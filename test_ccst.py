@@ -26,6 +26,29 @@ from torch_geometric.data import Data, DataLoader
 
 from CCST import get_graph, train_DGI, train_DGI, PCA_process, Kmeans_cluster
 
+import argparse
+parser = argparse.ArgumentParser()
+# ================Specify data type firstly===============
+parser.add_argument( '--data_type', default='nsc', help='"sc" or "nsc", \
+    refers to single cell resolution datasets(e.g. MERFISH) and \
+    non single cell resolution data(e.g. ST) respectively') 
+# =========================== args ===============================
+parser.add_argument( '--data_name', type=str, default='V1_Breast_Cancer_Block_A_Section_1', help="'MERFISH' or 'V1_Breast_Cancer_Block_A_Section_1") 
+parser.add_argument( '--lambda_I', type=float, default=0.3) #0.8 on MERFISH, 0.3 on ST
+parser.add_argument( '--data_path', type=str, default='generated_data/', help='data path')
+parser.add_argument( '--model_path', type=str, default='model') 
+parser.add_argument( '--embedding_data_path', type=str, default='Embedding_data') 
+parser.add_argument( '--result_path', type=str, default='results') 
+parser.add_argument( '--DGI', type=int, default=1, help='run Deep Graph Infomax(DGI) model, otherwise direct load embeddings')
+parser.add_argument( '--load', type=int, default=0, help='Load pretrained DGI model')
+parser.add_argument( '--num_epoch', type=int, default=5000, help='numebr of epoch in training DGI')
+parser.add_argument( '--hidden', type=int, default=256, help='hidden channels in DGI') 
+parser.add_argument( '--PCA', type=int, default=1, help='run PCA or not')   
+parser.add_argument( '--cluster', type=int, default=1, help='run cluster or not')
+parser.add_argument( '--n_clusters', type=int, default=5, help='number of clusters in Kmeans, when ground truth label is not avalible.') #5 on MERFISH, 20 on Breast
+parser.add_argument( '--draw_map', type=int, default=1, help='run drawing map')
+parser.add_argument( '--diff_gene', type=int, default=0, help='Run differential gene expression analysis')
+args = parser.parse_args() 
 
 
 class Encoder(nn.Module):
@@ -47,6 +70,12 @@ class Encoder(nn.Module):
         x = self.prelu(x)
 
         return x
+
+def corruption(data):
+    x = data.x[torch.randperm(data.x.size(0))]
+    return my_data(x, data.edge_index, data.edge_attr)
+
+
 
 
 #rootPath = os.path.dirname(sys.path[0])
@@ -91,14 +120,16 @@ batch_size=1
 data_list=graph_bags
 data_loader = DataLoader(data_list, batch_size=batch_size)
 
-in_channels=num_feature # length of node attribute vector
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-hidden_channels=num_feature
+in_channels=num_feature # length of node attribute vector
+hidden_channels=256 # length of node embedding vector
 Encoder_DGI=Encoder(in_channels=in_channels, hidden_channels=hidden_channels)
+
 corruption_DGI=corruption
 
-DGI_model = DeepGraphInfomax(hidden_channels=args.hidden, encoder=Encoder_DGI,
+DGI_model = DeepGraphInfomax(hidden_channels=hidden_channels, encoder=Encoder_DGI,
         summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
         corruption=corruption_DGI).to(device)
 
