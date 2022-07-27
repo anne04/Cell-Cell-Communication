@@ -26,6 +26,29 @@ from torch_geometric.data import Data, DataLoader
 
 from CCST import get_graph, train_DGI, train_DGI, PCA_process, Kmeans_cluster
 
+
+
+class Encoder(nn.Module):
+    def __init__(self, in_channels, hidden_channels):
+        super(Encoder, self).__init__()
+        self.conv = GCNConv(in_channels, hidden_channels)
+        self.conv_2 = GCNConv(hidden_channels, hidden_channels)
+        self.conv_3 = GCNConv(hidden_channels, hidden_channels)
+        self.conv_4 = GCNConv(hidden_channels, hidden_channels)
+        
+        self.prelu = nn.PReLU(hidden_channels)
+        
+    def forward(self, data):
+        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x = self.conv(x, edge_index, edge_weight=edge_weight)
+        x = self.conv_2(x, edge_index, edge_weight=edge_weight)
+        x = self.conv_3(x, edge_index, edge_weight=edge_weight)
+        x = self.conv_4(x, edge_index, edge_weight=edge_weight)
+        x = self.prelu(x)
+
+        return x
+
+
 #rootPath = os.path.dirname(sys.path[0])
 #os.chdir(rootPath+'/CCST')
 
@@ -71,7 +94,8 @@ data_loader = DataLoader(data_list, batch_size=batch_size)
 in_channels=num_feature # length of node attribute vector
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-Encoder_DGI=Encoder(in_channels=in_channels, hidden_channels=args.hidden)
+hidden_channels=num_feature
+Encoder_DGI=Encoder(in_channels=in_channels, hidden_channels=hidden_channels)
 corruption_DGI=corruption
 
 DGI_model = DeepGraphInfomax(hidden_channels=args.hidden, encoder=Encoder_DGI,
