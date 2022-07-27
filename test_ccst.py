@@ -26,8 +26,8 @@ from torch_geometric.data import Data, DataLoader
 
 from CCST import get_graph, train_DGI, train_DGI, PCA_process, Kmeans_cluster
 
-rootPath = os.path.dirname(sys.path[0])
-os.chdir(rootPath+'/CCST')
+#rootPath = os.path.dirname(sys.path[0])
+#os.chdir(rootPath+'/CCST')
 
 data_file = 'generated_data/V1_Breast_Cancer_Block_A_Section_1/'
 with open(data_file + 'Adjacent', 'rb') as fp:
@@ -52,8 +52,30 @@ for i in range(edge_nums):
 edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
 edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
 
+num_cell = X_data.shape[0]
+num_feature = X_data.shape[1]
+print('Adj:', adj.shape, 'Edges:', len(adj.data))
+print('X:', X_data.shape)
+
+
+
 graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
 
 graph_bags = []
 graph_bags.append(graph)
+
+batch_size=1
+data_list=graph_bags
+data_loader = DataLoader(data_list, batch_size=batch_size)
+
+in_channels=num_feature # length of node attribute vector
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+Encoder_DGI=Encoder(in_channels=in_channels, hidden_channels=args.hidden)
+corruption_DGI=corruption
+
+DGI_model = DeepGraphInfomax(hidden_channels=args.hidden, encoder=Encoder_DGI,
+        summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
+        corruption=corruption_DGI).to(device)
+
 
