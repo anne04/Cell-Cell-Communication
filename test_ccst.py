@@ -71,6 +71,12 @@ class Encoder(nn.Module):
 
         return x
 
+class my_data():
+    def __init__(self, x, edge_index, edge_attr):
+        self.x = x
+        self.edge_index = edge_index
+        self.edge_attr = edge_attr    
+    
 def corruption(data):
     x = data.x[torch.randperm(data.x.size(0))]
     return my_data(x, data.edge_index, data.edge_attr)
@@ -133,4 +139,31 @@ DGI_model = DeepGraphInfomax(hidden_channels=hidden_channels, encoder=Encoder_DG
         summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
         corruption=corruption_DGI).to(device)
 
+DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6)
+
+
+import datetime
+start_time = datetime.datetime.now()
+for epoch in range(args.num_epoch):
+    DGI_model.train()
+    DGI_optimizer.zero_grad()
+
+    DGI_all_loss = []
+
+    for data in data_loader:
+        data = data.to(device)
+        pos_z, neg_z, summary = DGI_model(data=data)
+
+        DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
+        DGI_loss.backward()
+        DGI_all_loss.append(DGI_loss.item())
+        DGI_optimizer.step()
+
+    if ((epoch+1)%100) == 0:
+        print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
+
+end_time = datetime.datetime.now()
+DGI_filename =  args.model_path+'DGI_lambdaI_' + str(args.lambda_I) + '_epoch' + str(args.num_epoch) + '.pth.tar'
+torch.save(DGI_model.state_dict(), DGI_filename)
+print('Training time in seconds: ', (end_time-start_time).seconds)
 
