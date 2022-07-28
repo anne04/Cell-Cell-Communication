@@ -33,13 +33,13 @@ parser.add_argument( '--data_type', default='nsc', help='"sc" or "nsc", \
     refers to single cell resolution datasets(e.g. MERFISH) and \
     non single cell resolution data(e.g. ST) respectively') 
 # =========================== args ===============================
-parser.add_argument( '--data_name', type=str, default='V1_Breast_Cancer_Block_A_Section_1', help="'MERFISH' or 'V1_Breast_Cancer_Block_A_Section_1") 
+parser.add_argument( '--data_name', type=str, default='V10M25-060_A1_PDA_128033_Pa_R_Spatial10x', help="'MERFISH' or 'V1_Breast_Cancer_Block_A_Section_1") 
 parser.add_argument( '--lambda_I', type=float, default=0.3) #0.8 on MERFISH, 0.3 on ST
 parser.add_argument( '--data_path', type=str, default='generated_data/', help='data path')
 parser.add_argument( '--model_path', type=str, default='model') 
 parser.add_argument( '--embedding_data_path', type=str, default='Embedding_data') 
 parser.add_argument( '--result_path', type=str, default='results') 
-parser.add_argument( '--DGI', type=int, default=1, help='run Deep Graph Infomax(DGI) model, otherwise direct load embeddings')
+parser.add_argument( '--DGI', type=int, default=0, help='run Deep Graph Infomax(DGI) model, otherwise direct load embeddings, 0 or 1')
 parser.add_argument( '--load', type=int, default=0, help='Load pretrained DGI model')
 parser.add_argument( '--num_epoch', type=int, default=5000, help='numebr of epoch in training DGI')
 parser.add_argument( '--hidden', type=int, default=256, help='hidden channels in DGI') 
@@ -87,7 +87,7 @@ def corruption(data):
 #rootPath = os.path.dirname(sys.path[0])
 #os.chdir(rootPath+'/CCST')
 
-data_file = 'generated_data/V1_Breast_Cancer_Block_A_Section_1/'
+data_file = 'generated_data/'+args.data_name+'/'
 with open(data_file + 'Adjacent', 'rb') as fp:
     adj_0 = pickle.load(fp)
 X_data = np.load(data_file + 'features.npy')
@@ -115,7 +115,7 @@ num_feature = X_data.shape[1]
 print('Adj:', adj.shape, 'Edges:', len(adj.data))
 print('X:', X_data.shape)
 
-
+n_clusters = 5
 
 graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
 
@@ -166,4 +166,8 @@ end_time = datetime.datetime.now()
 DGI_filename =  args.model_path+'DGI_lambdaI_' + str(args.lambda_I) + '_epoch' + str(args.num_epoch) + '.pth.tar'
 torch.save(DGI_model.state_dict(), DGI_filename)
 print('Training time in seconds: ', (end_time-start_time).seconds)
+
+-----------------------
+
+cluster_type=args.cluster_alg
 
