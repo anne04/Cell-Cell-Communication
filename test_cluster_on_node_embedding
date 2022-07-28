@@ -50,3 +50,13 @@ parser.add_argument( '--draw_map', type=int, default=1, help='run drawing map')
 parser.add_argument( '--diff_gene', type=int, default=0, help='Run differential gene expression analysis')
 args = parser.parse_args() 
 
+data_file = 'generated_data/'+args.data_name+'/'
+with open(data_file + 'Adjacent', 'rb') as fp:
+    adj_0 = pickle.load(fp)
+X_data = np.load(data_file + 'features.npy')
+
+lambda_I=0.3
+num_points = X_data.shape[0]
+adj_I = np.eye(num_points)
+adj_I = sparse.csr_matrix(adj_I)
+adj = (1-lambda_I)*adj_0 + lambda_I*adj_I
