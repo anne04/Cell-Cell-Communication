@@ -48,12 +48,37 @@ parser.add_argument( '--cluster', type=int, default=1, help='run cluster or not'
 parser.add_argument( '--n_clusters', type=int, default=5, help='number of clusters in Kmeans, when ground truth label is not avalible.') #5 on MERFISH, 20 on Breast
 parser.add_argument( '--draw_map', type=int, default=1, help='run drawing map')
 parser.add_argument( '--diff_gene', type=int, default=0, help='Run differential gene expression analysis')
-
+parser.add_argument( '--cluster_alg', type=str, default='leiden' , help='Run which clustering at the end')
 args = parser.parse_args() 
 
 args.embedding_data_path = args.embedding_data_path +'/'+ args.data_name +'/'
 args.model_path = args.model_path +'/'+ args.data_name +'/'
 args.result_path = args.result_path +'/'+ args.data_name +'/'
+
+
+
+def res_search_fixed_clus(cluster_type, adata, fixed_clus_count, increment=0.02):
+    '''
+        arg1(adata)[AnnData matrix]
+        arg2(fixed_clus_count)[int]
+        
+        return:
+            resolution[int]
+    '''
+    if cluster_type == 'leiden':
+        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
+            sc.tl.leiden(adata, random_state=0, resolution=res)
+            count_unique_leiden = len(pd.DataFrame(adata.obs['leiden']).leiden.unique())
+            if count_unique_leiden == fixed_clus_count:
+                break
+    elif cluster_type == 'louvain':
+        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
+            sc.tl.louvain(adata, random_state=0, resolution=res)
+            count_unique_louvain = len(pd.DataFrame(adata.obs['louvain']).louvain.unique())
+            if count_unique_louvain == fixed_clus_count:
+                break
+    return res
+
 
 
 
@@ -73,14 +98,14 @@ num_feature = X_data.shape[1]
 print('Adj:', adj.shape, 'Edges:', len(adj.data))
 print('X:', X_data.shape)
 
-n_clusters = 5
+n_clusters = 4 
 
 print("-----------Clustering-------------")
 
 X_embedding_filename =  args.embedding_data_path+'lambdaI' + str(lambda_I) + '_epoch' + str(args.num_epoch) + '_Embed_X.npy'
 X_embedding = np.load(X_embedding_filename)
 
-cluster_type=args.cluster_alg
+cluster_type='leiden'#'louvain'  #args.cluster_alg
 if cluster_type == 'kmeans':             
     X_embedding = PCA_process(X_embedding, nps=30)
     #X_data_PCA = PCA_process(X_data, nps=X_embedding.shape[1])
@@ -91,13 +116,16 @@ if cluster_type == 'kmeans':
 else:
     results_file = args.result_path + '/adata.h5ad'
     adata = ad.AnnData(X_embedding)
+
     sc.tl.pca(adata, n_comps=50, svd_solver='arpack')
-    sc.pp.neighbors(adata, n_neighbors=20, n_pcs=50) # 20
+    sc.pp.neighbors(adata, knn=False, method='gauss', n_neighbors=15, n_pcs=50) # 20        
     eval_resolution = res_search_fixed_clus(cluster_type, adata, n_clusters)
     if cluster_type == 'leiden':
+        print('leiden')
         sc.tl.leiden(adata, key_added="CCST_leiden", resolution=eval_resolution)
         cluster_labels = np.array(adata.obs['leiden'])
     if cluster_type == 'louvain':
+        print('louvain')
         sc.tl.louvain(adata, key_added="CCST_louvain", resolution=eval_resolution)
         cluster_labels = np.array(adata.obs['louvain'])
     #sc.tl.umap(adata)
@@ -125,16 +153,17 @@ for label in unique_labels:
            x_index.append(coordinates[i,0]) 
            y_index.append(coordinates[i,1])
            
-    plt.scatter(x_index, y_index , label = label)
+    plt.scatter(x=np.array(x_index),y=-np.array(y_index) , label = label)
     
 plt.legend()
 
 save_path = args.result_path
-plt.savefig(save_path+'/spatial_kmeans.png', dpi=400, bbox_inches='tight') 
+plt.savefig(save_path+'/spatial_'+cluster_type+'_test.png', dpi=400) 
+plt.clf()
 
-cp results/V10M25-060_A1_PDA_128033_Pa_R_Spatial10x/lambdaI0.3/spatial_kmeans_test.png /cluster/home/t116508uhn/data/CCST/spatial_kmeans_test.png
 
-plt.show()
+os.popen('cp results/V10M25-060_A1_PDA_128033_Pa_R_Spatial10x/spatial_'+cluster_type+'_test.png /cluster/home/t116508uhn/data/CCST/spatial_'+cluster_type+'_test.png') 
+
             
             
             
