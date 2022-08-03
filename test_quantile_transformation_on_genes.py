@@ -52,7 +52,7 @@ print(adata_h5)
 i_adata=adata_h5
 sc.pp.filter_genes(i_adata, min_cells=args.min_cells)
 print(i_adata.shape)
-adata_X = quantile_transform(np.array(i_adata))
+adata_X = quantile_transform(i_adata.X)
 
 
 
