@@ -11,23 +11,7 @@ import sys
 from h5py import Dataset, Group
 from sklearn.preprocessing import quantile_transform
 ####################  get the whole training dataset
-def read_h5(f, i=0):
-    print("hello world! read_h5")
-    for k in f.keys():
-        if isinstance(f[k], Group):
-            print('Group', f[k])
-            print('-'*(10-5*i))
-            read_h5(f[k], i=i+1)
-            print('-'*(10-5*i))
-        elif isinstance(f[k], Dataset):
-            print('Dataset', f[k])
-            print(f[k][()])
-        else:
-            print('Name', f[k].name)
-    print("hello world! read_h5_done")
-
-
-
+import scipy
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--min_cells', type=float, default=5, help='Lowly expressed genes which appear in fewer than this number of cells will be filtered out')
@@ -52,7 +36,16 @@ print(adata_h5)
 i_adata=adata_h5
 sc.pp.filter_genes(i_adata, min_cells=args.min_cells)
 print(i_adata.shape)
-adata_X = quantile_transform(i_adata.X)
+adata_X = quantile_transform(scipy.sparse.csr_matrix.toarray(i_adata.X),copy=True)
+adata_X = scipy.sparse.csr_matrix(adata_X)
 
+np.save(generated_data_fold + 'features.npy',adata_X)
 
+X_data = np.load(generated_data_fold + 'features.npy', allow_pickle=True)
 
+import pickle
+with open(generated_data_fold + 'features', 'wb') as fp:
+    pickle.dump(adata_X, fp)
+    
+with open(generated_data_fold + 'features', 'rb') as fp:
+    X_data = pickle.load(fp)
