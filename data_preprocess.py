@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument( '--min_cells', type=float, default=5, help='Lowly expressed genes which appear in fewer than this number of cells will be filtered out')
     parser.add_argument( '--Dim_PCA', type=int, default=200, help='The output dimention of PCA')
     parser.add_argument( '--data_path', type=str, default='dataset/', help='The path to dataset')
-    parser.add_argument( '--data_name', type=str, default='V1_Breast_Cancer_Block_A_Section_1', help='The name of dataset')
+    parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x', help='The name of dataset')
     parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
     args = parser.parse_args()
 
