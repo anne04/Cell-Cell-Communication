@@ -56,32 +56,6 @@ args.model_path = args.model_path +'/'+ args.data_name +'/'
 args.result_path = args.result_path +'/'+ args.data_name +'/'
 
 
-
-def res_search_fixed_clus(cluster_type, adata, fixed_clus_count, increment=0.02):
-    '''
-        arg1(adata)[AnnData matrix]
-        arg2(fixed_clus_count)[int]
-        
-        return:
-            resolution[int]
-    '''
-    if cluster_type == 'leiden':
-        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
-            sc.tl.leiden(adata, random_state=0, resolution=res)
-            count_unique_leiden = len(pd.DataFrame(adata.obs['leiden']).leiden.unique())
-            if count_unique_leiden == fixed_clus_count:
-                break
-    elif cluster_type == 'louvain':
-        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
-            sc.tl.louvain(adata, random_state=0, resolution=res)
-            count_unique_louvain = len(pd.DataFrame(adata.obs['louvain']).louvain.unique())
-            if count_unique_louvain == fixed_clus_count:
-                break
-    return res
-
-
-
-
 data_file = 'generated_data/'+args.data_name+'/'
 with open(data_file + 'Adjacent', 'rb') as fp:
     adj_0 = pickle.load(fp)
