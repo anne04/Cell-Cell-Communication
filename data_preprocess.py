@@ -33,7 +33,7 @@ def read_h5(f, i=0):
             read_h5(f[k], i=i+1)
             print('-'*(10-5*i))
     
-    elif isinstance(f[k], Dataset):
+        elif isinstance(f[k], Dataset):
             print('Dataset', f[k])
             print(f[k][()])
         else:
@@ -80,10 +80,14 @@ def main(args):
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
 
-    '''for threshold in [300]:#range (210,211):#(100,400,40):
-        num_big = np.where(distance_array<threshold)[0].shape[0]
-        print (threshold,num_big,str(num_big/(cell_num*2))) #300 22064 2.9046866771985256'''
-
+    for threshold in [300]:#range (210,211):#(100,400,40):
+        num_big = np.where(distance_matrix<threshold)[0].shape[0]
+        print (threshold,num_big,str(num_big/(cell_num*2))) #300 22064 2.9046866771985256
+        
+        #threshold=2000
+        #np.where(distance_matrix<threshold)[0].shape[0] # these are the number of the edges in the adj matrix
+        #416332
+    
     threshold=300
     distance_matrix = euclidean_distances(coordinates, coordinates)
 #        from sklearn.metrics.pairwise import manhattan_distances
