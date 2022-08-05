@@ -1,5 +1,3 @@
-  GNU nano 2.3.1                                                   File: data_generation_ST.py                                                                                                             
-
 import pandas as pd
 import scanpy as sc
 import numpy as np
