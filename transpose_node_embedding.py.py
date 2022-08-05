@@ -6,3 +6,8 @@ X_embedding = np.load(X_embedding_filename)
 X_embedding_T = np.transpose(X_embedding)
 X_embedding_filename = '/cluster/home/t116508uhn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_Embed_X.csv'
 np.savetxt(X_embedding_filename, X_embedding_T, delimiter=",")
+
+with open("product.tsv") as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        print(line)
