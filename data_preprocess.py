@@ -79,28 +79,39 @@ def main(args):
     cell_num = len(coordinates)
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
-
-    for threshold in [300]:#range (210,211):#(100,400,40):
+    print('min %g, max %g'%(np.min(distance_matrix), np.max(distance_matrix)))
+    
+    '''for threshold in [300]:#range (210,211):#(100,400,40):
         num_big = np.where(distance_matrix<threshold)[0].shape[0]
         print (threshold,num_big,str(num_big/(cell_num*2))) #300 22064 2.9046866771985256
         
         #threshold=2000
         #np.where(distance_matrix<threshold)[0].shape[0] # these are the number of the edges in the adj matrix
-        #416332
+        #416332'''
     
-    threshold=300
-    distance_matrix = euclidean_distances(coordinates, coordinates)
+    threshold=2000
+    
+    
 #        from sklearn.metrics.pairwise import manhattan_distances
 #        distance_matrix = manhattan_distances(coordinates, coordinates)
 
-    distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
+    '''distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
     distance_matrix_threshold_W = np.zeros(distance_matrix.shape)
     for i in range(distance_matrix_threshold_I.shape[0]):
         for j in range(distance_matrix_threshold_I.shape[1]):
             if distance_matrix[i,j] <= threshold and distance_matrix[i,j] > 0:
                 distance_matrix_threshold_I[i,j] = 1
-                distance_matrix_threshold_W[i,j] = distance_matrix[i,j]
-
+                distance_matrix_threshold_W[i,j] = distance_matrix[i,j]'''
+    
+    distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
+    for i in range(distance_matrix_threshold_I.shape[0]):
+        for j in range(distance_matrix_threshold_I.shape[1]):
+            if distance_matrix[i,j] <= threshold and distance_matrix[i,j] > 0:
+                distance_matrix_threshold_I[i,j] = distance_matrix[i,j]
+    
+    distance_matrix_min=np.min(distance_matrix_threshold_I)
+    distance_matrix_max=np.max(distance_matrix_threshold_I)
+    distance_matrix_threshold_I=1-(distance_matrix_threshold_I-distance_matrix_min)/(distance_matrix_max-distance_matrix_min)       
 
     ############### get normalized sparse adjacent matrix
     distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I) ## do not normalize adjcent matrix
