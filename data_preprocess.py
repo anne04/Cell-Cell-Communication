@@ -103,21 +103,22 @@ def main(args):
                 distance_matrix_threshold_I[i,j] = 1
                 distance_matrix_threshold_W[i,j] = distance_matrix[i,j]'''
     
-    distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
-    for i in range(distance_matrix_threshold_I.shape[0]):
-        for j in range(distance_matrix_threshold_I.shape[1]):
-            if distance_matrix[i,j] <= threshold and distance_matrix[i,j] > 0:
-                distance_matrix_threshold_I[i,j] = distance_matrix[i,j]
     
-    distance_matrix_min=np.min(distance_matrix_threshold_I)
-    distance_matrix_max=np.max(distance_matrix_threshold_I)
-    distance_matrix_threshold_I=1-(distance_matrix_threshold_I-distance_matrix_min)/(distance_matrix_max-distance_matrix_min)       
-
+    for i in range(distance_matrix.shape[0]):
+        max_value=np.max(distance_matrix[i,:])
+        for j in range(distance_matrix.shape[1]):
+            if distance_matrix[i,j] > threshold: # and distance_matrix[i,j] >= 0:
+                distance_matrix[i,j] = max_value
+                
+        min_value=np.min(distance_matrix[i,:])
+        for j in range(distance_matrix.shape[1]):
+            distance_matrix[i,j]=1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
+    
     ############### get normalized sparse adjacent matrix
-    distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I) ## do not normalize adjcent matrix
-    distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
+    distance_matrix = np.float32(distance_matrix) ## do not normalize adjcent matrix
+    distance_matrix_crs = sparse.csr_matrix(distance_matrix)
     with open(generated_data_fold + 'Adjacent', 'wb') as fp:
-        pickle.dump(distance_matrix_threshold_I_N_crs, fp)
+        pickle.dump(distance_matrix_crs, fp)
 
     '''for i in range (0,distance_matrix.shape[0]):
         distance_matrix_min=np.min(distance_matrix[i,:])
