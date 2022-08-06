@@ -67,9 +67,9 @@ def main(args):
     features = adata_X
     
 
-#    with open(generated_data_fold + 'features', 'wb') as fp:
-#        pickle.dump(features, fp)
-    np.save(generated_data_fold + 'features.npy', features)
+    with open(generated_data_fold + 'features', 'wb') as fp:
+        pickle.dump(features, fp)
+#    np.save(generated_data_fold + 'features.npy', features)
     np.save(generated_data_fold + 'coordinates.npy', np.array(coordinates))
 
     
