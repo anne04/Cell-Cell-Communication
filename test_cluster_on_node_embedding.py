@@ -58,37 +58,26 @@ args.result_path = args.result_path +'/'+ args.data_name +'/'
 
 
 
-def res_search_fixed_clus(cluster_type, adata, fixed_clus_count, increment=0.02):
-    '''
-       	arg1(adata)[AnnData matrix]
-        arg2(fixed_clus_count)[int]
-
-        return:
-            resolution[int]
-    '''
-    if cluster_type == 'leiden':
-        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
-            sc.tl.leiden(adata, random_state=0, resolution=res)
-            count_unique_leiden = len(pd.DataFrame(adata.obs['leiden']).leiden.unique())
-            if count_unique_leiden == fixed_clus_count:
-                break
-    elif cluster_type == 'louvain':
-        for res in sorted(list(np.arange(0.2, 2.5, increment)), reverse=True):
-            sc.tl.louvain(adata, random_state=0, resolution=res)
-            count_unique_louvain = len(pd.DataFrame(adata.obs['louvain']).louvain.unique())
-            if count_unique_louvain == fixed_clus_count:
-                break
-    return res
-
-
 
 n_clusters = args.n_clusters
 
 print("-----------Clustering-------------")
 lambda_I=args.lambda_I
 
+
+data_file = args.data_path + args.data_name +'/'
+with open(data_file + 'features', 'rb') as fp:
+    X_data = pickle.load(fp)
+
+print('X_data shape: ',X_data.shape)
+
+
 X_embedding_filename =  args.embedding_data_path+'lambdaI' + str(lambda_I) + '_Embed_X.npy'
 X_embedding = np.load(X_embedding_filename)
+print('X_embedding shape: ',X_embedding.shape)
+
+
+
 
 num_cell=X_embedding.shape[0]
 print("numcells %d"%num_cell)
@@ -105,7 +94,11 @@ if cluster_type == 'kmeans':
     cluster_labels, score = Kmeans_cluster(X_embedding, n_clusters)
 else:
     results_file = args.result_path + '/adata.h5ad'
-    adata = ad.AnnData(X_embedding)
+    if args.DGI==0:
+        print('Using only gene expression for clustering')
+        adata = ad.AnnData(X_data)
+    else:
+        adata = ad.AnnData(X_embedding)
 
 #    sc.tl.pca(adata, n_comps=70, svd_solver='arpack')
     sc.pp.neighbors(adata, knn=False, method='gauss', use_rep='X', n_neighbors=15) #, metric='manhattan')
