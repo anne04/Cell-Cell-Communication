@@ -1,5 +1,3 @@
-                                                                                                                                                                         File: cluster_on_node_embedding.py                                                                                                                                                                                                                                                                                                                                                                                        
-
 import os
 import sys
 import matplotlib
