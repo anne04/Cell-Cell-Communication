@@ -7,7 +7,7 @@ X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_da
 X_embedding = np.load(X_embedding_filename)
 X_embedding_T = np.transpose(X_embedding)
 
-X_gene_data_path = 'ls /cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'
+X_gene_data_path = '/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'
 fp = open(X_gene_data_path + 'features', 'rb')
 X_gene_data = pickle.load(fp)
 fp.close()
