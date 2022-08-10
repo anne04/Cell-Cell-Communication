@@ -46,5 +46,10 @@ with open(barcode_label_file) as file:
     for line in tsv_file:
         barcode_label_info.append(line)
         
-        
+X_embedding_filename='/cluster/home/t116508uhn/64630/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_Embed_X.csv'
+emb_label_info=[]
+with open(X_embedding_filename) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        emb_label_info.append(line)
      
