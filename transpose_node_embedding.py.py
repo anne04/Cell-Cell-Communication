@@ -35,7 +35,7 @@ f=open(X_gene_filename, 'w', encoding='UTF8', newline='') #'/cluster/home/t11650
 writer = csv.writer(f)
 # write the header
 writer.writerow(barcode_info)
-writer.writerows(X_gene_data)
+writer.writerows(X_gene_data_T)
 f.close()
 
 
