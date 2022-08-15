@@ -25,7 +25,25 @@ for i in range (1, len(kmeans_label)):
   if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
       max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
 ############
+pathologist_label_file='/cluster/home/t116508uhn/64630/Tumur_64630_K-Means_7.csv'
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
 
+barcode_label=dict()
+max=0
+for i in range (1, len(pathologist_label)):
+  if pathologist_label[i][1] == 'tumor':
+      barcode_label[pathologist[i][0]] = 0
+  elif pathologist_label[i][1] == 'stroma_deserted':
+      barcode_label[pathologist[i][0]] = 1
+    
+    barcode_label[kmeans_label[i][0]] = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
+  if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
+      max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
+############
 
 
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
