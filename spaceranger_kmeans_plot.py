@@ -25,7 +25,8 @@ for i in range (1, len(kmeans_label)):
   if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
       max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
 ############
-pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv'
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv'
+#pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv'
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -40,8 +41,10 @@ for i in range (1, len(pathologist_label)):
       barcode_label[pathologist_label[i][0]] = 2
   elif pathologist_label[i][1] == 'acinar_reactive':  
       barcode_label[pathologist_label[i][0]] = 3
+  elif pathologist_label[i][1] == 'Artifact':  
+      barcode_label[pathologist_label[i][0]] = 4
         
-max = 3
+max = 4
 ############
 
 
@@ -72,7 +75,7 @@ for label_i in range (0, max+1):
                 count=count+1
             
                 
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = label_i, s=5)
+    plt.scatter(x=np.array(x_index), y=np.array(y_index), label = label_i, s=5)
     
 print(count)
 plt.legend()
