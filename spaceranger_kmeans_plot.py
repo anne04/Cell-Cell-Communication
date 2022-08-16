@@ -84,7 +84,7 @@ plt.clf()
 # 413 == barcode not found, 443 = not labeled
 
 ############################################################################################################
-toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'
+toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_r3.csv'
 toomany_label=[]
 with open(toomany_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -118,8 +118,38 @@ for i in range (0, len(barcode_info)):
         count=count+1
         
 print(count)
-        
+
+NUM_COLORS=len(cluster_label)
+cm = plt.get_cmap('gist_rainbow')
+colors=[cm(1.*i/(NUM_COLORS*500)) for i in range(NUM_COLORS*500)]
+
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+'''fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_prop_cycle('color', [cm(1.*i/(NUM_COLORS*5)) for i in range(NUM_COLORS*5)])
      
+number = NUM_COLORS
+cmap = plt.get_cmap('gnuplot')
+
+colors=[]
+colors.append([.1,.1,.1])    
+
+start=len(colors)
+for i in range (1, 10):
+    colors.append([.1,.5,colors[0][2]+0.05*i*2])
+    colors.append([colors[0][0]+0.05*i*2, 1, .3])
+    colors.append([.5,colors[0][1]+0.05*i*2,.8])
+    colors.append([colors[0][0]+0.05*i*2, .7, 0.5])'''
+
 for j in range (0, len(cluster_label)):
     label_i=cluster_label[j]
     x_index=[]
@@ -128,11 +158,11 @@ for j in range (0, len(cluster_label)):
         if barcode_info[i][3] == label_i:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
-         
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, s=5)
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j], s=5)     
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10, s=5)
     
 plt.legend()
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_r3_plot.png', dpi=400)
 plt.clf()
