@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 ############
-kmeans_label_file='/cluster/home/t116508uhn/64630/Tumur_64630_K-Means_7.csv'
+'''kmeans_label_file='/cluster/home/t116508uhn/64630/Tumur_64630_K-Means_7.csv'
 kmeans_label=[]
 with open(kmeans_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -23,7 +23,7 @@ max=0
 for i in range (1, len(kmeans_label)):
   barcode_label[kmeans_label[i][0]] = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
   if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
-      max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])
+      max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])'''
 ############
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv'
 #pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv'
@@ -34,15 +34,20 @@ with open(pathologist_label_file) as file:
         pathologist_label.append(line)
 
 barcode_label=dict()
+count=np.zeros((4))
 for i in range (1, len(pathologist_label)):
   if pathologist_label[i][1] == 'tumor':
       barcode_label[pathologist_label[i][0]] = 1
+      count[0] = count[0] + 1
   elif pathologist_label[i][1] == 'stroma_deserted':
       barcode_label[pathologist_label[i][0]] = 2
+      count[1] = count[1] + 1
   elif pathologist_label[i][1] == 'acinar_reactive':  
       barcode_label[pathologist_label[i][0]] = 3
+      count[2] = count[2] + 1
   elif pathologist_label[i][1] == 'Artifact':  
       barcode_label[pathologist_label[i][0]] = 4
+      count[3] = count[3] + 1
         
 max = 4
 ############
@@ -87,7 +92,19 @@ plt.clf()
 # 413 == barcode not found, 443 = not labeled
 
 ############################################################################################################
-toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_r3.csv'
+import numpy as np
+import csv
+import pickle
+from scipy import sparse
+import scipy.io as sio
+import scanpy as sc
+import matplotlib
+matplotlib.use('Agg')
+#matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+
+toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_bulk.csv'
 toomany_label=[]
 with open(toomany_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -121,7 +138,7 @@ for i in range (0, len(barcode_info)):
         count=count+1
         
 print(count)
-
+print(len(cluster_label))
 number = 20
 cmap = plt.get_cmap('tab20')
 colors = [cmap(i) for i in np.linspace(0, 1, number)]
@@ -131,6 +148,22 @@ cmap = plt.get_cmap('tab20b')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+
+
+
 
 cell_count_cluster=np.zeros((len(cluster_label)))
 
@@ -150,5 +183,6 @@ for j in range (0, len(cluster_label)):
 plt.legend()
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'toomanycells_PCA_64embedding_Kena_label_l1mp5_r3_plot.png', dpi=400)
+#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
 plt.clf()
