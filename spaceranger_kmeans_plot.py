@@ -25,7 +25,7 @@ for i in range (1, len(kmeans_label)):
   if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
       max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])'''
 ############
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv'
+pathologist_label_file='/cluster/home/t116508uhn/64630/Annotation_KF.csv'
 #pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv'
 pathologist_label=[]
 with open(pathologist_label_file) as file:
@@ -36,13 +36,13 @@ with open(pathologist_label_file) as file:
 barcode_label=dict()
 count=np.zeros((4))
 for i in range (1, len(pathologist_label)):
-  if pathologist_label[i][1] == 'tumor':
+  if pathologist_label[i][1] == 'Tumour':
       barcode_label[pathologist_label[i][0]] = 1
       count[0] = count[0] + 1
-  elif pathologist_label[i][1] == 'stroma_deserted':
+  elif pathologist_label[i][1] == 'Stroma':
       barcode_label[pathologist_label[i][0]] = 2
       count[1] = count[1] + 1
-  elif pathologist_label[i][1] == 'acinar_reactive':  
+  elif pathologist_label[i][1] == 'Acinar_reactive':  
       barcode_label[pathologist_label[i][0]] = 3
       count[2] = count[2] + 1
   elif pathologist_label[i][1] == 'Artifact':  
@@ -80,7 +80,7 @@ for label_i in range (0, max+1):
                 count=count+1
             
                 
-    plt.scatter(x=np.array(x_index), y=np.array(y_index), label = label_i, s=5)
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = label_i, s=5)
     
 print(count)
 plt.legend()
@@ -104,7 +104,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_bulk.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
 toomany_label=[]
 with open(toomany_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -155,15 +155,17 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
-number = 20
-cmap = plt.get_cmap('tab20c')
+number = 8
+cmap = plt.get_cmap('Set2')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
-
-
+colors=colors+colors_2
 
 cell_count_cluster=np.zeros((len(cluster_label)))
 
