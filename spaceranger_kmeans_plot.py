@@ -25,8 +25,8 @@ for i in range (1, len(kmeans_label)):
   if max < int(kmeans_label[i][1].split('_')[0].split(' ')[1]):
       max = int(kmeans_label[i][1].split('_')[0].split(' ')[1])'''
 ############
-pathologist_label_file='/cluster/home/t116508uhn/64630/Annotation_KF.csv'
-#pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv'
+#pathologist_label_file='/cluster/home/t116508uhn/64630/Annotation_KF.csv'
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' # tumor_64630_D1_IX_annotation.csv'
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -36,13 +36,13 @@ with open(pathologist_label_file) as file:
 barcode_label=dict()
 count=np.zeros((4))
 for i in range (1, len(pathologist_label)):
-  if pathologist_label[i][1] == 'Tumour':
+  if pathologist_label[i][1] == 'tumor': #'Tumour':
       barcode_label[pathologist_label[i][0]] = 1
       count[0] = count[0] + 1
-  elif pathologist_label[i][1] == 'Stroma':
+  elif pathologist_label[i][1] == 'stroma_deserted': #'Stroma':
       barcode_label[pathologist_label[i][0]] = 2
       count[1] = count[1] + 1
-  elif pathologist_label[i][1] == 'Acinar_reactive':  
+  elif pathologist_label[i][1] == 'acinar_reactive': #'Acinar_reactive':  
       barcode_label[pathologist_label[i][0]] = 3
       count[2] = count[2] + 1
   elif pathologist_label[i][1] == 'Artifact':  
@@ -52,9 +52,11 @@ for i in range (1, len(pathologist_label)):
 max = 4
 ############
 
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/barcodes.tsv'
 
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
+#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
+#barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
 i=0
@@ -80,13 +82,13 @@ for label_i in range (0, max+1):
                 count=count+1
             
                 
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = label_i, s=5)
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = label_i)
     
 print(count)
 plt.legend()
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'pathologists_plot.png', dpi=400)
+plt.savefig(save_path+'pathologists_plot_new.png', dpi=400)
 #plt.savefig(save_path+'kmeans_spaceranger_plot.png', dpi=400)
 plt.clf()
 # 413 == barcode not found, 443 = not labeled
@@ -120,8 +122,8 @@ for i in range (1, len(toomany_label)):
         cluster_dict[int(toomany_label[i][1])]=1
 ############
 cluster_label=list(cluster_dict.keys())
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
 i=0
@@ -179,8 +181,8 @@ for j in range (0, len(cluster_label)):
             y_index.append(barcode_info[i][2])
             cell_count_cluster[j] = cell_count_cluster[j]+1
             
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j], s=5)     
-    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10, s=5)
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j])     
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
 plt.legend()
 
