@@ -25,7 +25,7 @@ emb_dim= 64 #512
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_r3/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r6_Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_temp/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r1_Embed_X.npy'
-X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r4_Embed_X.npy'
+X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/test_r1_Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_norm_scale_pca_2k_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/norm_scale_pca_2k_l1mp2_1layer_emb4096_r1_Embed_X.npy'
 
 
