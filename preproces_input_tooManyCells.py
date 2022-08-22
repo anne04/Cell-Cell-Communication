@@ -5,9 +5,9 @@ from scipy import sparse
 import scipy.io as sio
 import scanpy as sc
 
-barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/barcodes.tsv'
 barcode_info=[]
-#barcode_info.append("")
+barcode_info.append("")
 with open(barcode_file) as file:
     tsv_file = csv.reader(file, delimiter="\t")
     for line in tsv_file:
@@ -25,12 +25,19 @@ emb_dim= 64 #512
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_r3/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r6_Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_temp/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r1_Embed_X.npy'
-#X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r4_Embed_X.npy'
-X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_norm_scale_pca_2k_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/norm_scale_pca_2k_l1mp2_1layer_emb4096_r1_Embed_X.npy'
+X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r4_Embed_X.npy'
+#X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_norm_scale_pca_2k_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/norm_scale_pca_2k_l1mp2_1layer_emb4096_r1_Embed_X.npy'
 
 
 X_embedding = np.load(X_embedding_filename)
 X_embedding= sc.pp.pca(X_embedding, n_comps=60) 
+num_feature = 60
+
+feature_id = np.zeros((1, num_feature))
+for i in range (0, num_feature):
+    feature_id[0,i] = i+1
+    
+X_embedding = np.concatenate((feature_id, X_embedding))
 
 #X_embedding= sc.pp.pca(X_embedding, n_comps=100)  #2k
 
