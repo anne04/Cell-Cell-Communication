@@ -184,7 +184,7 @@ for j in range (0, len(cluster_label)):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j])     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend()
+plt.legend(fontsize=2)
 
 save_path = '/cluster/home/t116508uhn/64630/'
 #plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
