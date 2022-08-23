@@ -30,8 +30,8 @@ X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignmen
 
 
 X_embedding = np.load(X_embedding_filename)
-X_embedding= sc.pp.pca(X_embedding, n_comps=60) 
-num_feature = 60
+X_embedding= sc.pp.pca(X_embedding, n_comps=100) 
+num_feature = 100
 
 feature_id = np.zeros((1, num_feature))
 for i in range (0, num_feature):
