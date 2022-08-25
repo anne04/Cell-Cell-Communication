@@ -33,16 +33,16 @@ X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignmen
 X_embedding = np.load(X_embedding_filename)
 num_feature = X_embedding.shape[1]
 
-X_embedding= sc.pp.pca(X_embedding, n_comps=100) 
-num_feature = 100
+#X_embedding= sc.pp.pca(X_embedding, n_comps=100) 
+#num_feature = 100
 
+
+#####################
 feature_id = np.zeros((1, num_feature))
 for i in range (0, num_feature):
     feature_id[0,i] = i+1
-    
-X_embedding = np.concatenate((feature_id, X_embedding))
 
-#X_embedding= sc.pp.pca(X_embedding, n_comps=100)  #2k
+X_embedding = np.concatenate((feature_id, X_embedding))
 
 X_embedding_T = np.transpose(X_embedding)
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X_equal.csv'
