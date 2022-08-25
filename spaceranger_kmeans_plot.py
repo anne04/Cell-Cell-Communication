@@ -9,7 +9,35 @@ matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
+from typing import List
 
+def get_colour_scheme(palette_name: str, num_colours: int) -> List[str]:
+    """Extend a colour scheme using colour interpolation.
+
+    Parameters
+    ----------
+    palette_name: The matplotlib colour scheme name that will be extended.
+    num_colours: The number of colours in the output colour scheme.
+
+    Returns
+    -------
+    New colour scheme containing 'num_colours' of colours. Each colour is a hex
+    colour code.
+
+    """
+    scheme = [rgb2hex(c) for c in plt.get_cmap(palette_name).colors]
+    if len(scheme) >= num_colours:
+        return scheme[:num_colours]
+    else:
+        cmap = LinearSegmentedColormap.from_list("cmap", scheme)
+        extended_scheme = cmap(np.linspace(0, 1, num_colours))
+        return [to_hex(c, keep_alpha=False) for c in extended_scheme]
+    
+    
+    
 ############
 '''kmeans_label_file='/cluster/home/t116508uhn/64630/Tumur_64630_K-Means_7.csv'
 kmeans_label=[]
@@ -105,7 +133,14 @@ matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
+#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+
+toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
 toomany_label=[]
 with open(toomany_label_file) as file:
@@ -122,8 +157,6 @@ for i in range (1, len(toomany_label)):
         cluster_dict[int(toomany_label[i][1])]=1
 ############
 cluster_label=list(cluster_dict.keys())
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
 i=0
@@ -171,6 +204,9 @@ colors=colors+colors_2
 
 cell_count_cluster=np.zeros((len(cluster_label)))
 
+colors=get_colour_scheme('plasma', len(cluster_label))
+
+
 for j in range (0, len(cluster_label)):
     label_i=cluster_label[j]
     x_index=[]
@@ -184,7 +220,7 @@ for j in range (0, len(cluster_label)):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j])     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=2)
+plt.legend(fontsize=10,loc='upper left')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 #plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
