@@ -33,9 +33,9 @@ parser.add_argument( '--data_type', default='nsc', help='"sc" or "nsc", \
     refers to single cell resolution datasets(e.g. MERFISH) and \
     non single cell resolution data(e.g. ST) respectively')
 # =========================== args ===============================
-parser.add_argument( '--data_name', type=str, default='V10M25-060_A1_PDA_128033_Pa_R_Spatial10x', help="'MERFISH' or 'V1_Breast_Cancer_Block_A_Section_1")
+parser.add_argument( '--data_name', type=str, default='V10M25-060_A1_PDA_128033_Pa_R_Spatial10x_new', help="'MERFISH' or 'V1_Breast_Cancer_Block_A_Section_1")
 parser.add_argument( '--lambda_I', type=float, default=0.3) #0.8 on MERFISH, 0.3 on ST
-parser.add_argument( '--data_path', type=str, default='generated_data/', help='data path')
+parser.add_argument( '--data_path', type=str, default='generated_data_new/', help='data path')
 parser.add_argument( '--model_path', type=str, default='model')
 parser.add_argument( '--embedding_data_path', type=str, default='Embedding_data')
 parser.add_argument( '--result_path', type=str, default='results')
