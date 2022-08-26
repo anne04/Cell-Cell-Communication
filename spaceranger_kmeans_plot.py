@@ -202,10 +202,10 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
+
+#colors=get_colour_scheme('plasma', len(cluster_label))
+
 cell_count_cluster=np.zeros((len(cluster_label)))
-
-colors=get_colour_scheme('plasma', len(cluster_label))
-
 
 for j in range (0, len(cluster_label)):
     label_i=cluster_label[j]
@@ -220,7 +220,7 @@ for j in range (0, len(cluster_label)):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j])     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=10,loc='upper left')
+plt.legend(fontsize=5,loc='upper left')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 #plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
