@@ -5,7 +5,7 @@ from scipy import sparse
 import scipy.io as sio
 import scanpy as sc
 
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/barcodes.tsv'
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
 barcode_info.append("")
 with open(barcode_file) as file:
