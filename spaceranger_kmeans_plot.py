@@ -137,8 +137,12 @@ import matplotlib.pyplot as plt
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 
-toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label_node_embedding.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
+
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
+toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
@@ -156,15 +160,19 @@ for i in range (1, len(toomany_label)):
         barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
         cluster_dict[int(toomany_label[i][1])]=1
 ############
-cluster_label=list(cluster_dict.keys())
+
 barcode_info=[]
 #barcode_info.append("")
 i=0
 with open(barcode_file) as file:
     tsv_file = csv.reader(file, delimiter="\t")
     for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
+        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],-1])
         i=i+1
+        
+cluster_dict[-1]=1
+cluster_label=list(cluster_dict.keys())
+
 count=0   
 for i in range (0, len(barcode_info)):
     if barcode_info[i][0] in barcode_label:
@@ -178,7 +186,7 @@ number = 20
 cmap = plt.get_cmap('tab20')
 colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
-'''number = 20
+number = 20
 cmap = plt.get_cmap('tab20b')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
@@ -200,16 +208,13 @@ number = 12
 cmap = plt.get_cmap('Set3')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
-colors=colors+colors_2'''
+colors=colors+colors_2
 
 
 #colors=get_colour_scheme('plasma', len(cluster_label))
 
 cell_count_cluster=np.zeros((len(cluster_label)))
 
-# tumor_list = [1, 24, 25, 14, 15, 2, 10 ] # too many cells
-tumor_list = [20, 17, 15, 6, 16, 18, 19, 23, 12] # leiden
-k = 0
 for j in range (0, len(cluster_label)):
     label_i = cluster_label[j]
     x_index=[]
@@ -220,19 +225,12 @@ for j in range (0, len(cluster_label)):
             y_index.append(barcode_info[i][2])
             cell_count_cluster[j] = cell_count_cluster[j]+1
             
-    if j not in tumor_list:
-        set_color = '#808080'
-    else:
-        #set_color = colors[j]
-        set_color = colors[k]
-        k = k+1
         
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=set_color)     
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=colors[j])     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=5,loc='upper left')
+plt.legend(fontsize=5,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
-#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
-plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.png', dpi=400)
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
