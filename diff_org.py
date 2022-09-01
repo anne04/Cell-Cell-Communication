@@ -1,4 +1,3 @@
-  GNU nano 6.3                                                                   /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/diff.org                                                                    Modified  
 * Input
 - Node 10 :: Classical B
 - Node 59 :: Basal B
