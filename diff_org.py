@@ -45,7 +45,7 @@
     df = pd.read_csv(f)
 
     resDf = df.rename(columns={"Name": "feature", "List": "signature"})
-
+    
     return resDf
 
   def intersect(df, sDf):
@@ -65,8 +65,12 @@
     pd.set_option('display.max_columns', 50)
 
     signatureFile = "/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv"
-    inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_13_59_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+    nodes = "13_59"
+    inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+    outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes+"_org_whitelist.csv"
+    outFile_2 = "/cluster/project/schwartz/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes+"_org_whitelist.csv"
 
+    
     #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
     dfs = processFile(inFilesSig)
     sDf = processSignatureFile(signatureFile)
@@ -79,9 +83,9 @@
     print(resDf[0])
     print(resDf[1])
 
-    # outFile = os.path.basename(inFilesSig[0][0]).split(".")[0] + "_signals.csv.gz"
-
-    # resDf.to_csv(outFile, index = False)
+    
+    resDf.to_csv(outFile_1, index = False)
+    resDf.to_csv(outFile_2, index = False)
 
     # print(outFile)
 
