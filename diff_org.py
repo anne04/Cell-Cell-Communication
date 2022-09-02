@@ -1,12 +1,12 @@
-* Input
+''' Input
 - Node 10 :: Classical B
 - Node 59 :: Basal B
 - Node 14 :: Bottom right Classical A
 - Node 15 :: Top right Classical A
-- Node 13 :: Bottom and Top right Classical A
+- Node 13 :: Bottom and Top right Classical A'''
 
 #+name: in-files-sig
-- ./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv
+# - ./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
 # - ./differential_analysis/differential_TAGConv_test_r4_10_59_org_whitelist.csv
 # - ./differential_analysis/differential_TAGConv_test_r4_14_15_org_whitelist.csv
 
@@ -64,12 +64,15 @@
   def main():
     pd.set_option('display.max_columns', 50)
 
-    signatureFile = "./GeneList_KF_22Aug10.csv"
+    signatureFile = "/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv"
+    inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_13_59_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
 
-    dfs = map(processFile, [x for xs in inFilesSig for x in xs])
+    #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
+    dfs = processFile(inFilesSig)
     sDf = processSignatureFile(signatureFile)
 
-    df = pd.concat(map(lambda x: intersect(x, sDf), dfs))
+    #df = pd.concat(map(lambda x: intersect(x, sDf), dfs))
+    df = intersect(dfs, sDf)
     resDf = summarizeSig(df)
     # resDf = df.sort_values("log2FC", ascending=False)
 
