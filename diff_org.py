@@ -85,11 +85,11 @@
         print(resDf[1])
 
 
-        resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv", index = False)
-        resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv", index = False)
+        resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
+        resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv") #, index = False)
 
-        resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv", index = False)
-        resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv", index = False)
+        resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv") #, index = False)
+        resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv") #, index = False)
         
 
     # print(outFile)
