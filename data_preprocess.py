@@ -160,7 +160,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--min_cells', type=float, default=5, help='Lowly expressed genes which appear in fewer than this number of cells will be filtered out')
     parser.add_argument( '--Dim_PCA', type=int, default=200, help='The output dimention of PCA')
-    parser.add_argument( '--data_path', type=str, default='dataset/', help='The path to dataset')
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/', help='The path to dataset')
     parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
     parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
     parser.add_argument( '--all_distance', type=int, default=0, help='The folder to store the generated data')
