@@ -23,7 +23,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 
 print("hello world!")
 
-def read_h5(f, i=0):
+rdef read_h5(f, i=0):
     print("hello world! read_h5")
     for k in f.keys():
         if isinstance(f[k], Group):
@@ -59,11 +59,29 @@ def main(args):
     
     gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
     gene_ids = list(adata_h5.var_names) # 36601
-    
-    barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
-    
     cell_genes = defaultdict(list)
-    
+
+    pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+
+    barcode_tumor=dict()
+    for i in range (1, len(pathologist_label)):
+      if pathologist_label[i][1] == 'tumor': #'Tumour':
+          barcode_tumor[pathologist_label[i][0]] = 1
+            
+    barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
+    barcode_info=[]
+    #barcode_info.append("")
+    i=0
+    with open(barcode_file) as file:
+        tsv_file = csv.reader(file, delimiter="\t")
+        for line in tsv_file:
+            barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],-1])
+            i=i+1
     
     
     
