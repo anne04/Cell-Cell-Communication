@@ -1,5 +1,3 @@
-  GNU nano 2.3.1                                                                                                                                                                                            File: data_preprocess.py                                                                                                                                                                                                                                                                                                                                                                                              
-
 import pandas as pd
 import scanpy as sc
 import numpy as np
@@ -21,8 +19,8 @@ from sklearn.metrics.pairwise import euclidean_distances
 ####################  get the whole training dataset
 
 
-rootPath = os.path.dirname(sys.path[0])
-os.chdir(rootPath+'/CCST')
+#rootPath = os.path.dirname(sys.path[0])
+#os.chdir(rootPath+'/CCST')
 
 print("hello world!")
 
