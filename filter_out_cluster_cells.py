@@ -3,8 +3,7 @@ import scanpy as sc
 import numpy as np
 import stlearn as st
 import scipy
-import matplotlib
-matplotlib.use('Agg')
+import matplotlibmatplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import sys
@@ -58,8 +57,14 @@ def main(args):
     adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
     print(adata_h5)
     
-    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)    
-    gene_ids = list(adata_h5.var_names)
+    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
+    gene_ids = list(adata_h5.var_names) # 36601
+    
+    barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
+    
+    cell_genes = defaultdict(list)
+    
+    
     
     
     
