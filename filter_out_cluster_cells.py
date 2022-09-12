@@ -3,7 +3,8 @@ import scanpy as sc
 import numpy as np
 import stlearn as st
 import scipy
-import matplotlibmatplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import sys
@@ -16,6 +17,9 @@ import pickle
 import scipy.linalg
 from sklearn.metrics.pairwise import euclidean_distances
 import gseapy as gp
+import csv
+import stlearn as st
+from collections import defaultdict
 ####################  get the whole training dataset
 
 
@@ -24,7 +28,7 @@ import gseapy as gp
 
 print("hello world!")
 
-rdef read_h5(f, i=0):
+def read_h5(f, i=0):
     print("hello world! read_h5")
     for k in f.keys():
         if isinstance(f[k], Group):
@@ -39,20 +43,20 @@ rdef read_h5(f, i=0):
             print('Name', f[k].name)
     print("hello world! read_h5_done")
 
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/', help='The path to dataset')
-    parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
-    parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
-    args = parser.parse_args()
+#if __name__ == "__main__":
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
+args = parser.parse_args()
 
-    main(args)
+#    main(args)
     
 
 def main(args):
     print("hello world! main")  
-    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -67,6 +71,21 @@ def main(args):
             barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
             cluster_dict[int(toomany_label[i][1])]=1
             
+
+    pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+
+    barcode_tumor=dict()
+    for i in range (1, len(pathologist_label)):
+      if pathologist_label[i][1] == 'tumor': #'Tumour':
+          barcode_tumor[pathologist_label[i][0]] = 1
+
+            
+            
     barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
     barcode_info=[]
     #barcode_info.append("")
@@ -74,7 +93,7 @@ def main(args):
     with open(barcode_file) as file:
         tsv_file = csv.reader(file, delimiter="\t")
         for line in tsv_file:
-            barcode_info.append([line[0],-1])
+            barcode_info.append([line[0],-1,[]])
             i=i+1
             
     #cluster_dict[-1]=1
@@ -82,7 +101,7 @@ def main(args):
 
     count=0   
     for i in range (0, len(barcode_info)):
-        if barcode_info[i][0] in barcode_label:
+        if (barcode_info[i][0] in barcode_label) and (barcode_info[i][0] in barcode_tumor):
             barcode_info[i][1] = barcode_label[barcode_info[i][0]]
         else:
             count=count+1
@@ -98,38 +117,64 @@ def main(args):
     
     for cell_index in range (0, gene_list_all.shape[0]):
         gene_list_temp=[]
-        for gene_index in range (0, gene_list_all.shape[1]):
+        non_zero_index=list(np.where(gene_list_all[cell_index]!=0)[0])
+        for gene_index in non_zero_index:
             if gene_list_all[cell_index][gene_index]>0:
                 gene_list_temp.append(gene_ids[gene_index])
                 
-        barcode_info[cell_index].append(gene_list_temp)
+        barcode_info[cell_index][2]=barcode_info[cell_index][2]+gene_list_temp
         
     
-   target_cluster_id = 59 # BB
-   gene_list_cluster=[]
-   for i in range (0, len(barcode_info)):
-       if barcode_info[i][1] == target_cluster_id:
-           gene_list_cluster = gene_list_cluster + barcode_info[i][2]
+    target_cluster_id = [60, 61] ##[14, 15] #[11, 12] #[60, 61] # BB
+    gene_list_cluster=[]
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][1] in target_cluster_id:
+            gene_list_cluster = gene_list_cluster + barcode_info[i][2]
         
    
-   gene_list_cluster = set(gene_list_cluster)
+    gene_list_cluster = list(set(gene_list_cluster))
+    
+    diff_file=[
+               '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_59_org_whitelist.csv',
+               '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_86_org_whitelist.csv'
+              ]#'/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_13_org_whitelist.csv', 
+    gene_list_cluster=[]
+    for i in range (0, len(diff_file)):
+        with open(diff_file[i]) as file:
+            tsv_file = csv.reader(file, delimiter=",")
+            j=0
+            for line in tsv_file:
+                if j==0:
+                    j=j+1
+                    continue
+                if len(line)>0 and np.float(line[1]) < 0 and np.float(line[3]) < 0.05: 
+                    #print(np.float(line[1]))
+                    gene_list_cluster.append(line[0])
+                j=j+1
+                
+    gene_list_cluster = list(set(gene_list_cluster))             
+    
+    
    
-   signature_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
-   signature_info=defaultdict(list)
-   #barcode_info.append("")
-   i=0
-   with open(signature_file) as file:
-       tsv_file = csv.reader(file, delimiter=",")
-       for line in tsv_file:
-           signature_info[line[0]].append(line[1])
-           i=i+1
+    signature_file='/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv' # 1406
+    signature_info=defaultdict(list)
+    #barcode_info.append("")
+    with open(signature_file) as file:
+        tsv_file = csv.reader(file, delimiter=",")
+        for line in tsv_file:
+            if (line[0].find('Basal') > -1) or (line[0].find('Classical') > -1) :
+                signature_info[line[0]].append(line[1])
+          
    
-   enr = gp.enrichr(gene_list=gene_list_cluster,
-                 gene_sets=signature_info,
-                 organism='human', # don't forget to set organism to the one you desired! e.g. Yeast
-                 outdir=None, # don't write to disk
-                )         
-   enr.results.head(5)
+    signature_info=dict(signature_info)
+    
+    enr = gp.enrichr(gene_list=gene_list_cluster,
+                  gene_sets=signature_info,
+                  background=20000,
+                  #organism='human', # don't forget to set organism to the one you desired! e.g. Yeast
+                  outdir=None # don't write to disk
+                 )         
+    enr.results
 
 
         
