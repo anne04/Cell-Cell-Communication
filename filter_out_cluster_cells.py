@@ -104,7 +104,7 @@ def main(args):
         barcode_info[cell_index].append(gene_list_temp)
         
     
-   target_cluster_id=10
+   target_cluster_id = 59 # BB
    gene_list=[]
    for i in range (0, len(barcode_info)):
        if barcode_info[i][1] == target_cluster_id:
