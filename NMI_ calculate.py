@@ -22,9 +22,9 @@ barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/bar
 
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label_node_embedding.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
+toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
 
-toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
@@ -110,7 +110,7 @@ for barcode in barcode_keys:
         spot_node_pred.append(barcode_label_pred[barcode])
         
 
-print(normalized_mutual_info_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs kena: 0.4
+#print(normalized_mutual_info_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs kena: 0.4
 print(homogeneity_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs kena: .66
 
  #################################################################################  
@@ -125,7 +125,7 @@ for barcode in barcode_keys:
         spot_node_pred.append(barcode_label_pred[barcode])
         
 
-print(normalized_mutual_info_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs pathologist: 0.10
+#print(normalized_mutual_info_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs pathologist: 0.10
 print(homogeneity_score(labels_true=spot_real,labels_pred=spot_node_pred)) # pred vs pathologist: 0.33
 
      
