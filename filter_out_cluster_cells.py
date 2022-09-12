@@ -15,6 +15,7 @@ from scipy import sparse
 import pickle
 import scipy.linalg
 from sklearn.metrics.pairwise import euclidean_distances
+import gseapy as gp
 ####################  get the whole training dataset
 
 
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
 def main(args):
     print("hello world! main")  
-    toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -105,13 +106,13 @@ def main(args):
         
     
    target_cluster_id = 59 # BB
-   gene_list=[]
+   gene_list_cluster=[]
    for i in range (0, len(barcode_info)):
        if barcode_info[i][1] == target_cluster_id:
-           gene_list = gene_list + barcode_info[i][2]
+           gene_list_cluster = gene_list_cluster + barcode_info[i][2]
         
    
-   gene_list = set(gene_list)
+   gene_list_cluster = set(gene_list_cluster)
    
    signature_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
    signature_info=defaultdict(list)
@@ -123,8 +124,12 @@ def main(args):
            signature_info[line[0]].append(line[1])
            i=i+1
    
-           
-
+   enr = gp.enrichr(gene_list=gene_list_cluster,
+                 gene_sets=signature_info,
+                 organism='human', # don't forget to set organism to the one you desired! e.g. Yeast
+                 outdir=None, # don't write to disk
+                )         
+   enr.results.head(5)
 
 
         
