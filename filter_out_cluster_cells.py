@@ -134,10 +134,10 @@ def main(args):
    
     gene_list_cluster = list(set(gene_list_cluster))
     
-    diff_file=[
+    diff_file=['/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_13_org_whitelist.csv', 
                '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_59_org_whitelist.csv',
                '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_86_org_whitelist.csv'
-              ]#'/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_13_org_whitelist.csv', 
+              ]#
     gene_list_cluster=[]
     for i in range (0, len(diff_file)):
         with open(diff_file[i]) as file:
@@ -147,8 +147,8 @@ def main(args):
                 if j==0:
                     j=j+1
                     continue
-                if len(line)>0 and np.float(line[1]) < 0 and np.float(line[3]) < 0.05: 
-                    #print(np.float(line[1]))
+                if len(line)>0 and np.float(line[1]) !=-np.inf  and np.float(line[1]) < 0 : #and np.float(line[3]) < 0.05: 
+                    print(np.float(line[1]))
                     gene_list_cluster.append(line[0])
                 j=j+1
                 
