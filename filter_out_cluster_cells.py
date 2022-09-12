@@ -50,28 +50,21 @@ if __name__ == "__main__":
     
 
 def main(args):
-    print("hello world! main")
-    data_fold = args.data_path #+args.data_name+'/'
-    print(data_fold)
-    
-    adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
-    print(adata_h5)
-    
-    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
-    gene_ids = list(adata_h5.var_names) # 36601
-    cell_genes = defaultdict(list)
-
-    pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
-    pathologist_label=[]
-    with open(pathologist_label_file) as file:
+    print("hello world! main")  
+    toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label=[]
+    with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
         for line in csv_file:
-            pathologist_label.append(line)
+            toomany_label.append(line)
 
-    barcode_tumor=dict()
-    for i in range (1, len(pathologist_label)):
-      if pathologist_label[i][1] == 'tumor': #'Tumour':
-          barcode_tumor[pathologist_label[i][0]] = 1
+    barcode_label=dict()
+    cluster_dict=dict()
+    max=0
+    for i in range (1, len(toomany_label)):
+        if len(toomany_label[i])>0 :
+            barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
+            cluster_dict[int(toomany_label[i][1])]=1
             
     barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
     barcode_info=[]
@@ -80,9 +73,50 @@ def main(args):
     with open(barcode_file) as file:
         tsv_file = csv.reader(file, delimiter="\t")
         for line in tsv_file:
-            barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],-1])
+            barcode_info.append([line[0],-1])
             i=i+1
+            
+    #cluster_dict[-1]=1
+    cluster_label=list(cluster_dict.keys())
+
+    count=0   
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][0] in barcode_label:
+            barcode_info[i][1] = barcode_label[barcode_info[i][0]]
+        else:
+            count=count+1
     
+    data_fold = args.data_path #+args.data_name+'/'
+    print(data_fold)
     
+    adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
+    print(adata_h5)
+    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
+    gene_ids = list(adata_h5.var_names) # 36601
+    #cell_genes = defaultdict(list)
     
+    for cell_index in range (0, gene_list_all.shape[0]):
+        gene_list_temp=[]
+        for gene_index in range (0, gene_list_all.shape[1]):
+            if gene_list_all[cell_index][gene_index]>0:
+                gene_list_temp.append(gene_ids[gene_index])
+                
+        barcode_info[cell_index].append(gene_list_temp)
+        
+    
+   target_cluster_id=10
+   gene_list=[]
+   for i in range (0, len(barcode_info)):
+       if barcode_info[i][1] == target_cluster_id:
+           gene_list = gene_list + barcode_info[i][2]
+        
+   
+   gene_list = set(gene_list)
+    
+   
+           
+
+
+
+        
     
