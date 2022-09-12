@@ -112,7 +112,16 @@ def main(args):
         
    
    gene_list = set(gene_list)
-    
+   
+   signature_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
+   signature_info=defaultdict(list)
+   #barcode_info.append("")
+   i=0
+   with open(signature_file) as file:
+       tsv_file = csv.reader(file, delimiter=",")
+       for line in tsv_file:
+           signature_info[line[0]].append(line[1])
+           i=i+1
    
            
 
