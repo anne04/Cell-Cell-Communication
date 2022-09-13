@@ -22,11 +22,11 @@ barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/bar
 
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label_node_embedding.csv'
-toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
 
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
+toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
 #toomany_label_file="/cluster/home/t116508uhn/64630/spaceranger_too-many-cells.csv"
@@ -42,7 +42,8 @@ max=0
 for i in range (1, len(toomany_label)):
     if len(toomany_label[i])>0 :
         barcode_label_pred[toomany_label[i][0]] = int(toomany_label[i][1])
-
+        cluster_dict[int(toomany_label[i][1])]=1
+print(len(cluster_dict.keys()))
 #################################################################################       
 pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' # 
 pathologist_label=[]
@@ -91,12 +92,7 @@ count=np.zeros((4))
 for i in range (1, len(kena_label)):
   cluster_id = int(kena_label[i][1].split('_')[0].split(' ')[1])
   barcode_label_kena[kena_label[i][0]] = cluster_id
-  '''
-  if cluster_id == 2 or cluster_id == 4 or cluster_id == 7 : 
-      barcode_label_kena[kena_label[i][0]] = 0
-  else:
-      barcode_label_kena[kena_label[i][0]] = 1
-  '''      
+     
       
  #################################################################################  
 
