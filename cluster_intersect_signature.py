@@ -69,8 +69,10 @@ def main(args):
     for i in range (1, len(toomany_label)):
         if len(toomany_label[i])>0 :
             barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
-            cluster_dict[int(toomany_label[i][1])]=1
-            
+            if int(toomany_label[i][1]) in cluster_dict:
+                cluster_dict[int(toomany_label[i][1])]=cluster_dict[int(toomany_label[i][1])]+1
+            else:
+                cluster_dict[int(toomany_label[i][1])]=1
 
     pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
     pathologist_label=[]
@@ -82,9 +84,7 @@ def main(args):
     barcode_tumor=dict()
     for i in range (1, len(pathologist_label)):
       if pathologist_label[i][1] == 'tumor': #'Tumour':
-          barcode_tumor[pathologist_label[i][0]] = 1
-
-            
+          barcode_tumor[pathologist_label[i][0]] = 1           
             
     barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
     barcode_info=[]
@@ -116,13 +116,14 @@ def main(args):
     #sc.pp.highly_variable_genes(adata_h5,flavor='seurat_v3', n_top_genes = 500)
     #print(adata_h5)
     #adata_X = 
-    #sc.pp.normalize_total(adata_h5, target_sum=1) #, exclude_highly_expressed=True)
+    sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True)
     #print(adata_h5)
     #adata_X = 
-    #sc.pp.scale(adata_h5)
+    sc.pp.scale(adata_h5)
     #print(adata_h5)
     
-    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
+    gene_list_all=adata_h5.X
+    #gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
     gene_ids = list(adata_h5.var_names) # 36601
     #cell_genes = defaultdict(list)
     
@@ -136,14 +137,15 @@ def main(args):
         barcode_info[cell_index][2]=gene_list_temp
         
     
-    target_cluster_id = [11, 12] #[60, 61] #[14, 15] #BB
+    target_cluster_id = [14, 15] # #BB[11, 12] # [60, 61] 
     gene_list_cluster=defaultdict(list)
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] in target_cluster_id:
-            for genes in barcode_info[i][2].keys():
+            print(barcode_info[i][1])
+            for genes in list(barcode_info[i][2].keys()):
                 gene_list_cluster[genes] = gene_list_cluster[genes] + barcode_info[i][2][genes]
         
-    for genes in gene_list_cluster.keys():
+    for genes in list(gene_list_cluster.keys()):
         gene_list_cluster[genes]=np.mean(gene_list_cluster[genes])
         
    
@@ -162,19 +164,15 @@ def main(args):
     for signature in signature_info.keys():
         gene_list=signature_info[signature]
         for genes in gene_list_cluster.keys():
+            if genes in gene_list:
+                cluster_signature[signature].append(gene_list_cluster[genes])
             
-          
+    for signature in cluster_signature.keys():
+        cluster_signature[signature]=np.mean(cluster_signature[signature])      
         
     
+    print(cluster_signature)
     
-    
-    enr = gp.enrichr(gene_list=gene_list_cluster,
-                  gene_sets=signature_info,
-                  background=19523,
-                  #organism='human', # don't forget to set organism to the one you desired! e.g. Yeast
-                  outdir=None # don't write to disk
-                 )         
-    enr.results
 
 
         
