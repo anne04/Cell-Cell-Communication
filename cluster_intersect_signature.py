@@ -56,7 +56,7 @@ args = parser.parse_args()
 
 def main(args):
     print("hello world! main")  
-    toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -116,14 +116,14 @@ def main(args):
     #sc.pp.highly_variable_genes(adata_h5,flavor='seurat_v3', n_top_genes = 500)
     #print(adata_h5)
     #adata_X = 
-    sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True)
+    #sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True)
     #print(adata_h5)
     #adata_X = 
-    sc.pp.scale(adata_h5)
+    #sc.pp.scale(adata_h5)
     #print(adata_h5)
     
-    gene_list_all=adata_h5.X
-    #gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
+    #gene_list_all=adata_h5.X
+    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
     gene_ids = list(adata_h5.var_names) # 36601
     #cell_genes = defaultdict(list)
     
@@ -137,7 +137,7 @@ def main(args):
         barcode_info[cell_index][2]=gene_list_temp
         
     
-    target_cluster_id = [14, 15] # #BB[11, 12] # [60, 61] 
+    target_cluster_id = [60,61] #[11, 12] # [14, 15] # #
     gene_list_cluster=defaultdict(list)
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] in target_cluster_id:
