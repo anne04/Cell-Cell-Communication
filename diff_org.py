@@ -56,7 +56,9 @@
     return resDf
 
   def summarizeSig(df):
-    meanRes = df.groupby("signature")["log2FC"].mean()
+    #meanRes = df.groupby("signature")["log2FC"].mean()
+    df = df[df["signature"].str.contains("Classical|Basal")]
+    meanRes = df.groupby("signature").mean()
     statDf = df[df["signature"].str.contains("Classical|Basal")]
     statRes = post.posthoc_mannwhitney(statDf, val_col = "log2FC", group_col = "signature", p_adjust = "fdr_bh")
 
@@ -64,11 +66,11 @@
 
   def main():
     pd.set_option('display.max_columns', 50)
-
+    
     signatureFile = "/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv"
-    nodes = ["10_13", "10_59", "10_73", "10_86", "13_59", "13_73", "13_86", "14_15", "59_73", "59_86", "73_86"] 
+    nodes = ["10_13", "10_59", "10_86"] #, "10_73",  "13_59", "13_73", "13_86", "14_15", "59_73", "59_86", "73_86"] 
     for i in range (0, len(nodes)):
-        print(nodes[i])
+        print('\nfor differential analysis between: ',nodes[i])
         inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
         outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[i]
         outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[i]
@@ -82,7 +84,7 @@
         # resDf = df.sort_values("log2FC", ascending=False)
 
         print(resDf[0])
-        print(resDf[1])
+        #print(resDf[1])
 
 
         resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
