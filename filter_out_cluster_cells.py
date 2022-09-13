@@ -65,7 +65,7 @@ def main(args):
 
     barcode_label=dict()
     cluster_dict=dict()
-    max=0
+    
     for i in range (1, len(toomany_label)):
         if len(toomany_label[i])>0 :
             barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
@@ -111,21 +111,32 @@ def main(args):
     
     adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
     print(adata_h5)
+    sc.pp.filter_genes(adata_h5, min_cells=1)
+    print(adata_h5)
+    #sc.pp.highly_variable_genes(adata_h5,flavor='seurat_v3', n_top_genes = 500)
+    #print(adata_h5)
+    #adata_X = 
+    #sc.pp.normalize_total(adata_h5, target_sum=1) #, exclude_highly_expressed=True)
+    #print(adata_h5)
+    #adata_X = 
+    #sc.pp.scale(adata_h5)
+    #print(adata_h5)
+    
     gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
     gene_ids = list(adata_h5.var_names) # 36601
     #cell_genes = defaultdict(list)
     
     for cell_index in range (0, gene_list_all.shape[0]):
-        gene_list_temp=[]
+        gene_list_temp=defaultdict(list)
         non_zero_index=list(np.where(gene_list_all[cell_index]!=0)[0])
         for gene_index in non_zero_index:
             if gene_list_all[cell_index][gene_index]>0:
-                gene_list_temp.append(gene_ids[gene_index])
+                gene_list_temp[gene_ids[gene_index]].append(gene_list_all[cell_index][gene_index])
                 
-        barcode_info[cell_index][2]=barcode_info[cell_index][2]+gene_list_temp
+        barcode_info[cell_index][2]=gene_list_temp
         
     
-    target_cluster_id = [60, 61] ##[14, 15] #[11, 12] #[60, 61] # BB
+    target_cluster_id = [11, 12] #[60, 61] #[14, 15] #BB
     gene_list_cluster=[]
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] in target_cluster_id:
@@ -134,7 +145,7 @@ def main(args):
    
     gene_list_cluster = list(set(gene_list_cluster))
     
-    diff_file=['/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_13_org_whitelist.csv', 
+    '''diff_file=['/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_13_org_whitelist.csv', 
                '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_59_org_whitelist.csv',
                '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_10_86_org_whitelist.csv'
               ]#
@@ -152,7 +163,7 @@ def main(args):
                     gene_list_cluster.append(line[0])
                 j=j+1
                 
-    gene_list_cluster = list(set(gene_list_cluster))             
+    gene_list_cluster = list(set(gene_list_cluster))  '''           
     
     
    
@@ -170,7 +181,7 @@ def main(args):
     
     enr = gp.enrichr(gene_list=gene_list_cluster,
                   gene_sets=signature_info,
-                  background=20000,
+                  background=19523,
                   #organism='human', # don't forget to set organism to the one you desired! e.g. Yeast
                   outdir=None # don't write to disk
                  )         
