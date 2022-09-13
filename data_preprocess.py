@@ -39,6 +39,23 @@ def read_h5(f, i=0):
             print('Name', f[k].name)
     print("hello world! read_h5_done")
 
+def processFile(f):
+
+    df = pd.read_csv(f)
+    df = df.rename(columns={"symbol": "feature"})
+
+    # Replace infinite updated data with nan
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    # Drop rows with NaN
+    df.dropna(subset=["qVal", "pVal", "log2FC"], inplace=True)
+
+    # df = df[df["qVal"] < 0.05]
+    # df = df[(df["log2FC"]).abs() > 1]
+    df["sample"] = f
+
+    # Get maximum fold change values, one per feature.
+    resDf = df.sort_values("log2FC", ascending=False).drop_duplicates(["feature"])
+    return resDf
 
 def main(args):
     print("hello world! main")
