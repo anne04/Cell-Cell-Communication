@@ -25,9 +25,9 @@ emb_dim= 64 #512
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_r3/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r6_Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_NoPCA_'+str(emb_dim)+'_quantile_weighted_TDistance_2k_l1mp5_temp/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/r1_Embed_X.npy'
-#X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/norm_scale_pca_300fixed_lp8mp2_4layer_emb256_r4_Embed_X.npy' # r4 #test_r1_Embed_X.npy'
+X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/norm_scale_pca_300fixed_lp8mp2_4layer_emb256_r4_Embed_X.npy' # r4 #test_r1_Embed_X.npy'
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/Embedding_data_norm_scale_pca_2k_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/norm_scale_pca_2k_l1mp2_1layer_emb4096_r1_Embed_X.npy'
-X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/test_r4_Embed_X.npy' # r4
+#X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/test_r4_Embed_X.npy' # r4
 X_embedding = np.load(X_embedding_filename)
 num_feature = X_embedding.shape[1]
 
@@ -51,7 +51,8 @@ X_embedding_T = np.transpose(X_embedding)
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X.csv'
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X_bulk.csv'
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X_l1mp5_r3.csv'
-X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X_l1mp5_temp.csv'
+#X_embedding_filename = '/cluster/home/t116508uhn/64630/PCA_'+str(emb_dim)+'Embed_X_l1mp5_temp.csv'
+X_embedding_filename = '/cluster/home/t116508uhn/64630/GCN_r4.csv'
 f=open(X_embedding_filename, 'w', encoding='UTF8', newline='')
 writer = csv.writer(f)
 # write the header
