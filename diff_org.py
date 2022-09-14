@@ -68,7 +68,7 @@
     pd.set_option('display.max_columns', 50)
     
     signatureFile = "/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv"
-    nodes = ["10_13", "10_59", "10_86"] #, "10_73",  "13_59", "13_73", "13_86", "14_15", "59_73", "59_86", "73_86"] 
+    nodes = ["10_13", "10_59", "10_86", "48_10"] #["13_59",  "13_86", "10_13", "48_13"] #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
     for i in range (0, len(nodes)):
         print('\nfor differential analysis between: ',nodes[i])
         inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
