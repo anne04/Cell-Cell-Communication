@@ -56,6 +56,7 @@ args = parser.parse_args()
 
 def main(args):
     print("hello world! main")  
+    #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
     toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
@@ -158,8 +159,8 @@ def main(args):
     
     signature_info=dict(signature_info)
 
-    
-    target_cluster_id = [[11,12,15],[14]] #[[60,61], [11, 12], [14, 15], [88, 87], [46, 47]]
+    #target_cluster_id = [[76]] # [[52, 51, 49]] #[[69, 70, 76 ]] #[[25], [19], [69, 70, 72, 73], [52, 51], [37]]
+    target_cluster_id =[[61]] #[[11,12,15],[14]] #[[60,61], [11, 12], [14, 15], [88, 87], [46, 47]]
     for target_cluster in target_cluster_id:
         gene_list_cluster=defaultdict(list)
         for i in range (0, len(barcode_info)):
