@@ -73,7 +73,10 @@ def main(args):
                 cluster_dict[int(toomany_label[i][1])]=cluster_dict[int(toomany_label[i][1])]+1
             else:
                 cluster_dict[int(toomany_label[i][1])]=1
-
+    
+    print(len(cluster_dict.keys()))
+    print(cluster_dict)
+    
     pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
     pathologist_label=[]
     with open(pathologist_label_file) as file:
@@ -113,6 +116,12 @@ def main(args):
     print(adata_h5)
     sc.pp.filter_genes(adata_h5, min_cells=1)
     print(adata_h5)
+    ####################   
+    gene_ids = list(adata_h5.var_names)
+    temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  #quantile_transform(scipy.sparse.csr_matrix.toarray(adata_h5.X), copy=True)
+    adata_X = np.transpose(temp)    
+    gene_list_all = adata_X
+    #####################
     #sc.pp.highly_variable_genes(adata_h5,flavor='seurat_v3', n_top_genes = 500)
     #print(adata_h5)
     #adata_X = 
@@ -123,8 +132,8 @@ def main(args):
     #print(adata_h5)
     
     #gene_list_all=adata_h5.X
-    gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
-    gene_ids = list(adata_h5.var_names) # 36601
+    #gene_list_all=scipy.sparse.csr_matrix.toarray(adata_h5.X)  # row = cells x genes # (1406, 36601)
+    #gene_ids = list(adata_h5.var_names) # 36601
     #cell_genes = defaultdict(list)
     
     for cell_index in range (0, gene_list_all.shape[0]):
@@ -135,20 +144,9 @@ def main(args):
                 gene_list_temp[gene_ids[gene_index]].append(gene_list_all[cell_index][gene_index])
                 
         barcode_info[cell_index][2]=gene_list_temp
-        
     
-    target_cluster_id = [60,61] #[11, 12] # [14, 15] # #
-    gene_list_cluster=defaultdict(list)
-    for i in range (0, len(barcode_info)):
-        if barcode_info[i][1] in target_cluster_id:
-            print(barcode_info[i][1])
-            for genes in list(barcode_info[i][2].keys()):
-                gene_list_cluster[genes] = gene_list_cluster[genes] + barcode_info[i][2][genes]
-        
-    for genes in list(gene_list_cluster.keys()):
-        gene_list_cluster[genes]=np.mean(gene_list_cluster[genes])
-        
-   
+    
+    
     signature_file='/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv' # 1406
     signature_info=defaultdict(list)
     #barcode_info.append("")
@@ -157,22 +155,37 @@ def main(args):
         for line in tsv_file:
             if (line[0].find('Basal') > -1) or (line[0].find('Classical') > -1) :
                 signature_info[line[0]].append(line[1])
-          
-   
+    
     signature_info=dict(signature_info)
-    cluster_signature=defaultdict(list)
-    for signature in signature_info.keys():
-        gene_list=signature_info[signature]
-        for genes in gene_list_cluster.keys():
-            if genes in gene_list:
-                cluster_signature[signature].append(gene_list_cluster[genes])
-            
-    for signature in cluster_signature.keys():
-        cluster_signature[signature]=np.mean(cluster_signature[signature])      
+
+    
+    target_cluster_id = [[11,12,15],[14]] #[[60,61], [11, 12], [14, 15], [88, 87], [46, 47]]
+    for target_cluster in target_cluster_id:
+        gene_list_cluster=defaultdict(list)
+        for i in range (0, len(barcode_info)):
+            if barcode_info[i][1] in target_cluster:
+                #print(barcode_info[i][1])
+                for genes in list(barcode_info[i][2].keys()):
+                    gene_list_cluster[genes] = gene_list_cluster[genes] + barcode_info[i][2][genes]
+
+        for genes in list(gene_list_cluster.keys()):
+            gene_list_cluster[genes]=np.mean(gene_list_cluster[genes])
+
         
-    
-    print(cluster_signature)
-    
+        cluster_signature=defaultdict(list)
+        for signature in signature_info.keys():
+            gene_list=signature_info[signature]
+            for genes in gene_list_cluster.keys():
+                if genes in gene_list:
+                    cluster_signature[signature].append(gene_list_cluster[genes])
+
+        for signature in cluster_signature.keys():
+            cluster_signature[signature]=np.mean(cluster_signature[signature])      
+
+        print("cluster ID: ", target_cluster)
+        print(cluster_signature)
+        print('\n')
+
 
 
         
