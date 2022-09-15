@@ -41,12 +41,14 @@ args = parser.parse_args()
     
 
 def main(args):
-    print("hello world! main")  
-    name_list = ['13_48_59_86_10', '10_48_59_86_13']
+    print("hello world! main") 
+    node_list = [86, 59, 48, 10, 13]
+    name_list = ['10_13_48_59_86', '10_13_48_86_59', '10_13_59_86_48', '13_48_59_86_10', '10_48_59_86_13']
     n_index = 0
     for n_index in range (0, len(name_list)):
-        toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_'+name_list[n_index]+'_prerank.csv'
-
+        toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_59_86_org_whitelist.csv'
+        #toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_'+name_list[n_index]+'_prerank.csv'
+        #print(node_list[n_index])
         gene_dict=defaultdict(list)
         with open(toomany_label_file) as file:
             csv_file = csv.reader(file, delimiter=",")
@@ -85,13 +87,15 @@ def main(args):
                              verbose=True, # see what's going on behind the scenes
                             )
         print(pre_res.res2d)
-        pre_res.res2d.to_csv('/cluster/home/t116508uhn/64630/'+name_list[n_index]+'_prerank_tagconv_test_r4.csv')
+        pre_res.res2d.to_csv('/cluster/home/t116508uhn/64630/'+'86_vs_59'+'_prerank_tagconv_test_r4.csv')
+        #pre_res.res2d.to_csv('/cluster/home/t116508uhn/64630/'+str(node_list[n_index])+'_prerank_tagconv_test_r4.csv')
 
         terms = pre_res.res2d.Term
-        for i in range (0, 6):
+        for i in range (0, pre_res.res2d.shape[0]):
             # save figure
             # gseaplot(rank_metric=pre_res.ranking, term=terms[i], ofname=save_path+name_str+'_'+str(i)+'_prerank_tagconv_test_r4.svg', **pre_res.results[terms[i]])
-            gseaplot(rank_metric=pre_res.ranking, term=terms[i], ofname='/cluster/home/t116508uhn/64630/'+name_list[n_index]+'_'+str(i)+'_prerank_tagconv_test_r4.svg', **pre_res.results[terms[i]])
+            # gseaplot(rank_metric=pre_res.ranking, term=terms[i], ofname='/cluster/home/t116508uhn/64630/'+str(node_list[n_index])+'_'+str(i)+'_prerank_tagconv_test_r4.svg', **pre_res.results[terms[i]])
+            gseaplot(rank_metric=pre_res.ranking, term=terms[i], ofname='/cluster/home/t116508uhn/64630/'+"86_vs_59"+'_'+str(i)+'_prerank_tagconv_test_r4.svg', **pre_res.results[terms[i]])
 
 
       
