@@ -56,8 +56,8 @@ args = parser.parse_args()
 
 def main(args):
     print("hello world! main")  
-    #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
-    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
+    #toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -159,9 +159,10 @@ def main(args):
     
     signature_info=dict(signature_info)
 
-    #target_cluster_id = [[76]] # [[52, 51, 49]] #[[69, 70, 76 ]] #[[25], [19], [69, 70, 72, 73], [52, 51], [37]]
-    target_cluster_id =[[61]] #[[11,12,15],[14]] #[[60,61], [11, 12], [14, 15], [88, 87], [46, 47]]
+    target_cluster_id = [[25], [19], [69, 70, 72, 73], [52, 51], [37]]
+    #target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #
     for target_cluster in target_cluster_id:
+        print("cluster ID: ", target_cluster)
         gene_list_cluster=defaultdict(list)
         for i in range (0, len(barcode_info)):
             if barcode_info[i][1] in target_cluster:
@@ -180,10 +181,26 @@ def main(args):
                 if genes in gene_list:
                     cluster_signature[signature].append(gene_list_cluster[genes])
 
+        data_list=[]
         for signature in cluster_signature.keys():
-            cluster_signature[signature]=np.mean(cluster_signature[signature])      
-
-        print("cluster ID: ", target_cluster)
+            data_list.append(np.array(cluster_signature[signature]))
+            print("%s = %d "%(signature, len(cluster_signature[signature])))
+            #cluster_signature[signature]=np.mean(cluster_signature[signature]) 
+       
+        print("\n")
+        #fig = plt.figure(figsize =(10, 7))
+        # Creating axes instance
+        #ax = fig.add_axes([0, 0, 1, 1])
+        fig, ax = plt.subplots()
+        plt.rc('xtick', labelsize=6)
+        ax.boxplot(data_list,labels=['Basal A', 'Basal A DE', 'BasalB FOXJ1', 'Classical A', 'Classical A DE', 'ClassicalB_Sabrinalist'])
+        #plt.show()
+        # Creating plot
+        #bp = ax.boxplot(data_list)
+        save_path = '/cluster/home/t116508uhn/64630/'
+        plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_GCN_r4.svg', dpi=400)
+        plt.clf()
+        
         print(cluster_signature)
         print('\n')
 
