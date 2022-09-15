@@ -56,8 +56,8 @@ args = parser.parse_args()
 
 def main(args):
     print("hello world! main")  
-    #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
-    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
+    #toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -91,7 +91,27 @@ def main(args):
           barcode_tumor[pathologist_label[i][0]] = 1           
             
 
+    barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
+    barcode_info=[]
+    #barcode_info.append("")
+    i=0
+    with open(barcode_file) as file:
+        tsv_file = csv.reader(file, delimiter="\t")
+        for line in tsv_file:
+            barcode_info.append([line[0],-1,[]])
+            i=i+1
+            
+    #cluster_dict[-1]=1
+    cluster_label=list(cluster_dict.keys())
+
+    count=0   
+    for i in range (0, len(barcode_info)):
+        if (barcode_info[i][0] in barcode_label) and (barcode_info[i][0] in barcode_tumor):
+            barcode_info[i][1] = barcode_label[barcode_info[i][0]]
+        else:
+            count=count+1
     
+            
     data_fold = args.data_path #+args.data_name+'/'
     print(data_fold)
     
@@ -120,27 +140,7 @@ def main(args):
     #cell_genes = defaultdict(list)
     
     ####
-    barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv' # 1406
-    barcode_info=dict()
-    #barcode_info.append("")
-    i=0
-    with open(barcode_file) as file:
-        tsv_file = csv.reader(file, delimiter="\t")
-        for line in tsv_file:
-            if line[0] in gene_ids:
-                barcode_info[line[0]]=[-1,[]]
-            i=i+1
-            
-    #cluster_dict[-1]=1
-    cluster_label=list(cluster_dict.keys())
 
-    count=0   
-    for barcode in barcode_info.keys():
-        if (barcode in barcode_label) and (barcode in barcode_tumor):
-            barcode_info[barcode][0] = barcode_label[barcode] # cluster id
-        else:
-            count=count+1
-            
     
     for cell_index in range (0, gene_list_all.shape[0]):
         gene_list_temp = dict() #defaultdict(list)
@@ -149,7 +149,7 @@ def main(args):
             if gene_list_all[cell_index][gene_index]>0:
                 gene_list_temp[gene_ids[gene_index]] = gene_list_all[cell_index][gene_index] #.append(gene_list_all[cell_index][gene_index])
                 
-        barcode_info[gene_ids[cell_index]][1]=gene_list_temp
+        barcode_info[cell_index][2]=gene_list_temp
     
     
     
@@ -164,28 +164,28 @@ def main(args):
     
     signature_info=dict(signature_info)
 
-    #target_cluster_id = [[25], [19]] #, [69, 70, 72, 73], [52, 51], [37]]
-    target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
+    target_cluster_id = [[76]] #,[25], [19], [69, 70, 72, 73], [52, 51], [37]]
+    #target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
     for target_cluster in target_cluster_id:
         print("cluster ID: ", target_cluster)
         cell_list_cluster=[]
-        for barcode in barcode_info.keys(): # each i is a cell
-            if barcode_info[barcode][0] in target_cluster:
+        for i in range (0, len(barcode_info)): # each i is a cell
+            if  barcode_info[i][1] in target_cluster:
                 #print(barcode_info[i][1])
                 signature_dict=dict()
                 for signature in signature_info.keys():
                     signature_dict[signature]=[0]
-                for gene in list(barcode_info[barcode][1].keys()):
+                for gene in list(barcode_info[i][2].keys()):
                     for signature in signature_info.keys():
                         if gene in signature_info[signature]:
-                            signature_dict[signature].append(barcode_info[barcode][1][gene])
+                            signature_dict[signature].append(barcode_info[i][2][gene])
                 
                 for signature in signature_info.keys():
                     signature_dict[signature]=np.mean(signature_dict[signature])
                     
-                barcode_info[barcode].append(signature_dict)
+                barcode_info[i].append(signature_dict)
                 
-                cell_list_cluster.append(barcode_info[barcode])
+                cell_list_cluster.append(barcode_info[i])
 
         
         signature_dict=dict()
@@ -194,7 +194,7 @@ def main(args):
             
         for cell in cell_list_cluster:
             for signature in signature_info.keys():
-                signature_dict[signature].append(cell[2][signature])
+                signature_dict[signature].append(cell[3][signature])
                 
         data_group = []
         for signature in signature_info.keys():
@@ -208,9 +208,11 @@ def main(args):
         # Creating plot
         #bp = ax.boxplot(data_list)
         save_path = '/cluster/home/t116508uhn/64630/'
-        plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
+        #plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
         #plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
-        #plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
+        plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
+        #plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
+        #plt.savefig(save_path+"69_70_72_73"+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
         plt.clf()
         
      
