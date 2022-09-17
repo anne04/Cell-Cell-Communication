@@ -162,6 +162,17 @@ for i in range (1, len(toomany_label)):
     if len(toomany_label[i])>0 :
         barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
         cluster_dict[int(toomany_label[i][1])]=1
+        if int(toomany_label[i][1]) == 61:  
+            barcode_label[toomany_label[i][0]] = 60
+        if int(toomany_label[i][1]) == 88:  
+            barcode_label[toomany_label[i][0]] = 87
+        if int(toomany_label[i][1]) == 47:  
+            barcode_label[toomany_label[i][0]] = 46
+        if int(toomany_label[i][1]) == 12:  
+            barcode_label[toomany_label[i][0]] = 11
+        if int(toomany_label[i][1]) == 15:  
+            barcode_label[toomany_label[i][0]] = 14
+        
 ############
 
 barcode_info=[]
