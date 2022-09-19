@@ -128,10 +128,15 @@ import pickle
 from scipy import sparse
 import scipy.io as sio
 import scanpy as sc
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import altair as alt
+from vega_datasets import data
+
+
+
 
 #coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
@@ -196,71 +201,33 @@ for i in range (0, len(barcode_info)):
         
 print(count)
 print(len(cluster_label))
-number = 20
-cmap = plt.get_cmap('tab20')
-colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
-number = 20
-cmap = plt.get_cmap('tab20b')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+data_list=dict()
+data_list['cluster_label']=[]
+data_list['X']=[]
+data_list['Y']=[]
+for i in range (0, len(barcode_info)):
+    data_list['cluster_label']=append(barcode_info[i][3])
+    data_list['X']=append(barcode_info[i][1])
+    data_list['Y']=append(barcode_info[i][2])
 
-colors=colors+colors_2
-
-number = 20
-cmap = plt.get_cmap('tab20c')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
-number = 8
-cmap = plt.get_cmap('Set2')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
-number = 12
-cmap = plt.get_cmap('Set3')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
+data_list_pd = pd.DataFrame(data_list)
 
 
-#colors=get_colour_scheme('plasma', len(cluster_label))
 
-cell_count_cluster=np.zeros((len(cluster_label)))
 
-for j in range (0, len(cluster_label)):
-    label_i = cluster_label[j]
-    x_index=[]
-    y_index=[]
-    for i in range (0, len(barcode_info)):
-        if barcode_info[i][3] == label_i:
-            x_index.append(barcode_info[i][1])
-            y_index.append(barcode_info[i][2])
-            cell_count_cluster[j] = cell_count_cluster[j]+1
-            spot_color = colors[j]
-            ###############
-            if barcode_info[i][3] == 61:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 88:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 47:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 12:  
-                spot_color = colors[j-1]
-            #if barcode_info[i][3] == 15:  
-            #    barcode_label[toomany_label[i][0]] = 14
 
-            ###############
-            
-            
-        
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = cluster_label[j], color=spot_color)     
-    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
-    
-plt.legend(fontsize=4,loc='upper right')
+chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    #alt.Size('pop:Q'),
+    color=alt.Color('cluster_label:N', scale=alt.Scale(scheme=get_colour_scheme('plasma', len(cluster_label))))
+    alt.OpacityValue(0.5)
+)
+
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
-#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
-plt.clf()
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg')
+
+
+
