@@ -207,27 +207,56 @@ data_list['cluster_label']=[]
 data_list['X']=[]
 data_list['Y']=[]
 for i in range (0, len(barcode_info)):
-    data_list['cluster_label']=append(barcode_info[i][3])
-    data_list['X']=append(barcode_info[i][1])
-    data_list['Y']=append(barcode_info[i][2])
+    data_list['cluster_label'].append(barcode_info[i][3])
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
 
 data_list_pd = pd.DataFrame(data_list)
 
 
+########
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 8
+cmap = plt.get_cmap('Set2')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+
+#######
 
 
 chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
     #alt.Size('pop:Q'),
-    color=alt.Color('cluster_label:N', scale=alt.Scale(scheme=get_colour_scheme('plasma', len(cluster_label))))
-    alt.OpacityValue(0.5)
+    color=alt.Color('cluster_label:N', scale=alt.Scale(colors))
 )
 
 
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg')
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
 
 
 
