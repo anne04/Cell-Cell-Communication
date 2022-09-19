@@ -162,7 +162,7 @@ for i in range (1, len(toomany_label)):
     if len(toomany_label[i])>0 :
         barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
         cluster_dict[int(toomany_label[i][1])]=1
-        if int(toomany_label[i][1]) == 61:  
+        '''if int(toomany_label[i][1]) == 61:  
             barcode_label[toomany_label[i][0]] = 60
         if int(toomany_label[i][1]) == 88:  
             barcode_label[toomany_label[i][0]] = 87
@@ -171,7 +171,7 @@ for i in range (1, len(toomany_label)):
         if int(toomany_label[i][1]) == 12:  
             barcode_label[toomany_label[i][0]] = 11
         if int(toomany_label[i][1]) == 15:  
-            barcode_label[toomany_label[i][0]] = 14
+            barcode_label[toomany_label[i][0]] = 14'''
         
 ############
 
@@ -238,9 +238,24 @@ for j in range (0, len(cluster_label)):
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
             cell_count_cluster[j] = cell_count_cluster[j]+1
+            spot_color = colors[j]
+            ###############
+            if barcode_info[i][3] == 61:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 88:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 47:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 12:  
+                spot_color = colors[j-1]
+            #if barcode_info[i][3] == 15:  
+            #    barcode_label[toomany_label[i][0]] = 14
+
+            ###############
+            
             
         
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = cluster_label[j], color=colors[j])     
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = cluster_label[j], color=spot_color)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
 #plt.legend(fontsize=4,loc='upper right')
