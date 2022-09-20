@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
@@ -23,18 +23,18 @@ barcode_label=[]
 with open(barcode_file) as file:
     csv_file = csv.reader(file, delimiter="\t")
     for line in csv_file:
-        barcode_label.append(line)
+        barcode_label.append(line[0])
         
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label_node_embedding.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
 
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
+toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
-toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv' #GCN_r4_toomanycells_org_labels.csv' # #GCN_r7_toomanycells_minsize20_labels.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters.csv' #_org.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv' #GCN_r4_toomanycells_org_labels.csv' # #GCN_r7_toomanycells_minsize20_labels.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
 #toomany_label_file="/cluster/home/t116508uhn/64630/spaceranger_too-many-cells.csv"
 toomany_label=[]
@@ -138,16 +138,16 @@ print('ARI: pathologist: %g '%adjusted_rand_score(labels_true=spot_real, labels_
     
 
 #############################
-cluster_list = np.zeros((len(cluster_dict.keys())))
-true_label_list = np.zeros((len(true_label_dict.keys())))
-    
+
 max_matched = np.zeros((len(cluster_dict.keys())))
-for k in range (0, len(cluster_dict.keys())):
-    p = cluster_dict[k] 
+cluster_list = list(cluster_dict.keys())
+
+for k in range (0, len(cluster_list)):
+    p = cluster_list[k]
     temp_max = 0
-    for t in true_label_list.keys():  
+    for t in true_label_dict.keys():  
         count = 0
-        barcodes_list = true_label_list[t]
+        barcodes_list = true_label_dict[t]
         for barcode in barcodes_list:
             if barcode in barcode_label_pathologist and barcode in barcode_label_pred: 
                 if barcode in cluster_dict[p]:
@@ -158,12 +158,12 @@ for k in range (0, len(cluster_dict.keys())):
     
     max_matched[k] = temp_max
     
- N_cells = 0
- for barcode in barcode_label:
+N_cells = 0
+for barcode in barcode_label:
     if barcode in barcode_label_pathologist and barcode in barcode_label_pred: 
         N_cells = N_cells + 1
-        
- purity_cluster = np.sum(max_matched)/N_cells 
-        
+
+purity_cluster = np.sum(max_matched)/N_cells 
+print('purity: pathologist: %g'%purity_cluster)       
         
         
