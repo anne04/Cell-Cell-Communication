@@ -166,4 +166,43 @@ for barcode in barcode_label:
 purity_cluster = np.sum(max_matched)/N_cells 
 print('purity: pathologist: %g'%purity_cluster)       
         
+#############################
+
+entropy_cluster = np.zeros((len(cluster_dict.keys())))
+cluster_list = list(cluster_dict.keys())
+
+
+for k in range (0, len(cluster_list)):
+    p = cluster_list[k]
+    cluster_count = len(cluster_dict[p])
+    
+    H_sum = 0
+    for t in true_label_dict.keys():  
+        count_match = 0
+        barcodes_list = true_label_dict[t]
+        for barcode in barcodes_list:
+            if barcode in barcode_label_pathologist and barcode in barcode_label_pred: 
+                if barcode in cluster_dict[p]:
+                    count_match = count_match+1
         
+        #print(count_match/cluster_count)
+        if count_match/cluster_count != 0:
+            H_sum = H_sum + (count_match/cluster_count)*np.log(count_match/cluster_count)
+    
+    
+    entropy_cluster[k] = H_sum
+    
+    
+N_cells = 0
+for barcode in barcode_label:
+    if barcode in barcode_label_pathologist and barcode in barcode_label_pred: 
+        N_cells = N_cells + 1
+
+        
+        
+entropy_total = 0
+for k in range (0, len(cluster_list)):
+    entropy_total = entropy_total + (len(cluster_dict[cluster_list[k]])*entropy_cluster[k])/N_cells
+
+
+print('entropy_total: pathologist: %g'%entropy_total)           
