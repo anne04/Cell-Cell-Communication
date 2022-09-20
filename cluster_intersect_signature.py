@@ -158,7 +158,13 @@ def main(args):
                 signature_info[line[0]].append(line[1])
     
     signature_info=dict(signature_info)
-
+    for signature in signature_info.keys():
+        gene_list=signature_info[signature]
+        print(signature+"\n")
+        for gene in gene_list:
+            print(" \\\""+ gene +"\\\",", end = ' ')
+    
+    
     target_cluster_id = [[25], [19], [69, 70, 72, 73], [52, 51], [37]]
     #target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #
     for target_cluster in target_cluster_id:
