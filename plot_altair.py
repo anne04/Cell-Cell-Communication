@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
 from typing import List
 
+def rgb_to_hex(rgb):
+    return '%02x%02x%02x' % rgb
+
 def get_colour_scheme(palette_name: str, num_colours: int) -> List[str]:
     """Extend a colour scheme using colour interpolation.
 
@@ -134,8 +137,41 @@ import scanpy as sc
 #import matplotlib.pyplot as plt
 import altair as alt
 from vega_datasets import data
+import pandas as pd
 
 
+
+########
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 8
+cmap = plt.get_cmap('Set2')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+
+#####
 
 
 #coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
@@ -202,46 +238,29 @@ for i in range (0, len(barcode_info)):
 print(count)
 print(len(cluster_label))
 
+####
+
+index_array = dict()
+for i in range (0, len(cluster_label)):
+    index_array[cluster_label[i]] = i
+    
+
+
 data_list=dict()
 data_list['cluster_label']=[]
 data_list['X']=[]
 data_list['Y']=[]
+data_list['colors']=[]
 for i in range (0, len(barcode_info)):
     data_list['cluster_label'].append(barcode_info[i][3])
     data_list['X'].append(barcode_info[i][1])
     data_list['Y'].append(-barcode_info[i][2])
+    data_list['colors'].append(matplotlib.colors.to_hex([colors[index_array[barcode_info[i][3]]][0], colors[index_array[barcode_info[i][3]]][1], colors[index_array[barcode_info[i][3]]][2]]) )
+
+
 
 data_list_pd = pd.DataFrame(data_list)
 
-
-########
-number = 20
-cmap = plt.get_cmap('tab20')
-colors = [cmap(i) for i in np.linspace(0, 1, number)]
-
-number = 20
-cmap = plt.get_cmap('tab20b')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
-number = 20
-cmap = plt.get_cmap('tab20c')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
-number = 8
-cmap = plt.get_cmap('Set2')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
-number = 12
-cmap = plt.get_cmap('Set3')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
 
 
 #######
@@ -251,7 +270,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
     #alt.Size('pop:Q'),
-    color=alt.Color('cluster_label:N', scale=alt.Scale(colors))
+    color=alt.Color('cluster_label:N', colors)
 )
 
 
