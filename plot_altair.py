@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
 from typing import List
 
+
 def rgb_to_hex(rgb):
     return '%02x%02x%02x' % rgb
 
@@ -171,6 +172,10 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
 
+
+for i in range (0, len(colors)): 
+    colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
+
 #####
 
 
@@ -250,12 +255,12 @@ data_list=dict()
 data_list['cluster_label']=[]
 data_list['X']=[]
 data_list['Y']=[]
-data_list['colors']=[]
+
 for i in range (0, len(barcode_info)):
     data_list['cluster_label'].append(barcode_info[i][3])
     data_list['X'].append(barcode_info[i][1])
     data_list['Y'].append(-barcode_info[i][2])
-    data_list['colors'].append(matplotlib.colors.to_hex([colors[index_array[barcode_info[i][3]]][0], colors[index_array[barcode_info[i][3]]][1], colors[index_array[barcode_info[i][3]]][2]]) )
+    
 
 
 
@@ -270,8 +275,8 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
     #alt.Size('pop:Q'),
-    color=alt.Color('cluster_label:N', colors)
-)
+    color=alt.Color('cluster_label:N', scale=alt.Scale(range=colors))
+).configure_legend(labelFontSize=6, symbolLimit=50)
 
 
 save_path = '/cluster/home/t116508uhn/64630/'
