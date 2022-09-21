@@ -21,7 +21,10 @@
   import numpy as np
   import sys
   import scikit_posthocs as post
-
+  import altair as alt
+ 
+  
+  
   def processFile(f):
 
     df = pd.read_csv(f)
@@ -67,13 +70,19 @@
   def main():
     pd.set_option('display.max_columns', 50)
     
-    signatureFile = "/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv"
-    nodes = ["10_13", "10_59", "10_86", "48_10"] #["13_59",  "13_86", "10_13", "48_13"] #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
-    for i in range (0, len(nodes)):
-        print('\nfor differential analysis between: ',nodes[i])
-        inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
-        outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[i]
-        outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[i]
+    signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly.csv" #GeneList_KF_22Aug10.csv"
+    nodes = #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
+    nodes = [["13_10", "48_10", "59_10", "86_10"], ["10_13", "48_13", "59_13", "86_13"]]
+    target = ["10", "13"]
+    j = 0
+    logfc_values = np.zeros((4,5)) # each row is for one node
+    for i in range (0, len(nodes[j])):
+        print('\nfor differential analysis between: ',nodes[j][i])
+        inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[j][i]+"_prerank.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+
+        #inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+        outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
+        outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
         #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
         dfs = processFile(inFilesSig)
         sDf = processSignatureFile(signatureFile)
@@ -86,16 +95,40 @@
         print(resDf[0])
         #print(resDf[1])
 
-
         resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
         resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv") #, index = False)
 
         resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv") #, index = False)
         resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv") #, index = False)
         
+        type = 0
+        for k in range (0, resDf[0].values.shape[0]):
+          if resDf[0].index[k] == "Basal A New 05":
+              continue
+          logfc_values[i][type] = resDf[0].values[k,0]
+          type = type + 1
+          
 
     # print(outFile)
+    # Compute x^2 + y^2 across a 2D grid
+    x, y = np.meshgrid(range(-3, 2), range(-2, 2))
 
+
+    # Convert this grid to columnar data expected by Altair
+    source = pd.DataFrame({'x': x.ravel(),
+                         'y': y.ravel(),
+                         'z': logfc_values.ravel()})
+
+    chart = alt.Chart(source).mark_rect().encode(
+        x='x:O',
+        y='y:O',
+        color='z:Q'
+    )
+    
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+target[j]+'_heatmap.html')
+
+    
     return
 
   if __name__ == "__main__":
