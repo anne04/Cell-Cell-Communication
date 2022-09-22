@@ -71,62 +71,62 @@
     pd.set_option('display.max_columns', 50)
     
     signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly.csv" #GeneList_KF_22Aug10.csv"
-    nodes = #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
-    nodes = [["13_10", "48_10", "59_10", "86_10"], ["10_13", "48_13", "59_13", "86_13"]]
-    target = ["10", "13"]
-    j = 0
-    logfc_values = np.zeros((4,5)) # each row is for one node
-    for i in range (0, len(nodes[j])):
-        print('\nfor differential analysis between: ',nodes[j][i])
-        inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[j][i]+"_prerank.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+    #nodes = #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
+    nodes = [["13_10", "48_10", "59_10", "86_10"], ["10_13", "48_13", "59_13", "86_13"], ["10_48", "13_48", "59_48", "86_48"], ["10_59", "13_59", "48_59", "86_59"], ["10_86", "13_86", "48_86", "59_86"]]
+    target = ["10", "13", "48", "59", "86"]
+    for j in range (0, len(target)):
+        logfc_values = np.zeros((4,5)) # each row is for one node
+        for i in range (0, len(nodes[j])):
+            print('\nfor differential analysis between: ',nodes[j][i])
+            inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[j][i]+"_prerank.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
 
-        #inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
-        outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
-        outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
-        #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
-        dfs = processFile(inFilesSig)
-        sDf = processSignatureFile(signatureFile)
+            #inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
+            outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
+            outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
+            #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
+            dfs = processFile(inFilesSig)
+            sDf = processSignatureFile(signatureFile)
 
-        #df = pd.concat(map(lambda x: intersect(x, sDf), dfs))
-        df = intersect(dfs, sDf)
-        resDf = summarizeSig(df)
-        # resDf = df.sort_values("log2FC", ascending=False)
+            #df = pd.concat(map(lambda x: intersect(x, sDf), dfs))
+            df = intersect(dfs, sDf)
+            resDf = summarizeSig(df)
+            # resDf = df.sort_values("log2FC", ascending=False)
 
-        print(resDf[0])
-        #print(resDf[1])
+            print(resDf[0])
+            #print(resDf[1])
 
-        resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
-        resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv") #, index = False)
+            resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
+            resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv") #, index = False)
 
-        resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv") #, index = False)
-        resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv") #, index = False)
-        
-        type = 0
-        for k in range (0, resDf[0].values.shape[0]):
-          if resDf[0].index[k] == "Basal A New 05":
-              continue
-          logfc_values[i][type] = resDf[0].values[k,0]
-          type = type + 1
-          
+            resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv") #, index = False)
+            resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv") #, index = False)
 
-    # print(outFile)
-    # Compute x^2 + y^2 across a 2D grid
-    x, y = np.meshgrid(range(-3, 2), range(-2, 2))
+            type = 0
+            for k in range (0, resDf[0].values.shape[0]):
+              if resDf[0].index[k] == "Basal A New 05":
+                  continue
+              logfc_values[i][type] = resDf[0].values[k,0]
+              type = type + 1
 
 
-    # Convert this grid to columnar data expected by Altair
-    source = pd.DataFrame({'x': x.ravel(),
-                         'y': y.ravel(),
-                         'z': logfc_values.ravel()})
+        # print(outFile)
+        # Compute x^2 + y^2 across a 2D grid
+        x, y = np.meshgrid(range(-3, 2), range(-2, 2))
 
-    chart = alt.Chart(source).mark_rect().encode(
-        x='x:O',
-        y='y:O',
-        color='z:Q'
-    )
-    
-    save_path = '/cluster/home/t116508uhn/64630/'
-    chart.save(save_path+target[j]+'_heatmap.html')
+
+        # Convert this grid to columnar data expected by Altair
+        source = pd.DataFrame({'x': x.ravel(),
+                             'y': y.ravel(),
+                             'z': logfc_values.ravel()})
+
+        chart = alt.Chart(source).mark_rect().encode(
+            x='x:O',
+            y='y:O',
+            color='z:Q'
+        )
+
+        save_path = '/cluster/home/t116508uhn/64630/'
+        chart.save(save_path+target[j]+'_heatmap.html')
 
     
     return
