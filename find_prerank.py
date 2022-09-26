@@ -38,7 +38,24 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 args = parser.parse_args()
 
 #    main(args)
-    
+def processFile(f):
+
+    df = pd.read_csv(f)
+    df = df.rename(columns={"symbol": "feature"})
+
+    # Replace infinite updated data with nan
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    # Drop rows with NaN
+    df.dropna(subset=["qVal", "pVal", "log2FC"], inplace=True)
+
+    # df = df[df["qVal"] < 0.05]
+    # df = df[(df["log2FC"]).abs() > 1]
+    df["sample"] = f
+
+    # Get maximum fold change values, one per feature.
+    resDf = df.sort_values("log2FC", ascending=False).drop_duplicates(["feature"])
+
+    return resDf
 
 def main(args):
     print("hello world! main") 
@@ -50,6 +67,11 @@ def main(args):
         #toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_'+name_list[n_index]+'_prerank.csv'
         #print(node_list[n_index])
         gene_dict=defaultdict(list)
+        
+        
+        #dfs = processFile(toomany_label_file )
+        
+        
         with open(toomany_label_file) as file:
             csv_file = csv.reader(file, delimiter=",")
             i = 0
