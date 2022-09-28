@@ -30,9 +30,9 @@ with open(barcode_file) as file:
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
 
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
-toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
+#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
+toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_org_labels.csv' #GCN_r4_toomanycells_minsize20_labels.csv' # #GCN_r7_toomanycells_minsize20_labels.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
@@ -204,5 +204,5 @@ entropy_total = 0
 for k in range (0, len(cluster_list)):
     entropy_total = entropy_total + (len(cluster_dict[cluster_list[k]])*entropy_cluster[k])/N_cells
 
-
+entropy_total = - entropy_total
 print('entropy_total: pathologist: %g'%entropy_total)           
