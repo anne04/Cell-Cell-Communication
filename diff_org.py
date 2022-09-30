@@ -14,18 +14,18 @@
 #* Intersection
 #+name: find-intersection
 #+begin_src python :results output :var inFilesSig=in-files-sig
-  import os
-  #import glob
-  import pandas as pd
-  #import shutil
-  import numpy as np
-  import sys
-  import scikit_posthocs as post
-  import altair as alt
- 
-  
-  
-  def processFile(f):
+import os
+#import glob
+import pandas as pd
+#import shutil
+import numpy as np
+import sys
+import scikit_posthocs as post
+import altair as alt
+
+
+
+def processFile(f):
 
     df = pd.read_csv(f)
     df = df.rename(columns={"symbol": "feature"})
@@ -44,21 +44,21 @@
 
     return resDf
 
-  def processSignatureFile(f):
+def processSignatureFile(f):
 
     df = pd.read_csv(f)
 
     resDf = df.rename(columns={"Name": "feature", "List": "signature"})
-    
+
     return resDf
 
-  def intersect(df, sDf):
+def intersect(df, sDf):
     resDf = df.merge(sDf, how="inner", on="feature")[["feature", "log2FC", "pVal", "qVal", "signature", "sample"]]
     resDf.drop_duplicates(inplace=True)
 
     return resDf
 
-  def summarizeSig(df):
+def summarizeSig(df):
     #meanRes = df.groupby("signature")["log2FC"].mean()
     df = df[df["signature"].str.contains("Classical|Basal")]
     meanRes = df.groupby("signature").mean()
@@ -67,10 +67,10 @@
 
     return (meanRes, statRes)
 
-  def main():
+def main():
     pd.set_option('display.max_columns', 50)
     
-    signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly.csv" #GeneList_KF_22Aug10.csv"
+    signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv" #GeneList_KF_22Aug10.csv"
     #nodes = #["10_59", "13_59", "59_86", "48_59"] #["10_86", "13_86", "59_86", "48_86"] #["48_10", "48_13", "48_59", "48_86"] #, "13_73", "10_73",  , "14_15", "59_73", "59_86", "73_86"] 
     nodes = [["13_10", "48_10", "59_10", "86_10"], ["10_13", "48_13", "59_13", "86_13"], ["10_48", "13_48", "59_48", "86_48"], ["10_59", "13_59", "48_59", "86_59"], ["10_86", "13_86", "48_86", "59_86"]]
     target = ["10", "13", "48", "59", "86"]
@@ -131,6 +131,6 @@
     
     return
 
-  if __name__ == "__main__":
+if __name__ == "__main__":
       status = main()
       sys.exit(status)
