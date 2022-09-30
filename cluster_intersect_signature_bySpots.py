@@ -152,7 +152,7 @@ def main(args):
         barcode_info[cell_index][2]=gene_list_temp
     
     
-    signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv"
+    signature_file = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv"
     signature_info=defaultdict(list)
     #barcode_info.append("")
     with open(signature_file) as file:
@@ -164,7 +164,7 @@ def main(args):
     signature_info=dict(signature_info)
 
     #target_cluster_id = [[76]] #,[25], [19], [69, 70, 72, 73], [52, 51], [37]]
-    target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
+    target_cluster_id =[[60,61] , [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
     for target_cluster in target_cluster_id:
         print("cluster ID: ", target_cluster)
         cell_list_cluster=[]
@@ -188,21 +188,21 @@ def main(args):
 
         
         signature_dict=dict()
-        for signature in signature_info.keys():
+        for signature in sorted(list(signature_info.keys())):
             signature_dict[signature]=[]
             
         for cell in cell_list_cluster:
-            for signature in signature_info.keys():
+            for signature in sorted(list(signature_info.keys())):
                 signature_dict[signature].append(cell[3][signature])
                 
         data_group = []
-        for signature in signature_info.keys():
+        for signature in sorted(list(signature_info.keys())):
             data_group.append(np.array(signature_dict[signature]))
         
 
         fig, ax = plt.subplots()
         plt.rc('xtick', labelsize=6)
-        ax.boxplot(data_group,labels=['Basal A', 'Basal A DE', 'BasalB FOXJ1', 'Classical A', 'Classical A DE', 'ClassicalB_Sabrinalist'])
+        ax.boxplot(data_group,labels=['Basal A DE', 'BasalB FOXJ1', 'Classical A DE', 'Classical B New 10']) #'Basal A', 'Basal A DE', 'BasalB FOXJ1', 'Classical A', 'Classical A DE', 'ClassicalB_Sabrinalist'
         #plt.show()
         # Creating plot
         #bp = ax.boxplot(data_list)
