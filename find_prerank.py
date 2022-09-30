@@ -61,8 +61,8 @@ def main(args):
     print("hello world! main") 
     node_list = [86, 59, 48, 10, 13]
     name_list = ['10_13_48_59_86', '10_13_48_86_59', '10_13_59_86_48', '13_48_59_86_10', '10_48_59_86_13']
-    n_index = 2
-    #for n_index in range (0, len(name_list)):
+    #n_index = 2
+    for n_index in range (0, len(name_list)):
         #toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_14_15_org_whitelist.csv'
         toomany_label_file = '/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_'+name_list[n_index]+'_prerank.csv'
         #print(node_list[n_index])
@@ -85,8 +85,8 @@ def main(args):
         for gene in gene_dict:
             gene_dict[gene]=np.mean(gene_dict[gene])
 
-        #signature_file='/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly.csv' # 1406
-        signature_file='/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv'
+        signature_file='/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv' # 1406
+        #signature_file='/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv'
         signature_info=defaultdict(list)
         #barcode_info.append("")
         with open(signature_file) as file:
