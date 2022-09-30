@@ -56,8 +56,8 @@ args = parser.parse_args()
 
 def main(args):
     print("hello world! main")  
-    toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
-    #toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
+    #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r4_toomanycells_minsize20_labels.csv'
+    toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'#'/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv'     
     toomany_label=[]
     with open(toomany_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -78,7 +78,7 @@ def main(args):
     print(len(cluster_dict.keys()))
     print(cluster_dict)
     
-    pathologist_label_file='/cluster/home/t116508uhn/64630/tumor_64630_D1_IX_annotation.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #tumor_64630_D1_IX_annotation.csv' #
     pathologist_label=[]
     with open(pathologist_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -152,8 +152,7 @@ def main(args):
         barcode_info[cell_index][2]=gene_list_temp
     
     
-    
-    signature_file='/cluster/home/t116508uhn/64630/GeneList_KF_22Aug10.csv' # 1406
+    signatureFile = "/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv"
     signature_info=defaultdict(list)
     #barcode_info.append("")
     with open(signature_file) as file:
@@ -164,8 +163,8 @@ def main(args):
     
     signature_info=dict(signature_info)
 
-    target_cluster_id = [[76]] #,[25], [19], [69, 70, 72, 73], [52, 51], [37]]
-    #target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
+    #target_cluster_id = [[76]] #,[25], [19], [69, 70, 72, 73], [52, 51], [37]]
+    target_cluster_id =[[60,61], [11,12], [14,15], [88,87], [46,47]] #[[61]] #[[11,12,15],[14]] #[[60],[61]] #
     for target_cluster in target_cluster_id:
         print("cluster ID: ", target_cluster)
         cell_list_cluster=[]
@@ -208,9 +207,9 @@ def main(args):
         # Creating plot
         #bp = ax.boxplot(data_list)
         save_path = '/cluster/home/t116508uhn/64630/'
-        #plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
+        plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
         #plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_TAGConv_test_r4_bySpot.svg', dpi=400)
-        plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
+        #plt.savefig(save_path+str(target_cluster[0])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
         #plt.savefig(save_path+str(target_cluster[0])+'_'+str(target_cluster[1])+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
         #plt.savefig(save_path+"69_70_72_73"+'_'+'box_plot_GCN_r4_bySpot.svg', dpi=400)
         plt.clf()
