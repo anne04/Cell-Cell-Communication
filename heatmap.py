@@ -75,14 +75,14 @@ def main():
     nodes = [["13_10", "48_10", "59_10", "86_10"], ["10_13", "48_13", "59_13", "86_13"], ["10_48", "13_48", "59_48", "86_48"], ["10_59", "13_59", "48_59", "86_59"], ["10_86", "13_86", "48_86", "59_86"]]
     target = ["10", "13", "48", "59", "86"]
     for j in range (0, len(target)):
-        logfc_values = np.zeros((4,5)) # each row is for one node
+        logfc_values = np.zeros((4,4)) # each row is for one node
         for i in range (0, len(nodes[j])):
             print('\nfor differential analysis between: ',nodes[j][i])
             inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[j][i]+"_prerank.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
 
             #inFilesSig= "/cluster/home/t116508uhn/64630/differential_TAGConv_test_r4_"+nodes[i]+"_org_whitelist.csv" #"./differential_analysis/differential_TAGConv_test_r4_13_59_org_whitelist.csv"
-            outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
-            outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_"+nodes[j][i]
+            outFile_1 = "/cluster/home/t116508uhn/64630/intersection_TAGConv_test_r4_org_"+nodes[j][i]
+            outFile_2 = "/cluster/projects/schwartzgroup/fatema/intersection/64630/intersection_TAGConv_test_r4_org_"+nodes[j][i]
             #dfs = map(processFile, [x for xs in inFilesSig for x in xs])
             dfs = processFile(inFilesSig)
             sDf = processSignatureFile(signatureFile)
@@ -95,11 +95,11 @@ def main():
             print(resDf[0])
             #print(resDf[1])
 
-            resDf[0].to_csv(outFile_1+"_meanRes"+"_org_whitelist.csv") #, index = False)
-            resDf[0].to_csv(outFile_2+"_meanRes"+"_org_whitelist.csv") #, index = False)
+            resDf[0].to_csv(outFile_1+"_meanRes"+"_using_whitelist.csv") #, index = False)
+            resDf[0].to_csv(outFile_2+"_meanRes"+"_using_whitelist.csv") #, index = False)
 
-            resDf[1].to_csv(outFile_1+"_statRes"+"_org_whitelist.csv") #, index = False)
-            resDf[1].to_csv(outFile_2+"_statRes"+"_org_whitelist.csv") #, index = False)
+            resDf[1].to_csv(outFile_1+"_statRes"+"_using_whitelist.csv") #, index = False)
+            resDf[1].to_csv(outFile_2+"_statRes"+"_using_whitelist.csv") #, index = False)
 
             type = 0
             for k in range (0, resDf[0].values.shape[0]):
@@ -111,7 +111,7 @@ def main():
 
         # print(outFile)
         # Compute x^2 + y^2 across a 2D grid
-        x, y = np.meshgrid(range(-3, 2), range(-2, 2))
+        x, y = np.meshgrid(range(0, 4), range(0, 4))
 
 
         # Convert this grid to columnar data expected by Altair
