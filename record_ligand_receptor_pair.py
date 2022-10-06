@@ -95,11 +95,14 @@ adata_X = np.transpose(temp)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 #####################
 
+cell_vs_gene_dict = []
 gene_list = defaultdict(list)
 for cell_index in range (0, cell_vs_gene.shape[0]):
-    gene_list = cell_vs_gene[cell_index]
-    for gene_i in range (0, len(gene_list)):
-        gene_list[gene_ids[gene_i]].append(gene)
+    cell_vs_gene_dict.append(dict())
+    gene_exp = cell_vs_gene[cell_index]
+    for gene_i in range (0, len(gene_exp)):
+        gene_list[gene_ids[gene_i]].append(gene_exp[gene_i])
+        cell_vs_gene_dict[cell_index][gene_ids[gene_i]] = gene_exp[gene_i]
         
         
 gene_list_percentile = defaultdict(list)
@@ -107,8 +110,29 @@ for gene in gene_ids:
     gene_list_percentile[gene].append(np.percentile(gene_list[gene], 50))
     gene_list_percentile[gene].append(np.percentile(gene_list[gene], 70))   
 
-
+#################################################
+cells_ligand_vs_receptor = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cells_ligand_vs_receptor.append([])
     
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        cells_ligand_vs_receptor[i].append([])
+        cells_ligand_vs_receptor[i][j] = []
+##################################################
+
+for i in range (0, cell_vs_gene.shape[0]): # ligand
+    for gene in ligand_dict_dataset.keys(): 
+        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]:
+            for j in range (0, cell_vs_gene.shape[0]): # receptor
+                for gene_rec in ligand_dict_dataset[gene]:
+                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]:
+                        communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
+                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
+                        
+                        
+            
+        
 
 
 
