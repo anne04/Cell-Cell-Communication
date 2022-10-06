@@ -1,12 +1,18 @@
-orimport os
+import os
 #import glob
 import pandas as pd
 #import shutil
+import csv
 import numpy as np
 import sys
 import scikit_posthocs as post
 import altair as alt
 from collections import defaultdict
+import stlearn as st
+import scanpy as sc
+import qnorm
+import scipy
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -85,31 +91,45 @@ data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
 
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
-#print(adata_h5)
+print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
-#print(adata_h5)
-####################   
+print(adata_h5)
 gene_ids = list(adata_h5.var_names)
+coordinates = adata_h5.obsm['spatial']
+#################### 
 temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  #quantile_transform(scipy.sparse.csr_matrix.toarray(adata_h5.X), copy=True)
 adata_X = np.transpose(temp)    
 cell_vs_gene = adata_X   # rows = cells, columns = genes
+#################################
+adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
+#adata_X = sc.pp.scale(adata_X)
+cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X 
+#################################
+
+
+
+
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
 #####################
 
 cell_vs_gene_dict = []
 gene_list = defaultdict(list)
+all_expression = []
 for cell_index in range (0, cell_vs_gene.shape[0]):
     cell_vs_gene_dict.append(dict())
     gene_exp = cell_vs_gene[cell_index]
     for gene_i in range (0, len(gene_exp)):
         gene_list[gene_ids[gene_i]].append(gene_exp[gene_i])
         cell_vs_gene_dict[cell_index][gene_ids[gene_i]] = gene_exp[gene_i]
-        
+        all_expression.append(gene_exp[gene_i])
         
 gene_list_percentile = defaultdict(list)
 for gene in gene_ids:
-    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 50))
-    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 70))   
+    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 70))
+    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 97))   
 
+global_percentile = np.percentile(all_expression, 99)
 #################################################
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -124,17 +144,25 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 for i in range (0, cell_vs_gene.shape[0]): # ligand
     count_rec = 0
-    for gene in ligand_dict_dataset.keys(): 
-        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]:
+    max_score = -1
+    min_score = 1000
+    for gene in list(ligand_dict_dataset.keys()): 
+        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]: #global_percentile: #
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]:
-                        communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
-                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
-                        count_rec = count_rec + 1
-                        count_total_edges = count_total_edges + 1
-                        
-    cell_rec_count[i] =  count_rec       
+                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]: #global_percentile: #
+                        if distance_matrix[i,j] < 300:
+                            communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
+                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
+                            count_rec = count_rec + 1
+                            count_total_edges = count_total_edges + 1
+                            if communication_score > max_score:
+                                max_score = communication_score
+                            if communication_score < min_score:
+                                min_score = communication_score    
+                            
+    cell_rec_count[i] =  count_rec    
+    print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
         
 
 
