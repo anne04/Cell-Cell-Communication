@@ -120,8 +120,10 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 ##################################################
-
+cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
+count_total_edges = 0
 for i in range (0, cell_vs_gene.shape[0]): # ligand
+    count_rec = 0
     for gene in ligand_dict_dataset.keys(): 
         if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
@@ -129,9 +131,10 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]:
                         communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
+                        count_rec = count_rec + 1
+                        count_total_edges = count_total_edges + 1
                         
-                        
-            
+    cell_rec_count[i] =  count_rec       
         
 
 
