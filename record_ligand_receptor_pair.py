@@ -12,6 +12,8 @@ import stlearn as st
 import scanpy as sc
 import qnorm
 import scipy
+import pickle
+import gzip
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -86,6 +88,10 @@ for i in range (0, df["from"].shape[0]):
 print(len(ligand_dict_dataset.keys()))
 
 ##################################################################
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+##################################################################
+
 
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -116,7 +122,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 cell_vs_gene_dict = []
 gene_list = defaultdict(list)
 all_expression = []
-for cell_index in range (0, cell_vs_gene.shape[0]):
+rfor cell_index in range (0, cell_vs_gene.shape[0]):
     cell_vs_gene_dict.append(dict())
     gene_exp = cell_vs_gene[cell_index]
     for gene_i in range (0, len(gene_exp)):
@@ -163,6 +169,17 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                             
     cell_rec_count[i] =  count_rec    
     print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records', 'wb') as fp:
+    pickle.dump([cells_ligand_vs_receptor,ligand_dict_dataset], fp)
+
+'''for i in range (0, cell_vs_gene.shape[0]): 
+    for j in range (0, cell_vs_gene.shape[0]): 
+        
+        if len(cells_ligand_vs_receptor[i][j]) != 0:
+            print(j)
+            print(cells_ligand_vs_receptor[i][j])'''
+        
         
 
 
