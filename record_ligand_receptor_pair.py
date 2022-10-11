@@ -22,7 +22,7 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 args = parser.parse_args()
 
-
+spot_diameter = 89.43 #pixels
 
 def read_h5(f, i=0):
     print("hello world! read_h5")
@@ -64,15 +64,24 @@ for i in range (0, df["ligand_symbol"].shape[0]):
         ligand_dict_db[ligand].append(receptor)'''
 
 df = pd.read_csv(cell_chat_file)
+cell_cell_contact = []
 for i in range (0, df["ligand_symbol"].shape[0]):
     ligand = df["ligand_symbol"][i]
     if ligand not in gene_info:
         continue
+        
+    if df["annotation"][i] == 'ECM-Receptor':    
+        continue
+        
     receptor_symbol_list = df["receptor_symbol"][i]
     receptor_symbol_list = receptor_symbol_list.split("&")
     for receptor in receptor_symbol_list:
         if receptor in gene_info:
             ligand_dict_dataset[ligand].append(receptor)
+            #######
+            if df["annotation"][i] == 'Cell-Cell Contact':
+                cell_cell_contact.append(receptor)
+            #######                
             
 print(len(ligand_dict_dataset.keys()))
 
@@ -92,7 +101,7 @@ for gene in list(ligand_dict_dataset.keys()):
     ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
 ##################################################################
 
-
+##################################################################
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
 
@@ -103,13 +112,13 @@ print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 #################### 
-temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  #quantile_transform(scipy.sparse.csr_matrix.toarray(adata_h5.X), copy=True)
+temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)    
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 #################################
-adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
+'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
 #adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X 
+cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X '''
 #################################
 
 
@@ -122,7 +131,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 cell_vs_gene_dict = []
 gene_list = defaultdict(list)
 all_expression = []
-rfor cell_index in range (0, cell_vs_gene.shape[0]):
+for cell_index in range (0, cell_vs_gene.shape[0]):
     cell_vs_gene_dict.append(dict())
     gene_exp = cell_vs_gene[cell_index]
     for gene_i in range (0, len(gene_exp)):
@@ -130,12 +139,29 @@ rfor cell_index in range (0, cell_vs_gene.shape[0]):
         cell_vs_gene_dict[cell_index][gene_ids[gene_i]] = gene_exp[gene_i]
         all_expression.append(gene_exp[gene_i])
         
+##########
+i = 0
+for gene in gene_ids:
+    df = pd.DataFrame (gene_list[gene], columns = ['gene_expression'])
+    chart = alt.Chart(df).transform_density(
+        'gene_expression',
+        as_=['gene_expression', 'density'],
+    ).mark_area().encode(
+        x="gene_expression:Q",
+        y='density:Q',
+    )
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+'gene_exp_dist_'+gene+'.svg')
+    print(i)
+    i = i+1
+##########        
+        
 gene_list_percentile = defaultdict(list)
 for gene in gene_ids:
-    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 70))
-    gene_list_percentile[gene].append(np.percentile(gene_list[gene], 97))   
+    gene_list_percentile[gene].append(np.percentile(sorted(gene_list[gene]), 70))
+    gene_list_percentile[gene].append(np.percentile(sorted(gene_list[gene]), 97))   
 
-global_percentile = np.percentile(all_expression, 99)
+#global_percentile = np.percentile(all_expression, 99)
 #################################################
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -153,11 +179,15 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     max_score = -1
     min_score = 1000
     for gene in list(ligand_dict_dataset.keys()): 
-        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]: #global_percentile: #
+        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][0]: #global_percentile: #
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]: #global_percentile: #
-                        if distance_matrix[i,j] < 300:
+                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][0]: #global_percentile: #
+                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                            continue
+                        else:
+                            #if distance_matrix[i,j] > spot_diameter*4:
+                            #    continue
                             communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
                             cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
                             count_rec = count_rec + 1
@@ -165,7 +195,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                             if communication_score > max_score:
                                 max_score = communication_score
                             if communication_score < min_score:
-                                min_score = communication_score    
+                                min_score = communication_score                          
                             
     cell_rec_count[i] =  count_rec    
     print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
