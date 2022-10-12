@@ -23,16 +23,19 @@ def get_graph(adj, X):
     # create sparse matrix
     row_col = []
     edge_weight = []
+    edge_type = []
     rows, cols = adj.nonzero()
     edge_nums = adj.getnnz()
     for i in range(edge_nums):
         row_col.append([rows[i], cols[i]])
         edge_weight.append(adj.data[i])
+	edge_type.append(1)
     edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
+    edge_type = torch.tensor(np.array(edge_type), dtype=torch.float)
 
     graph_bags = []
-    graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
+    graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr, edge_type=edge_type)
     graph_bags.append(graph)
     return graph_bags
 
@@ -41,68 +44,33 @@ class Encoder(nn.Module):
     def __init__(self, in_channels, hidden_channels):
         super(Encoder, self).__init__()
 
-#        self.conv = SAGEConv(in_channels, hidden_channels)
-#        self.conv_2 = SAGEConv(hidden_channels, hidden_channels)
-#        self.conv_3 = SAGEConv(hidden_channels, hidden_channels)
-#        self.conv_4 = SAGEConv(hidden_channels, hidden_channels)
-
-
-        self.conv = GraphConv(in_channels, hidden_channels)
-        self.conv_2 = GraphConv(hidden_channels, hidden_channels)
-        self.conv_3 = GraphConv(hidden_channels, hidden_channels)
-        self.conv_4 = GraphConv(hidden_channels, hidden_channels)
-
         '''self.conv = GATv2Conv(in_channels, hidden_channels)
         self.conv_2 = GATv2Conv(hidden_channels, hidden_channels)
         self.conv_3 = GATv2Conv(hidden_channels, hidden_channels)
         self.conv_4 = GATv2Conv(hidden_channels, hidden_channels)'''
 
 
-#        self.conv = ChebConv(in_channels, hidden_channels, 3)
-#        self.conv_2 = ChebConv(hidden_channels, hidden_channels, 2)
-#        self.conv_3 = ChebConv(hidden_channels, hidden_channels, 2)
-#        self.conv_4 = ChebConv(hidden_channels, hidden_channels)
 
-
-
-        '''self.conv = RGCNConv(in_channels, hidden_channels, 1)
+        self.conv = RGCNConv(in_channels, hidden_channels, 1)
         self.conv_2 = RGCNConv(hidden_channels, hidden_channels, 1)
         self.conv_3 = RGCNConv(hidden_channels, hidden_channels, 1)
-        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 1)'''
-#        self.conv_5 = RGCNConv(hidden_channels, hidden_channels, 1)
-#        self.conv_6 = RGCNConv(hidden_channels, hidden_channels, 1)
+        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 1)
 
 
-        '''self.conv = TAGConv(in_channels, hidden_channels)
-        self.conv_2 = TAGConv(hidden_channels, hidden_channels)
-        self.conv_3 = TAGConv(hidden_channels, hidden_channels)
-        self.conv_4 = TAGConv(hidden_channels, hidden_channels)'''
 
-#        self.conv = GCNConv(in_channels, hidden_channels)
-#        self.conv_2 = GCNConv(hidden_channels, hidden_channels)
-#        self.conv_3 = GCNConv(hidden_channels, hidden_channels)
-#        self.conv_4 = GCNConv(hidden_channels, hidden_channels)
-#        self.linear_1 = Linear(hidden_channels, hidden_channels)
-#        self.conv_5 = GCNConv(hidden_channels, hidden_channels)
-#        self.conv_6 = GCNConv(hidden_channels, hidden_channels)
         #self.prelu = nn.Tanh(hidden_channels)
         self.prelu = nn.PReLU(hidden_channels)
     
     
     def forward(self, data):
-        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x, edge_index, edge_weight, edge_type = data.x, data.edge_index, data.edge_attr, data.edge_type
 
-        '''x = self.conv(x, edge_index)
-        x = self.conv_2(x, edge_index)
-        x = self.conv_3(x, edge_index)
-        x = self.conv_4(x, edge_index)'''
-
-        '''x = self.conv(x, edge_index, edge_type=edge_weight)
-        x = self.conv_2(x, edge_index, edge_type=edge_weight)
-        x = self.conv_3(x, edge_index, edge_type=edge_weight)
-        x = self.conv_4(x, edge_index, edge_type=edge_weight)'''
-#        x = self.conv_5(x, edge_index, edge_type=edge_weight)
-#        x = self.conv_6(x, edge_index, edge_type=edge_weight)
+        x = self.conv(x, edge_index, edge_type) #, edge_attr=edge_weight)
+        x = self.conv_2(x, edge_index, edge_type) #, edge_attr=edge_weight)
+        x = self.conv_3(x, edge_index, edge_type) #, edge_attr=edge_weight)
+        x = self.conv_4(x, edge_index, edge_type) #, edge_attr=edge_weight)
+#        x = self.conv_5(x, edge_index, edge_type) #, edge_attr=edge_weight)
+#        x = self.conv_6(x, edge_index, edge_type) #, edge_attr=edge_weight)
 
 
         '''x = self.conv(x, edge_index, edge_attr=edge_weight)
@@ -112,25 +80,20 @@ class Encoder(nn.Module):
 
 
 
-        x = self.conv(x, edge_index, edge_weight=edge_weight)
-        x = self.conv_2(x, edge_index, edge_weight=edge_weight)
-        x = self.conv_3(x, edge_index, edge_weight=edge_weight)
-        x = self.conv_4(x, edge_index, edge_weight=edge_weight)
-#        x = self.linear_1(x)
-#        x = self.conv_5(x, edge_index, edge_weight=edge_weight)
-#        x = self.conv_6(x, edge_index, edge_weight=edge_weight)
         x = self.prelu(x)
 
         return x
+
 class my_data():
-    def __init__(self, x, edge_index, edge_attr):
+    def __init__(self, x, edge_index, edge_attr, edge_type):
         self.x = x
         self.edge_index = edge_index
         self.edge_attr = edge_attr
+	data.edge_type = edge_type
 
 def corruption(data):
     x = data.x[torch.randperm(data.x.size(0))]
-    return my_data(x, data.edge_index, data.edge_attr)
+    return my_data(x, data.edge_index, data.edge_attr, data.edge_type)
 
 
 def train_DGI(args, data_loader, in_channels):
