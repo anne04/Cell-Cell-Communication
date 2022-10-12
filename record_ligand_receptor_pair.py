@@ -97,10 +97,17 @@ for i in range (0, df["from"].shape[0]):
 print(len(ligand_dict_dataset.keys()))
 
 ##################################################################
+total_relation = 0
+l_r_pair = dict()
+count = 0
 for gene in list(ligand_dict_dataset.keys()): 
     ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    l_r_pair[gene] = dict()
+    for receptor_gene in ligand_dict_dataset[gene]:
+        l_r_pair[gene][receptor_gene] = -1 #count #
+        count = count + 1
 ##################################################################
-
+print(count)
 ##################################################################
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -130,17 +137,17 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 
 cell_vs_gene_dict = []
 gene_list = defaultdict(list)
-all_expression = []
+#all_expression = []
 for cell_index in range (0, cell_vs_gene.shape[0]):
     cell_vs_gene_dict.append(dict())
     gene_exp = cell_vs_gene[cell_index]
     for gene_i in range (0, len(gene_exp)):
         gene_list[gene_ids[gene_i]].append(gene_exp[gene_i])
         cell_vs_gene_dict[cell_index][gene_ids[gene_i]] = gene_exp[gene_i]
-        all_expression.append(gene_exp[gene_i])
+        #all_expression.append(gene_exp[gene_i])
         
 ##########
-i = 0
+'''i = 0
 for gene in gene_ids:
     df = pd.DataFrame (gene_list[gene], columns = ['gene_expression'])
     chart = alt.Chart(df).transform_density(
@@ -153,7 +160,7 @@ for gene in gene_ids:
     save_path = '/cluster/home/t116508uhn/64630/'
     chart.save(save_path+'gene_exp_dist_'+gene+'.svg')
     print(i)
-    i = i+1
+    i = i+1'''
 ##########        
         
 gene_list_percentile = defaultdict(list)
@@ -174,35 +181,73 @@ for i in range (0, cell_vs_gene.shape[0]):
 ##################################################
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
+pair_id = 1
 for i in range (0, cell_vs_gene.shape[0]): # ligand
     count_rec = 0
-    max_score = -1
-    min_score = 1000
+    #max_score = -1
+    #min_score = 1000
     for gene in list(ligand_dict_dataset.keys()): 
-        if gene in cell_vs_gene_dict[i] and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][0]: #global_percentile: #
+        if (gene in gene_list) and cell_vs_gene_dict[i][gene] >= gene_list_percentile[gene][1]: #global_percentile: #
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if gene_rec in cell_vs_gene_dict[j] and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][0]: #global_percentile: #
+                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
-                            #if distance_matrix[i,j] > spot_diameter*4:
-                            #    continue
+                            if distance_matrix[i,j] > spot_diameter*4:
+                                continue
                             communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
-                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score])
-                            count_rec = count_rec + 1
-                            count_total_edges = count_total_edges + 1
-                            if communication_score > max_score:
+                            
+                            '''if communication_score > max_score:
                                 max_score = communication_score
                             if communication_score < min_score:
-                                min_score = communication_score                          
+                                min_score = communication_score ''' 
+                                
+                            if l_r_pair[gene][gene_rec] == -1: 
+                                l_r_pair[gene][gene_rec] = pair_id
+                                pair_id = pair_id + 1 
+                           
+                            relation_id = l_r_pair[gene][gene_rec]
+                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            count_rec = count_rec + 1
+                            count_total_edges = count_total_edges + 1
                             
-    cell_rec_count[i] =  count_rec    
-    print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
+                            
+    cell_rec_count[i] =  count_rec   
+    print("%d - %d "%(i, count_rec))
+    #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records', 'wb') as fp:
-    pickle.dump([cells_ligand_vs_receptor,ligand_dict_dataset], fp)
+print(pair_id)
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records', 'wb') as fp:
+    pickle.dump([cells_ligand_vs_receptor,ligand_dict_dataset,pair_id], fp)
+
+row_col = []
+edge_weight = []
+edge_type = []
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        if distance_matrix[i][j]<300:
+            row_col.append([i,j])
+            if i==j: 
+                edge_weight.append(0.8)
+            else:
+                edge_weight.append(0.2)
+            edge_type.append(0)  
+            
+            if len(cells_ligand_vs_receptor[i][j])>0:  
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):  
+                    row_col.append([i,j])
+                    edge_weight.append(cells_ligand_vs_receptor[i][j][k][2])
+                    edge_type.append(cells_ligand_vs_receptor[i][j][k][3])  
+            
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records', 'wb') as fp:
+    pickle.dump([row_col, edge_weight, edge_type], fp)
+           
+            
+
+	  
+    
 '''for i in range (0, cell_vs_gene.shape[0]): 
     for j in range (0, cell_vs_gene.shape[0]): 
         
