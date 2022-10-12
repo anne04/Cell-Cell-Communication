@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-
+import gzip
 
 from sklearn import metrics
 from scipy import sparse
@@ -30,6 +30,10 @@ def get_graph(adj, X):
         row_col.append([rows[i], cols[i]])
         edge_weight.append(adj.data[i])
 	edge_type.append(1)
+	
+    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records', 'rb')
+    row_col, edge_weight, edge_type = pickle.load(f)
+	
     edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
     edge_type = torch.tensor(np.array(edge_type), dtype=torch.float)
@@ -51,10 +55,10 @@ class Encoder(nn.Module):
 
 
 
-        self.conv = RGCNConv(in_channels, hidden_channels, 1)
-        self.conv_2 = RGCNConv(hidden_channels, hidden_channels, 1)
-        self.conv_3 = RGCNConv(hidden_channels, hidden_channels, 1)
-        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 1)
+        self.conv = RGCNConv(in_channels, hidden_channels, 6240, num_bases=300)
+        self.conv_2 = RGCNConv(hidden_channels, hidden_channels, 6240, num_bases=300)
+        self.conv_3 = RGCNConv(hidden_channels, hidden_channels, 6240, num_bases=300)
+        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 6240, num_bases=300)
 
 
 
