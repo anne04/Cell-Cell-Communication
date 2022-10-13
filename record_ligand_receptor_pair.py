@@ -222,7 +222,11 @@ print(pair_id)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records', 'wb') as fp:
     pickle.dump([cells_ligand_vs_receptor,ligand_dict_dataset,pair_id], fp)
 
-row_col = []
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records', 'rb') as fp:
+    cells_ligand_vs_receptor, ligand_dict_dataset, pair_id = pickle.load(fp)
+
+
+'''row_col = []
 edge_weight = []
 edge_type = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -236,11 +240,38 @@ for i in range (0, cell_vs_gene.shape[0]):
             edge_type.append(0)  
             
             if len(cells_ligand_vs_receptor[i][j])>0:  
+		
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):  
                     row_col.append([i,j])
                     edge_weight.append(cells_ligand_vs_receptor[i][j][k][2])
-                    edge_type.append(cells_ligand_vs_receptor[i][j][k][3])  
+                    edge_type.append(cells_ligand_vs_receptor[i][j][k][3])  '''
             
+
+row_col = []
+edge_weight = []
+edge_type = []
+for i in range (0, cell_vs_gene.shape[0]):
+    #ccc_j = []
+    for j in range (0, cell_vs_gene.shape[0]):
+        if distance_matrix[i][j]<300:
+            row_col.append([i,j])
+            if i==j: 
+                edge_weight.append(0.8)
+            else:
+                edge_weight.append(0.2)
+            edge_type.append(0)  
+            
+            if len(cells_ligand_vs_receptor[i][j])>0:  
+		mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])): 
+		    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+		
+		mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+	    	
+		row_col.append([i,j])
+		edge_weight.append(mean_ccc)
+		edge_type.append(1)  
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records', 'wb') as fp:
     pickle.dump([row_col, edge_weight, edge_type], fp)
            
