@@ -250,9 +250,9 @@ for i in range (0, cell_vs_gene.shape[0]):
 row_col = []
 edge_weight = []
 edge_type = []
-for i in range (0, cell_vs_gene.shape[0]):
+for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
-    for j in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, len(cells_ligand_vs_receptor)):
         if distance_matrix[i][j]<300:
             row_col.append([i,j])
             if i==j: 
@@ -268,9 +268,9 @@ for i in range (0, cell_vs_gene.shape[0]):
 		
 		mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
 	    	
-		row_col.append([i,j])
-		edge_weight.append(mean_ccc)
-		edge_type.append(1)  
+	        row_col.append([i,j])
+	        edge_weight.append(mean_ccc)
+	        edge_type.append(1)  
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records', 'wb') as fp:
     pickle.dump([row_col, edge_weight, edge_type], fp)
