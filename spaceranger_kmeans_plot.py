@@ -133,8 +133,8 @@ matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
@@ -142,12 +142,12 @@ barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/bar
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
 
 
-toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv'
+#toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
 #toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r7_toomanycells_minsize20_labels.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
+toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
 #toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
 toomany_label=[]
 with open(toomany_label_file) as file:
@@ -240,14 +240,14 @@ for j in range (0, len(cluster_label)):
             cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
             ###############
-            if barcode_info[i][3] == 61:  
+            '''if barcode_info[i][3] == 61:  
                 spot_color = colors[j-1]
             elif barcode_info[i][3] == 88:  
                 spot_color = colors[j-1]
             elif barcode_info[i][3] == 47:  
                 spot_color = colors[j-1]
             elif barcode_info[i][3] == 12:  
-                spot_color = colors[j-1]
+                spot_color = colors[j-1]'''
             #if barcode_info[i][3] == 15:  
             #    barcode_label[toomany_label[i][0]] = 14
 
