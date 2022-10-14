@@ -256,23 +256,58 @@ for i in range (0, len(cells_ligand_vs_receptor)):
         if distance_matrix[i][j]<300:
             row_col.append([i,j])
             if i==j: 
-                edge_weight.append(0.8)
+                edge_weight.append(0.5)
             else:
-                edge_weight.append(0.2)
+                edge_weight.append(0.5)
             edge_type.append(0)  
             
-            if len(cells_ligand_vs_receptor[i][j])>0:  
-		mean_ccc = 0
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])): 
-		    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-		
-		mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
-	    	
-	        row_col.append([i,j])
-	        edge_weight.append(mean_ccc)
-	        edge_type.append(1)  
+            if len(cells_ligand_vs_receptor[i][j])>0:
+				mean_ccc = 0
+				for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+					mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+				mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+				row_col.append([i,j])
+				edge_weight.append(mean_ccc)
+				edge_type.append(1) 
 
+				
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records', 'wb') as fp:
+    pickle.dump([row_col, edge_weight, edge_type], fp)				
+				
+row_col = []
+edge_weight = []
+edge_type = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    ccc_j = []
+	ccc_score = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            row_col.append([i,j])
+            if i==j: 
+                edge_weight.append(0.5)
+            else:
+                edge_weight.append(0.5)
+            edge_type.append(0)  
+            
+            if len(cells_ligand_vs_receptor[i][j])>0:
+				mean_ccc = 0
+				for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+					mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+				mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+				
+				ccc_score.append(mean_ccc)
+				ccc_j.append(j)
+				
+	sum_score = np.sum(ccc_score)			
+	for j in range (0, len(ccc_j)):
+		row_col.append([i,ccc_j[j]])
+		edge_weight.append(ccc_score[j]/sum_score)
+		edge_type.append(1) 
+
+				
+print(len(row_col))				
+				
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_normalized_ccc', 'wb') as fp:
     pickle.dump([row_col, edge_weight, edge_type], fp)
            
             
