@@ -101,13 +101,14 @@ class Encoder(nn.Module):
 
 	#self.prelu = nn.Tanh(hidden_channels)
         self.prelu = nn.PReLU(hidden_channels)
+	self.attention_scores_mine = 'attention'
 
 
     def forward(self, data):
         x, edge_index, edge_weight, edge_type = data.x, data.edge_index, data.edge_attr, data.edge_type
 
         x = self.conv(x, edge_index, edge_type = edge_type, edge_attr=edge_weight, return_attention_weights = True)
-        x, attention_scores = self.conv_2(x, edge_index, edge_type = edge_type, edge_attr=edge_weight, return_attention_weights = True)
+        x, self.attention_scores_mine = self.conv_2(x, edge_index, edge_type = edge_type, edge_attr=edge_weight, return_attention_weights = True)
 #        x = self.conv_3(x, edge_index, edge_type = edge_type, edge_attr=edge_weight)
 #        x = self.conv_4(x, edge_index, edge_type = edge_type, edge_attr=edge_weight)
 #        x = self.conv_5(x, edge_index, edge_type) #, edge_attr=edge_weight)
@@ -121,7 +122,7 @@ class Encoder(nn.Module):
 
         x = self.prelu(x)
 
-        return x, attention_scores
+        return x
 
 class my_data():
     def __init__(self, x, edge_index, edge_attr, edge_type):
@@ -142,6 +143,7 @@ def train_DGI(args, data_loader, in_channels):
         encoder=Encoder(in_channels=in_channels, hidden_channels=args.hidden),
         summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
         corruption=corruption).to(device)
+    
     DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6) #6
     DGI_filename = args.model_path+'DGI'+ args.model_name  +'.pth.tar'
     if args.load:
