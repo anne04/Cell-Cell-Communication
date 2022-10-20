@@ -311,7 +311,25 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     pickle.dump([row_col, edge_weight, edge_type], fp)
            
             
-
+row_col = []
+edge_weight = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            row_col.append([i,j])
+            #if i==j:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                edge_weight.append([0.5, mean_ccc])
+            else:
+                edge_weight.append([0.5, 0])
+             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT', 'wb') as fp:
+    pickle.dump([row_col, edge_weight], fp)
 	  
     
 '''for i in range (0, cell_vs_gene.shape[0]): 
