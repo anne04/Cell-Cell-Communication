@@ -51,7 +51,7 @@ coordinates = adata_h5.obsm['spatial']
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
-#adata_X = sc.pp.scale(adata_X)
+adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 #################################
 '''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
@@ -178,7 +178,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-    cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 90)])
+    cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 70),np.percentile(sorted(cell_vs_gene[i]), 80), np.percentile(sorted(cell_vs_gene[i]), 90)])
 ##################################################
 
 
@@ -189,14 +189,14 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     count_rec = 0
     #max_score = -1
     #min_score = 1000
-    percentile_70 = np.percentile(sorted(adata_X[i]), 70)
+    
     
 	
     for gene in list(ligand_dict_dataset.keys()): 
-        if (gene in gene_list) and cell_vs_gene_dict[i][gene] >= cell_percentile[i][0]: # gene_list_percentile[gene][1]: #global_percentile: #
+        if (gene in gene_list) and cell_vs_gene_dict[i][gene] >= cell_percentile[i][1]: # gene_list_percentile[gene][1]: #global_percentile: #
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= cell_percentile[j][0]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= cell_percentile[j][1]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
