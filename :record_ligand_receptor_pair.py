@@ -38,7 +38,28 @@ def read_h5(f, i=0):
         else:
             print('Name', f[k].name)
     print("read_h5_done")
+	
+data_fold = args.data_path #+args.data_name+'/'
+print(data_fold)
 
+adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
+print(adata_h5)
+sc.pp.filter_genes(adata_h5, min_cells=1)
+print(adata_h5)
+gene_ids = list(adata_h5.var_names)
+coordinates = adata_h5.obsm['spatial']
+#################### 
+temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  
+adata_X = np.transpose(temp)    
+cell_vs_gene = adata_X   # rows = cells, columns = genes
+#################################
+'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
+#adata_X = sc.pp.scale(adata_X)
+cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X '''
+#################################
+
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
 
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 gene_info=dict()
@@ -109,30 +130,7 @@ for gene in list(ligand_dict_dataset.keys()):
 ##################################################################
 print(count)
 ##################################################################
-data_fold = args.data_path #+args.data_name+'/'
-print(data_fold)
 
-adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
-print(adata_h5)
-sc.pp.filter_genes(adata_h5, min_cells=1)
-print(adata_h5)
-gene_ids = list(adata_h5.var_names)
-coordinates = adata_h5.obsm['spatial']
-#################### 
-temp = qnorm.quantile_normalize(np.transpose(scipy.sparse.csr_matrix.toarray(adata_h5.X)))  
-adata_X = np.transpose(temp)    
-cell_vs_gene = adata_X   # rows = cells, columns = genes
-#################################
-'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
-#adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X '''
-#################################
-
-
-
-
-from sklearn.metrics.pairwise import euclidean_distances
-distance_matrix = euclidean_distances(coordinates, coordinates)
 #####################
 
 cell_vs_gene_dict = []
@@ -331,7 +329,87 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
+
+##############################
+row_col = []
+edge_weight = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            row_col.append([i,j])
+            #if i==j:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                edge_weight.append([0.5, mean_ccc])
+            elif i==j:
+                edge_weight.append([0.5, 0])
+             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc', 'wb') as fp:
+    pickle.dump([row_col, edge_weight], fp)
+	  
+
+##############################
+
+
+edge_weight_temp = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    edge_weight_temp.append([])
     
+for i in range (0, len(cells_ligand_vs_receptor)):
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        edge_weight_temp[i].append([])
+        edge_weight_temp[i][j] = []
+
+
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                edge_weight_temp[i][j].append(0.5)
+                edge_weight_temp[i][j].append(mean_ccc)  
+            elif i==j : # required for self knowledge. Do it for i!=j as well if for link prediction ### SEE THIS ###
+                edge_weight_temp[i][j].append(0.5)			
+                edge_weight_temp[i][j].append(0) 
+				
+row_col = []
+edge_weight = []				
+for i in range (0, len(cells_ligand_vs_receptor)):
+	for j in range (i, len(cells_ligand_vs_receptor)):
+		if i==j: 
+			edge_weight_temp[i][j].append(0) # make it length 3
+			temp_weight = edge_weight_temp[i][j]
+			row_col.append([i,j])
+			edge_weight.append(temp_weight)
+		elif len(edge_weight_temp[i][j])>0:
+			temp_weight = edge_weight_temp[i][j] + edge_weight_temp[j][i]
+			if len(temp_weight) == 2: 
+				temp_weight.append(0)
+			elif len(temp_weight) == 4:
+				temp_weight = [temp_weight[0], temp_weight[1], temp_weight[3]]
+			#else: # len = 0 -- don't add the edge 
+			
+			row_col.append([i,j])
+			edge_weight.append(temp_weight)
+			row_col.append([j,i])
+			edge_weight.append(temp_weight)
+
+             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_bidir', 'wb') as fp:
+    pickle.dump([row_col, edge_weight], fp)
+	  
+
+	
+	
+	
 '''for i in range (0, cell_vs_gene.shape[0]): 
     for j in range (0, cell_vs_gene.shape[0]): 
         
