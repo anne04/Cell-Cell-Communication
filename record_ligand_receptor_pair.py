@@ -231,7 +231,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-rece
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records_97', 'rb') as fp:
     cells_ligand_vs_receptor, ligand_dict_dataset, pair_id, cell_rec_count = pickle.load(fp)
 
-
+i = 0
+for j in range (0, len(cells_ligand_vs_receptor)):
+    if cells_ligand_vs_receptor[i][j]>0:
+	print(cells_ligand_vs_receptor[i][j])
 '''row_col = []
 edge_weight = []
 edge_type = []
@@ -358,7 +361,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
              
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_97', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
 
@@ -413,10 +416,10 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 			edge_weight.append(temp_weight)
 
              
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_bidir_97', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_bidir_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
-fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_bidir_97', 'rb')
+fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_70', 'rb')
 row_col, edge_weight = pickle.load(fp)
 
 i=0
