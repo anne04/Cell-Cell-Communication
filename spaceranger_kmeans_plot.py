@@ -196,6 +196,21 @@ for i in range (0, len(barcode_info)):
         
 print(count)
 print(len(cluster_label))
+
+'''with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'ligand-receptor-records_97', 'rb') as fp:
+    cells_ligand_vs_receptor, ligand_dict_dataset, pair_id, cell_rec_count = pickle.load(fp)
+
+for i in range (0, len(cells_ligand_vs_receptor)):
+    flag = 0
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if i!=j and len(cells_ligand_vs_receptor[i][j])>0:
+            flag = 1
+            break
+    if flag==0:
+        print(i)'''
+    
+        
+
 number = 20
 cmap = plt.get_cmap('tab20')
 colors = [cmap(i) for i in np.linspace(0, 1, number)]
@@ -258,7 +273,7 @@ for j in range (0, len(cluster_label)):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = cluster_label[j], color=spot_color)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=4,loc='upper right')
+#plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
