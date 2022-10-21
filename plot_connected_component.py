@@ -65,15 +65,17 @@ with open(barcode_file) as file:
         i=i+1
         
 ############
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.model_name + '_attention.npy'
-X_attention_bundle = np.load(X_attention_filename) 
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[1][index][0]
-
+for i in range (0, len(barcode_info)):
+    if attention_scores[i][192]!=0:
+        print('%d is %g'%(i, attention_scores[i][192]))
 
 
 
