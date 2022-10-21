@@ -35,7 +35,8 @@ emb_dim= 64 #512
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/rgcn_r1_Embed_X.npy' # lr e-5, epoch 20k, K=3
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/rgat_r1_Embed_X.npy' # lr e-5, epoch 20k, K=3
 #X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/rgat_r1_alongcell_Embed_X.npy' # lr e-5, epoch 20k, K=3
-X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/rgat_r1_alongcell_normalized_ccc_Embed_X.npy' # lr e-5, epoch 20k, K=3
+#X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/gat_r1_2attr_withfeature_onlyccc_bidir_97_Embed_X.npy' # lr e-5, epoch 20k, K=3
+X_embedding_filename = '/cluster/projects/schwartzgroup/fatema/CCST/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/gat_r1_2attr_nofeature_onlyccc_bidir_97_Embed_X.npy' # lr e-5, epoch 20k, K=3
 
 
 X_embedding = np.load(X_embedding_filename)
@@ -72,7 +73,9 @@ X_embedding_T = np.transpose(X_embedding)
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/rgcn_r1_node_embedding.csv'
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/rgat_r1_node_embedding.csv'
 #X_embedding_filename = '/cluster/home/t116508uhn/64630/rgat_r1_alongcell_node_embedding.csv'
-X_embedding_filename = '/cluster/home/t116508uhn/64630/rgat_r1_alongcell_normalized_ccc_node_embedding.csv'
+#X_embedding_filename = '/cluster/home/t116508uhn/64630/rgat_r1_alongcell_normalized_ccc_node_embedding.csv'
+#X_embedding_filename = '/cluster/home/t116508uhn/64630/gat_r1_2attr_withfeature_onlyccc_bidir_97_node_embedding.csv'
+X_embedding_filename = '/cluster/home/t116508uhn/64630/gat_r1_2attr_nofeature_onlyccc_bidir_97_node_embedding.csv'
 f=open(X_embedding_filename, 'w', encoding='UTF8', newline='')
 writer = csv.writer(f)
 # write the header
