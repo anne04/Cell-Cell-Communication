@@ -14,6 +14,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
 from typing import List
 
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components
+
+
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -65,44 +70,41 @@ with open(barcode_file) as file:
         i=i+1
         
 ############
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_bidir_97'+ '_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
+
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[1][index][0]
-for i in range (0, len(barcode_info)):
+    distribution.append(attention_scores[i][j])
+    
+    
+'''for i in range (0, len(barcode_info)):
     if attention_scores[i][192]!=0:
-        print('%d is %g'%(i, attention_scores[i][192]))
-
-
+        print('%d is %g'%(i, attention_scores[i][192]))'''
+        
+threshold =  np.percentile(sorted(distribution), 60)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+for i in range (0, attention_scores.shape[0]):
+    for j in range (0, attention_scores.shape[1]):
+        if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+            connecting_edges[i][j] = 1
+             
 
 ############
 
-        
+graph = csr_matrix(connecting_edges)
+n_components, labels = connected_components(csgraph=graph, directed=True, connection = 'weak', return_labels=True)
+print('number of component %d'%n_components)
+
 for i in range (0, len(barcode_info)):
-    if barcode_info[i][0] in barcode_label:
-        barcode_info[i][3] = barcode_label[barcode_info[i][0]]
-        
-
-############################################################################################################
-import numpy as np
-import csv
-import pickle
-from scipy import sparse
-import scipy.io as sio
-import scanpy as sc
-#import matplotlib
-#matplotlib.use('Agg')
-#matplotlib.use('TkAgg')
-#import matplotlib.pyplot as plt
-import altair as alt
-from vega_datasets import data
-import pandas as pd
-
-
+#    if barcode_info[i][0] in barcode_label:
+     barcode_info[i][3] = labels[i]
+       
 
 ########
 number = 20
@@ -135,73 +137,53 @@ colors=colors+colors_2
 
 
 
+cell_count_cluster=np.zeros((labels.shape[0]))
+
+for j in range (0, n_components):
+    label_i = j
+    x_index=[]
+    y_index=[]
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][3] == label_i:
+            x_index.append(barcode_info[i][1])
+            y_index.append(barcode_info[i][2])
+            cell_count_cluster[j] = cell_count_cluster[j]+1
+            spot_color = colors[j]
+            ###############
+            '''if barcode_info[i][3] == 61:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 88:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 47:  
+                spot_color = colors[j-1]
+            elif barcode_info[i][3] == 12:  
+                spot_color = colors[j-1]'''
+            #if barcode_info[i][3] == 15:  
+            #    barcode_label[toomany_label[i][0]] = 14
+
+            ###############
+            
+            
+        
+    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color)     
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
+    
+plt.legend(fontsize=4,loc='upper right')
+
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
+
+
+##############################
+
+
 for i in range (0, len(colors)): 
     colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
 
 #####
 
-
-#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new_noPCA/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label_node_embedding.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label_node_embedding.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label_node_embedding.csv'
-
-
-toomany_label_file='/cluster/home/t116508uhn/64630/TAGConv_test_r4_too-many-cell-clusters_org.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/leiden_barcode_label.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/louvain_barcode_label.csv'
-#toomany_label_file='new_alignment/result_lp8mp2_bulk/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/kmeans_barcode_label.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/GCN_r7_toomanycells_minsize20_labels.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/PCA_64embedding_pathologist_label_l1mp5_temp.csv' #'/cluster/home/t116508uhn/64630/PCA_64embedding_Kena_label_l1mp5_temp.csv'
-#toomany_label_file='/cluster/home/t116508uhn/64630/spaceranger_pathologist.csv'
-toomany_label=[]
-with open(toomany_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        toomany_label.append(line)
-
-barcode_label=dict()
-cluster_dict=dict()
-max=0
-for i in range (1, len(toomany_label)):
-    if len(toomany_label[i])>0 :
-        barcode_label[toomany_label[i][0]] = int(toomany_label[i][1])
-        cluster_dict[int(toomany_label[i][1])]=1
-        '''if int(toomany_label[i][1]) == 61:  
-            barcode_label[toomany_label[i][0]] = 60
-        if int(toomany_label[i][1]) == 88:  
-            barcode_label[toomany_label[i][0]] = 87
-        if int(toomany_label[i][1]) == 47:  
-            barcode_label[toomany_label[i][0]] = 46
-        if int(toomany_label[i][1]) == 12:  
-            barcode_label[toomany_label[i][0]] = 11
-        if int(toomany_label[i][1]) == 15:  
-            barcode_label[toomany_label[i][0]] = 14'''
-        
-############
-
-barcode_info=[]
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],-1])
-        i=i+1
-        
-cluster_dict[-1]=1
-cluster_label=list(cluster_dict.keys())
-
-count=0   
-for i in range (0, len(barcode_info)):
-    if barcode_info[i][0] in barcode_label:
-        barcode_info[i][3] = barcode_label[barcode_info[i][0]]
-    else:
-        count=count+1
-        
 print(count)
 print(len(cluster_label))
 
