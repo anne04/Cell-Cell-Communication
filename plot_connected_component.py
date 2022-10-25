@@ -55,6 +55,8 @@ def get_colour_scheme(palette_name: str, num_colours: int) -> List[str]:
     
     
 ############
+       
+############
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 
@@ -68,8 +70,8 @@ with open(barcode_file) as file:
     for line in tsv_file:
         barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
         i=i+1
-        
-############
+ 
+
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
@@ -125,7 +127,20 @@ for i in range (0, count_points_component.shape[0]):
 print(id_label)
     
      
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 
+#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
+#barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
+barcode_info=[]
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
+        i=i+1
+ 
 for i in range (0, len(barcode_info)):
 #    if barcode_info[i][0] in barcode_label:
     if count_points_component[labels[i]] > 1:
@@ -195,7 +210,7 @@ for j in range (0, n_components):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=4,loc='upper right')
+#plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
