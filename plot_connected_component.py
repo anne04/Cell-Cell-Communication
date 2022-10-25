@@ -70,7 +70,7 @@ with open(barcode_file) as file:
         i=i+1
         
 ############
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_bidir_97'+ '_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -87,23 +87,50 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
         
-threshold =  np.percentile(sorted(distribution), 60)
+threshold =  np.percentile(sorted(distribution), 75)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-for i in range (0, attention_scores.shape[0]):
-    for j in range (0, attention_scores.shape[1]):
+
+for j in range (0, attention_scores.shape[1]):
+    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-             
+            
+'''count = 0            
+for i in range (0, attention_scores.shape[0]):           
+    if np.sum(connecting_edges[:,i])==0 and np.sum(connecting_edges[i,:])==0 :
+        print(i)
+        count = count+1
 
+print(count)'''
 ############
 
+
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph, directed=True, connection = 'weak', return_labels=True)
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
+
+count_points_component = np.zeros((n_components))
+for i in range (0, len(labels)):
+     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+           
+print(count_points_component)
+
+id_label = 0  
+index_dict = dict()
+for i in range (0, count_points_component.shape[0]):
+    if count_points_component[i]>1:
+        id_label = id_label+1
+        index_dict[i] = id_label
+print(id_label)
+    
+     
 
 for i in range (0, len(barcode_info)):
 #    if barcode_info[i][0] in barcode_label:
-     barcode_info[i][3] = labels[i]
+    if count_points_component[labels[i]] > 1:
+        barcode_info[i][3] = index_dict[labels[i]]
+    
        
 
 ########
@@ -117,12 +144,6 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
-number = 20
-cmap = plt.get_cmap('tab20c')
-colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
-
-colors=colors+colors_2
-
 number = 8
 cmap = plt.get_cmap('Set2')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
@@ -131,6 +152,12 @@ colors=colors+colors_2
 
 number = 12
 cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
