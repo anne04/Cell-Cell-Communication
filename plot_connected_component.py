@@ -89,7 +89,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
         
-threshold =  np.percentile(sorted(distribution), 75)
+threshold =  np.percentile(sorted(distribution), 80)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
@@ -217,9 +217,35 @@ plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp
 #plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
 
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(barcode_info)):    
+    ids.append(i)
+    x_index.append(barcode_info[i][1])
+    y_index.append(barcode_info[i][2])    
+    colors_point.append(colors[barcode_info[i][3]]) 
+    
+from pyvis.network import Network
+g = Network("12570px", "13030px", directed=True)
+g.add_nodes(ids, x=x_index, y=y_index) #, color=colors_point)
+
+for j in range (0, attention_scores.shape[1]):
+    for i in range (0, attention_scores.shape[0]):
+        if attention_scores[i][j] > threshold:
+            g.add_edge(i, j) #, weight=attention_scores[i][j])
+
+g.toggle_physics(True)
+g.show('mygraph.html')
 
 ##############################
-
+g = Network(directed=True)
+g.add_nodes([1,2,3], value=[10, 100, 400],x=[21.4, 54.2, 11.2],y=[100.2, 23.54, 32.1],label=['NODE 1', 'NODE 2', 'NODE 3'],color=['#00ff1e', '#162347', '#dd4b39'])
+g.add_edge(1, 2, weight=.87)
+g.add_edge(1, 3, weight=.01)
+g.toggle_physics(True)
+g.show('mygraph.html')
 
 for i in range (0, len(colors)): 
     colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
