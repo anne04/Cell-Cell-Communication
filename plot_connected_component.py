@@ -226,10 +226,21 @@ for i in range (0, len(barcode_info)):
     x_index.append(barcode_info[i][1])
     y_index.append(barcode_info[i][2])    
     colors_point.append(colors[barcode_info[i][3]]) 
-    
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
+
+min_x = np.min(x_index)
+min_y = np.min(y_index)
+for i in range (0, len(barcode_info)):    
+    x_index[i] = ((x_index[i]-min_x)/(max_x-min_x))*499
+    y_index[i] = ((y_index[i]-min_y)/(max_y-min_y))*421
+
 from pyvis.network import Network
-g = Network("12570px", "13030px", directed=True)
-g.add_nodes(ids, x=x_index, y=y_index) #, color=colors_point)
+
+g = Network("500px", "500px", directed=True)
+for i in range (0, len(barcode_info)):
+    g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, color=matplotlib.colors.rgb2hex(colors_point[i]))
 
 for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
@@ -238,7 +249,7 @@ for j in range (0, attention_scores.shape[1]):
 
 g.toggle_physics(True)
 g.show('mygraph.html')
-
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 ##############################
 g = Network(directed=True)
 g.add_nodes([1,2,3], value=[10, 100, 400],x=[21.4, 54.2, 11.2],y=[100.2, 23.54, 32.1],label=['NODE 1', 'NODE 2', 'NODE 3'],color=['#00ff1e', '#162347', '#dd4b39'])
