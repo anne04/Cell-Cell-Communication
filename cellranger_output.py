@@ -14,7 +14,7 @@ import qnorm
 import scipy
 import pickle
 import gzip
-
+import matplotlib.pyplot as plt
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -41,15 +41,43 @@ adata_X = np.transpose(temp)
 adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 #################################
-
-
-
-coordinates = adata_h5.obsm['spatial']
-#################### 
-'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, inplace=False)['X'] #exclude_highly_expressed=1, 
-#adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X '''
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+'''barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+barcode_info=[]
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
+        i=i+1 '''
+x_max = np.max(coordinates[:,0])
+x_min = np.min(coordinates[:,0])
+y_max = np.max(coordinates[:,1])
+y_min = np.min(coordinates[:,1])
 #################################
+coord_x = np.random.random(low = x_min-spot_diameter//2, high=x_max+spot_diameter//2, size=adata_h5.X.shape[0])
+coord_y = np.random.random(low = y_min-spot_diameter//2, high=y_max+spot_diameter//2, size=adata_h5.X.shape[0])
+noise_x = np.random.normal(low = x_min-spot_diameter//2, high=x_max+spot_diameter//2, size=adata_h5.X.shape[0])
+noise_y = np.random.normal(low = y_min-spot_diameter//2, high=y_max+spot_diameter//2, size=adata_h5.X.shape[0])
+################################
+
+a = x_min-spot_diameter//2
+b = x_max+spot_diameter//2
+coord_x = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
+noise_x = np.random.normal(size=adata_h5.X.shape[0])
+
+a = y_min-spot_diameter//2
+b = y_max+spot_diameter//2
+coord_y = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
+noise_y = np.random.normal(size=adata_h5.X.shape[0])
+
+plt.scatter(x=np.array(coord_x+noise_x*2), y=-np.array(coord_y+noise_y*2),s=1)
+#plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
+
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'synthetic_spatial_plot.svg', dpi=400)
+plt.clf()
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
