@@ -64,15 +64,30 @@ noise_y = np.random.normal(low = y_min-spot_diameter//2, high=y_max+spot_diamete
 
 a = x_min-spot_diameter//2
 b = x_max+spot_diameter//2
+#coord_x = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
 coord_x = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
-noise_x = np.random.normal(size=adata_h5.X.shape[0])
 
 a = y_min-spot_diameter//2
 b = y_max+spot_diameter//2
+#coord_y = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
 coord_y = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
-noise_y = np.random.normal(size=adata_h5.X.shape[0])
 
-plt.scatter(x=np.array(coord_x+noise_x*2), y=-np.array(coord_y+noise_y*2),s=1)
+noise_x = (500 - 100) * np.random.normal(size=adata_h5.X.shape[0]) + 100
+noise_y = (500 - 100) * np.random.normal(size=adata_h5.X.shape[0]) + 100
+
+temp_x = coord_x
+range_x = [[4000, 8000],[10000, 12000]]
+for range_i in range_x:
+    for x_index in temp_x:
+	if 
+	
+
+
+temp_x[np.where(temp_x)<6000 and np.where(temp_x)>4000] = temp_x[0:3000] + noise_x[0:3000]
+temp_y = coord_y
+temp_y[0:3000] = temp_y[0:3000] + noise_y[0:3000]
+
+plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 #plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
