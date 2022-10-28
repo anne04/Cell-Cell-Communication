@@ -65,27 +65,39 @@ noise_y = np.random.normal(low = y_min-spot_diameter//2, high=y_max+spot_diamete
 a = x_min-spot_diameter//2
 b = x_max+spot_diameter//2
 #coord_x = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
-coord_x = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
+
+save_x=coord_x
+save_y=coord_y
+coord_x = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]//2) + a
 
 a = y_min-spot_diameter//2
 b = y_max+spot_diameter//2
 #coord_y = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
-coord_y = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]) + a
-
-noise_x = (500 - 100) * np.random.normal(size=adata_h5.X.shape[0]) + 100
-noise_y = (500 - 100) * np.random.normal(size=adata_h5.X.shape[0]) + 100
+coord_y = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]//2) + a
 
 temp_x = coord_x
-range_x = [[4000, 8000],[10000, 12000]]
-for range_i in range_x:
-    for x_index in temp_x:
-	if 
-	
-
-
-temp_x[np.where(temp_x)<6000 and np.where(temp_x)>4000] = temp_x[0:3000] + noise_x[0:3000]
 temp_y = coord_y
-temp_y[0:3000] = temp_y[0:3000] + noise_y[0:3000]
+
+
+coord_x_t = np.random.normal(loc=5000,scale=600,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=7000,scale=600,size=adata_h5.X.shape[0]//8)
+temp_x = np.concatenate((temp_x,coord_x_t))
+temp_y = np.concatenate((temp_y,coord_y_t))
+
+coord_x_t = np.random.normal(loc=5000,scale=600,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=11000,scale=600,size=adata_h5.X.shape[0]//8)
+temp_x = np.concatenate((temp_x,coord_x_t))
+temp_y = np.concatenate((temp_y,coord_y_t))
+
+coord_x_t = np.random.normal(loc=8000,scale=900,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=9000,scale=900,size=adata_h5.X.shape[0]//8)
+temp_x = np.concatenate((temp_x,coord_x_t))
+temp_y = np.concatenate((temp_y,coord_y_t))
+
+coord_x_t = np.random.normal(loc=10000,scale=1000,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=10000,scale=1000,size=adata_h5.X.shape[0]//8)
+temp_x = np.concatenate((temp_x,coord_x_t))
+temp_y = np.concatenate((temp_y,coord_y_t))
 
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 #plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
@@ -93,6 +105,10 @@ plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot.svg', dpi=400)
 plt.clf()
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic', 'wb') as fp:
+    pickle.dump([temp_x, temp_y], fp)
+	
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
