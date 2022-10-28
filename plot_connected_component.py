@@ -72,7 +72,9 @@ with open(barcode_file) as file:
         i=i+1
  
 
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_STnCCC_97'+ '_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_97_onehop'+ '_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -89,7 +91,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
         
-threshold =  np.percentile(sorted(distribution), 80)
+threshold =  np.percentile(sorted(distribution), 85)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
@@ -210,7 +212,7 @@ for j in range (0, n_components):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-plt.legend(fontsize=4,loc='upper right')
+#plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
