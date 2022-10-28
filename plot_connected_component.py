@@ -210,7 +210,7 @@ for j in range (0, n_components):
     plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-#plt.legend(fontsize=4,loc='upper right')
+plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
@@ -240,12 +240,12 @@ from pyvis.network import Network
 
 g = Network("500px", "500px", directed=True)
 for i in range (0, len(barcode_info)):
-    g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(ids[i], x=x_index[i], y=y_index[i], label=str(ids[i]), physics=True, color=matplotlib.colors.rgb2hex(colors_point[i]))
 
 for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] > threshold:
-            g.add_edge(i, j) #, weight=attention_scores[i][j])
+            g.add_edge(i, j, weight=attention_scores[i][j])
 
 g.toggle_physics(True)
 g.show('mygraph.html')
