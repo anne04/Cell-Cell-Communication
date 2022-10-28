@@ -193,10 +193,10 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     
 	
     for gene in list(ligand_dict_dataset.keys()): 
-        if (gene in gene_list) and cell_vs_gene_dict[i][gene] >= cell_percentile[i][2]: # gene_list_percentile[gene][1]: #global_percentile: #
+        if (gene in gene_list) and cell_vs_gene_dict[i][gene] >= cell_percentile[i][0]: # gene_list_percentile[gene][1]: #global_percentile: #
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= cell_percentile[j][0]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
@@ -357,11 +357,13 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 edge_weight.append([0.5, mean_ccc])
-            elif i==j: # if not onlyccc, then remove the condition i==j
+            #elif i==j: # if not onlyccc, then remove the condition i==j
+            else:
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
-             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_70', 'wb') as fp:
+		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_STnCCC_97', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
 
