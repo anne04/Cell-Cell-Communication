@@ -55,7 +55,25 @@ def get_colour_scheme(palette_name: str, num_colours: int) -> List[str]:
     
     
 ############
-       
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[pathologist_label[i][0]] = 1
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = 0
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = 2
+    else:
+        barcode_type[pathologist_label[i][0]] = 0
+    
+ 
 ############
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
@@ -72,8 +90,8 @@ with open(barcode_file) as file:
         i=i+1
  
 
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_STnCCC_97'+ '_attention.npy'
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_STnCCC_97'+ '_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_97_onehop'+ '_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
@@ -91,7 +109,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
         
-threshold =  np.percentile(sorted(distribution), 85)
+threshold =  np.percentile(sorted(distribution), 80)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
@@ -182,17 +200,28 @@ colors=colors+colors_2
 
 
 cell_count_cluster=np.zeros((labels.shape[0]))
-
+filltype='none'
 for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
+    marker_size = []
+    #fillstyles_type = []
     for i in range (0, len(barcode_info)):
         if barcode_info[i][3] == label_i:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
             cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
+            if barcode_type[barcode_info[i][0]] == 0:
+                marker_size.append('o') 
+                #fillstyles_type.append('full') 
+            elif barcode_type[barcode_info[i][0]] == 1:
+                marker_size.append('^')  
+                #fillstyles_type.append('full') 
+            else:
+                marker_size.append('*') 
+                #fillstyles_type.append('full') 
             ###############
             '''if barcode_info[i][3] == 61:  
                 spot_color = colors[j-1]
@@ -207,9 +236,11 @@ for j in range (0, n_components):
 
             ###############
             
-            
-        
-    plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color)     
+    
+    for i in range (0, len(x_index)):  
+        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    filltype = 'full'
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
 #plt.legend(fontsize=4,loc='upper right')
