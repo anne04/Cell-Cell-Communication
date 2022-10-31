@@ -56,18 +56,10 @@ x_min = np.min(coordinates[:,0])
 y_max = np.max(coordinates[:,1])
 y_min = np.min(coordinates[:,1])
 #################################
-coord_x = np.random.random(low = x_min-spot_diameter//2, high=x_max+spot_diameter//2, size=adata_h5.X.shape[0])
-coord_y = np.random.random(low = y_min-spot_diameter//2, high=y_max+spot_diameter//2, size=adata_h5.X.shape[0])
-noise_x = np.random.normal(low = x_min-spot_diameter//2, high=x_max+spot_diameter//2, size=adata_h5.X.shape[0])
-noise_y = np.random.normal(low = y_min-spot_diameter//2, high=y_max+spot_diameter//2, size=adata_h5.X.shape[0])
-################################
 
 a = x_min-spot_diameter//2
 b = x_max+spot_diameter//2
 #coord_x = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
-
-save_x=coord_x
-save_y=coord_y
 coord_x = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]//2) + a
 
 a = y_min-spot_diameter//2
@@ -75,6 +67,8 @@ b = y_max+spot_diameter//2
 #coord_y = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
 coord_y = (b - a) * np.random.random_sample(size=adata_h5.X.shape[0]//2) + a
 
+save_x=coord_x
+save_y=coord_y
 temp_x = coord_x
 temp_y = coord_y
 
