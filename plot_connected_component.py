@@ -93,6 +93,7 @@ with open(barcode_file) as file:
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_STnCCC_97'+ '_attention.npy'
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_97_onehop'+ '_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_nofeature_onlyccc_97_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -109,7 +110,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
         
-threshold =  np.percentile(sorted(distribution), 80)
+threshold =  np.percentile(sorted(distribution), 83)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
@@ -273,7 +274,13 @@ from pyvis.network import Network
 
 g = Network("500px", "500px", directed=True)
 for i in range (0, len(barcode_info)):
-    g.add_node(ids[i], x=x_index[i], y=y_index[i], label=str(ids[i]), physics=True, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    if barcode_type[barcode_info[i][0]] == 0:
+        marker_size = 'circle'
+    elif barcode_type[barcode_info[i][0]] == 1:
+        marker_size = 'box'
+    else:
+        marker_size = 'ellipse'
+    g.add_node(ids[i], x=x_index[i], y=y_index[i], label=str(ids[i]), physics=True, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
 
 for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
