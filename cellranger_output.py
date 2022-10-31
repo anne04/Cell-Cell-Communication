@@ -79,13 +79,13 @@ temp_x = coord_x
 temp_y = coord_y
 
 
-coord_x_t = np.random.normal(loc=5000,scale=600,size=adata_h5.X.shape[0]//8)
-coord_y_t = np.random.normal(loc=7000,scale=600,size=adata_h5.X.shape[0]//8)
+coord_x_t = np.random.normal(loc=5000,scale=300,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=7000,scale=300,size=adata_h5.X.shape[0]//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
 
-coord_x_t = np.random.normal(loc=5000,scale=600,size=adata_h5.X.shape[0]//8)
-coord_y_t = np.random.normal(loc=11000,scale=600,size=adata_h5.X.shape[0]//8)
+coord_x_t = np.random.normal(loc=5000,scale=300,size=adata_h5.X.shape[0]//8)
+coord_y_t = np.random.normal(loc=11000,scale=300,size=adata_h5.X.shape[0]//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
 
@@ -103,10 +103,10 @@ plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 #plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'synthetic_spatial_plot.svg', dpi=400)
+plt.savefig(save_path+'synthetic_spatial_plot_2.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 	
 
