@@ -182,17 +182,30 @@ for i in range (0, cell_vs_gene.shape[0]):
             j = j+1
         
 #################################################
-ligand_list = list(ligand_dict_dataset.keys())          
+ligand_list = list(ligand_dict_dataset.keys())  
+region_list = [[4000, 6000, 6000, 8000]]
 for i in range (0, 5): 
     ligand_gene = ligand_list[i]
     recp_list = ligand_dict_dataset[ligand_gene]
     for cell_index in range (0, cell_vs_gene.shape[0]):
-        cell_vs_gene[cell_index, gene_index[ligand_gene]] = adata_X[cell_index, gene_index[ligand_gene]]
-        for receptor in recp_list:
-            receptor_gene = recp_list[receptor]
-            cell_vs_gene[cell_index, gene_index[receptor_gene]] = adata_X[cell_index, gene_index[receptor_gene]]
-        
+        for region in region_list:
+            region_x_min = region[0]
+            region_x_max = region[1]
+            region_y_min = region[2]
+            region_y_max = region[3]
+                        
+            if barcode_info[cell_index][1] > region_x_min and barcode_info[cell_index][1] < region_x_max and barcode_info[cell_index][2] > region_y_min and barcode_info[cell_index][2] < region_y_max:
+                cell_vs_gene[cell_index, gene_index[ligand_gene]] = adata_X[cell_index, gene_index[ligand_gene]]
+                for receptor in recp_list:
+                    receptor_gene = recp_list[receptor]
+                    cell_vs_gene[cell_index, gene_index[receptor_gene]] = adata_X[cell_index, gene_index[receptor_gene]]       
 #################################################
+
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'wb') as fp:
+    pickle.dump([cell_vs_gene, region_list, ligand_list[0:5]], fp)
+
+
       
       
 
