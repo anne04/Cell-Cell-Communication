@@ -46,7 +46,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_c
 #############################
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 gene_info=dict()
-for gene in range gene_ids:
+for gene in gene_ids:
     gene_info[gene]=''
     
 #############################
@@ -82,6 +82,8 @@ for i in range (0, df["from"].shape[0]):
     if ligand not in gene_info:
         continue
     receptor = df["to"][i]
+    if receptor not in gene_info:
+        continue
     ligand_dict_dataset[ligand].append(receptor)
     
 print(len(ligand_dict_dataset.keys()))
