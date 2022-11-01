@@ -41,7 +41,6 @@ def read_h5(f, i=0):
 	
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
-
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
@@ -64,27 +63,21 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 gene_info=dict()
+for gene in range gene_ids:
+    gene_info[gene]=''
+
 #barcode_info.append("")
-i=0
+'''i=0
 with open(gene_file) as file:
     tsv_file = csv.reader(file, delimiter="\t")
     for line in tsv_file:
         gene_info[line[1]]=''
+'''
 
 ligand_dict_dataset = defaultdict(list)
-
-
 ligand_dict_db = defaultdict(list)
+
 cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
-
-'''df = pd.read_csv(cell_chat_file)
-for i in range (0, df["ligand_symbol"].shape[0]):
-    ligand = df["ligand_symbol"][i]
-    receptor_symbol_list = df["receptor_symbol"][i]
-    receptor_symbol_list = receptor_symbol_list.split("&")
-    for receptor in receptor_symbol_list:
-        ligand_dict_db[ligand].append(receptor)'''
-
 df = pd.read_csv(cell_chat_file)
 cell_cell_contact = []
 for i in range (0, df["ligand_symbol"].shape[0]):
