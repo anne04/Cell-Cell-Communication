@@ -17,6 +17,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from collections import defaultdict
 import pandas as pd
+import gzip
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -27,32 +28,10 @@ parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='mod
 args = parser.parse_args()
 
 
-def rgb_to_hex(rgb):
-    return '%02x%02x%02x' % rgb
 
-def get_colour_scheme(palette_name: str, num_colours: int) -> List[str]:
-    """Extend a colour scheme using colour interpolation.
-    Parameters
-    ----------
-    palette_name: The matplotlib colour scheme name that will be extended.
-    num_colours: The number of colours in the output colour scheme.
-    Returns
-    -------
-    New colour scheme containing 'num_colours' of colours. Each colour is a hex
-    colour code.
-    """
-    scheme = [rgb2hex(c) for c in plt.get_cmap(palette_name).colors]
-    if len(scheme) >= num_colours:
-        return scheme[:num_colours]
-    else:
-        cmap = LinearSegmentedColormap.from_list("cmap", scheme)
-        extended_scheme = cmap(np.linspace(0, 1, num_colours))
-        return [to_hex(c, keep_alpha=False) for c in extended_scheme]
-    
-    
     
 ############
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+'''pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -68,15 +47,12 @@ for i in range (1, len(pathologist_label)):
     elif pathologist_label[i][1] =='acinar_reactive':
         barcode_type[pathologist_label[i][0]] = 2
     else:
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[pathologist_label[i][0]] = 0'''
     
  
 ############
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-
-#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
-#barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
 i=0
@@ -114,14 +90,14 @@ features = adata_X'''
 ####################
 
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
-gene_info=dict()
-#barcode_info.append("")
-i=0
-with open(gene_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        gene_info[line[1]]=''
 
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
+gene_index = dict()
+for gene in gene_ids: 
+    gene_index[gene] = i
+    
 ligand_dict_dataset = defaultdict(list)
 cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
 df = pd.read_csv(cell_chat_file)
@@ -153,6 +129,8 @@ for i in range (0, df["from"].shape[0]):
     if ligand not in gene_info:
         continue
     receptor = df["to"][i]
+    if receptor not in gene_info:
+        continue
     ligand_dict_dataset[ligand].append(receptor)
     
 print(len(ligand_dict_dataset.keys()))
@@ -170,9 +148,7 @@ for gene in gene_info.keys():
 print(count)
 affected_gene_count = count
 #################################################
-gene_index = dict()
-for gene in gene_info.keys(): 
-    gene_index[gene] = i
+
 
 #################################################
 cell_noise = []
