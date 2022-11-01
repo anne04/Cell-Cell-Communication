@@ -226,7 +226,7 @@ for cell_index in range (0, cell_vs_gene.shape[0]):
 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'wb') as fp:
-    pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell], fp)
+    pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell, gene_ids], fp)
 
 
       
