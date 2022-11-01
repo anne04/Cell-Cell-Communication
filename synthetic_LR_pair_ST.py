@@ -100,6 +100,10 @@ temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.
 adata_X = np.transpose(temp)  
 adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
+####################
+cell_percentile = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 5), np.percentile(sorted(cell_vs_gene[i]), 50),np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 97)])
 
 
 ####################
@@ -170,40 +174,59 @@ gene_index = dict()
 for gene in gene_info.keys(): 
     gene_index[gene] = i
 
-max_expressions = np.max(cell_vs_gene)
-min_expressions = np.min(cell_vs_gene)
-random_noise = np.random.random_sample(size=cell_vs_gene.shape[0]*affected_gene_count)
-
-j = 0
+#################################################
+cell_noise = []
 for i in range (0, cell_vs_gene.shape[0]):
+    temp = (cell_percentile[i][1] - cell_percentile[i][0]) * np.random.random_sample(size=affected_gene_count) + cell_percentile[i][0]
+    cell_noise.append(temp)
+    
+    
+'''max_expressions = np.max(cell_vs_gene)
+min_expressions = np.min(cell_vs_gene)
+random_noise = np.random.random_sample(size=cell_vs_gene.shape[0]*affected_gene_count)'''
+
+
+for i in range (0, cell_vs_gene.shape[0]):
+    j = 0
     for gene in gene_info.keys(): 
         if gene_info[gene] == 'included': 
-            cell_vs_gene[i, gene_index[gene]] = random_noise[j]
+            cell_vs_gene[i, gene_index[gene]] = cell_noise[i][j]
             j = j+1
         
 #################################################
+cell_expressed = []
+for i in range (0, cell_vs_gene.shape[0]):
+    temp = (np.max(cell_vs_gene[i]) - cell_percentile[i][2]) * np.random.random_sample(size=affected_gene_count) + cell_percentile[i][2]
+    cell_expressed.append(temp)
+    
 ligand_list = list(ligand_dict_dataset.keys())  
-region_list = [[4000, 6000, 6000, 8000]]
-for i in range (0, 5): 
-    ligand_gene = ligand_list[i]
-    recp_list = ligand_dict_dataset[ligand_gene]
-    for cell_index in range (0, cell_vs_gene.shape[0]):
-        for region in region_list:
-            region_x_min = region[0]
-            region_x_max = region[1]
-            region_y_min = region[2]
-            region_y_max = region[3]
-                        
-            if barcode_info[cell_index][1] > region_x_min and barcode_info[cell_index][1] < region_x_max and barcode_info[cell_index][2] > region_y_min and barcode_info[cell_index][2] < region_y_max:
-                cell_vs_gene[cell_index, gene_index[ligand_gene]] = adata_X[cell_index, gene_index[ligand_gene]]
-                for receptor in recp_list:
-                    receptor_gene = recp_list[receptor]
-                    cell_vs_gene[cell_index, gene_index[receptor_gene]] = adata_X[cell_index, gene_index[receptor_gene]]       
+region_list = [[7000, 9000, 10000, 13000]]
+activated_cell = []
+for cell_index in range (0, cell_vs_gene.shape[0]):
+    j = 0
+    for region in region_list:
+        region_x_min = region[0]
+        region_x_max = region[1]
+        region_y_min = region[2]
+        region_y_max = region[3]
+        if barcode_info[cell_index][1] > region_x_min and barcode_info[cell_index][1] < region_x_max and barcode_info[cell_index][2] > region_y_min and barcode_info[cell_index][2] < region_y_max:
+            for i in range (0, 5): 
+                ligand_gene = ligand_list[i]
+                recp_list = ligand_dict_dataset[ligand_gene]
+                cell_vs_gene[cell_index, gene_index[ligand_gene]] = cell_expressed[cell_index][j]
+                j = j+1
+                for receptor_gene in recp_list:                    
+                    cell_vs_gene[cell_index, gene_index[receptor_gene]] = cell_expressed[cell_index][j] 
+                    j = j+1
+    if j>0:
+        activated_cell.append(1)
+    else:
+        activated_cell.append(0)
 #################################################
 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'wb') as fp:
-    pickle.dump([cell_vs_gene, region_list, ligand_list[0:5]], fp)
+    pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell], fp)
 
 
       
