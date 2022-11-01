@@ -26,7 +26,17 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 args = parser.parse_args()
-
+################################3
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+barcode_info=[]
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
+        i=i+1
 
 
 #############################
@@ -163,5 +173,74 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
+#############################
+########
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
-##############################
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 8
+cmap = plt.get_cmap('Set2')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+cell_count_cluster=np.zeros((labels.shape[0]))
+filltype='none'
+
+x_index=[]
+y_index=[]
+marker_size = []
+
+x_index_ccc=[]
+y_index_ccc=[]
+marker_size_ccc = []
+
+ccc_index_dict = dict()
+for tuple in row_col:
+    ccc_index_dict[tuple[0]] = ''
+    ccc_index_dict[tuple[1]] = ''
+	
+for i in range (0, len(barcode_info)):
+    if i in ccc_index_ccc:
+        x_index_ccc.append(barcode_info[i][1])
+        y_index_ccc.append(barcode_info[i][2])
+	marker_size_ccc.append('^')  
+	
+    else:
+        x_index.append(barcode_info[i][1])
+        y_index.append(barcode_info[i][2])
+	marker_size.append('o') 
+
+
+for i in range (0, len(x_index)):  
+    plt.scatter(x=x_index[i], y=-y_index[i], label = 0, color=colors[0], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i]), s=15)   
+
+for i in range (0, len(x_index_ccc)):  
+    plt.scatter(x=x_index_ccc[i], y=-y_index_ccc[i], label = 1, color=colors[1], marker=matplotlib.markers.MarkerStyle(marker=marker_size_ccc[i]), s=15)   
+
+      
+#plt.legend(fontsize=4,loc='upper right')
+
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
+
