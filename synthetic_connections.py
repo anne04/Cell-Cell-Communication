@@ -48,7 +48,10 @@ gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/featur
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
-    
+i = 0
+for gene in gene_ids: 
+    gene_index[gene] = i
+    i = i+1  
 #############################
 ligand_dict_dataset = defaultdict(list)
 ligand_dict_db = defaultdict(list)
@@ -109,23 +112,27 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-    
+
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
-for i in range (0, cell_vs_gene.shape[0]): # ligand
-    count_rec = 0
-    for gene in ligand_list: 
-        if cell_vs_gene_dict[i][gene] >= cell_percentile[i][2]:
+for gene in ligand_list: 
+    
+    for i in range (0, cell_vs_gene.shape[0]): # ligand
+        count_rec = 0    
+        if cell_vs_gene_dict[i][gene_index[gene]] >= cell_percentile[i][2]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if (gene_rec in gene_list) and cell_vs_gene_dict[j][gene_rec] >= cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
                             if distance_matrix[i,j] > spot_diameter*4:
                                 continue
-                            communication_score = cell_vs_gene_dict[i][gene] * cell_vs_gene_dict[j][gene_rec]
+                            communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
                             
                             '''if communication_score > max_score:
                                 max_score = communication_score
@@ -142,13 +149,14 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                             count_total_edges = count_total_edges + 1
                             
                             
-    cell_rec_count[i] =  count_rec   
-    print("%d - %d "%(i, count_rec))
-    #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
+        cell_rec_count[i] =  count_rec   
+        print("%d - %d "%(i, count_rec))
+        #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
     
-print(pair_id)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_'+str(len(ligand_list))+'_region_1', 'wb') as fp:
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair], fp)
+    print(pair_id)
+	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'wb') as fp:
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list], fp)
 
 
 row_col = []
