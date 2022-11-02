@@ -41,7 +41,7 @@ with open(barcode_file) as file:
 
 #############################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'rb') as fp:
-    cell_vs_gene, region_list, ligand_list, activated_cell, gene_ids = pickle.load(fp)
+    cell_vs_gene, region_list, ligand_list, activated_cell, gene_ids, cell_percentile = pickle.load(fp)
 
 #############################
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
@@ -103,11 +103,13 @@ for gene in list(ligand_dict_dataset.keys()):
         count = count + 1
 ##################################################################
 print(count)
+
+
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
  
-cell_percentile = []
+
 for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
@@ -120,13 +122,12 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
 for gene in ligand_list: 
-    
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene_dict[i][gene_index[gene]] >= cell_percentile[i][2]:
+        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
@@ -150,7 +151,7 @@ for gene in ligand_list:
                             
                             
         cell_rec_count[i] =  count_rec   
-        print("%d - %d "%(i, count_rec))
+        #print("%d - %d "%(i, count_rec))
         #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
     
     print(pair_id)
@@ -165,7 +166,6 @@ for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
         if distance_matrix[i][j]<300:
-            
             #if i==j:
             if len(cells_ligand_vs_receptor[i][j])>0:
                 mean_ccc = 0
@@ -230,7 +230,7 @@ for tuple in row_col:
     ccc_index_dict[tuple[1]] = ''
 	
 for i in range (0, len(barcode_info)):
-    if i in ccc_index_ccc:
+    if i in ccc_index_dict:
         x_index_ccc.append(barcode_info[i][1])
         y_index_ccc.append(barcode_info[i][2])
 	marker_size_ccc.append('^')  
