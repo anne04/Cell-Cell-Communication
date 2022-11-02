@@ -112,7 +112,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
         print('%d is %g'%(i, attention_scores[i][192]))'''
 
 
-threshold =  np.percentile(sorted(distribution), 57)
+threshold =  np.percentile(sorted(distribution), 63)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
