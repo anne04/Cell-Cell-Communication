@@ -48,6 +48,9 @@ gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/featur
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
+
+
+gene_index=dict()
 i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
