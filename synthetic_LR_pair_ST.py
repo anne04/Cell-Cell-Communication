@@ -95,6 +95,7 @@ gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
 
+gene_index=dict()    
 i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
@@ -170,7 +171,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         if gene_info[gene] == 'included': 
             cell_vs_gene[i, gene_index[gene]] = cell_noise[i][j]
             j = j+1
-        
+    print(j)    
 #################################################
 cell_expressed = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -209,5 +210,43 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_c
 
       
       
-
+activated_cell = []
+for cell_index in range (0, cell_vs_gene.shape[0]):
+    j = 0
+    '''for region in region_list:
+        region_x_min = region[0]
+        region_x_max = region[1]
+        region_y_min = region[2]
+        region_y_max = region[3]
+        if barcode_info[cell_index][1] > region_x_min and barcode_info[cell_index][1] < region_x_max and barcode_info[cell_index][2] > region_y_min and barcode_info[cell_index][2] < region_y_max:'''
+            for i in range (0, 5): 
+                ligand_gene = ligand_list[i]
+                recp_list = ligand_dict_dataset[ligand_gene]
+                if cell_vs_gene[cell_index, gene_index[ligand_gene]]>cell_percentile[cell_index][2]:
+                    j = j+1
+                for receptor_gene in recp_list:
+                    if cell_vs_gene[cell_index, gene_index[receptor_gene]]>cell_percentile[cell_index][2]:
+                        j = j+1
+    print(j)
+    if j>0:
+        activated_cell.append(1)
+    else:
+        activated_cell.append(0)
+    
+activated_cell = []
+for cell_index in range (0, cell_vs_gene.shape[0]):
+    j = 0
+    for i in range (0, 5): 
+        ligand_gene = ligand_list[i]
+        recp_list = ligand_dict_dataset[ligand_gene]
+        if cell_vs_gene[cell_index, gene_index[ligand_gene]]>cell_percentile[cell_index][2]:
+            j = j+1
+        for receptor_gene in recp_list:
+            if cell_vs_gene[cell_index, gene_index[receptor_gene]]>cell_percentile[cell_index][2]:
+                j = j+1
+    print(j)
+    if j>0:
+        activated_cell.append(1)
+    else:
+        activated_cell.append(0)
     
