@@ -27,6 +27,8 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 args = parser.parse_args()
 ################################3
+spot_diameter = 89.43 #pixels
+
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
@@ -152,8 +154,8 @@ for gene in ligand_list:
                             cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
                             count_rec = count_rec + 1
                             count_total_edges = count_total_edges + 1
-			    activated_cell_index[i] = ''
-			    activated_cell_index[j] = ''
+                            activated_cell_index[i] = ''
+                            activated_cell_index[j] = ''
                             
                             
         cell_rec_count[i] =  count_rec   
@@ -163,9 +165,10 @@ for gene in ligand_list:
     print(pair_id)
 	
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'wb') as fp:
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list], fp)
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp)
 
 
+ccc_index_dict = dict()
 row_col = []
 edge_weight = []
 for i in range (0, len(cells_ligand_vs_receptor)):
@@ -179,11 +182,14 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
                 mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
                 edge_weight.append([0.5, mean_ccc])
             elif i==j: # if not onlyccc, then remove the condition i==j
             #else:
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
+
 		
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_STnCCC_97', 'wb') as fp:             
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
@@ -219,8 +225,6 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
-cell_count_cluster=np.zeros((labels.shape[0]))
-filltype='none'
 
 x_index=[]
 y_index=[]
@@ -230,21 +234,15 @@ x_index_ccc=[]
 y_index_ccc=[]
 marker_size_ccc = []
 
-ccc_index_dict = dict()
-for tuple in row_col:
-    ccc_index_dict[tuple[0]] = ''
-    ccc_index_dict[tuple[1]] = ''
-	
 for i in range (0, len(barcode_info)):
     if i in ccc_index_dict:
         x_index_ccc.append(barcode_info[i][1])
         y_index_ccc.append(barcode_info[i][2])
-	marker_size_ccc.append('^')  
-	
+        marker_size_ccc.append('^')  
     else:
         x_index.append(barcode_info[i][1])
         y_index.append(barcode_info[i][2])
-	marker_size.append('o') 
+        marker_size.append('o') 
 
 
 for i in range (0, len(x_index)):  
