@@ -44,7 +44,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_c
     cell_vs_gene, region_list, ligand_list, activated_cell, gene_ids, cell_percentile = pickle.load(fp)
 
 #############################
-gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
+#gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
@@ -124,6 +124,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
+activated_cell_index = dict()
 for gene in ligand_list: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
@@ -151,6 +152,8 @@ for gene in ligand_list:
                             cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
                             count_rec = count_rec + 1
                             count_total_edges = count_total_edges + 1
+			    activated_cell_index[i] = ''
+			    activated_cell_index[j] = ''
                             
                             
         cell_rec_count[i] =  count_rec   
