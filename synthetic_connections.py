@@ -167,6 +167,8 @@ for gene in ligand_list:
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'wb') as fp:
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp)
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'rb') as fp:
+   cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index = pickle.load(fp)
 
 ccc_index_dict = dict()
 row_col = []
@@ -185,14 +187,14 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
                 edge_weight.append([0.5, mean_ccc])
-            elif i==j: # if not onlyccc, then remove the condition i==j
-            #else:
+            #elif i==j: # if not onlyccc, then remove the condition i==j
+            else:
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 
 		
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_STnCCC_97', 'wb') as fp:             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_STnCCC_70', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 	  
 #############################
