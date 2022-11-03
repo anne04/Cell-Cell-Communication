@@ -175,6 +175,35 @@ for i in range (0, count_points_component.shape[0]):
         id_label = id_label+1
         index_dict[i] = id_label
 print(id_label)
+########
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 8
+cmap = plt.get_cmap('Set2')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
     
 cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
