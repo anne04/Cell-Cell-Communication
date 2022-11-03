@@ -29,7 +29,7 @@ args = parser.parse_args()
 
 
 
-    
+spot_diameter = 89.43 #pixels
 ############
 
 ############
@@ -146,7 +146,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         if gene_info[gene] == 'included': 
             cell_vs_gene[i, gene_index[gene]] = cell_noise[i][j]
             j = j+1
-    print(j)    
+    #print(j)    
 #################################################
 cell_expressed = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -229,7 +229,8 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
 activated_cell_index = dict()
-for gene in ligand_list: 
+
+for gene in ligand_list[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
         if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
@@ -262,7 +263,7 @@ for gene in ligand_list:
     print(pair_id)
 	
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_2_a', 'wb') as fp:
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp)
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[0:5],activated_cell_index], fp)
 
 
 ccc_index_dict = dict()
@@ -282,14 +283,14 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
                 edge_weight.append([0.5, mean_ccc])
-            elif i==j: # if not onlyccc, then remove the condition i==j
-            #else:
+            #elif i==j: # if not onlyccc, then remove the condition i==j
+            else:
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 
 		
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region2_STnCCC_70', 'wb') as fp:             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region2_STnCCC_70', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
