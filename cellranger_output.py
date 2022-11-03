@@ -82,6 +82,9 @@ coord_x_t = np.random.normal(loc=5000,scale=300,size=adata_h5.X.shape[0]//8)
 coord_y_t = np.random.normal(loc=11000,scale=300,size=adata_h5.X.shape[0]//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
+
+ccc_scores = np.random.random_sample(size=affected_gene_count)
+
 ccc_dict_x = dict()
 ccc_dict_y = dict()
 for i in range (0, coord_x_t.shape[0]):
