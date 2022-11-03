@@ -94,7 +94,9 @@ with open(barcode_file) as file:
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_withfeature_onlyccc_97'+ '_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r2_2attr_withFeature_97_onehop'+ '_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_nofeature_onlyccc_97_attention.npy'
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_STnCCC_70_reg1_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_70_reg1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -111,8 +113,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     if attention_scores[i][192]!=0:
         print('%d is %g'%(i, attention_scores[i][192]))'''
 
-
-threshold =  np.percentile(sorted(distribution), 63)
+percentile_value = 50
+threshold =  np.percentile(sorted(distribution), percentile_value)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 
 for j in range (0, attention_scores.shape[1]):
