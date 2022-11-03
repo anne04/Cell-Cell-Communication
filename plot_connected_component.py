@@ -96,7 +96,9 @@ with open(barcode_file) as file:
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_nofeature_onlyccc_97_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_70_reg1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_STnCCC_70_reg1_attention.npy'
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_70_reg1_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_STnCCC_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withQuantFeature_70_reg1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
