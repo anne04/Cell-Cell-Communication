@@ -154,7 +154,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     cell_expressed.append(temp)
     
 ligand_list = list(ligand_dict_dataset.keys())  
-region_list = [[6000, 10000, 10000, 13000]]
+region_list = [[6000, 10000, 10000, 13000], [10000, 13000, 5000, 9000]]
 activated_cell = []
 for cell_index in range (0, cell_vs_gene.shape[0]):
     j = 0
