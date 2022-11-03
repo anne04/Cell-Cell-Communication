@@ -81,7 +81,6 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 5), np.percentile(sorted(cell_vs_gene[i]), 50),np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 97)])
 
-
 ####################
 '''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
 adata_X = sc.pp.scale(adata_X)
@@ -158,13 +157,7 @@ cell_noise = []
 for i in range (0, cell_vs_gene.shape[0]):
     temp = (cell_percentile[i][1] - cell_percentile[i][0]) * np.random.random_sample(size=affected_gene_count) + cell_percentile[i][0]
     cell_noise.append(temp)
-    
-    
-'''max_expressions = np.max(cell_vs_gene)
-min_expressions = np.min(cell_vs_gene)
-random_noise = np.random.random_sample(size=cell_vs_gene.shape[0]*affected_gene_count)'''
-
-
+   
 for i in range (0, cell_vs_gene.shape[0]):
     j = 0
     for gene in gene_info.keys(): 
@@ -207,33 +200,8 @@ for cell_index in range (0, cell_vs_gene.shape[0]):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'wb') as fp:
     pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell, gene_ids, cell_percentile], fp)
 
-
-      
-      
-activated_cell = []
-for cell_index in range (0, cell_vs_gene.shape[0]):
-    j = 0
-    '''for region in region_list:
-        region_x_min = region[0]
-        region_x_max = region[1]
-        region_y_min = region[2]
-        region_y_max = region[3]
-        if barcode_info[cell_index][1] > region_x_min and barcode_info[cell_index][1] < region_x_max and barcode_info[cell_index][2] > region_y_min and barcode_info[cell_index][2] < region_y_max:'''
-            for i in range (0, 5): 
-                ligand_gene = ligand_list[i]
-                recp_list = ligand_dict_dataset[ligand_gene]
-                if cell_vs_gene[cell_index, gene_index[ligand_gene]]>cell_percentile[cell_index][2]:
-                    j = j+1
-                for receptor_gene in recp_list:
-                    if cell_vs_gene[cell_index, gene_index[receptor_gene]]>cell_percentile[cell_index][2]:
-                        j = j+1
-    print(j)
-    if j>0:
-        activated_cell.append(1)
-    else:
-        activated_cell.append(0)
-    
-activated_cell = []
+######################################       
+'''activated_cell = []
 for cell_index in range (0, cell_vs_gene.shape[0]):
     j = 0
     for i in range (0, 5): 
@@ -249,4 +217,67 @@ for cell_index in range (0, cell_vs_gene.shape[0]):
         activated_cell.append(1)
     else:
         activated_cell.append(0)
+    '''
+######################################
+total_relation = 0
+l_r_pair = dict()
+count = 0
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    l_r_pair[gene] = dict()
+    for receptor_gene in ligand_dict_dataset[gene]:
+        l_r_pair[gene][receptor_gene] = -1 #count #
+        count = count + 1
+##################################################################
+print(count)
+
+cells_ligand_vs_receptor = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cells_ligand_vs_receptor.append([])
+ 
+
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        cells_ligand_vs_receptor[i].append([])
+        cells_ligand_vs_receptor[i][j] = []
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
+cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
+count_total_edges = 0
+pair_id = 1
+activated_cell_index = dict()
+for gene in ligand_list: 
+    for i in range (0, cell_vs_gene.shape[0]): # ligand
+        count_rec = 0    
+        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
+            for j in range (0, cell_vs_gene.shape[0]): # receptor
+                for gene_rec in ligand_dict_dataset[gene]:
+                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                            continue
+                        else:
+                            if distance_matrix[i,j] > spot_diameter*4:
+                                continue
+                            communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                            
+                            if l_r_pair[gene][gene_rec] == -1: 
+                                l_r_pair[gene][gene_rec] = pair_id
+                                pair_id = pair_id + 1 
+                           
+                            relation_id = l_r_pair[gene][gene_rec]
+                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            count_rec = count_rec + 1
+                            count_total_edges = count_total_edges + 1
+                            activated_cell_index[i] = ''
+                            activated_cell_index[j] = ''
+                            
+                            
+        cell_rec_count[i] =  count_rec   
+        #print("%d - %d "%(i, count_rec))
+        #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
     
+    print(pair_id)
+	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'wb') as fp:
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp)
