@@ -30,6 +30,10 @@ args = parser.parse_args()
 spot_diameter = 89.43 #pixels
 
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
+
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
@@ -198,6 +202,51 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     pickle.dump([row_col, edge_weight], fp)
 	  
 #############################
+
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+edge_type = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            #if i==j:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+		# type 0
+                row_col.append([i,j])
+                edge_weight.append([0.5])
+                edge_type.append(0)
+		# type 1
+                row_col.append([i,j])
+                edge_weight.append([mean_ccc])
+                edge_type.append(1)
+		
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+		
+            #elif i==j: # if not onlyccc, then remove the condition i==j
+            else:               
+		# type 0
+                row_col.append([i,j])
+                edge_weight.append([0.5])
+                edge_type.append(0)
+		# type 1
+                row_col.append([i,j])
+                edge_weight.append([0])
+                edge_type.append(1)
+
+		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_2RGAT_synthetic_region1_STnCCC_70', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    pickle.dump([row_col, edge_weight, edge_type], fp)
+	  
+#############################
+
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
