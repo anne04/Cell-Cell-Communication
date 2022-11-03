@@ -31,25 +31,7 @@ args = parser.parse_args()
 
     
 ############
-'''pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
 
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
-    else:
-        barcode_type[pathologist_label[i][0]] = 0'''
-    
- 
 ############
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
@@ -197,7 +179,7 @@ for cell_index in range (0, cell_vs_gene.shape[0]):
 #################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_1', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_2', 'wb') as fp:
     pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell, gene_ids, cell_percentile], fp)
 
 ######################################       
@@ -279,5 +261,183 @@ for gene in ligand_list:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_1_a', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_2_a', 'wb') as fp:
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp)
+
+
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<300:
+            #if i==j:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                mean_ccc = 0
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                row_col.append([i,j])
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+                edge_weight.append([0.5, mean_ccc])
+            elif i==j: # if not onlyccc, then remove the condition i==j
+            #else:
+                row_col.append([i,j])
+                edge_weight.append([0.5, 0])
+
+		
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region2_STnCCC_70', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    pickle.dump([row_col, edge_weight], fp)
+############################################################
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[pathologist_label[i][0]] = 1
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = 0
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = 2
+    else:
+        barcode_type[pathologist_label[i][0]] = 0
+	
+attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+distribution = []
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    attention_scores[i][j] = edge_weight[index][1]
+    distribution.append(attention_scores[i][j])
+    
+
+threshold =  np.percentile(sorted(distribution), 90)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+
+for j in range (0, attention_scores.shape[1]):
+    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    for i in range (0, attention_scores.shape[0]):
+        if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+            connecting_edges[i][j] = 1
+            
+############
+
+
+graph = csr_matrix(connecting_edges)
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+print('number of component %d'%n_components)
+
+count_points_component = np.zeros((n_components))
+for i in range (0, len(labels)):
+     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+           
+print(count_points_component)
+
+id_label = 0  
+index_dict = dict()
+for i in range (0, count_points_component.shape[0]):
+    if count_points_component[i]>1:
+        id_label = id_label+1
+        index_dict[i] = id_label
+print(id_label)
+    
+     
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+
+#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
+#barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
+barcode_info=[]
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
+        i=i+1
+ 
+for i in range (0, len(barcode_info)):
+#    if barcode_info[i][0] in barcode_label:
+    if count_points_component[labels[i]] > 1:
+        barcode_info[i][3] = index_dict[labels[i]]
+    
+       
+
+########
+number = 20
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+number = 20
+cmap = plt.get_cmap('tab20b')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 8
+cmap = plt.get_cmap('Set2')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 12
+cmap = plt.get_cmap('Set3')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+
+cell_count_cluster=np.zeros((labels.shape[0]))
+filltype='none'
+for j in range (0, n_components):
+    label_i = j
+    x_index=[]
+    y_index=[]
+    marker_size = []
+    #fillstyles_type = []
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][3] == label_i:
+            x_index.append(barcode_info[i][1])
+            y_index.append(barcode_info[i][2])
+            cell_count_cluster[j] = cell_count_cluster[j]+1
+            spot_color = colors[j]
+            if barcode_type[barcode_info[i][0]] == 0:
+                marker_size.append('o') 
+                #fillstyles_type.append('full') 
+            elif barcode_type[barcode_info[i][0]] == 1:
+                marker_size.append('^')  
+                #fillstyles_type.append('full') 
+            else:
+                marker_size.append('*') 
+                #fillstyles_type.append('full') 
+            
+            ###############
+            
+    
+    for i in range (0, len(x_index)):  
+        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    filltype = 'full'
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
+    
+#plt.legend(fontsize=4,loc='upper right')
+
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
+ 
