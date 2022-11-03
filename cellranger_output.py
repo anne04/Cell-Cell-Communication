@@ -82,6 +82,12 @@ coord_x_t = np.random.normal(loc=5000,scale=300,size=adata_h5.X.shape[0]//8)
 coord_y_t = np.random.normal(loc=11000,scale=300,size=adata_h5.X.shape[0]//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
+ccc_dict_x = dict()
+ccc_dict_y = dict()
+for i in range (0, coord_x_t.shape[0]):
+    ccc_dict_x[coord_x_t[i]] = ''
+    ccc_dict_y[coord_y_t[i]] = ''
+
 
 coord_x_t = np.random.normal(loc=8000,scale=900,size=adata_h5.X.shape[0]//8)
 coord_y_t = np.random.normal(loc=9000,scale=900,size=adata_h5.X.shape[0]//8)
@@ -102,7 +108,116 @@ plt.clf()
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
-	
+
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j]<3:
+            #if i==j:
+            if i in ccc_dict_x and j in ccc_dict_y:
+                mean_ccc = np.random(1)
+                row_col.append([i,j])
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+                edge_weight.append([0.5, mean_ccc])
+            #elif i==j: # if not onlyccc, then remove the condition i==j
+            else:
+                row_col.append([i,j])
+                edge_weight.append([0.5, 0])
+
+		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region2_STnCCC_70', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    pickle.dump([row_col, edge_weight], fp)
+########
+
+attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+distribution = []
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    attention_scores[i][j] = edge_weight[index][1]
+    distribution.append(attention_scores[i][j])
+    
+
+threshold =  np.percentile(sorted(distribution), 90)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+
+for j in range (0, attention_scores.shape[1]):
+    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    for i in range (0, attention_scores.shape[0]):
+        if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+            connecting_edges[i][j] = 1
+            
+############
+
+
+graph = csr_matrix(connecting_edges)
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+print('number of component %d'%n_components)
+
+count_points_component = np.zeros((n_components))
+for i in range (0, len(labels)):
+     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+           
+print(count_points_component)
+
+id_label = 0  
+index_dict = dict()
+for i in range (0, count_points_component.shape[0]):
+    if count_points_component[i]>1:
+        id_label = id_label+1
+        index_dict[i] = id_label
+print(id_label)
+    
+cell_count_cluster=np.zeros((labels.shape[0]))
+filltype='none'
+for j in range (0, n_components):
+    label_i = j
+    x_index=[]
+    y_index=[]
+    marker_size = []
+    #fillstyles_type = []
+    for i in range (0, temp_x.shape[0]):
+        if label[i] == j:
+            x_index.append(temp_x[i])
+            y_index.append(temp_y[i])
+            
+            '''if barcode_type[barcode_info[i][0]] == 0:
+                marker_size.append('o') 
+                #fillstyles_type.append('full') 
+            elif barcode_type[barcode_info[i][0]] == 1:
+                marker_size.append('^')  
+                #fillstyles_type.append('full') 
+            else:
+                marker_size.append('*') 
+                #fillstyles_type.append('full')''' 
+            
+            ###############
+            
+    
+    for i in range (0, len(x_index)):  
+        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], s=1)   
+    #filltype = 'full'
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
+    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
+    
+#plt.legend(fontsize=4,loc='upper right')
+
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
+ 
+
+
+
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
