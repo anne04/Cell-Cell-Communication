@@ -186,6 +186,14 @@ for i in range (0, count_points_component.shape[0]):
         id_label = id_label+1
         index_dict[i] = id_label
 print(id_label)
+
+datapoint_label = []
+for i in range (0, datapoint_size):
+    if count_points_component[labels[i]]>1:
+        datapoint_label.append(index_dict[labels[i]])
+    else:
+        datapoint_label.append(0)
+
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
@@ -216,16 +224,13 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
     
-cell_count_cluster=np.zeros((labels.shape[0]))
-filltype='none'
-for j in range (0, n_components):
-    label_i = j
+
+for j in range (0, id_label):
     x_index=[]
     y_index=[]
-    marker_size = []
     #fillstyles_type = []
-    for i in range (0, temp_x.shape[0]):
-        if labels[i] == j:
+    for i in range (0, datapoint_size):
+        if datapoint_label[i] == j:
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
             
@@ -243,7 +248,7 @@ for j in range (0, n_components):
             
     
     for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], s=2)   
+        plt.scatter(x=x_index[i], y=y_index[i], label = j, color=colors[j], s=2)   
     #filltype = 'full'
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
