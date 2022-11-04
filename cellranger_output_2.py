@@ -97,8 +97,8 @@ plt.clf()
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
-
-coordinates = np.zeros((datapoint_size,2))
+datapoint_size = temp_x.shape[0]
+coordinates = np.zeros((temp_x.shape[0],2))
 for i in range (0, datapoint_size):
     coordinates[i][0] = temp_x[i]
     coordinates[i][1] = temp_y[i]
@@ -110,7 +110,7 @@ distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
 for i in range (0, datapoint_size):
     #ccc_j = []
     for j in range (0, datapoint_size):
-        if distance_matrix[i][j]<4:
+        if distance_matrix[i][j]<6:
             distance_matrix_threshold_I[i][j] = 1
             
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
@@ -129,7 +129,7 @@ edge_weight = []
 for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
     for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<4:
+        if distance_matrix[i][j]<6:
             if temp_x[i] in ccc_dict_x and temp_y[j] in ccc_dict_y:
                 mean_ccc = ccc_scores[k]
                 k = k + 1
@@ -147,7 +147,17 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 
-###########
+###############################################Visualization starts###################################################################################################
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
+    temp_x, temp_y = pickle.load(fp)
+
+#####################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    row_col, edge_weight = pickle.load(fp)
+
+
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 for index in range (0, len(row_col)):
@@ -162,9 +172,6 @@ for index in range (0, len(row_col)):
 ########
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
-    temp_x, temp_y = pickle.load(fp)
-
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
