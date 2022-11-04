@@ -96,11 +96,27 @@ with open(barcode_file) as file:
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'gat_r1_2attr_nofeature_onlyccc_97_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_70_reg1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withFeature_STnCCC_70_reg1_attention.npy'
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_STnCCC_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_STnCCC_70_reg1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_noFeature_70_reg1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withQuantFeature_70_reg1_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synccc_gat_r1_2attr_withQuantFeature_STnCCC_70_reg1_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
+######
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
+    temp_x, temp_y = pickle.load(fp)
+
+coordinates = np.zeros((temp_x.shape[0],2))
+for i in range (0, coordinates.shape[0]):
+    coordinates[i][0] = temp_x[i]
+    coordinates[i][1] = temp_y[i]
+  
+######
+barcode_info = []
+for i in range (0, coordinates.shape[0]):
+    barcode_info.append([[],coordinates[i][0],coordinates[i][1],0])
+################################################################
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
 distribution = []
@@ -125,13 +141,7 @@ for j in range (0, attention_scores.shape[1]):
         if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
             
-'''count = 0            
-for i in range (0, attention_scores.shape[0]):           
-    if np.sum(connecting_edges[:,i])==0 and np.sum(connecting_edges[i,:])==0 :
-        print(i)
-        count = count+1
 
-print(count)'''
 ############
 
 
@@ -153,21 +163,17 @@ for i in range (0, count_points_component.shape[0]):
         index_dict[i] = id_label
 print(id_label)
     
-     
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+######################################     
+'''coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-
-#coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_noPCA_QuantileTransform_wighted_TDistance_2k/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x/'+'coordinates.npy')
-#barcode_file='/cluster/home/t116508uhn/64630/barcodes.tsv'
 barcode_info=[]
-#barcode_info.append("")
 i=0
 with open(barcode_file) as file:
     tsv_file = csv.reader(file, delimiter="\t")
     for line in tsv_file:
         barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
-        i=i+1
- 
+        i=i+1'''
+#################################### 
 for i in range (0, len(barcode_info)):
 #    if barcode_info[i][0] in barcode_label:
     if count_points_component[labels[i]] > 1:
@@ -218,9 +224,8 @@ for j in range (0, n_components):
         if barcode_info[i][3] == label_i:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
-            cell_count_cluster[j] = cell_count_cluster[j]+1
-            spot_color = colors[j]
-            if barcode_type[barcode_info[i][0]] == 0:
+            
+            '''if barcode_type[barcode_info[i][0]] == 0:
                 marker_size.append('o') 
                 #fillstyles_type.append('full') 
             elif barcode_type[barcode_info[i][0]] == 1:
@@ -228,24 +233,16 @@ for j in range (0, n_components):
                 #fillstyles_type.append('full') 
             else:
                 marker_size.append('*') 
-                #fillstyles_type.append('full') 
+                #fillstyles_type.append('full') '''
             ###############
-            '''if barcode_info[i][3] == 61:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 88:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 47:  
-                spot_color = colors[j-1]
-            elif barcode_info[i][3] == 12:  
-                spot_color = colors[j-1]'''
-            #if barcode_info[i][3] == 15:  
-            #    barcode_label[toomany_label[i][0]] = 14
+           
 
             ###############
             
     
-    for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    for i in range (0, len(x_index)): 
+        plt.scatter(x=x_index[i], y=y_index[i], label = j, color=colors[j],  s=15)
+        #plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
     filltype = 'full'
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
