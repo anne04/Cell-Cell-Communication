@@ -118,8 +118,8 @@ distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
-a = 2
-b = 10
+a = 1
+b = 2
 ccc_scores = (b - a) * np.random.random_sample(size=len(ccc_dict_x.keys())*len(ccc_dict_x.keys())) + a
 k = 0
 
@@ -146,8 +146,8 @@ for i in range (0, distance_matrix.shape[0]):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
-########
 
+###########
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 for index in range (0, len(row_col)):
@@ -157,8 +157,29 @@ for index in range (0, len(row_col)):
     distribution.append(attention_scores[i][j])
     
 
-threshold =  np.percentile(sorted(distribution), 65)
-connecting_edges = np.zeros((datapoint_size,datapoint_size))
+################
+
+########
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
+    temp_x, temp_y = pickle.load(fp)
+
+
+attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+distribution = []
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores[i][j] = X_attention_bundle[1][index][0]
+    distribution.append(attention_scores[i][j])
+	
+##############
+
+
+percentile_value = 50
+threshold =  np.percentile(sorted(distribution), percentile_value)
+connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
@@ -188,7 +209,7 @@ for i in range (0, count_points_component.shape[0]):
 print(id_label)
 
 datapoint_label = []
-for i in range (0, datapoint_size):
+for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
         datapoint_label.append(index_dict[labels[i]])
     else:
@@ -229,7 +250,7 @@ for j in range (0, id_label):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
-    for i in range (0, datapoint_size):
+    for i in range (0, temp_x.shape[0]):
         if datapoint_label[i] == j:
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
