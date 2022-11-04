@@ -118,7 +118,7 @@ distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
-a = 1
+a = 0
 b = 2
 ccc_scores = (b - a) * np.random.random_sample(size=len(ccc_dict_x.keys())*len(ccc_dict_x.keys())) + a
 k = 0
