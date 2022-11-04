@@ -24,6 +24,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+
 args = parser.parse_args()
 
 spot_diameter = 89.43 #pixels
@@ -75,12 +77,7 @@ coord_x_t = np.random.normal(loc=200,scale=10,size=datapoint_size//8)
 coord_y_t = np.random.normal(loc=150,scale=10,size=datapoint_size//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
-ccc_dict_x = dict()
-ccc_dict_y = dict()
-for i in range (0, coord_x_t.shape[0]):
-    ccc_dict_x[coord_x_t[i]] = ''
-    ccc_dict_y[coord_y_t[i]] = ''
-    
+ 
     
 coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
 coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
@@ -118,25 +115,44 @@ distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
-a = 0
-b = 2
-ccc_scores = (b - a) * np.random.random_sample(size=len(ccc_dict_x.keys())*len(ccc_dict_x.keys())) + a
-k = 0
-
-ccc_index_dict = dict()
-row_col = []
-edge_weight = []
+a = -1
+b = +2
+count = 0
+region_list = [[182, 230, 125, 170], [350, 450, 50, 225]]
 for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
     for j in range (0, distance_matrix.shape[1]):
         if distance_matrix[i][j]<6:
-            if temp_x[i] in ccc_dict_x and temp_y[j] in ccc_dict_y:
-                mean_ccc = ccc_scores[k]
-                k = k + 1
-                row_col.append([i,j])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-                edge_weight.append([0.5, mean_ccc])
+            for region in region_list:
+                region_x_min = region[0]
+                region_x_max = region[1]
+                region_y_min = region[2]
+                region_y_max = region[3]  		
+                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
+                    count = count + 1
+
+ccc_scores = (b - a) * np.random.random_sample(size=count+1) + a		
+k = 0
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+
+for i in range (0, distance_matrix.shape[0]):
+    #ccc_j = []
+    for j in range (0, distance_matrix.shape[1]):
+        if distance_matrix[i][j]<6:
+            for region in region_list:
+                region_x_min = region[0]
+                region_x_max = region[1]
+                region_y_min = region[2]
+                region_y_max = region[3]  		
+                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
+                    mean_ccc = ccc_scores[k]
+                    k = k + 1
+                    row_col.append([i,j])
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    edge_weight.append([0.5, mean_ccc])
             #elif i==j: # if not onlyccc, then remove the condition i==j
             else:
                 row_col.append([i,j])
@@ -152,6 +168,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
+datapoint_size = temp_x.shape[0]
 #####################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
@@ -184,7 +201,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 ##############
 
 
-percentile_value = 50
+percentile_value = 96
 threshold =  np.percentile(sorted(distribution), percentile_value)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
@@ -276,16 +293,12 @@ for j in range (0, id_label):
             
     
     for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=y_index[i], label = j, color=colors[j], s=2)   
-    #filltype = 'full'
-    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
-    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
+        plt.scatter(x=x_index[i], y=y_index[i], label=j, color=colors[j], s=1)   
     
 #plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
-#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
  
 
