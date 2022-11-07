@@ -29,7 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 
 spot_diameter = 89.43 #pixels
-th_dist = 4
+th_dist = 10
 
 	
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
@@ -165,12 +165,25 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 
+print(len(row_col))
+
+
 ###############################################Visualization starts###################################################################################################
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
+
+coordinates = np.zeros((temp_x.shape[0],2))
+for i in range (0, datapoint_size):
+    coordinates[i][0] = temp_x[i]
+    coordinates[i][1] = temp_y[i]
+    
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
+
 #####################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
@@ -203,10 +216,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 ##############
 
 
-percentile_value = 88
+percentile_value = 98
 threshold =  np.percentile(sorted(distribution), percentile_value)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
@@ -214,10 +226,28 @@ for j in range (0, attention_scores.shape[1]):
             connecting_edges[i][j] = 1
             
 ############
+'''region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
+percentile_value = 85
+threshold =  np.percentile(sorted(distribution), percentile_value)
+connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for j in range (0, attention_scores.shape[1]):
+    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    for i in range (0, attention_scores.shape[0]):
+        flag = 0
+        for region in region_list:
+            region_x_min = region[0]
+            region_x_max = region[1]
+            region_y_min = region[2]
+            region_y_max = region[3]  		
+            if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max:                				
+                if attention_scores[i][j] > threshold and attention_scores[i][j] < np.percentile(sorted(distribution), 100): #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1'''
+    
+#############
 
 
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+n_components, labels = connected_components(csgraph=graph,directed=False, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
 
 count_points_component = np.zeros((n_components))
@@ -270,7 +300,13 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
 
-    
+number = 20
+cmap = plt.get_cmap('tab20c')
+colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
+
+colors=colors+colors_2
+
+       
 
 for j in range (0, id_label):
     x_index=[]
