@@ -25,11 +25,11 @@ parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-
 args = parser.parse_args()
+th_dist = 6
 
 spot_diameter = 89.43 #pixels
-th_dist = 10
+
 
 	
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
@@ -87,6 +87,10 @@ temp_y = np.concatenate((temp_y,coord_y_t))
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=2)
 #plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
 
+
+
+
+
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
@@ -118,7 +122,7 @@ with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_
 a = .5
 b = +2
 count = 0
-region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
+region_list =  [[182, 230, 125, 170], [350, 450, 50, 225]]
 #ccc_scores = []
 for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
@@ -192,12 +196,15 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
+ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
     attention_scores[i][j] = edge_weight[index][1]
     distribution.append(attention_scores[i][j])
-    
+    if edge_weight[index][1]>0:
+        ccc_index_dict[i] = ''
+        ccc_index_dict[j] = ''    
 
 ################
 
@@ -270,6 +277,15 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
+	
+#############
+datapoint_label = []
+for i in range (0, temp_x.shape[0]):
+    if i in ccc_index_dict:
+        datapoint_label.append(1)
+    else:
+        datapoint_label.append(0)
+id_label=2
 
 ########
 number = 20
