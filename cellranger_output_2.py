@@ -29,7 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 
 spot_diameter = 89.43 #pixels
-
+th_dist = 4
 
 	
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
@@ -107,7 +107,7 @@ distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
 for i in range (0, datapoint_size):
     #ccc_j = []
     for j in range (0, datapoint_size):
-        if distance_matrix[i][j]<6:
+        if distance_matrix[i][j]<th_dist:
             distance_matrix_threshold_I[i][j] = 1
             
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
@@ -115,14 +115,15 @@ distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
-a = -1
+a = .5
 b = +2
 count = 0
-region_list = [[182, 230, 125, 170], [350, 450, 50, 225]]
+region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
+#ccc_scores = []
 for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
     for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<6:
+        if distance_matrix[i][j]<th_dist:
             for region in region_list:
                 region_x_min = region[0]
                 region_x_max = region[1]
@@ -130,17 +131,17 @@ for i in range (0, distance_matrix.shape[0]):
                 region_y_max = region[3]  		
                 if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
                     count = count + 1
+            
 
 ccc_scores = (b - a) * np.random.random_sample(size=count+1) + a		
 k = 0
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
-
 for i in range (0, distance_matrix.shape[0]):
-    #ccc_j = []
     for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<6:
+        if distance_matrix[i][j]<th_dist:
+            flag = 0
             for region in region_list:
                 region_x_min = region[0]
                 region_x_max = region[1]
@@ -153,10 +154,11 @@ for i in range (0, distance_matrix.shape[0]):
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     edge_weight.append([0.5, mean_ccc])
-            #elif i==j: # if not onlyccc, then remove the condition i==j
-            else:
+                    flag = 1
+            if flag == 0 :
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
+
 
 		
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'wb') as fp:             
