@@ -203,7 +203,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 ##############
 
 
-percentile_value = 96
+percentile_value = 88
 threshold =  np.percentile(sorted(distribution), percentile_value)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
@@ -294,10 +294,10 @@ for j in range (0, id_label):
             ###############
             
     
-    for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=y_index[i], label=j, color=colors[j], s=1)   
+    #for i in range (0, len(x_index)):  
+    plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
     
-#plt.legend(fontsize=4,loc='upper right')
+plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
