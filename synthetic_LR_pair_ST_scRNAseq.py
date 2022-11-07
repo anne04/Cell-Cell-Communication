@@ -32,18 +32,6 @@ args = parser.parse_args()
 spot_diameter = 89.43 #pixels
 ############
 
-############
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=[]
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
-        i=i+1
- 
 ####### get the gene expressions ######
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -52,12 +40,12 @@ print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 gene_ids = list(adata_h5.var_names)
-coordinates = adata_h5.obsm['spatial']
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
 adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = adata_X   # rows = cells, columns = genes
+cell_vs_gene = adata_X[0:2000]   # rows = cells, columns = genes
+
 ####################
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -70,7 +58,7 @@ adata_X = sc.pp.scale(adata_X)
 features = adata_X'''
 ####################
 
-gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
+#gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
 gene_info=dict()
 for gene in gene_ids:
@@ -81,7 +69,9 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
-    
+#################################################
+
+
 ligand_dict_dataset = defaultdict(list)
 cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
 df = pd.read_csv(cell_chat_file)
@@ -152,7 +142,8 @@ cell_expressed = []
 for i in range (0, cell_vs_gene.shape[0]):
     temp = (np.max(cell_vs_gene[i]) - cell_percentile[i][2]) * np.random.random_sample(size=affected_gene_count) + cell_percentile[i][2]
     cell_expressed.append(temp)
-    
+
+
 ligand_list = list(ligand_dict_dataset.keys())  
 region_list = [[6000, 10000, 10000, 13000], [10000, 13000, 5000, 9000]]
 activated_cell = []
