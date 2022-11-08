@@ -137,32 +137,35 @@ with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_
     
 a = .5
 b = +2
-count = 0
-region_list =  [[182, 230, 125, 170], [350, 450, 50, 225]]
-#ccc_scores = []
-for i in range (0, distance_matrix.shape[0]):
+region_list =  [[182, 230, 125, 170], [350, 450, 50, 150], [350, 450, 170, 225]]
+ccc_scores_count = []
+for region in region_list:
+    count = 0
+    for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
-    for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<th_dist:
-            for region in region_list:
+        for j in range (0, distance_matrix.shape[1]):
+            if distance_matrix[i][j]<th_dist:            
                 region_x_min = region[0]
                 region_x_max = region[1]
                 region_y_min = region[2]
                 region_y_max = region[3]  		
                 if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
                     count = count + 1
-            
+    ccc_scores_count.append(count)          
 
-ccc_scores = (b - a) * np.random.random_sample(size=count+1) + a		
-k = 0
+		
+
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
-for i in range (0, distance_matrix.shape[0]):
-    for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<th_dist:
-            flag = 0
-            for region in region_list:
+for region_index in range (0, len(region_list)):
+    region = region_list[region_index]
+    ccc_scores = (b - a) * np.random.random_sample(size=ccc_scores_count[region_index]+1) + a
+    k=0
+    for i in range (0, distance_matrix.shape[0]):
+        for j in range (0, distance_matrix.shape[1]):
+            if distance_matrix[i][j]<th_dist:
+                flag = 0          
                 region_x_min = region[0]
                 region_x_max = region[1]
                 region_y_min = region[2]
@@ -178,7 +181,6 @@ for i in range (0, distance_matrix.shape[0]):
                     #print([0.5, mean_ccc])
                     flag = 1
 		    
-
 print("len row_col with ccc %d"%len(row_col))
 
 for i in range (0, distance_matrix.shape[0]):
