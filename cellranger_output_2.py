@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
+from sklearn.metrics.pairwise import euclidean_distances
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -46,13 +47,13 @@ y_min = 0
 
 a = x_min
 b = x_max
-#coord_x = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
-coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+coord_x = np.random.randint(a, b, size=(datapoint_size//2))
+#coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
 
 a = y_min
 b = y_max
-#coord_y = (b - a) * np.random.normal(size=adata_h5.X.shape[0]) + a
-coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+#coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+coord_y = np.random.randint(a, b, size=(datapoint_size//2))
 
 save_x=coord_x
 save_y=coord_y
@@ -84,8 +85,28 @@ coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
 
-plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=2)
-#plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
+
+discard_points = dict()
+for i in range (0, temp_x.shape[0]):
+    if i not in discard_points:
+        for j in range (i+1, temp_x.shape[0]):
+            if j not in discard_points:
+                if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
+                    print('i: %d and j: %d'%(i,j))
+                    discard_points[j]=''
+
+coord_x = []
+coord_y = []
+for i in range (0, temp_x.shape[0]):
+    if i not in discard_points:
+        coord_x.append(temp_x[i])
+        coord_y.append(temp_y[i])
+
+temp_x = np.array(coord_x)
+temp_y = np.array(coord_y)
+	
+plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
+
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
@@ -100,7 +121,6 @@ for i in range (0, datapoint_size):
     coordinates[i][0] = temp_x[i]
     coordinates[i][1] = temp_y[i]
     
-from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
@@ -153,8 +173,9 @@ for i in range (0, distance_matrix.shape[0]):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([0.5, mean_ccc])
-                    print([0.5, mean_ccc])
+                    edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
+                    #edge_weight.append([0.5, mean_ccc])
+                    #print([0.5, mean_ccc])
                     flag = 1
 		    
 
@@ -165,7 +186,8 @@ for i in range (0, distance_matrix.shape[0]):
         if distance_matrix[i][j]<th_dist:
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-                edge_weight.append([0.5, 0])
+                edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
+                #edge_weight.append([0.5, 0])
 
 
 '''for i in range (0, distance_matrix.shape[0]):
@@ -214,9 +236,12 @@ from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 
+'''for i in range (0, distance_matrix.shape[0]):
+    if np.sort(distance_matrix[i])[1]<0.1:
+        print(np.sort(distance_matrix[i])[0:5])'''
+
 #####################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb') as fp:             
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     row_col, edge_weight = pickle.load(fp)
 
 
@@ -228,7 +253,7 @@ for index in range (0, len(row_col)):
     j = row_col[index][1]
     attention_scores[i][j] = edge_weight[index][1]
     distribution.append(attention_scores[i][j])
-    if edge_weight[index][1]>0:
+    if edge_weight[index][1]>=0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
 
@@ -301,6 +326,7 @@ print(id_label)
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
+        #datapoint_label.append(1) #
         datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
@@ -351,7 +377,24 @@ colors=colors+colors_2
 
        
 exist_datapoint = dict()
-for j in range (0, id_label+1):
+for j in range (1, id_label+1):
+    x_index=[]
+    y_index=[]
+    #fillstyles_type = []
+    for i in range (0, temp_x.shape[0]):
+        if datapoint_label[i] == j:
+            x_index.append(temp_x[i])
+            y_index.append(temp_y[i])
+            exist_datapoint[i] = ''
+    print(len(x_index))
+            
+            ###############
+            
+    
+    #for i in range (0, len(x_index)):  
+    plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
+
+for j in range (0, 1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
@@ -370,10 +413,10 @@ for j in range (0, id_label+1):
     
 plt.legend(fontsize=4,loc='upper right')
 
-for i in range (0, temp_x.shape[0]):
+'''for i in range (0, temp_x.shape[0]):
     if i not in exist_datapoint:
         print(i)
-
+'''
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
