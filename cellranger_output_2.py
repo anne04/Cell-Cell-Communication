@@ -87,10 +87,6 @@ temp_y = np.concatenate((temp_y,coord_y_t))
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=2)
 #plt.scatter(x=np.array(coord_x), y=-np.array(coord_y),s=1)
 
-
-
-
-
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
@@ -158,13 +154,43 @@ for i in range (0, distance_matrix.shape[0]):
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     edge_weight.append([0.5, mean_ccc])
+                    print([0.5, mean_ccc])
                     flag = 1
-            if flag == 0 :
+		    
+
+print("len row_col with ccc %d"%len(row_col))
+
+for i in range (0, distance_matrix.shape[0]):
+    for j in range (0, distance_matrix.shape[1]):
+        if distance_matrix[i][j]<th_dist:
+            if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 
 
-		
+'''for i in range (0, distance_matrix.shape[0]):
+    for j in range (0, distance_matrix.shape[1]):
+        if distance_matrix[i][j]<th_dist:
+            flag = 0
+            for region in region_list:
+                region_x_min = region[0]
+                region_x_max = region[1]
+                region_y_min = region[2]
+                region_y_max = region[3]  		
+                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
+                    mean_ccc = ccc_scores[k]
+                    k = k + 1
+                    row_col.append([i,j])
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    edge_weight.append([0.5, mean_ccc])
+                    print([0.5, mean_ccc])
+                    flag = 1
+		    
+            if flag == 0 :
+                row_col.append([i,j])
+                edge_weight.append([0.5, 0])
+'''		
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
@@ -223,13 +249,14 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 ##############
 
 
-percentile_value = 98
-threshold =  np.percentile(sorted(distribution), percentile_value)
+
+threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_up =  np.percentile(sorted(distribution), 80)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+        if attention_scores[i][j] > threshold_down and attention_scores[i][j] < threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
             
 ############
@@ -279,13 +306,13 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 	
 #############
-datapoint_label = []
+'''datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-id_label=2
+id_label=2'''
 
 ########
 number = 20
@@ -323,8 +350,8 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
        
-
-for j in range (0, id_label):
+exist_datapoint = dict()
+for j in range (0, id_label+1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
@@ -332,16 +359,8 @@ for j in range (0, id_label):
         if datapoint_label[i] == j:
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
-            
-            '''if barcode_type[barcode_info[i][0]] == 0:
-                marker_size.append('o') 
-                #fillstyles_type.append('full') 
-            elif barcode_type[barcode_info[i][0]] == 1:
-                marker_size.append('^')  
-                #fillstyles_type.append('full') 
-            else:
-                marker_size.append('*') 
-                #fillstyles_type.append('full')''' 
+            exist_datapoint[i] = ''
+    print(len(x_index))
             
             ###############
             
@@ -350,6 +369,11 @@ for j in range (0, id_label):
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
     
 plt.legend(fontsize=4,loc='upper right')
+
+for i in range (0, temp_x.shape[0]):
+    if i not in exist_datapoint:
+        print(i)
+
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
