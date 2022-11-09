@@ -121,6 +121,16 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
+        for j in range (0,distance_matrix.shape[0]):
+            distance_matrix_min=np.min(distance_matrix[:,j])
+            distance_matrix_max=np.max(distance_matrix[:,j])
+            distance_matrix[:,j]=1-(distance_matrix[:,j]-distance_matrix_min)/(distance_matrix_max-distance_matrix_min)
+
+
+
+
+
+
 distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
 for i in range (0, datapoint_size):
     #ccc_j = []
@@ -174,8 +184,8 @@ for region_index in range (0, len(region_list)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    #edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
-                    edge_weight.append([0.5, mean_ccc])
+                    edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
+                    #edge_weight.append([0.5, mean_ccc])
                     #print([0.5, mean_ccc])
                     flag = 1
 		    
@@ -186,8 +196,8 @@ for i in range (0, distance_matrix.shape[0]):
         if distance_matrix[i][j]<th_dist:
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-                #edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
-                edge_weight.append([0.5, 0])
+                edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
+                #edge_weight.append([0.5, 0])
 
 
 '''for i in range (0, distance_matrix.shape[0]):
@@ -213,7 +223,7 @@ for i in range (0, distance_matrix.shape[0]):
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 '''		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_sp', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 
@@ -241,7 +251,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_sp', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
 
@@ -273,7 +283,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_4heads_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_sp_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
