@@ -47,13 +47,13 @@ y_min = 0
 
 a = x_min
 b = x_max
-coord_x = np.random.randint(a, b, size=(datapoint_size//2))
+coord_x = np.random.randint(a, b, size=(datapoint_size))
 #coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
 
 a = y_min
 b = y_max
 #coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
-coord_y = np.random.randint(a, b, size=(datapoint_size//2))
+coord_y = np.random.randint(a, b, size=(datapoint_size))
 
 save_x=coord_x
 save_y=coord_y
@@ -62,7 +62,7 @@ temp_x = coord_x
 temp_y = coord_y
 
 
-coord_x_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
+'''coord_x_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
 coord_y_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
@@ -84,7 +84,7 @@ coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
 coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
 temp_x = np.concatenate((temp_x,coord_x_t))
 temp_y = np.concatenate((temp_y,coord_y_t))
-
+'''
 
 discard_points = dict()
 for i in range (0, temp_x.shape[0]):
@@ -135,8 +135,7 @@ distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
-a = .5
-b = +2
+
 region_list =  [[182, 230, 125, 170], [350, 450, 50, 150], [350, 450, 170, 225]]
 ccc_scores_count = []
 for region in region_list:
@@ -154,7 +153,8 @@ for region in region_list:
     ccc_scores_count.append(count)          
 
 		
-
+a = 7
+b = +558
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -220,7 +220,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     pickle.dump([row_col, edge_weight], fp)
 
 print(len(row_col))
-
+print(len(temp_x))
 
 ###############################################Visualization starts###################################################################################################
 
@@ -276,15 +276,18 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 ##############
 
 
-
-threshold_down =  np.percentile(sorted(distribution), 70)
-threshold_up =  np.percentile(sorted(distribution), 80)
+ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 90)
+threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] > threshold_down and attention_scores[i][j] < threshold_up: #np.percentile(sorted(distribution), 50):
+        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
+            '''ccc_index_dict[i] = ''
+            ccc_index_dict[j] = '' 
+	    '''
             
 ############
 '''region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
@@ -328,8 +331,8 @@ print(id_label)
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
-        #datapoint_label.append(1) #
-        datapoint_label.append(index_dict[labels[i]])
+        datapoint_label.append(1) #
+        #datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
 	
@@ -341,6 +344,7 @@ for i in range (0, temp_x.shape[0]):
     else:
         datapoint_label.append(0)
 id_label=2'''
+
 
 ########
 number = 20
@@ -379,7 +383,7 @@ colors=colors+colors_2
 
        
 exist_datapoint = dict()
-for j in range (1, id_label+1):
+for j in range (1, 2): #id_label+1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
