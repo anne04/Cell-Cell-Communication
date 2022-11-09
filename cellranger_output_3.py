@@ -28,11 +28,9 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 th_dist = 4
-
 spot_diameter = 89.43 #pixels
 
 
-	
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
 print(data_fold)
 
@@ -55,13 +53,58 @@ while i < x_max:
         temp_y.append(j)
         j = j + 2
     i = i + 2
+#0, 2, 4, ...24, 26, 28
+region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+for region in region_list:
+    x_max = region[1]
+    x_min = region[0]
+    y_max = region[3]
+    y_min = region[2]
+    i = x_min
+    while i < x_max:
+        j = y_min
+        while j < y_max:
+            temp_x.append(i)
+            temp_y.append(j)
+            j = j + 2
+        i = i + 2
 
 
 temp_x = np.array(temp_x)
 temp_y = np.array(temp_y)
-	
-plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 
+'''
+a = x_min
+b = x_max
+temp_x = (b - a) * np.random.random_sample(size=datapoint_size) + a #np.random.randint(x_min, x_max, size=(datapoint_size))
+
+a = y_min
+b = y_max
+temp_y = (b - a) * np.random.random_sample(size=datapoint_size) + a
+'''
+
+discard_points = dict()
+for i in range (0, temp_x.shape[0]):
+    if i not in discard_points:
+        for j in range (i+1, temp_x.shape[0]):
+            if j not in discard_points:
+                if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 0.5 :
+                    print('i: %d and j: %d'%(i,j))
+                    discard_points[j]=''
+
+coord_x = []
+coord_y = []
+for i in range (0, temp_x.shape[0]):
+    if i not in discard_points:
+        coord_x.append(temp_x[i])
+        coord_y.append(temp_y[i])
+
+temp_x = np.array(coord_x)
+temp_y = np.array(coord_y)
+
+print(len(temp_x))
+
+plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
@@ -91,7 +134,7 @@ with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
 
-region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -108,7 +151,7 @@ for region in region_list:
     ccc_scores_count.append(count)          
 
 		
-a = 7
+a = 20
 b = +558
 ccc_index_dict = dict()
 row_col = []
@@ -208,25 +251,14 @@ ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
+    
     attention_scores[i][j] = edge_weight[index][1]
     distribution.append(attention_scores[i][j])
-    if edge_weight[index][1]>=0:
+    if edge_weight[index][1]>0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
-
-################
-
-########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
-X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-distribution = []
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    attention_scores[i][j] = X_attention_bundle[1][index][0]
-    distribution.append(attention_scores[i][j])
-
+	
+ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -235,6 +267,34 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
+            ccc_index_dict[i] = ''
+            ccc_index_dict[j] = ''
+
+################
+
+########
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_4heads_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+distribution = []
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    if i<temp_x.shape[0] and j<temp_x.shape[0]:
+        attention_scores[i][j] = X_attention_bundle[1][index][0]
+        distribution.append(attention_scores[i][j])
+
+ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_up =  np.percentile(sorted(distribution), 100)
+connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for j in range (0, attention_scores.shape[1]):
+    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    for i in range (0, attention_scores.shape[0]):
+        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
+            connecting_edges[i][j] = 1
+            ccc_index_dict[i] = ''
+            ccc_index_dict[j] = ''
 
 ##############
 '''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
