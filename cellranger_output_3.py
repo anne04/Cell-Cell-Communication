@@ -27,7 +27,7 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
-th_dist = 2
+th_dist = 4
 
 spot_diameter = 89.43 #pixels
 
@@ -39,17 +39,22 @@ print(data_fold)
 #cell_vs_gene = adata_X   # rows = cells, columns = genes
 
 datapoint_size = 2000
-x_max = 100
+x_max = 200
 x_min = 0
-y_max = 20
+y_max = 40
 y_min = 0
 #################################
 temp_x = []
 temp_y = []
-for i in range (x_min, x_max):
-    for j in range (y_min, y_max):	
+
+i = x_min
+while i < x_max:
+    j = y_min
+    while j < y_max:
         temp_x.append(i)
         temp_y.append(j)
+        j = j + 2
+    i = i + 2
 
 
 temp_x = np.array(temp_x)
@@ -86,7 +91,7 @@ with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
 
-region_list =  [[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -214,7 +219,6 @@ for index in range (0, len(row_col)):
 ########
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -222,11 +226,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[1][index][0]
     distribution.append(attention_scores[i][j])
-	
-##############
 
-
-ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -235,9 +235,30 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-            '''ccc_index_dict[i] = ''
-            ccc_index_dict[j] = '' 
-	    '''
+
+##############
+'''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores[i][j] = X_attention_bundle[1][index][0]
+    
+distribution = []
+cell_attention = []
+for i in range (0, attention_scores.shape[0]):
+    cell_attention.append(np.sum(attention_scores[i,:])) #(np.sum(attention_scores[i,:])+np.sum(attention_scores[:,i]))/2) 
+    distribution.append(cell_attention[i])
+
+ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_up =  np.percentile(sorted(distribution), 100)
+for i in range (0, attention_scores.shape[0]):    
+        if cell_attention[i] >= threshold_down and cell_attention[i] <= threshold_up: #np.percentile(sorted(distribution), 50):            
+            ccc_index_dict[i] = ''
+'''
+ 
             
 ############
 '''region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
@@ -287,13 +308,13 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 	
 #############
-'''datapoint_label = []
+datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-id_label=2'''
+id_label=2
 
 
 ########
