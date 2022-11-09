@@ -27,7 +27,7 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
-th_dist = 6
+th_dist = 2
 
 spot_diameter = 89.43 #pixels
 
@@ -39,71 +39,21 @@ print(data_fold)
 #cell_vs_gene = adata_X   # rows = cells, columns = genes
 
 datapoint_size = 2000
-x_max = 500
+x_max = 100
 x_min = 0
-y_max = 300
+y_max = 20
 y_min = 0
 #################################
-
-a = x_min
-b = x_max
-coord_x = np.random.randint(a, b, size=(datapoint_size))
-#coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
-
-a = y_min
-b = y_max
-#coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
-coord_y = np.random.randint(a, b, size=(datapoint_size))
-
-save_x=coord_x
-save_y=coord_y
-
-temp_x = coord_x
-temp_y = coord_y
+temp_x = []
+temp_y = []
+for i in range (x_min, x_max):
+    for j in range (y_min, y_max):	
+        temp_x.append(i)
+        temp_y.append(j)
 
 
-'''coord_x_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
-coord_y_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
-temp_x = np.concatenate((temp_x,coord_x_t))
-temp_y = np.concatenate((temp_y,coord_y_t))
-
-coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
-coord_y_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
-temp_x = np.concatenate((temp_x,coord_x_t))
-temp_y = np.concatenate((temp_y,coord_y_t))
-
-#ccc_scores = np.random.random_sample(size=affected_gene_count)
-
-coord_x_t = np.random.normal(loc=200,scale=10,size=datapoint_size//8)
-coord_y_t = np.random.normal(loc=150,scale=10,size=datapoint_size//8)
-temp_x = np.concatenate((temp_x,coord_x_t))
-temp_y = np.concatenate((temp_y,coord_y_t))
- 
-    
-coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
-coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
-temp_x = np.concatenate((temp_x,coord_x_t))
-temp_y = np.concatenate((temp_y,coord_y_t))
-'''
-
-discard_points = dict()
-for i in range (0, temp_x.shape[0]):
-    if i not in discard_points:
-        for j in range (i+1, temp_x.shape[0]):
-            if j not in discard_points:
-                if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
-                    print('i: %d and j: %d'%(i,j))
-                    discard_points[j]=''
-
-coord_x = []
-coord_y = []
-for i in range (0, temp_x.shape[0]):
-    if i not in discard_points:
-        coord_x.append(temp_x[i])
-        coord_y.append(temp_y[i])
-
-temp_x = np.array(coord_x)
-temp_y = np.array(coord_y)
+temp_x = np.array(temp_x)
+temp_y = np.array(temp_y)
 	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 
@@ -136,7 +86,7 @@ with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
 
-region_list =  [[182, 230, 125, 170], [350, 450, 50, 150], [350, 450, 170, 225]]
+region_list =  [[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -176,8 +126,8 @@ for region_index in range (0, len(region_list)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
-                    #edge_weight.append([0.5, mean_ccc])
+                    #edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
+                    edge_weight.append([0.5, mean_ccc])
                     #print([0.5, mean_ccc])
                     flag = 1
 		    
@@ -188,8 +138,8 @@ for i in range (0, distance_matrix.shape[0]):
         if distance_matrix[i][j]<th_dist:
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-                edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
-                #edge_weight.append([0.5, 0])
+                #edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
+                edge_weight.append([0.5, 0])
 
 
 '''for i in range (0, distance_matrix.shape[0]):
@@ -277,7 +227,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 90)
+threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
