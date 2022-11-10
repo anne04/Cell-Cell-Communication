@@ -44,7 +44,6 @@ y_min = 0
 #################################
 temp_x = []
 temp_y = []
-
 i = x_min
 while i < x_max:
     j = y_min
@@ -53,7 +52,8 @@ while i < x_max:
         temp_y.append(j)
         j = j + 2
     i = i + 2
-#0, 2, 4, ...24, 26, 28
+    
+#0, 2, 4, ...24, 26, 28   
 region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
 for region in region_list:
     x_max = region[1]
@@ -69,9 +69,28 @@ for region in region_list:
             j = j + 2
         i = i + 2
 
-
 temp_x = np.array(temp_x)
 temp_y = np.array(temp_y)
+
+
+
+'''datapoint_size = 2000
+x_max = 100
+x_min = 0
+y_max = 20
+y_min = 0
+#################################
+temp_x = []
+temp_y = []
+i = x_min
+while i < x_max:
+    j = y_min
+    while j < y_max:
+        temp_x.append(i)
+        temp_y.append(j)
+        j = j + 1
+    i = i + 1
+'''
 
 '''
 a = x_min
@@ -107,10 +126,12 @@ print(len(temp_x))
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
+
 plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
 datapoint_size = temp_x.shape[0]
@@ -128,19 +149,29 @@ for i in range (0, datapoint_size):
         if distance_matrix[i][j]<th_dist:
             distance_matrix_threshold_I[i][j] = 1
 	
-D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
+'''D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
 D = np.matrix(np.diag(D))
-sp_weight = D**-1 * A	
-	
-	
+sp_weight = D**-1 * A	'''
             
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
 distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
-with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
+with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma', 'wb') as fp:
+#with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
 
+########### No Feature ##########
+dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 
+for j in range(distance_matrix.shape[1]):
+    max_value=np.max(distance_matrix[:,j])
+    min_value=np.min(distance_matrix[:,j])
+    for i in range(distance_matrix.shape[0]):
+        dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
+
+
+
+#region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] # [[25, 75, 1, 15], [125, 175, 11, 25]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -164,24 +195,24 @@ row_col = []
 edge_weight = []
 for region_index in range (0, len(region_list)):
     region = region_list[region_index]
+    region_x_min = region[0]
+    region_x_max = region[1]
+    region_y_min = region[2]
+    region_y_max = region[3] 
     ccc_scores = (b - a) * np.random.random_sample(size=ccc_scores_count[region_index]+1) + a
     k=0
     for i in range (0, distance_matrix.shape[0]):
         for j in range (0, distance_matrix.shape[1]):
             if distance_matrix[i][j]<th_dist:
-                flag = 0          
-                region_x_min = region[0]
-                region_x_max = region[1]
-                region_y_min = region[2]
-                region_y_max = region[3]  		
+                flag = 0           		
                 if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
                     mean_ccc = ccc_scores[k]
                     k = k + 1
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-		    edge_weight.append([sp_weight[i][j], mean_ccc])
-                    #edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
+		    #edge_weight.append([sp_weight[i][j], mean_ccc])
+                    edge_weight.append([dist_X[i,j], mean_ccc])
                     #edge_weight.append([0.5, mean_ccc])
                     #print([0.5, mean_ccc])
                     flag = 1
@@ -193,8 +224,8 @@ for i in range (0, distance_matrix.shape[0]):
         if distance_matrix[i][j]<th_dist:
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-		edge_weight.append([sp_weight[i][j], 0])
-                #edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
+		#edge_weight.append([sp_weight[i][j], 0])
+                edge_weight.append([dist_X[i,j], 0])
                 #edge_weight.append([0.5, 0])
 
 
@@ -221,16 +252,20 @@ for i in range (0, distance_matrix.shape[0]):
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 '''		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_sp', 'wb') as fp:             
+		  
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma', 'wb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
-
+		  
 print(len(row_col))
 print(len(temp_x))
 
 ###############################################Visualization starts###################################################################################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma', 'rb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
@@ -249,9 +284,8 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_sp', 'rb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
-
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
@@ -281,7 +315,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_sp_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_equallySpaced_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
@@ -292,17 +326,16 @@ for index in range (0, X_attention_bundle[0].shape[1]):
         attention_scores[i][j] = X_attention_bundle[1][index][0]
         distribution.append(attention_scores[i][j])
 
-ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 80)
-threshold_up =  np.percentile(sorted(distribution), 100)
+#ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 0)
+threshold_up =  np.percentile(sorted(distribution), 30)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
-    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''
+            #ccc_index_dict[i] = ''
+            #ccc_index_dict[j] = ''
 
 ##############
 '''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
@@ -350,15 +383,13 @@ for j in range (0, attention_scores.shape[1]):
 
 
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=False, connection = 'weak',  return_labels=True) #
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
-
 count_points_component = np.zeros((n_components))
 for i in range (0, len(labels)):
      count_points_component[labels[i]] = count_points_component[labels[i]] + 1
            
 print(count_points_component)
-
 id_label = 0  
 index_dict = dict()
 for i in range (0, count_points_component.shape[0]):
@@ -370,21 +401,19 @@ print(id_label)
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
-        datapoint_label.append(1) #
-        #datapoint_label.append(index_dict[labels[i]])
+        #datapoint_label.append(1) #
+        datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
 	
 #############
-datapoint_label = []
+'''datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-id_label=2
-
-
+id_label=2'''
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
@@ -419,10 +448,9 @@ cmap = plt.get_cmap('tab20c')
 colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
-
        
 exist_datapoint = dict()
-for j in range (1, 2): #id_label+1):
+for j in range (1, id_label+1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
@@ -431,11 +459,8 @@ for j in range (1, 2): #id_label+1):
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
             exist_datapoint[i] = ''
-    print(len(x_index))
-            
-            ###############
-            
-    
+    print(len(x_index))            
+    ##############    
     #for i in range (0, len(x_index)):  
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
 
@@ -450,9 +475,7 @@ for j in range (0, 1):
             exist_datapoint[i] = ''
     print(len(x_index))
             
-            ###############
-            
-    
+    ##############                
     #for i in range (0, len(x_index)):  
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
     
