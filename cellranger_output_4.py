@@ -317,7 +317,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_equallySpacedStroma_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_equallySpacedStroma_knn_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
@@ -403,19 +403,19 @@ print(id_label)
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
-        #datapoint_label.append(1) #
-        datapoint_label.append(index_dict[labels[i]])
+        datapoint_label.append(2) #
+        #datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
-	
+
 #############
-datapoint_label = []
+'''datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-id_label=2
+id_label=2'''
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
@@ -452,7 +452,9 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
        
 exist_datapoint = dict()
-for j in range (1, id_label+1):
+id_label = [0, 2]
+for j in id_label:
+#for j in range (0, id_label+1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
@@ -466,7 +468,7 @@ for j in range (1, id_label+1):
     #for i in range (0, len(x_index)):  
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
 
-for j in range (0, 1):
+'''for j in range (0, 1):
     x_index=[]
     y_index=[]
     #fillstyles_type = []
@@ -480,7 +482,7 @@ for j in range (0, 1):
     ##############                
     #for i in range (0, len(x_index)):  
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
-    
+    '''
 plt.legend(fontsize=4,loc='upper right')
 
 '''for i in range (0, temp_x.shape[0]):
