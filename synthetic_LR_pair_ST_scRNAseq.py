@@ -29,7 +29,7 @@ args = parser.parse_args()
 
 
 
-spot_diameter = 89.43 #pixels
+spot_diameter = 1#pixels
 ############
 
 ####### get the gene expressions ######
@@ -121,8 +121,6 @@ for gene in gene_info.keys():
         count = count + 1
 print(count)
 affected_gene_count = count
-#################################################
-
 
 #################################################
 cell_noise = []
@@ -144,8 +142,24 @@ for i in range (0, cell_vs_gene.shape[0]):
     cell_expressed.append(temp)
 
 
+#################################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
+    temp_x, temp_y = pickle.load(fp)
+
+datapoint_size = temp_x.shape[0]
+coordinates = np.zeros((temp_x.shape[0],2))
+for i in range (0, datapoint_size):
+    coordinates[i][0] = temp_x[i]
+    coordinates[i][1] = temp_y[i]
+    
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
+#################################################
+
+	
 ligand_list = list(ligand_dict_dataset.keys())  
-region_list = [[6000, 10000, 10000, 13000], [10000, 13000, 5000, 9000]]
+region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] # [[25, 75, 1, 15], [125, 175, 11, 25]] #[60, 80, 1, 7] 
 activated_cell = []
 for cell_index in range (0, cell_vs_gene.shape[0]):
     j = 0
@@ -170,7 +184,7 @@ for cell_index in range (0, cell_vs_gene.shape[0]):
 #################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_region_2', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_ccc_scRNAseq_equallySpaced', 'wb') as fp:
     pickle.dump([cell_vs_gene, region_list, ligand_list[0:5], activated_cell, gene_ids, cell_percentile], fp)
 
 ######################################       
@@ -204,18 +218,18 @@ for gene in list(ligand_dict_dataset.keys()):
 ##################################################################
 print(count)
 
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
- 
 
 for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-from sklearn.metrics.pairwise import euclidean_distances
-distance_matrix = euclidean_distances(coordinates, coordinates)
-
+	
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
@@ -253,7 +267,7 @@ for gene in ligand_list[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_region_2_a', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_scRNAseq_equallySpaced', 'wb') as fp:
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[0:5],activated_cell_index], fp)
 
 
@@ -263,7 +277,7 @@ edge_weight = []
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j]<300:
+        if distance_matrix[i][j]<spot_diameter*3:
             #if i==j:
             if len(cells_ligand_vs_receptor[i][j])>0:
                 mean_ccc = 0
@@ -280,7 +294,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([0.5, 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region2_STnCCC_70', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_scRNAseq_STnCCC_equallySpaced', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
