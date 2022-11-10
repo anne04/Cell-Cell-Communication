@@ -121,22 +121,18 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-        for j in range (0,distance_matrix.shape[0]):
-            distance_matrix_min=np.min(distance_matrix[:,j])
-            distance_matrix_max=np.max(distance_matrix[:,j])
-            distance_matrix[:,j]=1-(distance_matrix[:,j]-distance_matrix_min)/(distance_matrix_max-distance_matrix_min)
-
-
-
-
-
-
 distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
 for i in range (0, datapoint_size):
     #ccc_j = []
     for j in range (0, datapoint_size):
         if distance_matrix[i][j]<th_dist:
             distance_matrix_threshold_I[i][j] = 1
+	
+D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
+D = np.matrix(np.diag(D))
+sp_weight = D**-1 * A	
+	
+	
             
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
 distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
@@ -184,7 +180,8 @@ for region_index in range (0, len(region_list)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
+		    edge_weight.append([sp_weight[i][j], mean_ccc])
+                    #edge_weight.append([np.round(1-distance_matrix[i][j],6), mean_ccc])
                     #edge_weight.append([0.5, mean_ccc])
                     #print([0.5, mean_ccc])
                     flag = 1
@@ -196,7 +193,8 @@ for i in range (0, distance_matrix.shape[0]):
         if distance_matrix[i][j]<th_dist:
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-                edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
+		edge_weight.append([sp_weight[i][j], 0])
+                #edge_weight.append([np.round(1-distance_matrix[i][j],6), 0])
                 #edge_weight.append([0.5, 0])
 
 
