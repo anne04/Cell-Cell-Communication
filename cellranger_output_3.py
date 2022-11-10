@@ -168,7 +168,12 @@ for j in range(distance_matrix.shape[1]):
     min_value=np.min(distance_matrix[:,j])
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
-
+	
+    list_indx = np.argsort(dist_X[:,j])
+    k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+    for i in range(distance_matrix.shape[0]):
+        if i not in k_higher:
+            dist_X[i,j] = -1
 
 
 #region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] # [[25, 75, 1, 15], [125, 175, 11, 25]] #[60, 80, 1, 7] 
@@ -178,7 +183,7 @@ for region in region_list:
     for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
         for j in range (0, distance_matrix.shape[1]):
-            if distance_matrix[i][j]<th_dist:            
+            if distance_matrix[i][j]<th_dist:  
                 region_x_min = region[0]
                 region_x_max = region[1]
                 region_y_min = region[2]
