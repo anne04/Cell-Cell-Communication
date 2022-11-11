@@ -27,8 +27,8 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
-th_dist = 6
-
+th_dist = 4
+k_nn = 4
 spot_diameter = 89.43 #pixels
 
 
@@ -203,29 +203,7 @@ for i in range (0, distance_matrix.shape[0]):
                 #edge_weight.append([0.5, 0])
 
 
-'''for i in range (0, distance_matrix.shape[0]):
-    for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<th_dist:
-            flag = 0
-            for region in region_list:
-                region_x_min = region[0]
-                region_x_max = region[1]
-                region_y_min = region[2]
-                region_y_max = region[3]  		
-                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
-                    mean_ccc = ccc_scores[k]
-                    k = k + 1
-                    row_col.append([i,j])
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-                    edge_weight.append([0.5, mean_ccc])
-                    print([0.5, mean_ccc])
-                    flag = 1
-		    
-            if flag == 0 :
-                row_col.append([i,j])
-                edge_weight.append([0.5, 0])
-'''		
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
@@ -273,7 +251,7 @@ for index in range (0, len(row_col)):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -288,7 +266,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_down =  np.percentile(sorted(distribution), 90)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
@@ -322,7 +300,7 @@ for j in range (0, attention_scores.shape[1]):
 
 
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=False, connection = 'weak',  return_labels=True) #
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
 
 count_points_component = np.zeros((n_components))
@@ -354,8 +332,8 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-id_label=2'''
-
+id_label=2
+'''
 
 ########
 number = 20
@@ -393,8 +371,8 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
        
-exist_datapoint = dict()
-id_label = [0, 2]
+#exist_datapoint = dict()
+id_label = [0,2]
 for j in id_label:
 #for j in range (0, id_label+1):
     x_index=[]
@@ -404,7 +382,6 @@ for j in id_label:
         if datapoint_label[i] == j:
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
-            exist_datapoint[i] = ''
     print(len(x_index))
             
             ##############
