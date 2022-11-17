@@ -223,35 +223,11 @@ def PCA_process(X, nps):
     print('PCA recover:', pca.explained_variance_ratio_.sum())
     return X_PC
 
-from sklearn.cluster import KMeans, DBSCAN, AffinityPropagation
-def Kmeans_cluster(X_embedding, n_clusters, merge=False):
-    cluster_model = KMeans(n_clusters=n_clusters, init='k-means++', n_init=100, max_iter=1000, tol=1e-6)
-    cluster_labels = cluster_model.fit_predict(X_embedding)
-
-    # merge clusters with less than 3 cells
-    if merge:
-	cluster_labels = merge_cluser(X_embedding, cluster_labels)
-
-    score = metrics.silhouette_score(X_embedding, cluster_labels, metric='euclidean')
-
-    return cluster_labels, score
-
-def Umap(args, X, label, n_clusters, score):
-    import umap
-    reducer = umap.UMAP(random_state=42)
-    embedding = reducer.fit_transform(X)
-
-    plt.scatter(embedding[:, 0], embedding[:, 1], c=label, cmap='Spectral', s=20)
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.colorbar(boundaries=np.arange(n_clusters+1)-0.5).set_ticks(np.arange(n_clusters))
-    plt.title('UMAP projection')
-    if score:
-	plt.text(0.0, 0.0, score, fontdict={'size':'16','color':'black'},  transform = plt.gca().transAxes)
-    plt.savefig(args.result_path + '/Umap.jpg')
-    #plt.show()
-    plt.close()
-
-
-
-
-  
+'''nohup python -u run_CCST.py 
+--data_type nsc --data_name V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new --lambda_I 0.8 
+--DGI 1 --data_path generated_data_new_quantile/ --model_path new_alignment/model_ccc_rgcn/ 
+--embedding_data_path new_alignment/Embedding_data_ccc_rgcn/ --result_path new_alignment/result_ccc_rgcn/ 
+--num_epoch 30000 --hidden 512 --cluster 0 --retrain 0 --all_distance 0 --meu 0.2 
+--model_name 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn' --heads 1 
+--training_data 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal' > output_totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn.log &
+  '''
