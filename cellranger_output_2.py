@@ -121,7 +121,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 
-for j in range(distance_matrix.shape[1]):
+for j in range(0, distance_matrix.shape[1]):
     max_value=np.max(distance_matrix[:,j])
     min_value=np.min(distance_matrix[:,j])
     for i in range(distance_matrix.shape[0]):
@@ -129,7 +129,7 @@ for j in range(distance_matrix.shape[1]):
 	
     list_indx = list(np.argsort(dist_X[:,j]))
     k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-    for i in range(distance_matrix.shape[0]):
+    for i in range(0, distance_matrix.shape[0]):
         if i not in k_higher:
             dist_X[i,j] = -1
 	
@@ -166,11 +166,14 @@ for region in region_list:
 		
 a = 20
 b = +558
+limit_list =[[200,500],[20,50],[20,50]]
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
 for region_index in range (0, len(region_list)):
     region = region_list[region_index]
+    a = limit_list[region_index][0]
+    b = limit_list[region_index][1]
     ccc_scores = (b - a) * np.random.random_sample(size=ccc_scores_count[region_index]+1) + a
     k=0
     for i in range (0, distance_matrix.shape[0]):
@@ -232,7 +235,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal', 'rb') as fp:             
+'''with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
 
@@ -247,11 +250,11 @@ for index in range (0, len(row_col)):
     if edge_weight[index][1]>=0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
-
+'''
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention.npy'
+'''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -261,7 +264,32 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[1][index][0]
     distribution.append(attention_scores[i][j])
-	
+	'''
+###############
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r2_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
+attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+distribution = []
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores[i][j] = X_attention_bundle[2][index][0]
+    distribution.append(attention_scores[i][j])
+##############
+attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
+##############
+adjacency_matrix = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    adjacency_matrix [i][j] = 1
+
+
 ##############
 
 
