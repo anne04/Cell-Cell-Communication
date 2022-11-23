@@ -105,10 +105,10 @@ print(len(temp_x))
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y),s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'synthetic_spatial_plot_data1.svg', dpi=400)
+plt.savefig(save_path+'synthetic_spatial_plot_data2.svg', dpi=400) #data1
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_uniform_normal_data1', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_uniform_normal_data2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
 datapoint_size = temp_x.shape[0]
@@ -166,7 +166,7 @@ for region in region_list:
 		
 a = 20
 b = +558
-limit_list =[[200,500],[20,50],[20,50]]
+limit_list =[[2, 5],[2,5],[2,5]] #data=1:[[200,500],[20,50],[20,50]]
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -207,7 +207,7 @@ for i in range (0, distance_matrix.shape[0]):
 
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data1', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data2', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 
@@ -216,7 +216,7 @@ print(len(temp_x))
 
 ###############################################Visualization starts###################################################################################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_uniform_normal_data1', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_uniform_normal_data2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
@@ -235,7 +235,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-'''with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data1', 'rb') as fp:             
+'''with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data2', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
 
@@ -254,7 +254,7 @@ for index in range (0, len(row_col)):
 ################
 
 ########
-'''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention_data1.npy'
+'''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn_attention_data2.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
