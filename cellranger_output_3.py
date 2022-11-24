@@ -36,42 +36,7 @@ print(data_fold)
 
 #cell_vs_gene = adata_X   # rows = cells, columns = genes
 
-datapoint_size = 2000
-x_max = 200
-x_min = 0
-y_max = 40
-y_min = 0
-#################################
-'''temp_x = []
-temp_y = []
-i = x_min
-while i < x_max:
-    j = y_min
-    while j < y_max:
-        temp_x.append(i)
-        temp_y.append(j)
-        j = j + 2
-    i = i + 2
-    
-#0, 2, 4, ...24, 26, 28   
-region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
-for region in region_list:
-    x_max = region[1]
-    x_min = region[0]
-    y_max = region[3]
-    y_min = region[2]
-    i = x_min
-    while i < x_max:
-        j = y_min
-        while j < y_max:
-            temp_x.append(i)
-            temp_y.append(j)
-            j = j + 2
-        i = i + 2
 
-temp_x = np.array(temp_x)
-temp_y = np.array(temp_y)
-'''
 ###############################################
 datapoint_size = 2000
 x_max = 250
@@ -125,7 +90,7 @@ for region in region_list:
 temp_x = np.array(temp_x)
 temp_y = np.array(temp_y)
 
-region_list =  [[25, 75, 1, 15], [124, 170, 10, 20]] #[25, 90, 30, 50],
+region_list =  [[25, 75, 31, 50], [25, 75, 1, 11], [124, 170, 10, 20]] #[25, 90, 30, 50],
 ###############################################
 
 
@@ -186,7 +151,7 @@ for j in range(0, distance_matrix.shape[1]):
             dist_X[i,j] = -1
 	
 
-#region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] # [[25, 75, 1, 15], [125, 175, 11, 25]] #[60, 80, 1, 7] 
+
 ccc_scores_count = []
 for region in region_list:
     count = 0
