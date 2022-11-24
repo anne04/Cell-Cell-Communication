@@ -379,10 +379,11 @@ for i in range (0, temp_x.shape[0]):
     if row_col[i][0] in node_list and row_col[i][1] in node_list and connecting_edges[row_col[i][0]][row_col[i][1]]==1:
         print('%d,%d -- %g %g'%(row_col[i][0],row_col[i][1], edge_weight[i][0], edge_weight[i][1]))
 '''	
-'''datapoint_label = []
+'''
+datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
-        datapoint_label.append(1)
+        datapoint_label.append(2)
     else:
         datapoint_label.append(0)
 id_label=2
@@ -435,7 +436,7 @@ for j in id_label:
         if datapoint_label[i] == j:
             x_index.append(temp_x[i])
             y_index.append(temp_y[i])
-    print(len(x_index))
+    #print(len(x_index))
             
             ##############
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
