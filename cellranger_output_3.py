@@ -170,24 +170,6 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-'''D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
-D = np.matrix(np.diag(D))
-sp_weight = D**-1 * A	'''
-'''distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
-for i in range (0, datapoint_size):
-    #ccc_j = []
-    for j in range (0, datapoint_size):
-        if distance_matrix[i][j]<th_dist:
-            distance_matrix_threshold_I[i][j] = 1
-	           
-distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
-distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
-with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma_data1', 'wb') as fp:
-#with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma', 'wb') as fp:
-#with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
-    pickle.dump(distance_matrix_threshold_I_N_crs, fp)
-    '''
-
 ########### No Feature ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 
