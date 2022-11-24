@@ -29,7 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 th_dist = 4
 spot_diameter = 89.43 #pixels
-
+k_nn = 4
 
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
 print(data_fold)
@@ -298,7 +298,7 @@ print(len(temp_x))
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma_data1', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
@@ -318,7 +318,9 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma_data1', 'rb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
@@ -349,7 +351,33 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_equallySpaced_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpacedStroma_knn_data1_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
+attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+distribution = []
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores[i][j] = X_attention_bundle[2][index][0]
+    distribution.append(attention_scores[i][j])
+##############
+attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
+##############
+adjacency_matrix = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    adjacency_matrix [i][j] = 1
+
+
+
+
+'''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_equallySpaced_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 distribution = []
@@ -370,7 +398,7 @@ for j in range (0, attention_scores.shape[1]):
             connecting_edges[i][j] = 1
             #ccc_index_dict[i] = ''
             #ccc_index_dict[j] = ''
-
+'''
 ##############
 '''X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
@@ -441,13 +469,14 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 	
 #############
-'''datapoint_label = []
+'''
+datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
-        datapoint_label.append(1)
+        datapoint_label.append(2)
     else:
         datapoint_label.append(0)
-id_label=2'''
+'''
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
