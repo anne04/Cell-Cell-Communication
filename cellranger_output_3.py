@@ -42,7 +42,7 @@ x_min = 0
 y_max = 40
 y_min = 0
 #################################
-temp_x = []
+'''temp_x = []
 temp_y = []
 i = x_min
 while i < x_max:
@@ -71,15 +71,14 @@ for region in region_list:
 
 temp_x = np.array(temp_x)
 temp_y = np.array(temp_y)
-
-
-
-'''datapoint_size = 2000
-x_max = 100
+'''
+###############################################
+datapoint_size = 2000
+x_max = 300
 x_min = 0
-y_max = 20
+y_max = 60
 y_min = 0
-#################################
+
 temp_x = []
 temp_y = []
 i = x_min
@@ -88,19 +87,47 @@ while i < x_max:
     while j < y_max:
         temp_x.append(i)
         temp_y.append(j)
-        j = j + 1
-    i = i + 1
-'''
+        j = j + 4
+    i = i + 4
+    
+#0, 2, 4, ...24, 26, 28   
+region_list =  [[25, 75, 1, 20]]
+for region in region_list:
+    x_max = region[1]
+    x_min = region[0]
+    y_max = region[3]
+    y_min = region[2]
+    i = x_min
+    while i < x_max:
+        j = y_min
+        while j < y_max:
+            temp_x.append(i)
+            temp_y.append(j)
+            j = j + 1
+        i = i + 1
 
-'''
-a = x_min
-b = x_max
-temp_x = (b - a) * np.random.random_sample(size=datapoint_size) + a #np.random.randint(x_min, x_max, size=(datapoint_size))
+region_list =  [[124, 200, 10, 30]]
+for region in region_list:
+    x_max = region[1]
+    x_min = region[0]
+    y_max = region[3]
+    y_min = region[2]
+    i = x_min
+    while i < x_max:
+        j = y_min
+        while j < y_max:
+            temp_x.append(i)
+            temp_y.append(j)
+            j = j + 2
+        i = i + 2
 
-a = y_min
-b = y_max
-temp_y = (b - a) * np.random.random_sample(size=datapoint_size) + a
-'''
+	
+temp_x = np.array(temp_x)
+temp_y = np.array(temp_y)
+
+region_list =  [[25, 90, 30, 50],[25, 75, 1, 20], [124, 200, 10, 30]]
+###############################################
+
 
 discard_points = dict()
 for i in range (0, temp_x.shape[0]):
@@ -127,10 +154,11 @@ plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 
 save_path = '/cluster/home/t116508uhn/64630/'
 
-plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
+plt.savefig(save_path+'synthetic_spatial_plot_equallySpacedStroma_data1.svg', dpi=400)
+#plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma_data1', 'wb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
@@ -155,7 +183,8 @@ sp_weight = D**-1 * A	'''
             
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
 distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
-with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma', 'wb') as fp:
+with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma_data1', 'wb') as fp:
+#with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma', 'wb') as fp:
 #with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
     
@@ -257,8 +286,8 @@ for i in range (0, distance_matrix.shape[0]):
                 row_col.append([i,j])
                 edge_weight.append([0.5, 0])
 '''		
-		  
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma_data1', 'wb') as fp:             		  
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
