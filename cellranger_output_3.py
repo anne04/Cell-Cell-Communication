@@ -27,7 +27,7 @@ parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
-th_dist = 4
+#th_dist = 4
 spot_diameter = 89.43 #pixels
 k_nn = 4
 
@@ -74,7 +74,7 @@ temp_y = np.array(temp_y)
 '''
 ###############################################
 datapoint_size = 2000
-x_max = 300
+x_max = 250
 x_min = 0
 y_max = 60
 y_min = 0
@@ -91,7 +91,7 @@ while i < x_max:
     i = i + 4
     
 #0, 2, 4, ...24, 26, 28   
-region_list =  [[25, 75, 1, 20]]
+region_list =  [[25, 75, 1, 15]]
 for region in region_list:
     x_max = region[1]
     x_min = region[0]
@@ -106,7 +106,7 @@ for region in region_list:
             j = j + 1
         i = i + 1
 
-region_list =  [[124, 200, 10, 30]]
+region_list =  [[124, 170, 10, 20]]
 for region in region_list:
     x_max = region[1]
     x_min = region[0]
@@ -125,7 +125,7 @@ for region in region_list:
 temp_x = np.array(temp_x)
 temp_y = np.array(temp_y)
 
-region_list =  [[25, 90, 30, 50],[25, 75, 1, 20], [124, 200, 10, 30]]
+region_list =  [[25, 75, 1, 15], [124, 170, 10, 20]] #[25, 90, 30, 50],
 ###############################################
 
 
@@ -170,40 +170,39 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
+'''D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
+D = np.matrix(np.diag(D))
+sp_weight = D**-1 * A	'''
+'''distance_matrix_threshold_I = np.zeros(distance_matrix.shape)
 for i in range (0, datapoint_size):
     #ccc_j = []
     for j in range (0, datapoint_size):
         if distance_matrix[i][j]<th_dist:
             distance_matrix_threshold_I[i][j] = 1
-	
-'''D = np.array(np.sum(distance_matrix_threshold_I, axis=0))[0]
-D = np.matrix(np.diag(D))
-sp_weight = D**-1 * A	'''
-            
+	           
 distance_matrix_threshold_I_N = np.float32(distance_matrix_threshold_I)
 distance_matrix_threshold_I_N_crs = sparse.csr_matrix(distance_matrix_threshold_I_N)
 with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma_data1', 'wb') as fp:
 #with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix_equallySpacedStroma', 'wb') as fp:
 #with open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'total_synthetic_1_adjacency_matrix', 'wb') as fp:
     pickle.dump(distance_matrix_threshold_I_N_crs, fp)
-    
+    '''
 
 ########### No Feature ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 
-for j in range(distance_matrix.shape[1]):
+for j in range(0, distance_matrix.shape[1]):
     max_value=np.max(distance_matrix[:,j])
     min_value=np.min(distance_matrix[:,j])
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
 	
-    list_indx = np.argsort(dist_X[:,j])
+    list_indx = list(np.argsort(dist_X[:,j]))
     k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-    for i in range(distance_matrix.shape[0]):
+    for i in range(0, distance_matrix.shape[0]):
         if i not in k_higher:
             dist_X[i,j] = -1
-
+	
 
 #region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] # [[25, 75, 1, 15], [125, 175, 11, 25]] #[60, 80, 1, 7] 
 ccc_scores_count = []
@@ -212,7 +211,7 @@ for region in region_list:
     for i in range (0, distance_matrix.shape[0]):
     #ccc_j = []
         for j in range (0, distance_matrix.shape[1]):
-            if distance_matrix[i][j]<th_dist:  
+            if dist_X[i,j] > -1:  
                 region_x_min = region[0]
                 region_x_max = region[1]
                 region_y_min = region[2]
@@ -229,45 +228,12 @@ row_col = []
 edge_weight = []
 for region_index in range (0, len(region_list)):
     region = region_list[region_index]
-    region_x_min = region[0]
-    region_x_max = region[1]
-    region_y_min = region[2]
-    region_y_max = region[3] 
     ccc_scores = (b - a) * np.random.random_sample(size=ccc_scores_count[region_index]+1) + a
     k=0
     for i in range (0, distance_matrix.shape[0]):
         for j in range (0, distance_matrix.shape[1]):
-            if distance_matrix[i][j]<th_dist:
-                flag = 0           		
-                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
-                    mean_ccc = ccc_scores[k]
-                    k = k + 1
-                    row_col.append([i,j])
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-		    #edge_weight.append([sp_weight[i][j], mean_ccc])
-                    edge_weight.append([dist_X[i,j], mean_ccc])
-                    #edge_weight.append([0.5, mean_ccc])
-                    #print([0.5, mean_ccc])
-                    flag = 1
-		    
-print("len row_col with ccc %d"%len(row_col))
-
-for i in range (0, distance_matrix.shape[0]):
-    for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<th_dist:
-            if i not in ccc_index_dict and j not in ccc_index_dict:
-                row_col.append([i,j])
-		#edge_weight.append([sp_weight[i][j], 0])
-                edge_weight.append([dist_X[i,j], 0])
-                #edge_weight.append([0.5, 0])
-
-
-'''for i in range (0, distance_matrix.shape[0]):
-    for j in range (0, distance_matrix.shape[1]):
-        if distance_matrix[i][j]<th_dist:
-            flag = 0
-            for region in region_list:
+            if dist_X[i,j] > -1:
+                flag = 0          
                 region_x_min = region[0]
                 region_x_max = region[1]
                 region_y_min = region[2]
@@ -278,14 +244,24 @@ for i in range (0, distance_matrix.shape[0]):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([0.5, mean_ccc])
-                    print([0.5, mean_ccc])
+                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    #edge_weight.append([0.5, mean_ccc])
+                    #print([0.5, mean_ccc])
                     flag = 1
-		    
-            if flag == 0 :
+			    
+print("len row_col with ccc %d"%len(row_col))
+
+for i in range (0, distance_matrix.shape[0]):
+    for j in range (0, distance_matrix.shape[1]):
+        if dist_X[i,j] > -1:
+            if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
-                edge_weight.append([0.5, 0])
-'''		
+		#edge_weight.append([sp_weight[i][j], 0])
+                edge_weight.append([dist_X[i,j], 0])
+                #edge_weight.append([0.5, 0])
+
+
+		
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma_data1', 'wb') as fp:             		  
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'wb') as fp:             
