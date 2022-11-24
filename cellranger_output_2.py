@@ -235,11 +235,23 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
         print(np.sort(distance_matrix[i])[0:5])'''
 
 #####################################
-'''with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data2', 'rb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal_data2', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
-
-attention_scores = np.zeros((datapoint_size,datapoint_size))
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    if i==48 and j==435:
+        print(edge_weight[index])
+        break
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    if i==48 and j==435:
+        print(attention_scores[i][j])
+        break	
+	
+'''attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 ccc_index_dict = dict()
 for index in range (0, len(row_col)):
@@ -295,7 +307,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_down =  np.percentile(sorted(distribution), 70)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
@@ -303,9 +315,7 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-            '''ccc_index_dict[i] = ''
-            ccc_index_dict[j] = '' 
-	    '''
+        
             
 ############
 '''region_list =  [[182, 230, 125, 170], [350, 450, 50, 225], [70, 120, 70, 125]]
@@ -347,14 +357,28 @@ for i in range (0, count_points_component.shape[0]):
 print(id_label)
 
 datapoint_label = []
+node_list = []
 for i in range (0, temp_x.shape[0]):
     if count_points_component[labels[i]]>1:
         datapoint_label.append(2) #
+        #if coordinates[i][0] <100 and (coordinates[i][1]>150 and coordinates[i][1]<250):
+            #print('%d'%i)
+            #node_list.append(i)
         #datapoint_label.append(index_dict[labels[i]])
     else:
         datapoint_label.append(0)
 	
 #############
+'''for i in range (0, temp_x.shape[0]):
+    if datapoint_label[i]==4:       
+        print('%d'%i)
+'''
+	
+
+'''for i in range (0, len(row_col)):
+    if row_col[i][0] in node_list and row_col[i][1] in node_list and connecting_edges[row_col[i][0]][row_col[i][1]]==1:
+        print('%d,%d -- %g %g'%(row_col[i][0],row_col[i][1], edge_weight[i][0], edge_weight[i][1]))
+'''	
 '''datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
