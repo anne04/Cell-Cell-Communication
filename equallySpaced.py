@@ -98,7 +98,7 @@ for j in range(0, distance_matrix.shape[1]):
         if i not in k_higher:
             dist_X[i,j] = -1
 	
-region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
+region_list = [[50, 125, 10, 30]] #[[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -114,7 +114,10 @@ for region in region_list:
                     count = count + 1
     ccc_scores_count.append(count)          
 
-		
+num1 = np.zeros((1,2)) 
+num_center = np.zeros((1,2))
+num_center[0][0]=100
+num_center[0][1]=20
 a = 20
 b = +558
 limit_list =[[300,500],[100,200]] #data2: [[20,50],[300,500],[100,200]] #data=1:[[200,500],[20,50],[20,50]]
@@ -136,7 +139,10 @@ for region_index in range (0, len(region_list)):
                 region_y_min = region[2]
                 region_y_max = region[3]  		
                 if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
-                    mean_ccc = ccc_scores[k]
+                    num1[0][0]=temp_x[i]
+                    num1[0][1]=temp_y[i]
+                    mean_ccc = euclidean_distances(num1, num_center)[0][0]
+		    #mean_ccc = ccc_scores[k]
                     k = k + 1
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
@@ -156,7 +162,7 @@ for i in range (0, distance_matrix.shape[0]):
                 #edge_weight.append([0.5, 0])
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0', 'wb') as fp:             		 		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0_a', 'wb') as fp:             		 		
     pickle.dump([row_col, edge_weight], fp)
 		  
 print(len(row_col))
@@ -218,7 +224,8 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_a_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -227,9 +234,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[2][index][0]
-    if attention_scores[i][j]<-.25:
+    '''if attention_scores[i][j]<-.25:
         attention_scores[i][j] = (attention_scores[i][j]+0.25) * (-1)
-
+    '''
     distribution.append(attention_scores[i][j])
 ##############
 attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
