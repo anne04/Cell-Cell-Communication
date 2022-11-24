@@ -264,6 +264,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[2][index][0]
+    if attention_scores[i][j]<-.25:
+        attention_scores[i][j] = (attention_scores[i][j]+0.25) * (-1)
+
     distribution.append(attention_scores[i][j])
 ##############
 attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
@@ -300,7 +303,7 @@ for j in range (0, attention_scores.shape[1]):
 
 
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=False, connection = 'weak',  return_labels=True) #
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
 
 count_points_component = np.zeros((n_components))
