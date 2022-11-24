@@ -98,7 +98,7 @@ for j in range(0, distance_matrix.shape[1]):
         if i not in k_higher:
             dist_X[i,j] = -1
 	
-region_list = [[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+region_list = [[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
