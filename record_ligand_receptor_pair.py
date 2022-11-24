@@ -61,6 +61,21 @@ cell_vs_gene = scipy.sparse.csr_matrix.toarray(adata_X) #adata_X '''
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
+dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
+
+for j in range(0, distance_matrix.shape[1]):
+    max_value=np.max(distance_matrix[:,j])
+    min_value=np.min(distance_matrix[:,j])
+    for i in range(distance_matrix.shape[0]):
+        dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
+	
+    list_indx = list(np.argsort(dist_X[:,j]))
+    k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+    for i in range(0, distance_matrix.shape[0]):
+        if i not in k_higher:
+            dist_X[i,j] = -1
+
+
 gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 gene_info=dict()
 for gene in range gene_ids:
