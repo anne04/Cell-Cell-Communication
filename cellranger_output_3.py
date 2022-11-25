@@ -56,7 +56,7 @@ while i < x_max:
     i = i + 4
     
 #0, 2, 4, ...24, 26, 28   
-region_list =  [[25, 75, 1, 15]]
+region_list =  [[25, 75, 1, 11]]
 for region in region_list:
     x_max = region[1]
     x_min = region[0]
@@ -123,7 +123,7 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpacedStroma_data1.svg', dp
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma_data1', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpacedStroma_data1_a', 'wb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
@@ -143,7 +143,7 @@ for j in range(0, distance_matrix.shape[1]):
     min_value=np.min(distance_matrix[:,j])
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
-	
+        	
     list_indx = list(np.argsort(dist_X[:,j]))
     k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
     for i in range(0, distance_matrix.shape[0]):
@@ -169,7 +169,7 @@ for region in region_list:
 
 		
 a = 20
-b = +558
+b = 50 #+558
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -191,7 +191,7 @@ for region_index in range (0, len(region_list)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    edge_weight.append([dist_X[i,j]*10, mean_ccc])
                     #edge_weight.append([0.5, mean_ccc])
                     #print([0.5, mean_ccc])
                     flag = 1
@@ -204,12 +204,12 @@ for i in range (0, distance_matrix.shape[0]):
             if i not in ccc_index_dict and j not in ccc_index_dict:
                 row_col.append([i,j])
 		#edge_weight.append([sp_weight[i][j], 0])
-                edge_weight.append([dist_X[i,j], 0])
+                edge_weight.append([dist_X[i,j]*10, 0])
                 #edge_weight.append([0.5, 0])
 
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma_data1', 'wb') as fp:             		  
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma_data1_a', 'wb') as fp:             		  
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpacedStroma', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'wb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
@@ -435,8 +435,10 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
        
-exist_datapoint = dict()
-for j in range (1, id_label+1):
+#exist_datapoint = dict()
+#for j in range (1, id_label+1):
+id_label = [0,2]
+for j in id_label:
     x_index=[]
     y_index=[]
     #fillstyles_type = []
