@@ -448,7 +448,11 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
  
-
+plt.hist(distribution, color = 'blue',
+         bins = int(len(distribution)/5))
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
 
 
 
