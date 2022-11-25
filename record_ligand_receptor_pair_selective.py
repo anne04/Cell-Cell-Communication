@@ -148,6 +148,8 @@ for gene in list(ligand_dict_dataset.keys()):
 ##################################################################
 print(count)
 
+ligand_list = list(ligand_dict_dataset.keys())  
+
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -169,8 +171,8 @@ for j in range(0, distance_matrix.shape[1]):
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
         	
-    list_indx = list(np.argsort(dist_X[:,j]))
-    k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+    #list_indx = list(np.argsort(dist_X[:,j]))
+    #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > spot_diameter*4: #i not in k_higher:
             dist_X[i,j] = -1
@@ -274,27 +276,45 @@ with open(barcode_file) as file:
         barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
         i=i+1
         
-        
+#####
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_a_attention.npy'
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
 distribution = []
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    attention_scores[i][j] = edge_weight[index][1]
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores[i][j] = X_attention_bundle[2][index][0]
     distribution.append(attention_scores[i][j])
-    
+##############
+attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
+##############
+adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
+for index in range (0, X_attention_bundle[0].shape[1]):
+    i = X_attention_bundle[0][0][index]
+    j = X_attention_bundle[0][1][index]
+    adjacency_matrix [i][j] = 1
 
-threshold =  np.percentile(sorted(distribution), 90)
+
+##############
+
+
+ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-            
-############
-
+        
+	
 
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
@@ -371,7 +391,7 @@ for j in id_label:
             cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
             if barcode_type[barcode_info[i][0]] == 0:
-                marker_size.appjend('o') 
+                marker_size.append('o') 
                 #fillstyles_type.append('full') 
             elif barcode_type[barcode_info[i][0]] == 1:
                 marker_size.append('^')  
