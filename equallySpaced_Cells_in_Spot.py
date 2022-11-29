@@ -36,10 +36,10 @@ print(data_fold)
 
 #cell_vs_gene = adata_X   # rows = cells, columns = genes
 
-datapoint_size = 2000
+datapoint_size = 3000
 x_max = 200
 x_min = 0
-y_max = 40
+y_max = 20
 y_min = 0
 #################################
 temp_x = []
@@ -48,8 +48,9 @@ i = x_min
 while i < x_max:
     j = y_min
     while j < y_max:
-        temp_x.append(i)
-        temp_y.append(j)
+        for k in range (0, 3):	#each spot have 3 cells   	
+            temp_x.append(i)
+            temp_y.append(j)
         j = j + 2
     i = i + 2
     
@@ -71,8 +72,7 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced_data0.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_data0', 'wb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data0', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
 datapoint_size = temp_x.shape[0]
@@ -162,7 +162,7 @@ for i in range (0, distance_matrix.shape[0]):
                 #edge_weight.append([0.5, 0])
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0_a', 'wb') as fp:             		 		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_data0', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 		  
 print(len(row_col))
@@ -171,7 +171,7 @@ print(len(temp_x))
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_data0', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data0', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
@@ -192,7 +192,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0', 'rb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_data0', 'rb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
     row_col, edge_weight = pickle.load(fp)
 
@@ -224,7 +224,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_a_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data0_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
