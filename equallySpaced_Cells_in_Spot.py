@@ -19,6 +19,7 @@ from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
+import random
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -29,7 +30,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 spot_diameter = 89.43 #pixels
-k_nn = 4
+k_nn = 5
 
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
 print(data_fold)
@@ -42,15 +43,19 @@ x_min = 0
 y_max = 20
 y_min = 0
 #################################
+
+cell_count_list = []
 temp_x = []
 temp_y = []
 i = x_min
 while i < x_max:
     j = y_min
     while j < y_max:
-        for k in range (0, 3):	#each spot have 3 cells   	
+        cell_count = random.sample(range(1, 4), 1)[0]
+        for k in range (0, cell_count):	#each spot have 3 cells   	
             temp_x.append(i)
             temp_y.append(j)
+        cell_count_list.append(cell_count)
         j = j + 2
     i = i + 2
     
@@ -72,8 +77,12 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced_data0.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data0', 'wb') as fp:
-    pickle.dump([temp_x, temp_y], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data2', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, cell_count, k_nn], fp)
+
+
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data0', 'wb') as fp:
+#    pickle.dump([temp_x, temp_y], fp)
 
 datapoint_size = temp_x.shape[0]
 coordinates = np.zeros((temp_x.shape[0],2))
@@ -117,7 +126,7 @@ for region in region_list:
 num1 = np.zeros((1,2)) 
 num_center = np.zeros((1,2))
 num_center[0][0]=100
-num_center[0][1]=20
+num_center[0][1]= 20
 a = 20
 b = +558
 limit_list =[[300,500],[100,200]] #data2: [[20,50],[300,500],[100,200]] #data=1:[[200,500],[20,50],[20,50]]
@@ -162,7 +171,7 @@ for i in range (0, distance_matrix.shape[0]):
                 #edge_weight.append([0.5, 0])
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_data0', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_data2', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 		  
 print(len(row_col))
@@ -171,9 +180,9 @@ print(len(temp_x))
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data0', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data1', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
-    temp_x, temp_y = pickle.load(fp)
+    temp_x, temp_y, cell_count_list = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
 
@@ -224,7 +233,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data0_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
@@ -256,7 +265,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
