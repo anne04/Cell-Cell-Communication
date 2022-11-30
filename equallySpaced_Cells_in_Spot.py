@@ -180,9 +180,9 @@ print(len(temp_x))
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data1', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_data2', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
-    temp_x, temp_y, cell_count_list = pickle.load(fp)
+    temp_x, temp_y, cell_count_list, k_nn = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
 
@@ -233,7 +233,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data1_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data2_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
