@@ -43,7 +43,7 @@ x_min = 0
 y_max = 40
 y_min = 0
 #################################
-
+max_cell_count = 4
 cell_count_list = []
 temp_x = []
 temp_y = []
@@ -51,7 +51,7 @@ i = x_min
 while i <= x_max:
     j = y_min
     while j <= y_max:
-        cell_count = 1 #random.sample(range(1, 4), 1)[0]
+        cell_count = random.sample(range(1, max_cell_count), 1)[0]
         for k in range (0, cell_count):	#each spot have 3 cells   	
             temp_x.append(i)
             temp_y.append(j)
@@ -77,9 +77,9 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced_data0.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_multiple_lr_data0', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, cell_count, k_nn, lr_pair_type], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data1', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_multiple_lr_data0', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, max_cell_count-1, k_nn, lr_pair_type], fp)
 
 
 datapoint_size = temp_x.shape[0]
@@ -104,8 +104,43 @@ for j in range(0, distance_matrix.shape[1]):
     for i in range(0, distance_matrix.shape[0]):
         if i not in k_higher:
             dist_X[i,j] = -1
+
+
+num1 = np.zeros((1,2)) 
+num_center = np.zeros((2,2))
+# c1
+num_center[0][0]=0 # x
+num_center[0][1]=0 # y
+# c2
+num_center[1][0]=200 # x
+num_center[1][1]=0 # y
+
+region_list = [[0, 50, 30, 40], [150, 200, 30, 40] ] #[[50, 150, 8, 20]] #[[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
+ccc_scores_count = []
+for region in region_list:
+    count = 0
+    for i in range (0, distance_matrix.shape[0]):
+    #ccc_j = []
+        for j in range (0, distance_matrix.shape[1]):
+            if dist_X[i,j] > -1:  
+                region_x_min = region[0]
+                region_x_max = region[1]
+                region_y_min = region[2]
+                region_y_max = region[3]  		
+                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
+                    count = count + 1
+    ccc_scores_count.append(count)   	
 	
-region_list = [[50, 150, 8, 20]] #[[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
+'''
+num1 = np.zeros((1,2)) 
+num_center = np.zeros((2,2))
+# c1
+num_center[0][0]=100
+num_center[0][1]= 20
+# c2
+num_center[1][0]=100
+num_center[1][1]= 8
+region_list = [[0, 50, 30, 40], [150, 200, 30, 40] ] #[[50, 150, 8, 20]] #[[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
 ccc_scores_count = []
 for region in region_list:
     count = 0
@@ -120,16 +155,7 @@ for region in region_list:
                 if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
                     count = count + 1
     ccc_scores_count.append(count)          
-
-num1 = np.zeros((1,2)) 
-num_center = np.zeros((2,2))
-# c1
-num_center[0][0]=100
-num_center[0][1]= 20
-# c2
-num_center[1][0]=100
-num_center[1][1]= 8
-
+'''
 
 a = 20
 b = +558
@@ -184,8 +210,10 @@ for i in range (0, distance_matrix.shape[0]):
                 edge_weight.append([dist_X[i,j], 0])
                 #edge_weight.append([0.5, 0])
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_multiple_lr_data0', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_multiple_lr_data1', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_multiple_lr_data0', 'wb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_multiple_lr_data1', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 		  
 print(len(row_col))
@@ -247,7 +275,7 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_multiple_lr_knn_data0_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_multiple_lr_knn_data1_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_multiple_lr_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
@@ -271,7 +299,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_down =  np.percentile(sorted(distribution), 90)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 c1_list = []
@@ -279,15 +307,16 @@ c2_list = []
 for j in range (0, datapoint_size):
     for i in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
+        #print(len(atn_score_list))
         for k in range (0, len(atn_score_list)):
             if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                 connecting_edges[i][j] = 1
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
                 if k==0:
-                    c1_list.append([temp_x[i],temp_y[i]])	
+                    c1_list.append([i, j, temp_x[i],temp_y[i]])	
                 elif k==1:
-                    c2_list.append([temp_x[i],temp_y[i]])
+                    c2_list.append([i, j, temp_x[i],temp_y[i]])
 
 #############
 
