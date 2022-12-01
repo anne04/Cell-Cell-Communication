@@ -70,7 +70,8 @@ adata_X = sc.pp.scale(adata_X)
 features = adata_X'''
 ####################
 
-gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
+#gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
+
 
 gene_info=dict()
 for gene in gene_ids:
@@ -81,14 +82,23 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
-    
+	
+gene_marker_ids = dict()
+gene_marker_file = '/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv'
+df = pd.read_csv(gene_marker_file)
+for i in range (0, df["Name"].shape[0]):
+    if df["Name"][i] in gene_info:
+        gene_marker_ids[df["Name"][i]] = ''
+ 
+
 ligand_dict_dataset = defaultdict(list)
 cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
 df = pd.read_csv(cell_chat_file)
 cell_cell_contact = []
 for i in range (0, df["ligand_symbol"].shape[0]):
     ligand = df["ligand_symbol"][i]
-    if ligand not in gene_info:
+    if ligand not in gene_marker_ids:
+    #if ligand not in gene_info:
         continue
         
     if df["annotation"][i] == 'ECM-Receptor':    
@@ -97,7 +107,8 @@ for i in range (0, df["ligand_symbol"].shape[0]):
     receptor_symbol_list = df["receptor_symbol"][i]
     receptor_symbol_list = receptor_symbol_list.split("&")
     for receptor in receptor_symbol_list:
-        if receptor in gene_info:
+        #if receptor in gene_info:
+        if receptor in gene_marker_ids:
             ligand_dict_dataset[ligand].append(receptor)
             #######
             if df["annotation"][i] == 'Cell-Cell Contact':
@@ -110,10 +121,12 @@ nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'
 df = pd.read_csv(nichetalk_file)
 for i in range (0, df["from"].shape[0]):
     ligand = df["from"][i]
-    if ligand not in gene_info:
+    if ligand not in gene_marker_ids:
+    #if ligand not in gene_info:
         continue
     receptor = df["to"][i]
-    if receptor not in gene_info:
+    if receptor not in gene_marker_ids:
+    #if receptor not in gene_info:
         continue
     ligand_dict_dataset[ligand].append(receptor)
     
@@ -183,7 +196,7 @@ count_total_edges = 0
 pair_id = 1
 activated_cell_index = dict()
 
-for gene in ligand_list[0:5]: 
+for gene in ligand_list: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
         if 1==1: #cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
@@ -215,8 +228,8 @@ for gene in ligand_list[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_a', 'wb') as fp:
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[0:5],activated_cell_index], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b', 'wb') as fp: #a
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
 
 
 ccc_index_dict = dict()
@@ -231,7 +244,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 mean_ccc = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                     mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                #mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
@@ -242,7 +255,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_a', 'wb') as fp:             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b', 'wb') as fp:  #a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
@@ -277,7 +290,7 @@ with open(barcode_file) as file:
         i=i+1
         
 #####
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_a_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
