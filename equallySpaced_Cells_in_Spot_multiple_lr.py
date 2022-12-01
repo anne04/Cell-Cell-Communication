@@ -40,7 +40,7 @@ print(data_fold)
 datapoint_size = 3000
 x_max = 200
 x_min = 0
-y_max = 20
+y_max = 40
 y_min = 0
 #################################
 
@@ -51,7 +51,7 @@ i = x_min
 while i <= x_max:
     j = y_min
     while j <= y_max:
-        cell_count = random.sample(range(1, 4), 1)[0]
+        cell_count = 1 #random.sample(range(1, 4), 1)[0]
         for k in range (0, cell_count):	#each spot have 3 cells   	
             temp_x.append(i)
             temp_y.append(j)
@@ -77,7 +77,8 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced_data0.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_multiple_lr_data0', 'wb') as fp:
     pickle.dump([temp_x, temp_y, cell_count, k_nn, lr_pair_type], fp)
 
 
@@ -183,8 +184,8 @@ for i in range (0, distance_matrix.shape[0]):
                 edge_weight.append([dist_X[i,j], 0])
                 #edge_weight.append([0.5, 0])
 
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_multiple_lr_data0', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_cell_spot_multiple_lr_data0', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 		  
 print(len(row_col))
@@ -193,9 +194,9 @@ print(len(temp_x))
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data0', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
-    temp_x, temp_y, cell_count_list, k_nn = pickle.load(fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_cell_spot_multiple_lr_data0', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_multiple_lr_data0', 'rb') as fp:
+    temp_x, temp_y, cell_count_list, k_nn, lr_pair_type = pickle.load(fp)
 
 datapoint_size = temp_x.shape[0]
 
@@ -246,50 +247,47 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_knn_data2_attention.npy'
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_multiple_lr_knn_data0_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_cell_spot_multiple_lr_knn_data0_attention.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
-attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+attention_scores = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    attention_scores[i][j] = X_attention_bundle[2][index][0]
+    attention_scores[i][j].append(X_attention_bundle[2][index][0])
     '''if attention_scores[i][j]<-.25:
         attention_scores[i][j] = (attention_scores[i][j]+0.25) * (-1)
     '''
-    distribution.append(attention_scores[i][j])
-##############
-attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-    #attention_scores[i][j] =  X_attention_bundle[1][index][0]
-    #distribution.append(attention_scores[i][j])
-    
-##############
-adjacency_matrix = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    adjacency_matrix [i][j] = 1
+    distribution.append(X_attention_bundle[2][index][0])
 
 
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-
-for j in range (0, attention_scores.shape[1]):
-    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-    for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
-            connecting_edges[i][j] = 1
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''
-
+c1_list = []
+c2_list = []
+for j in range (0, datapoint_size):
+    for i in range (0, datapoint_size):
+        atn_score_list = attention_scores[i][j]
+        for k in range (0, len(atn_score_list)):
+            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                connecting_edges[i][j] = 1
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+                if k==0:
+                    c1_list.append([temp_x[i],temp_y[i]])	
+                elif k==1:
+                    c2_list.append([temp_x[i],temp_y[i]])
 
 #############
 
