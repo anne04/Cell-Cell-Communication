@@ -292,7 +292,7 @@ with open(barcode_file) as file:
         i=i+1
         
 #####
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_1_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
@@ -320,7 +320,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, attention_scores.shape[1]):
