@@ -54,16 +54,17 @@ print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 #################### 
-'''temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
+temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
-adata_X = sc.pp.scale(adata_X)
+#adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
-'''
+
 ####################
-adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
-adata_X = sc.pp.scale(adata_X)
+'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
+#adata_X = sc.pp.scale(adata_X)
 #adata_X = sc.pp.pca(adata_X, n_comps=args.Dim_PCA)
 cell_vs_gene = adata_X
+'''
 ####################
 ####################
 cell_percentile = []
@@ -197,21 +198,27 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
 activated_cell_index = dict()
-
+count = 0
+count2 = 0
 for gene in ligand_list: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if 1==1: #cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
+        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if 1==1: #cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
+                            '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
+                                print(gene)'''
                             if distance_matrix[i,j] > spot_diameter*4:
                                 continue
                             communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                            
+                            if gene=='L1CAM':
+                                count = count+1
+                            elif gene=='LAMC2':
+                                count2 = count2+1
                             if l_r_pair[gene][gene_rec] == -1: 
                                 l_r_pair[gene][gene_rec] = pair_id
                                 pair_id = pair_id + 1 
@@ -230,7 +237,7 @@ for gene in ligand_list: #[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b_1', 'wb') as fp: #b, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b_70', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
 
 
@@ -257,7 +264,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b_1', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b_70', 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
@@ -292,7 +299,7 @@ with open(barcode_file) as file:
         i=i+1
         
 #####
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a, b_1
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
@@ -320,7 +327,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 90)
+threshold_down =  np.percentile(sorted(distribution), 70)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, attention_scores.shape[1]):
