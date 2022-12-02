@@ -208,7 +208,7 @@ for gene in ligand_list: #[0:5]:
                         else:
                             '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
                                 print(gene)'''
-                            if distance_matrix[i,j] >=300: #> spot_diameter*4:
+                            if distance_matrix[i,j] > spot_diameter*4:
                                 continue
                             communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
                             if gene=='L1CAM':
