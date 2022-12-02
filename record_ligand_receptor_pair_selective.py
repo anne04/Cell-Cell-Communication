@@ -60,18 +60,17 @@ adata_X = np.transpose(temp)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 
 ####################
-'''adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
+'''
+adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
 #adata_X = sc.pp.scale(adata_X)
 #adata_X = sc.pp.pca(adata_X, n_comps=args.Dim_PCA)
-cell_vs_gene = adata_X
+cell_vs_gene = sparse.csr_matrix.toarray(adata_X) #adata_X
 '''
 ####################
 ####################
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 5), np.percentile(sorted(cell_vs_gene[i]), 50),np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 97)])
-
-
 
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
@@ -147,8 +146,6 @@ for gene in gene_info.keys():
         count = count + 1
 print(count)
 affected_gene_count = count
-#################################################
-
 
 
 ######################################
@@ -192,7 +189,6 @@ for j in range(0, distance_matrix.shape[1]):
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > spot_diameter*4: #i not in k_higher:
             dist_X[i,j] = -1
-
             
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
@@ -203,10 +199,10 @@ count2 = 0
 for gene in ligand_list: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
+        if cell_vs_gene[i][gene_index[gene]] > 0: #cell_percentile[i][2]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] > 0: # cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
@@ -237,7 +233,7 @@ for gene in ligand_list: #[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b_70', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
 
 
@@ -264,7 +260,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b_70', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b', 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
