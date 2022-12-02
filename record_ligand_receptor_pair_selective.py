@@ -199,16 +199,16 @@ count2 = 0
 for gene in ligand_list: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] > 0: #cell_percentile[i][2]:
+        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] > 0: # cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                             continue
                         else:
                             '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
                                 print(gene)'''
-                            if distance_matrix[i,j] > spot_diameter*4:
+                            if distance_matrix[i,j] >=300: #> spot_diameter*4:
                                 continue
                             communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
                             if gene=='L1CAM':
@@ -233,7 +233,7 @@ for gene in ligand_list: #[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b_70', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
 
 
@@ -243,7 +243,7 @@ edge_weight = []
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j]<300:
+        if distance_matrix[i][j] <= spot_diameter*4:
             #if i==j:
             if len(cells_ligand_vs_receptor[i][j])>0:
                 mean_ccc = 0
@@ -260,7 +260,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b_70', 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
@@ -295,7 +295,7 @@ with open(barcode_file) as file:
         i=i+1
         
 #####
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_70_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
@@ -323,7 +323,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_down =  np.percentile(sorted(distribution), 80)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, attention_scores.shape[1]):
