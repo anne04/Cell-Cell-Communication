@@ -25,6 +25,7 @@ parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
+parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 
 
@@ -85,13 +86,13 @@ for gene in gene_ids:
     gene_index[gene] = i
     i = i+1
 	
-gene_marker_ids = dict()
+'''gene_marker_ids = dict()
 gene_marker_file = '/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv'
 df = pd.read_csv(gene_marker_file)
 for i in range (0, df["Name"].shape[0]):
     if df["Name"][i] in gene_info:
         gene_marker_ids[df["Name"][i]] = ''
-
+'''
 
 ligand_dict_dataset = defaultdict(list)
 cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
@@ -99,8 +100,8 @@ df = pd.read_csv(cell_chat_file)
 cell_cell_contact = []
 for i in range (0, df["ligand_symbol"].shape[0]):
     ligand = df["ligand_symbol"][i]
-    if ligand not in gene_marker_ids:
-    #if ligand not in gene_info:
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
         continue
         
     if df["annotation"][i] == 'ECM-Receptor':    
@@ -109,8 +110,8 @@ for i in range (0, df["ligand_symbol"].shape[0]):
     receptor_symbol_list = df["receptor_symbol"][i]
     receptor_symbol_list = receptor_symbol_list.split("&")
     for receptor in receptor_symbol_list:
-        #if receptor in gene_info:
-        if receptor in gene_marker_ids:
+        if receptor in gene_info:
+        #if receptor in gene_marker_ids:
             ligand_dict_dataset[ligand].append(receptor)
             #######
             if df["annotation"][i] == 'Cell-Cell Contact':
@@ -123,12 +124,12 @@ nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'
 df = pd.read_csv(nichetalk_file)
 for i in range (0, df["from"].shape[0]):
     ligand = df["from"][i]
-    if ligand not in gene_marker_ids:
-    #if ligand not in gene_info:
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
         continue
     receptor = df["to"][i]
-    if receptor not in gene_marker_ids:
-    #if receptor not in gene_info:
+    #if receptor not in gene_marker_ids:
+    if receptor not in gene_info:
         continue
     ligand_dict_dataset[ligand].append(receptor)
     
@@ -194,9 +195,14 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
 pair_id = 1
 activated_cell_index = dict()
-count = 0
-count2 = 0
-for gene in ligand_list: #[0:5]: 
+#count = 0
+#count2 = 0
+print('len ligand_list %d'%len(ligand_list))
+
+start_index = args.slice
+end_index = min(len(ligand_list), start_index+100)
+
+for gene in ligand_list[start_index: end_index]: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
         if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
@@ -211,10 +217,10 @@ for gene in ligand_list: #[0:5]:
                             if distance_matrix[i,j] > spot_diameter*4:
                                 continue
                             communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                            if gene=='L1CAM':
+                            '''if gene=='L1CAM':
                                 count = count+1
                             elif gene=='LAMC2':
-                                count2 = count2+1
+                                count2 = count2+1'''
                             if l_r_pair[gene][gene_rec] == -1: 
                                 l_r_pair[gene][gene_rec] = pair_id
                                 pair_id = pair_id + 1 
@@ -233,8 +239,8 @@ for gene in ligand_list: #[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_b_70', 'wb') as fp: #b, b_1, a
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(args.slice), 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[start_index, end_index],activated_cell_index], fp) #a - [0:5]
 
 
 ccc_index_dict = dict()
@@ -260,7 +266,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_b_70', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+str(args.slice), 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
