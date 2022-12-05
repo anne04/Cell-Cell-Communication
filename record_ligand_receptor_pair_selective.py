@@ -301,7 +301,7 @@ with open(barcode_file) as file:
         i=i+1
         
 #####
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_b_attention.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
@@ -362,7 +362,7 @@ print(id_label)
 for i in range (0, len(barcode_info)):
 #    if barcode_info[i][0] in barcode_label:
     if count_points_component[labels[i]] > 1:
-        barcode_info[i][3] = 2 #index_dict[labels[i]]
+        barcode_info[i][3] = index_dict[labels[i]] #2
     else: 
         barcode_info[i][3] = 0
        
@@ -400,9 +400,9 @@ colors=colors+colors_2
 cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-id_label = [0,2]
-for j in id_label:
-#for j in range (0, n_components):
+#id_label = [0,2]
+#for j in id_label:
+for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
