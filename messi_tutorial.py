@@ -77,12 +77,12 @@ l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
 
 
-# read in meta information about the dataset
+# read in meta information about the dataset # meta_all = cell x metadata
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
 response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 
-# get all available animals/samples
-all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']]))
+# get all available animals/samples -- get unique IDs
+all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
 
 test_animal  = 16
 test_animals = [test_animal]
