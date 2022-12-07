@@ -1,5 +1,4 @@
 %matplotlib inline
-
 import copy
 import os
 import pickle
@@ -13,12 +12,24 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 from sklearn.cluster import AgglomerativeClustering
-
+import stlearn as st
+import scanpy as sc
+from scipy import sparse
 
 import messi
 from messi.data_processing import *
 from messi.hme import hme
 from messi.gridSearch import gridSearch
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') 
+'''parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
+parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+'''
+args = parser.parse_args()
 
 input_path = 'input/'
 output_path = 'output/'
@@ -66,7 +77,7 @@ lr_pairs = pd.read_html(os.path.join('input/','ligand_receptor_pairs2.txt'), hea
 lr_pairs.columns = ['ligand','receptor']
 lr_pairs[['ligand','receptor']] = lr_pairs['receptor'].str.split('\t',expand=True)
 lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
-tlr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
+lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
 l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
 
@@ -109,47 +120,13 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
 #hp_genes = [cell_count x gene_count] #numpy array
 #hp_genes_columns = set of gene names and their index
 
-
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-
-barcode_type=[]
-for i in range (1, len(pathologist_label)):
-    barcode_type.append([])
-    barcode_type[i].append(pathologist_label[i][0])
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[i].append(1)
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[i].append(0)
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[i].append(2)
-    else:
-        barcode_type[i].append(0)
-        
-hp_hp = np.array(barcode_type)
-
-hp_columns = set(['Cell_ID','cell_type'])
-
 #################### coordinate #############################################
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=dict()
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info[line[0]] = [coordinates[i,0],coordinates[i,1]]
-        i=i+1
-        
-hp_cor = np.zeros((len(barcode_type),2))
-for i in range (0, len(barcode_type)):
-    hp_cor[i][0] = barcode_info[barcode_type[i][0]][0]
-    hp_cor[i][1] = barcode_info[barcode_type[i][0]][1]
+       
+hp_cor = np.zeros((coordinates.shape[0],2))
+for i in range (0, coordinates.shape[0]):
+    hp_cor[i][0] = coordinates[i][0]
+    hp_cor[i][1] = coordinates[i][1]
 
 hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
 
@@ -164,7 +141,7 @@ gene_ids = list(adata_h5.var_names)
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = sparse.csr_matrix.toarray(adata_X)   # rows = cells, columns = genes
+cell_vs_gene = adata_X #sparse.csr_matrix.toarray(adata_X)   # rows = cells, columns = genes
 
 hp_genes = cell_vs_gene
 
@@ -172,14 +149,56 @@ hp_genes_columns = dict()
 for i in range (0, len(gene_ids)):
     hp_genes_columns[gene_ids[i]] = i
 
+#################################################################
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+barcode_info=dict()
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info[line[0]] = ''
+        i=i+1
+        
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
 
+barcode_type = []
+j = -1
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][0] not in barcode_info:
+        continue
+    barcode_type.append([])
+    j = j+1
+    barcode_type[j].append(pathologist_label[i][0])    
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[j].append(1)
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[j].append(0)
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[j].append(2)
+    else:
+        barcode_type[j].append(0)
+
+barcode_type = pd.DataFrame(barcode_type)
+hp_np = barcode_type.to_numpy()        
+
+
+hp_columns = set(['Cell_ID','cell_type'])
+############################################
+data_sets=[]
 data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
 datasets_train = data_sets
 datasets_test = data_sets
 
 #################################################################
 #################################################################
-'''data_sets = []
+'''
+data_sets = []
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     
@@ -232,7 +251,7 @@ if data_type == 'merfish_rna_seq':
     neighbors_test = None
 else: 
     if data_type == 'merfish':
-        dis_filter = 100
+        dis_filter = 300
     else:
         dis_filter = 1e9  
         
@@ -263,8 +282,7 @@ else:
 
 X_trains, X_tests, regulator_list_neighbor, regulator_list_self  = prepare_features(data_type, datasets_train, datasets_test, meta_per_dataset_train, meta_per_dataset_test, 
                      idx_train, idx_test, idx_train_in_dataset, idx_test_in_dataset,neighbors_train, neighbors_test,
-                    feature_types, regulator_list_prior, top_k_regulator, 
-                     genes_list_u, l_u, r_u,cell_types_dict)
+                    feature_types, regulator_list_prior, top_k_regulator, genes_list_u, l_u, r_u,cell_types_dict)
 
 
 
