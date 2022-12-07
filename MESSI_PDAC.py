@@ -99,11 +99,13 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
                                                 current_cell_type, get_idx_per_dataset,
                                                 return_in_general = False, 
                                                 bregma=bregma)
-##################################################################
+################## metadata ################################################
 #hp_hp=barcode,spot type
 #hp_columns=set(['Cell_ID','cell_type'])
+
 #hp_cor = [cell_count x 2] #numpy array
 #hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
+
 #hp_genes = [cell_count x gene_count] #numpy array
 #hp_genes_columns = set of gene names and their index
 
@@ -115,24 +117,69 @@ with open(pathologist_label_file) as file:
     for line in csv_file:
         pathologist_label.append(line)
 
-barcode_type=dict()
+barcode_type=[]
 for i in range (1, len(pathologist_label)):
+    barcode_type.append([])
+    barcode_type[i].append(pathologist_label[i][0])
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
+        barcode_type[i].append(1)
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[i].append(0)
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
+        barcode_type[i].append(2)
     else:
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[i].append(0)
         
+hp_hp = np.array(barcode_type)
 
+hp_columns = set(['Cell_ID','cell_type'])
+
+#################### coordinate #############################################
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+barcode_info=dict()
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info[line[0]] = [coordinates[i,0],coordinates[i,1]]
+        i=i+1
         
-#################################################################
+hp_cor = np.zeros((len(barcode_type),2))
+for i in range (0, len(barcode_type)):
+    hp_cor[i][0] = barcode_info[barcode_type[i][0]][0]
+    hp_cor[i][1] = barcode_info[barcode_type[i][0]][1]
+
+hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
+
+##################### gene ########################################    
+data_fold = args.data_path #+args.data_name+'/'
+adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
+print(adata_h5)
+sc.pp.filter_genes(adata_h5, min_cells=1)
+print(adata_h5)
+gene_ids = list(adata_h5.var_names)
+
+temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
+adata_X = np.transpose(temp)  
+#adata_X = sc.pp.scale(adata_X)
+cell_vs_gene = sparse.csr_matrix.toarray(adata_X)   # rows = cells, columns = genes
+
+hp_genes = cell_vs_gene
+
+hp_genes_columns = dict()
+for i in range (0, len(gene_ids)):
+    hp_genes_columns[gene_ids[i]] = i
 
 
+data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
+datasets_train = data_sets
+datasets_test = data_sets
+
 #################################################################
-data_sets = []
+#################################################################
+'''data_sets = []
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     
@@ -171,14 +218,14 @@ for animal_id, bregma in meta_per_dataset_test:
 datasets_test = data_sets
 
 del data_sets
-
+'''
 #############
-for data_tr in datasets_train:
+'''for data_tr in datasets_train:
     # keep only barcode and type, nothing else
     for i in range (0,len(data_tr[0])):
         for j in [1, 2, 3, 4, 5, 6, 8]:
             data_tr[0][i][j] = 0
-
+'''
 #############
 if data_type == 'merfish_rna_seq':
     neighbors_train = None
