@@ -108,6 +108,28 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
 #hp_genes_columns = set of gene names and their index
 
 
+pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[pathologist_label[i][0]] = 1
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = 0
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = 2
+    else:
+        barcode_type[pathologist_label[i][0]] = 0
+        
+
+        
+#################################################################
+
 
 #################################################################
 data_sets = []
