@@ -58,11 +58,72 @@ adata_X = np.transpose(temp)
 cell_vs_gene = adata_X #sparse.csr_matrix.toarray(adata_X)   # rows = cells, columns = genes
 '''
 cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)
-hp_genes = cell_vs_gene
+#########################################################################
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
 
-hp_genes_columns = dict()
-for i in range (0, len(gene_ids)):
-    hp_genes_columns[gene_ids[i]] = i
+ligand_dict_dataset = defaultdict(list)
+cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
+df = pd.read_csv(cell_chat_file)
+cell_cell_contact = []
+for i in range (0, df["ligand_symbol"].shape[0]):
+    ligand = df["ligand_symbol"][i]
+    #if ligand not in gene_marker_ids:
+    #if ligand not in gene_info:
+    #    continue
+        
+    if df["annotation"][i] == 'ECM-Receptor':    
+        continue
+        
+    receptor_symbol_list = df["receptor_symbol"][i]
+    receptor_symbol_list = receptor_symbol_list.split("&")
+    for receptor in receptor_symbol_list:
+        #if receptor in gene_info:
+        #if receptor in gene_marker_ids:
+            ligand_dict_dataset[ligand].append(receptor)
+            #######
+            if df["annotation"][i] == 'Cell-Cell Contact':
+                cell_cell_contact.append(receptor)
+            #######                
+            
+print(len(ligand_dict_dataset.keys()))
+
+nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'   
+df = pd.read_csv(nichetalk_file)
+for i in range (0, df["from"].shape[0]):
+    ligand = df["from"][i]
+    #if ligand not in gene_marker_ids:
+    #if ligand not in gene_info:
+    #    continue
+    receptor = df["to"][i]
+    #if receptor not in gene_marker_ids:
+    #if receptor not in gene_info:
+    #    continue
+    ligand_dict_dataset[ligand].append(receptor)
+    
+print(len(ligand_dict_dataset.keys()))
+
+l_u = []
+r_u = []
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    #gene_info[gene] = 'included'
+    for receptor_gene in ligand_dict_dataset[gene]:
+        #gene_info[receptor_gene] = 'included'
+        l_u.append(gene)
+        r_u.append(receptor_gene)
+   
+l_u_p = set(l_u)
+r_u_p = set(r_u)
+##############
+
+
+#l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+#r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+
+l_u = l_u_p#.union(l_u_search)
+r_u = r_u_p#.union(r_u_search)
 
 #################################################################
 '''barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
@@ -126,6 +187,32 @@ hp_columns['Animal_ID'] = 2
 hp_columns['Bregma'] = 3
 hp_columns['ID_in_dataset'] = 4
 
+##### keep selective genes ####
+selective_genes = ['L1CAM','LAMC2','ITGA2']
+
+non_cancer_ccc =  (l_u.union(r_u)).intersect(set(gene_ids)) - set(selective_genes)
+selective_gene.add(non_cancer_ccc[0])
+
+only_spot = (set(gene_ids)-l_u) - r_u
+selective_gene.add(only_spot[0])
+
+gene_ids = selective_gene
+
+index_genes = []
+for gene in selective_genes:
+    for i in range (0, len(gene_ids)):
+        if gene_ids[i] == gene:
+            index_genes.append(i)
+            break
+       
+cell_vs_gene = cell_vs_gene[:,index_genes]
+#################
+hp_genes = cell_vs_gene
+
+hp_genes_columns = dict()
+for i in range (0, len(gene_ids)):
+    hp_genes_columns[gene_ids[i]] = i
+
 ############################################
 data_sets=[]
 data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
@@ -186,79 +273,6 @@ lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
 l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
 '''
-#########################################################################
-gene_info=dict()
-for gene in gene_ids:
-    gene_info[gene]=''
-
-ligand_dict_dataset = defaultdict(list)
-cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
-df = pd.read_csv(cell_chat_file)
-cell_cell_contact = []
-for i in range (0, df["ligand_symbol"].shape[0]):
-    ligand = df["ligand_symbol"][i]
-    #if ligand not in gene_marker_ids:
-    if ligand not in gene_info:
-        continue
-        
-    if df["annotation"][i] == 'ECM-Receptor':    
-        continue
-        
-    receptor_symbol_list = df["receptor_symbol"][i]
-    receptor_symbol_list = receptor_symbol_list.split("&")
-    for receptor in receptor_symbol_list:
-        if receptor in gene_info:
-        #if receptor in gene_marker_ids:
-            ligand_dict_dataset[ligand].append(receptor)
-            #######
-            if df["annotation"][i] == 'Cell-Cell Contact':
-                cell_cell_contact.append(receptor)
-            #######                
-            
-print(len(ligand_dict_dataset.keys()))
-
-nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'   
-df = pd.read_csv(nichetalk_file)
-for i in range (0, df["from"].shape[0]):
-    ligand = df["from"][i]
-    #if ligand not in gene_marker_ids:
-    if ligand not in gene_info:
-        continue
-    receptor = df["to"][i]
-    #if receptor not in gene_marker_ids:
-    if receptor not in gene_info:
-        continue
-    ligand_dict_dataset[ligand].append(receptor)
-    
-print(len(ligand_dict_dataset.keys()))
-
-l_u = []
-r_u = []
-for gene in list(ligand_dict_dataset.keys()): 
-    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
-    gene_info[gene] = 'included'
-    for receptor_gene in ligand_dict_dataset[gene]:
-        gene_info[receptor_gene] = 'included'
-        l_u.append(gene)
-        r_u.append(receptor_gene)
-   
-count = 0
-for gene in gene_info.keys(): 
-    if gene_info[gene] == 'included':
-        count = count + 1
-print(count)
-affected_gene_count = count
-
-l_u_p = set(l_u)
-r_u_p = set(r_u)
-##############
-
-
-#l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
-#r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
-
-l_u = l_u_p#.union(l_u_search)
-r_u = r_u_p#.union(r_u_search)
 
 
 # read in meta information about the dataset # meta_all = cell x metadata
