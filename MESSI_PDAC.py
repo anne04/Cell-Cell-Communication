@@ -223,10 +223,11 @@ datasets_test = data_sets
 
 ## training data #####
 data_sets=[]
+total_spots = len(barcode_info)
 j = len(barcode_info)
-for tr_index in [0, 2, 3, 4]:
+for tr_index in [0, 2, 3]:
     barcode_info_next=[]
-    for i in range (0, len(barcode_info)):
+    for i in range (0, total_spots):
         barcode_info_next.append([])
         barcode_info_next[i].append(i) # barcode
         barcode_info_next[i].append('Excitatory')
@@ -240,11 +241,13 @@ for tr_index in [0, 2, 3, 4]:
         barcode_info[j].append(tr_index)
         barcode_info[j].append(.26)
         barcode_info[j].append(i)
+        j = j+1
         ##############      
     barcode_type_next = pd.DataFrame(barcode_info_next)
-    hp_np = barcode_type_next.to_numpy()        
+    hp_np = barcode_type_next.to_numpy()    
+    print(hp_np.shape)
     ## random noise to gene exp ##
-    random_noise = random.uniform(tr_index*1,(tr_index+1)*2, [hp_genes.shape[0],hp_genes.shape[1]])
+    random_noise = np.random.uniform(tr_index*1,(tr_index+1)*2, [hp_genes.shape[0],hp_genes.shape[1]])
     data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes+random_noise, hp_genes_columns])
      
 datasets_train = data_sets
@@ -333,7 +336,8 @@ all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18
 test_animal  = 1
 test_animals = [test_animal]
 samples_test = np.array(test_animals)
-samples_train = np.array([0, 2, 3, 4])
+samples_train = np.array(list(set(all_animals)-set(test_animals)))
+samples_train = np.array([0, 2, 3])
 print(f"Test set is {samples_test}")
 print(f"Training set is {samples_train}")
 bregma = None
