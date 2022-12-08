@@ -270,6 +270,12 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
+	
+    
+coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')	
+from sklearn.metrics.pairwise import euclidean_distances
+distance_matrix = euclidean_distances(coordinates, coordinates)
+
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -279,23 +285,18 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-	
-    
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')	
-from sklearn.metrics.pairwise import euclidean_distances
-distance_matrix = euclidean_distances(coordinates, coordinates)
-
 
 slice = -30
 while slice < 544:
     slice = slice + 30
+    print('read %d'%slice)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(slice), 'rb') as fp: #b, b_1, a
         cells_ligand_vs_receptor_temp, l_r_pair, ligand_list, activated_cell_index = pickle.load(fp) 
         
-	for i in range (0, len(cells_ligand_vs_receptor)):
-	    for j in range (0, len(cells_ligand_vs_receptor)):
-		if len(cells_ligand_vs_receptor_temp[i][j])>0:
-		    cells_ligand_vs_receptor[i][j].extend(cells_ligand_vs_receptor_temp[i][j]) 
+    for i in range (0, len(cells_ligand_vs_receptor)):
+        for j in range (0, len(cells_ligand_vs_receptor)):
+            if len(cells_ligand_vs_receptor_temp[i][j])>0:
+                cells_ligand_vs_receptor[i][j].extend(cells_ligand_vs_receptor_temp[i][j]) 
 ###############################
 ccc_index_dict = dict()
 row_col = []
