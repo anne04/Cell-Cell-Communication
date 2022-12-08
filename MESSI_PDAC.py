@@ -31,95 +31,7 @@ parser.add_argument( '--slice', type=int, default=0, help='starting index of lig
 '''
 args = parser.parse_args()
 
-input_path = 'input/'
-output_path = 'output/'
-data_type = 'merfish'
-sex = 'Female'
-behavior = 'Parenting'
-behavior_no_space = behavior.replace(" ", "_")
-current_cell_type = 'Excitatory'
-current_cell_type_no_space = current_cell_type.replace(" ", "_")
-
-grid_search = True
-n_sets = 2  # for example usage only; we recommend 5
-
-n_classes_0 = 1
-n_classes_1 = 5
-n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
-
-preprocess = 'neighbor_cat'
-top_k_response = 20  # for example usage only; we recommend use all responses (i.e. None)
-top_k_regulator = None
-response_type = 'original'  # use raw values to fit the model
-condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_{n_classes_1}"
-
-if grid_search:
-    condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_grid_search"
-else:
-    condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_{n_classes_1}"
-
-read_in_functions = {'merfish': [read_meta_merfish, read_merfish_data, get_idx_per_dataset_merfish],
-                    'merfish_cell_line': [read_meta_merfish_cell_line, read_merfish_cell_line_data, get_idx_per_dataset_merfish_cell_line],
-                    'starmap': [read_meta_starmap_combinatorial, read_starmap_combinatorial, get_idx_per_dataset_starmap_combinatorial]}
-
-# set data reading functions corresponding to the data type
-if data_type in ['merfish', 'merfish_cell_line', 'starmap']:
-    read_meta = read_in_functions[data_type][0]
-    read_data = read_in_functions[data_type][1]
-    get_idx_per_dataset = read_in_functions[data_type][2]
-else:
-    raise NotImplementedError(f"Now only support processing 'merfish', 'merfish_cell_line' or 'starmap'")
-
-# read in ligand and receptor lists
-#l_u, r_u = get_lr_pairs(input_path='../messi/input/')  # may need to change to the default value
-
-lr_pairs = pd.read_html(os.path.join('input/','ligand_receptor_pairs2.txt'), header=None)[0] #pd.read_table(os.path.join(input_path, filename), header=None)
-lr_pairs.columns = ['ligand','receptor']
-lr_pairs[['ligand','receptor']] = lr_pairs['receptor'].str.split('\t',expand=True)
-lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
-lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
-l_u_p = set([l.upper() for l in lr_pairs['ligand']])
-r_u_p = set([g.upper() for g in lr_pairs['receptor']])
-
-l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
-r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
-
-l_u = l_u_p.union(l_u_search)
-r_u = r_u_p.union(r_u_search)
-
-
-# read in meta information about the dataset # meta_all = cell x metadata
-meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
-response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
-
-# get all available animals/samples -- get unique IDs
-all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
-
-test_animal  = 16
-test_animals = [test_animal]
-samples_test = np.array(test_animals)
-samples_train = np.array(list(set(all_animals)-set(test_animals)))
-print(f"Test set is {samples_test}")
-print(f"Training set is {samples_train}")
-bregma = None
-idx_train, idx_test, idx_train_in_general, \
-idx_test_in_general, idx_train_in_dataset, \
-idx_test_in_dataset, meta_per_dataset_train, \
-meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test, 
-                                                meta_all, meta_all_columns, data_type, 
-                                                current_cell_type, get_idx_per_dataset,
-                                                return_in_general = False, 
-                                                bregma=bregma)
-################## metadata ################################################
-#hp_hp=barcode,spot type
-#hp_columns=set(['Cell_ID','cell_type'])
-
-#hp_cor = [cell_count x 2] #numpy array
-#hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
-
-#hp_genes = [cell_count x gene_count] #numpy array
-#hp_genes_columns = set of gene names and their index
-
+####
 #################### coordinate #############################################
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
        
@@ -194,6 +106,167 @@ data_sets=[]
 data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
 datasets_train = data_sets
 datasets_test = data_sets
+
+####
+
+
+input_path = 'input/'
+output_path = 'output/'
+data_type = 'merfish'
+sex = 'Female'
+behavior = 'Parenting'
+behavior_no_space = behavior.replace(" ", "_")
+current_cell_type = 'Excitatory'
+current_cell_type_no_space = current_cell_type.replace(" ", "_")
+
+grid_search = True
+n_sets = 2  # for example usage only; we recommend 5
+
+n_classes_0 = 1
+n_classes_1 = 5
+n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
+
+preprocess = 'neighbor_cat'
+top_k_response = 20  # for example usage only; we recommend use all responses (i.e. None)
+top_k_regulator = None
+response_type = 'original'  # use raw values to fit the model
+condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_{n_classes_1}"
+
+if grid_search:
+    condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_grid_search"
+else:
+    condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_{n_classes_1}"
+
+read_in_functions = {'merfish': [read_meta_merfish, read_merfish_data, get_idx_per_dataset_merfish],
+                    'merfish_cell_line': [read_meta_merfish_cell_line, read_merfish_cell_line_data, get_idx_per_dataset_merfish_cell_line],
+                    'starmap': [read_meta_starmap_combinatorial, read_starmap_combinatorial, get_idx_per_dataset_starmap_combinatorial]}
+
+# set data reading functions corresponding to the data type
+if data_type in ['merfish', 'merfish_cell_line', 'starmap']:
+    read_meta = read_in_functions[data_type][0]
+    read_data = read_in_functions[data_type][1]
+    get_idx_per_dataset = read_in_functions[data_type][2]
+else:
+    raise NotImplementedError(f"Now only support processing 'merfish', 'merfish_cell_line' or 'starmap'")
+
+# read in ligand and receptor lists
+#l_u, r_u = get_lr_pairs(input_path='../messi/input/')  # may need to change to the default value
+
+'''
+lr_pairs = pd.read_html(os.path.join('input/','ligand_receptor_pairs2.txt'), header=None)[0] #pd.read_table(os.path.join(input_path, filename), header=None)
+lr_pairs.columns = ['ligand','receptor']
+lr_pairs[['ligand','receptor']] = lr_pairs['receptor'].str.split('\t',expand=True)
+lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
+lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
+l_u_p = set([l.upper() for l in lr_pairs['ligand']])
+r_u_p = set([g.upper() for g in lr_pairs['receptor']])
+'''
+#########################################################################
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
+
+ligand_dict_dataset = defaultdict(list)
+cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
+df = pd.read_csv(cell_chat_file)
+cell_cell_contact = []
+for i in range (0, df["ligand_symbol"].shape[0]):
+    ligand = df["ligand_symbol"][i]
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
+        continue
+        
+    if df["annotation"][i] == 'ECM-Receptor':    
+        continue
+        
+    receptor_symbol_list = df["receptor_symbol"][i]
+    receptor_symbol_list = receptor_symbol_list.split("&")
+    for receptor in receptor_symbol_list:
+        if receptor in gene_info:
+        #if receptor in gene_marker_ids:
+            ligand_dict_dataset[ligand].append(receptor)
+            #######
+            if df["annotation"][i] == 'Cell-Cell Contact':
+                cell_cell_contact.append(receptor)
+            #######                
+            
+print(len(ligand_dict_dataset.keys()))
+
+nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'   
+df = pd.read_csv(nichetalk_file)
+for i in range (0, df["from"].shape[0]):
+    ligand = df["from"][i]
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
+        continue
+    receptor = df["to"][i]
+    #if receptor not in gene_marker_ids:
+    if receptor not in gene_info:
+        continue
+    ligand_dict_dataset[ligand].append(receptor)
+    
+print(len(ligand_dict_dataset.keys()))
+
+l_u = []
+r_u = []
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    gene_info[gene] = 'included'
+    for receptor_gene in ligand_dict_dataset[gene]:
+        gene_info[receptor_gene] = 'included'
+        l_u.append(gene)
+        r_u.append(receptor_gene)
+   
+count = 0
+for gene in gene_info.keys(): 
+    if gene_info[gene] == 'included':
+        count = count + 1
+print(count)
+affected_gene_count = count
+
+l_u_p = set(l_u)
+r_u_p = set(r_u)
+##############
+
+
+l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+
+l_u = l_u_p#.union(l_u_search)
+r_u = r_u_p#.union(r_u_search)
+
+
+# read in meta information about the dataset # meta_all = cell x metadata
+meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
+response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
+
+# get all available animals/samples -- get unique IDs
+all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
+
+test_animal  = 16
+test_animals = [test_animal]
+samples_test = np.array(test_animals)
+samples_train = np.array(list(set(all_animals)-set(test_animals)))
+print(f"Test set is {samples_test}")
+print(f"Training set is {samples_train}")
+bregma = None
+idx_train, idx_test, idx_train_in_general, \
+idx_test_in_general, idx_train_in_dataset, \
+idx_test_in_dataset, meta_per_dataset_train, \
+meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test, 
+                                                meta_all, meta_all_columns, data_type, 
+                                                current_cell_type, get_idx_per_dataset,
+                                                return_in_general = False, 
+                                                bregma=bregma)
+################## metadata ################################################
+#hp_hp=barcode,spot type
+#hp_columns=set(['Cell_ID','cell_type'])
+
+#hp_cor = [cell_count x 2] #numpy array
+#hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
+
+#hp_genes = [cell_count x gene_count] #numpy array
+#hp_genes_columns = set of gene names and their index
 
 #################################################################
 #################################################################
@@ -281,7 +354,7 @@ else:
     feature_types = [lig_n, rec_s, type_n , base_s, lig_s]
 
 X_trains, X_tests, regulator_list_neighbor, regulator_list_self  = prepare_features(data_type, datasets_train, datasets_test, meta_per_dataset_train, meta_per_dataset_test, 
-                     idx_train, idx_test, idx_train_in_dataset, idx_test_in_dataset,neighbors_train, neighbors_test,
+                     idx_train, idx_test, idx_train_in_dataset, idx_test_in_dataset, neighbors_train, neighbors_test,
                     feature_types, regulator_list_prior, top_k_regulator, genes_list_u, l_u, r_u,cell_types_dict)
 
 
