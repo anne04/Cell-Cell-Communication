@@ -270,6 +270,35 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+slice = -30
+while slice < 544:
+    slice = slice + 30
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(slice), 'rb') as fp: #b, b_1, a
+        cells_ligand_vs_receptor, l_r_pair, ligand_list[start_index, end_index], activated_cell_index = pickle.load(fp) 
+
+        for i in range (0, len(cells_ligand_vs_receptor)):
+            #ccc_j = []
+            for j in range (0, len(cells_ligand_vs_receptor)):
+                if distance_matrix[i][j] <= spot_diameter*4:
+                    #if i==j:
+                    if len(cells_ligand_vs_receptor[i][j])>0:
+                        mean_ccc = 0
+                        for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                            mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                        #mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                        row_col.append([i,j])
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        edge_weight.append([dist_X[i,j], mean_ccc])
+                   
+
+
+
+
+###########################################################
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
