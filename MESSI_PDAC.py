@@ -40,7 +40,9 @@ for i in range (0, coordinates.shape[0]):
     hp_cor[i][0] = coordinates[i][0]
     hp_cor[i][1] = coordinates[i][1]
 
-hp_cor_columns = {'Centroid_X': 0, 'Centroid_Y': 1}
+hp_cor_columns = dict()
+hp_cor_columns['Centroid_X'] = 0
+hp_cor_columns['Centroid_Y'] = 1
 
 ##################### gene ########################################    
 data_fold = args.data_path #+args.data_name+'/'
@@ -49,12 +51,13 @@ print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 gene_ids = list(adata_h5.var_names)
-
+'''
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X #sparse.csr_matrix.toarray(adata_X)   # rows = cells, columns = genes
-
+'''
+cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)
 hp_genes = cell_vs_gene
 
 hp_genes_columns = dict()
@@ -62,7 +65,7 @@ for i in range (0, len(gene_ids)):
     hp_genes_columns[gene_ids[i]] = i
 
 #################################################################
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+'''barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=dict()
 #barcode_info.append("")
 i=0
@@ -95,12 +98,34 @@ for i in range (1, len(pathologist_label)):
         barcode_type[j].append(2)
     else:
         barcode_type[j].append(0)
+'''
 
-barcode_type = pd.DataFrame(barcode_type)
+barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
+barcode_info=[]
+#barcode_info.append("")
+i=0
+with open(barcode_file) as file:
+    tsv_file = csv.reader(file, delimiter="\t")
+    for line in tsv_file:
+        barcode_info.append([])
+        barcode_info[i].append(line[0])
+        barcode_info[i].append('Excitatory')
+        barcode_info[i].append(1)
+        barcode_info[i].append(.26)
+        barcode_info[i].append(i)
+        i=i+1
+              
+barcode_type = pd.DataFrame(barcode_info)
 hp_np = barcode_type.to_numpy()        
 
+###########################
+hp_columns = dict() #set(['Cell_ID','Cell_class','Animal_ID','Bregma','ID_in_dataset'])
+hp_columns['Cell_ID'] = 0
+hp_columns['Cell_class'] = 1
+hp_columns['Animal_ID'] = 2
+hp_columns['Bregma'] = 3
+hp_columns['ID_in_dataset'] = 4
 
-hp_columns = set(['Cell_ID','cell_type'])
 ############################################
 data_sets=[]
 data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
@@ -119,14 +144,14 @@ behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 
-grid_search = True
+grid_search = False #True
 n_sets = 2  # for example usage only; we recommend 5
 
 n_classes_0 = 1
 n_classes_1 = 5
 n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
 
-preprocess = 'neighbor_cat'
+preprocess = 'neighbor_sum' #'neighbor_cat'
 top_k_response = 20  # for example usage only; we recommend use all responses (i.e. None)
 top_k_regulator = None
 response_type = 'original'  # use raw values to fit the model
@@ -229,24 +254,41 @@ r_u_p = set(r_u)
 ##############
 
 
-l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
-r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+#l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+#r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 
 l_u = l_u_p#.union(l_u_search)
 r_u = r_u_p#.union(r_u_search)
 
 
 # read in meta information about the dataset # meta_all = cell x metadata
+'''
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
 response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
+'''
+response_list_prior = regulator_list_prior = None
+meta_all = barcode_type.to_numpy()
+
+meta_all_columns = dict()
+meta_all_columns['Cell_ID'] = 0
+meta_all_columns['Cell_class'] = 1
+meta_all_columns['Animal_ID'] = 2
+meta_all_columns['Bregma'] = 3
+meta_all_columns['ID_in_dataset'] = 4
+
+cell_types_dict = dict()
+cell_types_dict['Excitatory']=0
+
+genes_list_u = genes_list = gene_ids
+
 
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
-
-test_animal  = 16
+# test animal is 16. and all others are train. Then get the index of 16 and train animals separately. 
+test_animal  = 1
 test_animals = [test_animal]
 samples_test = np.array(test_animals)
-samples_train = np.array(list(set(all_animals)-set(test_animals)))
+samples_train = np.array([1])
 print(f"Test set is {samples_test}")
 print(f"Training set is {samples_train}")
 bregma = None
@@ -324,12 +366,12 @@ if data_type == 'merfish_rna_seq':
     neighbors_test = None
 else: 
     if data_type == 'merfish':
-        dis_filter = 300
+        dis_filter = 100 #300
     else:
         dis_filter = 1e9  
         
-    neighbors_train = get_neighbors_datasets(datasets_train, "Del", k=10, dis_filter=dis_filter, include_self = False)
-    neighbors_test = get_neighbors_datasets(datasets_test, "Del", k=10, dis_filter=dis_filter, include_self = False)
+    neighbors_train = get_neighbors_datasets(datasets_train, "Del", k=5, dis_filter=dis_filter, include_self = False)
+    neighbors_test = get_neighbors_datasets(datasets_test, "Del", k=5, dis_filter=dis_filter, include_self = False)
 
 lig_n =  {'name':'regulators_neighbor','helper':preprocess_X_neighbor_per_cell, 
                       'feature_list_type': 'regulator_neighbor', 'per_cell':True, 'baseline':False, 
