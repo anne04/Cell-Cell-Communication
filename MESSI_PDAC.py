@@ -15,6 +15,7 @@ from sklearn.cluster import AgglomerativeClustering
 import stlearn as st
 import scanpy as sc
 from scipy import sparse
+import csv
 
 import messi
 from messi.data_processing import *
@@ -190,22 +191,23 @@ hp_columns['ID_in_dataset'] = 4
 ##### keep selective genes ####
 selective_genes = ['L1CAM','LAMC2','ITGA2']
 
-non_cancer_ccc =  (l_u.union(r_u)).intersect(set(gene_ids)) - set(selective_genes)
-selective_gene.add(non_cancer_ccc[0])
+non_cancer_ccc =  (l_u.union(r_u)).intersection(set(gene_ids)) - set(selective_genes)
+selective_genes.append(list(non_cancer_ccc)[0])
 
 only_spot = (set(gene_ids)-l_u) - r_u
-selective_gene.add(only_spot[0])
+selective_genes.append(list(only_spot)[0])
 
-gene_ids = selective_gene
-print(gene_ids)
 index_genes = []
 for gene in selective_genes:
     for i in range (0, len(gene_ids)):
         if gene_ids[i] == gene:
             index_genes.append(i)
             break
-       
+              
+
 cell_vs_gene = cell_vs_gene[:,index_genes]
+gene_ids = selective_genes
+print(gene_ids)
 #################
 hp_genes = cell_vs_gene
 
