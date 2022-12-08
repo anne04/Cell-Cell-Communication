@@ -197,7 +197,7 @@ only_spot = (set(gene_ids)-l_u) - r_u
 selective_gene.add(only_spot[0])
 
 gene_ids = selective_gene
-
+print(gene_ids)
 index_genes = []
 for gene in selective_genes:
     for i in range (0, len(gene_ids)):
