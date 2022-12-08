@@ -76,6 +76,11 @@ r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
 
+a = set(l_u)
+a = a.union(r_u)
+
+b = set(genes_list_u)
+
 
 # read in meta information about the dataset # meta_all = cell x metadata
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
