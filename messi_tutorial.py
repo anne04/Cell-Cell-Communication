@@ -383,3 +383,22 @@ plt.clf()
 
 plt.close()
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'wb') as fp: #b, b_1, a
+    pickle.dump(genes_list_us_messi, fp) 	
+
+common_lr_pairs = []
+set_common_pairs = []
+for i in range (0, len(l_u)):
+    for j in range (0, len(l_u_m)):
+        if l_u[i] == l_u_m[j] and r_u[i] == r_u_m[j]:
+            common_lr_pairs.append([l_u[i], r_u[i]])
+            set_common_pairs.append(l_u[i])
+            set_common_pairs.append(r_u[i])
+            
+set_common_pairs = set(set_common_pairs)
+
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'lr_db_messi_us', 'wb') as fp: #b, b_1, a
+    pickle.dump([common_lr_pairs,set_common_pairs], fp) 
+
+            
