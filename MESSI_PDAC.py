@@ -196,6 +196,7 @@ selective_genes.append(list(non_cancer_ccc)[0])
 
 only_spot = (set(gene_ids)-l_u) - r_u
 selective_genes.append(list(only_spot)[0])
+selective_genes.append(list(only_spot)[1])
 
 index_genes = []
 for gene in selective_genes:
@@ -263,12 +264,12 @@ behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 
-grid_search = False #True
+grid_search = False #True #
 n_sets = 2  # for example usage only; we recommend 5
 
 n_classes_0 = 1
 n_classes_1 = 5
-n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
+n_epochs = 8  # for example usage only; we recommend using the default 20 n_epochs 
 
 preprocess = 'neighbor_sum' #'neighbor_cat'
 top_k_response = 20  # for example usage only; we recommend use all responses (i.e. None)
