@@ -310,7 +310,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 mean_ccc = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                     mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-                #mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
@@ -320,8 +320,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
 
-		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]           		
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all', 'wb') as fp:  #b, a:[0:5]           
     pickle.dump([row_col, edge_weight], fp)
 #
 
@@ -360,7 +360,7 @@ with open(barcode_file) as file:
         
 #####
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_bothlayer_attention.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
