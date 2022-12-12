@@ -86,35 +86,42 @@ response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_spac
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
     genes_list_us_messi = pickle.load(fp) 
 
-genes_list_us_messi_dict = []
-for gene in genes_list_us_messi:
+genes_list_us_messi_list = list(genes_list_us_messi)
+genes_list_us_messi_dict = dict()
+for gene in genes_list_us_messi_list:
     genes_list_us_messi_dict[gene] = ''
     
 us_messi_r = genes_list_us_messi.intersection(r_u) 
-us_messi_r_dict = []
+us_messi_r_dict = dict()
 for gene in us_messi_r:
     us_messi_r_dict[gene] = ''
     
 # pick 'N'(=5) l_r 
-r_remove_list = []
-r_remove_dict = dict()
+
+r_chosen_list = []
+r_chosen_dict = dict()
 for i in range (0, len(lr_pairs)):
-    if lr_pairs['receptor'][i] is in us_messi_r_dict:
+    if lr_pairs['receptor'][i] in us_messi_r_dict:
         # see if it's ligand exist in other pairs as well
         my_ligand = lr_pairs['ligand'][i]
         if my_ligand not in genes_list_us_messi_dict:
             continue
-        flag = 0
+        
         for j in range (0, len(lr_pairs)):
             if lr_pairs['ligand'][j] == my_ligand:
-                r_remove_dict[lr_pairs['receptor'][i]] = '' # rec pairs to keep 
-                r_remove_list.append(i) # index to keep
+                r_chosen_dict[lr_pairs['receptor'][i]] = '' # rec pairs to keep 
+                r_chosen_list.append(i) # index to keep
                 break
-        if len(r_remove_list) == 5:
+        
+        if len(r_chosen_list) == 5:
             break
+            
 # find row to remove
+r_remove_list = []
 for i in range (0, len(lr_pairs)):
-    
+    if lr_pairs['receptor'][i] in r_chosen_dict and i not in r_chosen_list:
+        r_remove_list.append(i)
+       
 
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
