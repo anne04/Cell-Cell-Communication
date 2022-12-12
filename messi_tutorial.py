@@ -82,6 +82,40 @@ r_u = r_u_p.union(r_u_search)
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
 response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
+    genes_list_us_messi = pickle.load(fp) 
+
+genes_list_us_messi_dict = []
+for gene in genes_list_us_messi:
+    genes_list_us_messi_dict[gene] = ''
+    
+us_messi_r = genes_list_us_messi.intersection(r_u) 
+us_messi_r_dict = []
+for gene in us_messi_r:
+    us_messi_r_dict[gene] = ''
+    
+# pick 'N'(=5) l_r 
+r_remove_list = []
+r_remove_dict = dict()
+for i in range (0, len(lr_pairs)):
+    if lr_pairs['receptor'][i] is in us_messi_r_dict:
+        # see if it's ligand exist in other pairs as well
+        my_ligand = lr_pairs['ligand'][i]
+        if my_ligand not in genes_list_us_messi_dict:
+            continue
+        flag = 0
+        for j in range (0, len(lr_pairs)):
+            if lr_pairs['ligand'][j] == my_ligand:
+                r_remove_dict[lr_pairs['receptor'][i]] = '' # rec pairs to keep 
+                r_remove_list.append(i) # index to keep
+                break
+        if len(r_remove_list) == 5:
+            break
+# find row to remove
+for i in range (0, len(lr_pairs)):
+    
+
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
 
@@ -397,4 +431,6 @@ set_common_pairs = set(set_common_pairs)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'lr_db_messi_us', 'wb') as fp: #b, b_1, a
     pickle.dump([common_lr_pairs,set_common_pairs], fp) 
 
-            
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'lr_db_messi_us', 'rb') as fp: #b, b_1, a
+    pickle.dump([common_lr_pairs,set_common_pairs], fp) 
+           
