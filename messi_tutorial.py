@@ -29,7 +29,7 @@ behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 
-grid_search = True
+grid_search = False #True
 n_sets = 2  # for example usage only; we recommend 5
 
 n_classes_0 = 1
@@ -37,7 +37,7 @@ n_classes_1 = 5
 n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
 
 preprocess = 'neighbor_cat'
-top_k_response = 20  # for example usage only; we recommend use all responses (i.e. None)
+top_k_response = None #20  # for example usage only; we recommend use all responses (i.e. None)
 top_k_regulator = None
 response_type = 'original'  # use raw values to fit the model
 condition = f"response_{top_k_response}_l1_{n_classes_0}_l2_{n_classes_1}"
@@ -76,10 +76,6 @@ r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
 
-a = set(l_u)
-a = a.union(r_u)
-
-b = set(genes_list_u)
 
 
 # read in meta information about the dataset # meta_all = cell x metadata
