@@ -10,18 +10,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
-import scipy as sp
-from sklearn.cluster import AgglomerativeClustering
-import stlearn as st
-import scanpy as sc
-from scipy import sparse
-import csv
 
 import messi
 from messi.data_processing import *
 from messi.hme import hme
 from messi.gridSearch import gridSearch
 
+import scipy as sp
+from sklearn.cluster import AgglomerativeClustering
+import stlearn as st
+import scanpy as sc
+from scipy import sparse
+import csv
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') 
@@ -61,7 +61,7 @@ cell_vs_gene = adata_X #sparse.csr_matrix.toarray(adata_X)   # rows = cells, col
 cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)
 #########################################################################
 #########################################################################
-gene_info=dict()
+'''gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
 
@@ -126,17 +126,19 @@ r_u_p = set(r_u)
 
 l_u = l_u_p#.union(l_u_search)
 r_u = r_u_p#.union(r_u_search)
-
+'''
 ###########################
 hp_columns = dict() #set(['Cell_ID','Cell_class','Animal_ID','Bregma','ID_in_dataset'])
 # EDIT
 hp_columns['Cell_ID'] = 0
-hp_columns['Cell_class'] = 1
-hp_columns['Animal_ID'] = 2
-hp_columns['Bregma'] = 3
-hp_columns['ID_in_dataset'] = 4
-#################################################################
+hp_columns['Animal_ID'] = 1
+hp_columns['Animal_sex'] = 2
+hp_columns['Behavior'] = 3
+hp_columns['Bregma'] = 4
+hp_columns['Cell_class'] = 5
+hp_columns['ID_in_dataset'] = 6
 
+#############################################################
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
@@ -146,9 +148,11 @@ with open(barcode_file) as file:
     for line in tsv_file:
         barcode_info.append([])
         barcode_info[i].append(line[0])
-        barcode_info[i].append('Excitatory')
         barcode_info[i].append(1)
-        barcode_info[i].append(.26)
+        barcode_info[i].append('Female')
+        barcode_info[i].append('Parenting')
+        barcode_info[i].append(.26)      
+        barcode_info[i].append('Excitatory')
         barcode_info[i].append(i)
         i=i+1
               
@@ -181,20 +185,24 @@ for gene in genes_list_us_messi:
               
 
 cell_vs_gene = cell_vs_gene[:,index_genes]
-gene_ids = genes_list_us_messi
-print(gene_ids)
+#gene_ids = genes_list_us_messi
+genes_list_u = genes_list_us_messi
+
+#print(gene_ids)
 #################
 hp_genes = cell_vs_gene
 
 hp_genes_columns = dict()
+j = 0
 for i in range (0, len(gene_ids)):
-    hp_genes_columns[gene_ids[i]] = i
+    if gene_ids[i] in genes_list_us_messi:
+       hp_genes_columns[gene_ids[i]] = j
+       j = j+1
 
 ############################################
 data_sets=[]
 data_sets.append([hp_np, hp_columns, hp_cor, hp_cor_columns, hp_genes, hp_genes_columns])
 datasets_test = data_sets
-
 
 ## training data #####
 data_sets=[]
@@ -204,17 +212,22 @@ for tr_index in [0, 2, 3]:
     barcode_info_next=[]
     for i in range (0, total_spots):
         barcode_info_next.append([])
-        barcode_info_next[i].append(i) # barcode
-        barcode_info_next[i].append('Excitatory')
-        barcode_info_next[i].append(tr_index)
-        barcode_info_next[i].append(.26)
         barcode_info_next[i].append(i)
-        # ########################              
+        barcode_info_next[i].append(tr_index)
+        barcode_info_next[i].append('Female')
+        barcode_info_next[i].append('Parenting')
+        barcode_info_next[i].append(.26)      
+        barcode_info_next[i].append('Excitatory')
+        barcode_info_next[i].append(i)
+              
+        # ########################   
         barcode_info.append([])
         barcode_info[j].append(i)
-        barcode_info[j].append('Excitatory')
         barcode_info[j].append(tr_index)
-        barcode_info[j].append(.26)
+        barcode_info[j].append('Female')
+        barcode_info[j].append('Parenting')
+        barcode_info[j].append(.26)      
+        barcode_info[j].append('Excitatory')
         barcode_info[j].append(i)
         j = j+1
         ##############      
@@ -229,7 +242,7 @@ datasets_train = data_sets
 ####
 
 
-input_path = 'input/'
+'''input_path = 'input/'
 output_path = 'output/'
 data_type = 'merfish'
 sex = 'Female'
@@ -267,7 +280,7 @@ if data_type in ['merfish', 'merfish_cell_line', 'starmap']:
     get_idx_per_dataset = read_in_functions[data_type][2]
 else:
     raise NotImplementedError(f"Now only support processing 'merfish', 'merfish_cell_line' or 'starmap'")
-
+'''
 # read in ligand and receptor lists
 #l_u, r_u = get_lr_pairs(input_path='../messi/input/')  # may need to change to the default value
 
@@ -281,18 +294,16 @@ l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
 '''
 
-
 # read in meta information about the dataset # meta_all = cell x metadata
 '''
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
 response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 '''
 response_list_prior = regulator_list_prior = None
-
 barcode_type = pd.DataFrame(barcode_info)
 meta_all = barcode_type.to_numpy()
 
-meta_all_columns = dict()
+'''meta_all_columns = dict()
 meta_all_columns['Cell_ID'] = 0
 meta_all_columns['Cell_class'] = 1
 meta_all_columns['Animal_ID'] = 2
@@ -301,9 +312,12 @@ meta_all_columns['ID_in_dataset'] = 4
 
 cell_types_dict = dict()
 cell_types_dict['Excitatory']=0
+gene_ids = genes_list 
+'''
 
-genes_list_u = genes_list = gene_ids
+#genes_list_u = 
 
+a, meta_all_columns, cell_types_dict, a, a, response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
@@ -390,7 +404,7 @@ if data_type == 'merfish_rna_seq':
     neighbors_test = None
 else: 
     if data_type == 'merfish':
-        dis_filter = 100 #300
+        dis_filter = 300
     else:
         dis_filter = 1e9  
         
@@ -421,7 +435,7 @@ else:
 
 X_trains, X_tests, regulator_list_neighbor, regulator_list_self  = prepare_features(data_type, datasets_train, datasets_test, meta_per_dataset_train, meta_per_dataset_test, 
                      idx_train, idx_test, idx_train_in_dataset, idx_test_in_dataset, neighbors_train, neighbors_test,
-                    feature_types, regulator_list_prior, top_k_regulator, genes_list_u, l_u, r_u,cell_types_dict)
+                    feature_types, regulator_list_prior, top_k_regulator, genes_list_u, l_u, r_u, cell_types_dict)
 
 
 
