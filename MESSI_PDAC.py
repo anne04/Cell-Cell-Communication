@@ -60,6 +60,7 @@ cell_vs_gene = adata_X #sparse.csr_matrix.toarray(adata_X)   # rows = cells, col
 '''
 cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)
 #########################################################################
+#########################################################################
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
@@ -126,41 +127,15 @@ r_u_p = set(r_u)
 l_u = l_u_p#.union(l_u_search)
 r_u = r_u_p#.union(r_u_search)
 
+###########################
+hp_columns = dict() #set(['Cell_ID','Cell_class','Animal_ID','Bregma','ID_in_dataset'])
+# EDIT
+hp_columns['Cell_ID'] = 0
+hp_columns['Cell_class'] = 1
+hp_columns['Animal_ID'] = 2
+hp_columns['Bregma'] = 3
+hp_columns['ID_in_dataset'] = 4
 #################################################################
-'''barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=dict()
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info[line[0]] = ''
-        i=i+1
-        
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-
-barcode_type = []
-j = -1
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][0] not in barcode_info:
-        continue
-    barcode_type.append([])
-    j = j+1
-    barcode_type[j].append(pathologist_label[i][0])    
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[j].append(1)
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[j].append(0)
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[j].append(2)
-    else:
-        barcode_type[j].append(0)
-'''
 
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
@@ -179,27 +154,26 @@ with open(barcode_file) as file:
               
 barcode_type = pd.DataFrame(barcode_info)
 hp_np = barcode_type.to_numpy()        
-
-###########################
-hp_columns = dict() #set(['Cell_ID','Cell_class','Animal_ID','Bregma','ID_in_dataset'])
-hp_columns['Cell_ID'] = 0
-hp_columns['Cell_class'] = 1
-hp_columns['Animal_ID'] = 2
-hp_columns['Bregma'] = 3
-hp_columns['ID_in_dataset'] = 4
-
 ##### keep selective genes ####
-selective_genes = ['L1CAM','LAMC2','ITGA2']
-
+'''selective_genes = ['L1CAM','LAMC2','ITGA2']
 non_cancer_ccc =  (l_u.union(r_u)).intersection(set(gene_ids)) - set(selective_genes)
 selective_genes.append(list(non_cancer_ccc)[0])
-
 only_spot = (set(gene_ids)-l_u) - r_u
 selective_genes.append(list(only_spot)[0])
 selective_genes.append(list(only_spot)[1])
-
 index_genes = []
 for gene in selective_genes:
+    for i in range (0, len(gene_ids)):
+        if gene_ids[i] == gene:
+            index_genes.append(i)
+            break
+            '''
+#####################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
+    genes_list_us_messi = pickle.load(fp) 
+
+index_genes = [] # to keep
+for gene in genes_list_us_messi:
     for i in range (0, len(gene_ids)):
         if gene_ids[i] == gene:
             index_genes.append(i)
@@ -207,7 +181,7 @@ for gene in selective_genes:
               
 
 cell_vs_gene = cell_vs_gene[:,index_genes]
-gene_ids = selective_genes
+gene_ids = genes_list_us_messi
 print(gene_ids)
 #################
 hp_genes = cell_vs_gene
