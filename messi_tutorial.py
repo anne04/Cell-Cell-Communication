@@ -29,12 +29,12 @@ behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 
-grid_search = False #True
-n_sets = 2  # for example usage only; we recommend 5
+grid_search = True #False #
+n_sets = 5  # for example usage only; we recommend 5
 
 n_classes_0 = 1
 n_classes_1 = 5
-n_epochs = 5  # for example usage only; we recommend using the default 20 n_epochs 
+n_epochs = 20  # for example usage only; we recommend using the default 20 n_epochs 
 
 preprocess = 'neighbor_cat'
 top_k_response = None #20  # for example usage only; we recommend use all responses (i.e. None)
@@ -69,18 +69,11 @@ lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
 lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
 l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
-
 l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
 r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
-
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
 
-
-
-# read in meta information about the dataset # meta_all = cell x metadata
-meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
-response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
@@ -116,12 +109,35 @@ for i in range (0, len(lr_pairs)):
         if len(r_chosen_list) == 5:
             break
             
-# find row to remove
+chosen_ligand_rec_pair = []
+for index in r_chosen_list:
+    chosen_ligand_rec_pair.append([lr_pairs['ligand'], lr_pairs['receptor']])
+
+# find rows to remove - remove all those receptors 
 r_remove_list = []
 for i in range (0, len(lr_pairs)):
-    if lr_pairs['receptor'][i] in r_chosen_dict and i not in r_chosen_list:
+    if lr_pairs['receptor'][i] in r_chosen_dict:
         r_remove_list.append(i)
-       
+        
+filtered_lr_pairs = lr_pairs.drop(r_remove_list)  
+
+lr_pairs = filtered_lr_pairs
+      
+l_u_p = set([l.upper() for l in lr_pairs['ligand']])
+r_u_p = set([g.upper() for g in lr_pairs['receptor']])
+l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+l_u = l_u_p.union(l_u_search)
+r_u = r_u_p.union(r_u_search)
+
+# read in meta information about the dataset # meta_all = cell x metadata
+meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
+response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
+
+
+genes_list_u = genes_list_us_messi
+   
+
 
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
@@ -146,7 +162,14 @@ data_sets = []
 
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
-    
+    # remove genes which are not in common list genes_list_us_messi
+    rem_col = []
+    for i in range (0,len(hp_genes.columns)):
+        if hp_genes.columns[i] not in genes_list_us_messi:
+            rem_col.append(hp_genes.columns[i])
+            
+    hp_genes.drop(rem_col, axis=1, inplace=True)
+    #####################
     if hp is not None:
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
         hp_np = hp.to_numpy()
@@ -165,8 +188,15 @@ data_sets = []
 
 for animal_id, bregma in meta_per_dataset_test:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
-    
-    if hp is not None:
+    # remove genes which are not in common list genes_list_us_messi
+    rem_col = []
+    for i in range (0,len(hp_genes.columns)):
+        if hp_genes.columns[i] not in genes_list_us_messi:
+            rem_col.append(hp_genes.columns[i])
+            
+    hp_genes.drop(rem_col, axis=1, inplace=True)
+    #####################
+    if hp is not None: # meta data
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
         hp_np = hp.to_numpy()
     else:
@@ -189,7 +219,7 @@ if data_type == 'merfish_rna_seq':
     neighbors_test = None
 else: 
     if data_type == 'merfish':
-        dis_filter = 100
+        dis_filter = 300
     else:
         dis_filter = 1e9  
         
