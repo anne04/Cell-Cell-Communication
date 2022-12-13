@@ -111,7 +111,7 @@ for i in range (0, len(lr_pairs)):
             
 chosen_ligand_rec_pair = []
 for index in r_chosen_list:
-    chosen_ligand_rec_pair.append([lr_pairs['ligand'], lr_pairs['receptor']])
+    chosen_ligand_rec_pair.append([lr_pairs['ligand'][index], lr_pairs['receptor'][index]])
 
 # find rows to remove - remove all those receptors 
 r_remove_list = []
