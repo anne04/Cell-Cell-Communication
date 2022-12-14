@@ -163,12 +163,10 @@ data_sets = []
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     # remove genes which are not in common list genes_list_us_messi
-    rem_col = []
-    for i in range (0,len(hp_genes.columns)):
-        if hp_genes.columns[i] not in genes_list_us_messi:
-            rem_col.append(hp_genes.columns[i])
-            
-    hp_genes.drop(rem_col, axis=1, inplace=True)
+   
+    
+    hp_genes_filtered = hp_genes[genes_list_us_messi]   
+    hp_genes = hp_genes_filtered
     #####################
     if hp is not None:
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
@@ -189,12 +187,9 @@ data_sets = []
 for animal_id, bregma in meta_per_dataset_test:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     # remove genes which are not in common list genes_list_us_messi
-    rem_col = []
-    for i in range (0,len(hp_genes.columns)):
-        if hp_genes.columns[i] not in genes_list_us_messi:
-            rem_col.append(hp_genes.columns[i])
-            
-    hp_genes.drop(rem_col, axis=1, inplace=True)
+    
+    hp_genes_filtered = hp_genes[genes_list_us_messi]   
+    hp_genes = hp_genes_filtered
     #####################
     if hp is not None: # meta data
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
