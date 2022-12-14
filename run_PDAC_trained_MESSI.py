@@ -4,6 +4,7 @@ import os
 import pickle
 from collections import defaultdict
 import itertools
+import gzip
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -399,7 +400,7 @@ search_range_dict = {'Excitatory': range(7, 9), 'U-2_OS': range(1,3), \
                         'STARmap_excitatory': range(1,3)}  
 
 
-#################
+r#################
 
 saved_model = pickle.load(open(os.path.join(current_dir, filename), 'rb'))
 Y_hat_final = saved_model.predict(X_test, X_test_clf_1, X_test_clf_2)
@@ -442,6 +443,25 @@ plt.title(f"Coefficients of expert {_expert[1]}")
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
-
 plt.close()
-
+#######
+r_chosen_list = list(r_chosen_dict.keys())
+MESSI_found_ligand = defaultdict(list)
+for response_gene in df_plot.columns:
+    for receptor in r_chosen_list:
+        if response_gene.upper() == receptor.upper():
+            temp = df_plot[response_gene].sort_values(ascending=False)
+            for i in range (0,len(temp)):
+                if temp[i] > 0.1:
+                    MESSI_found_ligand[response_gene.upper()].append([temp.index[i],temp[i]])
+                else:
+                    break 
+                    
+new_ligand_rec_pairs = defaultdict(list)
+for receptor in r_chosen_list:
+    for i in range(0, len(MESSI_found_ligand[receptor])):
+        new_ligand_rec_pairs[MESSI_found_ligand[receptor][i][0].upper()].append(receptor.upper())
+            
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'MESSI_predicted_lr_pairs', 'wb') as fp: 
+    pickle.dump(new_ligand_rec_pairs, fp) 
+            
