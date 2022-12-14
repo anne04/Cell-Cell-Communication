@@ -388,14 +388,12 @@ sub_condition = f"{condition}_{model_name_gates}_{model_name_experts}"
 sub_dir = f"{data_type}/{behavior_no_space}/{sex}/{current_cell_type_no_space}/{preprocess}/{sub_condition}"
 current_dir = os.path.join(output_path, sub_dir)
 
-if not os.path.exists(current_dir):
-    os.makedirs(current_dir)
+
 
 print(f"Model and validation results (if appliable) saved to: {current_dir}")
 
 suffix = f"_{test_animal}"
-
-
+filename = 'hme_model_16.pickle' 
 # search range for number of experts; for example usage only, we recommend 4
 search_range_dict = {'Excitatory': range(7, 9), 'U-2_OS': range(1,3), \
                         'STARmap_excitatory': range(1,3)}  
