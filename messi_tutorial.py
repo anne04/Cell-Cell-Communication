@@ -5,6 +5,7 @@ import os
 import pickle
 from collections import defaultdict
 import itertools
+import gzip
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -73,8 +74,6 @@ l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
 r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
-
-
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
     genes_list_us_messi = pickle.load(fp) 
