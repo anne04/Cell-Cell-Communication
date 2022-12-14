@@ -222,7 +222,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 mean_ccc = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                     mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-                #mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
+                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
@@ -233,7 +233,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_MESSI_comparison_a', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnAvgCCC_MESSI_comparison_a', 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
