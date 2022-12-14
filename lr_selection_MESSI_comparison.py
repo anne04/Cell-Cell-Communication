@@ -86,14 +86,8 @@ for gene in gene_ids:
     gene_index[gene] = i
     i = i+1
 	
-'''gene_marker_ids = dict()
-gene_marker_file = '/cluster/home/t116508uhn/64630/Geneset_22Sep21_Subtypesonly_edited.csv'
-df = pd.read_csv(gene_marker_file)
-for i in range (0, df["Name"].shape[0]):
-    if df["Name"][i] in gene_info:
-        gene_marker_ids[df["Name"][i]] = ''
-'''
-lr_pairs = pd.read_html('/cluster/home/t116508uhn/MESSI/input/ligand_receptor_pairs2.txt', header=None)[0] #pd.read_table(os.path.join(input_path, filename), header=None)
+
+'''lr_pairs = pd.read_html('/cluster/home/t116508uhn/MESSI/input/ligand_receptor_pairs2.txt', header=None)[0] #pd.read_table(os.path.join(input_path, filename), header=None)
 lr_pairs.columns = ['ligand','receptor']
 lr_pairs[['ligand','receptor']] = lr_pairs['receptor'].str.split('\t',expand=True)
 lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
@@ -107,6 +101,10 @@ for index in range (0, len(lr_pairs)):
         ligand_dict_dataset[lr_pairs['ligand'][index]].append(lr_pairs['receptor'][index])
    
 print(len(ligand_dict_dataset.keys()))
+'''
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'MESSI_predicted_lr_pairs', 'rb') as fp: 
+    ligand_dict_dataset = pickle.load(fp) 
 
 for gene in list(ligand_dict_dataset.keys()): 
     ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
@@ -233,8 +231,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
 		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnAvgCCC_MESSI_comparison_a', 'wb') as fp:  #b, a:[0:5]           
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnAvgCCC_MESSI_comparison_a', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_MESSI_predicted_pairs', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
 	
@@ -325,7 +323,29 @@ with open(barcode_file) as file:
         barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
         i=i+1
         
-#####
+##########
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_MESSI_comparison_a', 'rb') as fp: #b, b_1, a
+    cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index = pickle.load(fp) 
+
+datapoint_size = len(cells_ligand_vs_receptor)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           		
+    row_col, edge_weight = pickle.load(fp)
+
+attention_scores = np.zeros((datapoint_size,datapoint_size))
+distribution = []
+ccc_index_dict = dict()
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    
+    attention_scores[i][j] = edge_weight[index][1]
+    if edge_weight[index][1]>0:
+        distribution.append(attention_scores[i][j])
+        ccc_index_dict[i] = ''
+        #ccc_index_dict[j] = ''    
+
+###########
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnAvgCCC_MESSI_a_bothlayer_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
@@ -336,7 +356,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    distribution.append(attention_scores[i][j])
+    if attention_scores[i][j]>0:
+        distribution.append(attention_scores[i][j])
 ##############
 attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -363,7 +384,7 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-        
+            ccc_index_dict[i] = ''
 	
 
 graph = csr_matrix(connecting_edges)
@@ -425,10 +446,16 @@ colors=colors+colors_2
 
 cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
-
-#id_label = [0,2]
-#for j in id_label:
-for j in range (0, n_components):
+#######
+for i in range (0, len(barcode_info)):
+    if i in ccc_index_dict:
+        barcode_info[i][3] = 2
+    else: 
+        barcode_info[i][3] = 0
+#######
+id_label = [0,2]
+for j in id_label:
+#for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
@@ -438,7 +465,7 @@ for j in range (0, n_components):
         if barcode_info[i][3] == j:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
-            cell_count_cluster[j] = cell_count_cluster[j]+1
+            #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
             if barcode_type[barcode_info[i][0]] == 0:
                 marker_size.append('o') 
