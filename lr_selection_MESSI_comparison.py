@@ -452,18 +452,31 @@ for i in range (0, len(barcode_info)):
 max_x = np.max(x_index)
 max_y = np.max(y_index)
 
+'''
 min_x = np.min(x_index)
 min_y = np.min(y_index)
 for i in range (0, len(barcode_info)):    
     x_index[i] = ((x_index[i]-min_x)/(max_x-min_x))*499
     y_index[i] = ((y_index[i]-min_y)/(max_y-min_y))*421
-
+'''
 from pyvis.network import Network
+import networkx as nx
 
-g = Network("500px", "500px", directed=True)
-g.show_buttons()
+#g = Network("500px", "500px", directed=True)
+#g.show_buttons()
 #g.setOptions(var options = {"physics": {"barnesHut": {"springConstant": 0,"avoidOverlap": 0.1}}})
-
+cont = []
+for i in range (0, 3):
+    attrbt = dict()
+    attrbt["x"] = x_index[i]
+    attrbt["y"] = y_index[i]
+    cont.append((i,attrbt))
+    
+g = nx.Graph()
+#g.add_nodes_from(cont)
+#g.add_node(ids[0], x=x_index[0], y=y_index[0])
+#g.add_node(ids[1], x=x_index[1], y=y_index[1])
+#g.add_node(ids[2], x=x_index[2], y=y_index[2])
 for i in range (0, len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 0:
         marker_size = 'circle'
@@ -471,14 +484,43 @@ for i in range (0, len(barcode_info)):
         marker_size = 'box'
     else:
         marker_size = 'ellipse'
-    g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), physics=False)
+    #g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
 #label=str(ids[i]),
 
 for i in range (0, attention_scores.shape[0]):
     for j in range (0, attention_scores.shape[1]):
         if attention_scores[i][j] >= threshold_down:
-            g.add_edge(i, j, value=attention_scores[i][j])
+            g.add_edge(int(i), int(j)) #
 
-g.toggle_physics(True)
-g.show('mygraph.html')
+#g.toggle_physics(True)
+nt = Network("500px", "500px")
+nt.from_nx(g)
+nt.show('mygraph.html')
+
+
+#g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
+
+g = nx.Graph()
+#g = Network("500px", "500px", directed=True)
+g.add_node(1, x=1, y=1, title='I am node 1', label='NODE 1', color='#00ff1e')
+g.add_node(2, x=10, y=2, title='I am node 2', label='NODE 2', color='#162347')
+g.add_node(3, x=1, y=3, title='I am node 3', label='NODE 3', color='#dd4b39')
+
+nt = Network('500px', '500px')
+nt.from_nx(g)
+nt.show('mygraph.html')
+
+#g.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
+g.add_nodes([1,2,3],
+    ...:                          title=['I am node 1', 'node 2 here', 'and im n
+    ...: ode 3'],
+    ...:                          x=[1, 1, 1],
+    ...:                          y=[1, 2, 3],
+    ...:                          label=['NODE 1', 'NODE 2', 'NODE 3'],
+    ...:                          color=['#00ff1e', '#162347', '#dd4b39'])
+
