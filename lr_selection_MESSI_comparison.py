@@ -204,8 +204,8 @@ for gene in ligand_list: #[0:5]:
     
     print(pair_id)
 	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_MESSI_comparison_a', 'wb') as fp: #b, b_1, a
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_MESSI_comparison_a', 'wb') as fp: #b, b_1, a
+#    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index], fp) #a - [0:5]
 
 
 ccc_index_dict = dict()
@@ -235,62 +235,6 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_MESSI_predicted_pairs', 'wb') as fp:
     pickle.dump([row_col, edge_weight], fp)
 ############################################################
-	
-    
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')	
-from sklearn.metrics.pairwise import euclidean_distances
-distance_matrix = euclidean_distances(coordinates, coordinates)
-
-cells_ligand_vs_receptor = []
-for i in range (0, cell_vs_gene.shape[0]):
-    cells_ligand_vs_receptor.append([])
- 
-
-for i in range (0, cell_vs_gene.shape[0]):
-    for j in range (0, cell_vs_gene.shape[0]):
-        cells_ligand_vs_receptor[i].append([])
-        cells_ligand_vs_receptor[i][j] = []
-
-slice = -30
-while slice < 544:
-    slice = slice + 30
-    print('read %d'%slice)
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(slice), 'rb') as fp: #b, b_1, a
-        cells_ligand_vs_receptor_temp, l_r_pair, ligand_list, activated_cell_index = pickle.load(fp) 
-        
-    for i in range (0, len(cells_ligand_vs_receptor)):
-        for j in range (0, len(cells_ligand_vs_receptor)):
-            if len(cells_ligand_vs_receptor_temp[i][j])>0:
-                cells_ligand_vs_receptor[i][j].extend(cells_ligand_vs_receptor_temp[i][j]) 
-###############################
-ccc_index_dict = dict()
-row_col = []
-edge_weight = []
-for i in range (0, len(cells_ligand_vs_receptor)):
-    #ccc_j = []
-    for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4:
-            #if i==j:
-            if len(cells_ligand_vs_receptor[i][j])>0:
-                mean_ccc = 0
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
-                row_col.append([i,j])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-                edge_weight.append([dist_X[i,j], mean_ccc])
-            #elif i==j: # if not onlyccc, then remove the condition i==j
-            else:
-                row_col.append([i,j])
-                edge_weight.append([dist_X[i,j], 0])
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]           		
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all', 'wb') as fp:  #b, a:[0:5]           
-    pickle.dump([row_col, edge_weight], fp)
-#
-
-
 
 ###########################################################
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
@@ -328,8 +272,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_c
     cells_ligand_vs_receptor,l_r_pair,ligand_list,activated_cell_index = pickle.load(fp) 
 
 datapoint_size = len(cells_ligand_vs_receptor)
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           		
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_MESSI_predicted_pairs', 'rb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           		
     row_col, edge_weight = pickle.load(fp)
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
@@ -356,8 +300,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    if attention_scores[i][j]>0:
-        distribution.append(attention_scores[i][j])
+    #if attention_scores[i][j]>0:
+    distribution.append(attention_scores[i][j])
 ##############
 attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -447,15 +391,17 @@ colors=colors+colors_2
 cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 #######
-for i in range (0, len(barcode_info)):
+'''for i in range (0, len(barcode_info)):
     if i in ccc_index_dict:
         barcode_info[i][3] = 2
     else: 
         barcode_info[i][3] = 0
+'''
 #######
-id_label = [0,2]
+'''id_label = [0,2]
 for j in id_label:
-#for j in range (0, n_components):
+'''
+for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
@@ -493,3 +439,46 @@ plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp
 #plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
  
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(barcode_info)):    
+    ids.append(i)
+    x_index.append(barcode_info[i][1])
+    y_index.append(barcode_info[i][2])    
+    colors_point.append(colors[barcode_info[i][3]]) 
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
+
+min_x = np.min(x_index)
+min_y = np.min(y_index)
+for i in range (0, len(barcode_info)):    
+    x_index[i] = ((x_index[i]-min_x)/(max_x-min_x))*499
+    y_index[i] = ((y_index[i]-min_y)/(max_y-min_y))*421
+
+from pyvis.network import Network
+
+g = Network("500px", "500px", directed=True)
+g.show_buttons()
+#g.setOptions(var options = {"physics": {"barnesHut": {"springConstant": 0,"avoidOverlap": 0.1}}})
+
+for i in range (0, len(barcode_info)):
+    if barcode_type[barcode_info[i][0]] == 0:
+        marker_size = 'circle'
+    elif barcode_type[barcode_info[i][0]] == 1:
+        marker_size = 'box'
+    else:
+        marker_size = 'ellipse'
+    g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+#label=str(ids[i]),
+
+for i in range (0, attention_scores.shape[0]):
+    for j in range (0, attention_scores.shape[1]):
+        if attention_scores[i][j] >= threshold_down:
+            g.add_edge(i, j, value=attention_scores[i][j])
+
+g.toggle_physics(True)
+g.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
