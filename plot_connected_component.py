@@ -285,8 +285,9 @@ for i in range (0, len(barcode_info)):
         marker_size = 'ellipse'
     g.add_node(ids[i], x=x_index[i], y=y_index[i], label=str(ids[i]), physics=True, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
 
-for j in range (0, attention_scores.shape[1]):
-    for i in range (0, attention_scores.shape[0]):
+
+for i in range (0, attention_scores.shape[0]):
+    for j in range (0, attention_scores.shape[1]):
         if attention_scores[i][j] > threshold:
             g.add_edge(i, j, weight=attention_scores[i][j])
 
