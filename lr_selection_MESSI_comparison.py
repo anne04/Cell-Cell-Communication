@@ -320,7 +320,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 96)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, attention_scores.shape[1]):
@@ -452,31 +452,12 @@ for i in range (0, len(barcode_info)):
 max_x = np.max(x_index)
 max_y = np.max(y_index)
 
-'''
-min_x = np.min(x_index)
-min_y = np.min(y_index)
-for i in range (0, len(barcode_info)):    
-    x_index[i] = ((x_index[i]-min_x)/(max_x-min_x))*499
-    y_index[i] = ((y_index[i]-min_y)/(max_y-min_y))*421
-'''
+
 from pyvis.network import Network
 import networkx as nx
 
-#g = Network("500px", "500px", directed=True)
-#g.show_buttons()
-#g.setOptions(var options = {"physics": {"barnesHut": {"springConstant": 0,"avoidOverlap": 0.1}}})
-cont = []
-for i in range (0, 3):
-    attrbt = dict()
-    attrbt["x"] = x_index[i]
-    attrbt["y"] = y_index[i]
-    cont.append((i,attrbt))
     
-g = nx.Graph()
-#g.add_nodes_from(cont)
-#g.add_node(ids[0], x=x_index[0], y=y_index[0])
-#g.add_node(ids[1], x=x_index[1], y=y_index[1])
-#g.add_node(ids[2], x=x_index[2], y=y_index[2])
+g = nx.DiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 0:
         marker_size = 'circle'
@@ -484,18 +465,18 @@ for i in range (0, len(barcode_info)):
         marker_size = 'box'
     else:
         marker_size = 'ellipse'
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), physics=False)
-    #g.add_node(ids[i], x=x_index[i], y=y_index[i], physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-#label=str(ids[i]),
-
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		
+#nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
+#g.toggle_physics(True)
+nt = Network("500px", "500px", directed=True)
+nt.from_nx(g)
 for i in range (0, attention_scores.shape[0]):
     for j in range (0, attention_scores.shape[1]):
         if attention_scores[i][j] >= threshold_down:
-            g.add_edge(int(i), int(j)) #
+            #print('hello')
+            nt.add_edge(int(i), int(j)) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
 
-#g.toggle_physics(True)
-nt = Network("500px", "500px")
-nt.from_nx(g)
 nt.show('mygraph.html')
 
 
@@ -524,3 +505,11 @@ g.add_nodes([1,2,3],
     ...:                          label=['NODE 1', 'NODE 2', 'NODE 3'],
     ...:                          color=['#00ff1e', '#162347', '#dd4b39'])
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+					 
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+#plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
+plt.clf()
