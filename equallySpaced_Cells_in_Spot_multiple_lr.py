@@ -395,6 +395,10 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 
 colors=colors+colors_2
        
+plt.gca().set_aspect(1)					 
+#plt.xticks(np.arange(min(x), max(x)+1, 1.0))
+#plt.yticks(np.arange(min(y), max(y)+1, 1.0))
+
 id_label = [0,2]
 for j in id_label:
 #for j in range (0, id_label+1):
@@ -410,7 +414,7 @@ for j in id_label:
             ##############
     plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
     
-plt.legend(fontsize=4,loc='upper right')
+#plt.legend(fontsize=4,loc='upper right')
 
 
 save_path = '/cluster/home/t116508uhn/64630/'
