@@ -309,7 +309,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
             if len(cells_ligand_vs_receptor[i][j])>0:
                 mean_ccc = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j]
                 mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 ccc_index_dict[i] = ''
@@ -320,8 +320,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]           		
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all', 'wb') as fp:  #b, a:[0:5]           
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STtimesCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]  
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_sum', 'wb') as fp:  #b, a:[0:5]           
     pickle.dump([row_col, edge_weight], fp)
 #
 
@@ -385,8 +386,24 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ##############
-
-
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    row_col, edge_weight = pickle.load(fp)
+	
+attention_scores = np.zeros((datapoint_size,datapoint_size))
+distribution = []
+ccc_index_dict = dict()
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    
+    attention_scores[i][j] = edge_weight[index][1]
+    if edge_weight[index][1]>0:
+        distribution.append(attention_scores[i][j])
+        ccc_index_dict[i] = ''
+        #ccc_index_dict[j] = ''   
+	
+#############
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
