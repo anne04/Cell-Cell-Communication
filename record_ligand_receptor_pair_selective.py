@@ -309,7 +309,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
             if len(cells_ligand_vs_receptor[i][j])>0:
                 mean_ccc = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j]
+                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2] #*dist_X[i,j]
                 mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
                 row_col.append([i,j])
                 ccc_index_dict[i] = ''
@@ -319,12 +319,39 @@ for i in range (0, len(cells_ligand_vs_receptor)):
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
+                
+print('len row col %d'%len(row_col))
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STtimesCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]  
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_sum', 'wb') as fp:  #b, a:[0:5]           
     pickle.dump([row_col, edge_weight], fp)
-#
+################################################################################
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+count_edge = 0
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j] <= spot_diameter*4:
+            #if i==j:
+            count_edge = count_edge + len(cells_ligand_vs_receptor[i][j])
+            '''if len(cells_ligand_vs_receptor[i][j])>0:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    mean_ccc = cells_ligand_vs_receptor[i][j]
+                    row_col.append([i,j])
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    edge_weight.append([dist_X[i,j], mean_ccc])
+            else:
+                row_col.append([i,j])
+                edge_weight.append([dist_X[i,j], 0])
+
+            print('len row col %d'%len(row_col))
+'''            
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump([row_col, edge_weight], fp)
 
 
 
