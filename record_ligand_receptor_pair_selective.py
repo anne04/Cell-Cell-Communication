@@ -58,6 +58,7 @@ coordinates = adata_h5.obsm['spatial']
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
+cell_vs_gene_scaled = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X   # rows = cells, columns = genes
 
 ####################
@@ -71,7 +72,7 @@ cell_vs_gene = sparse.csr_matrix.toarray(adata_X) #adata_X
 ####################
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
-    cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 5), np.percentile(sorted(cell_vs_gene[i]), 50),np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 97)])
+    cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
@@ -334,12 +335,16 @@ count_edge = 0
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4:
-            #if i==j:
-            count_edge = count_edge + len(cells_ligand_vs_receptor[i][j])
-            '''if len(cells_ligand_vs_receptor[i][j])>0:
+        if distance_matrix[i][j] <= spot_diameter*4: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = cells_ligand_vs_receptor[i][j]
+                    gene = cells_ligand_vs_receptor[i][j][k][0]
+                    gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                    # above 5th percentile only
+                    if cell_vs_gene_scaled[i][gene_index[gene]] > cell_percentile[i][0] and cell_vs_gene_scaled[j][gene_index[gene_rec]] > cell_percentile[j][0]:
+                        count_edge = count_edge + 1
+print(edge_count)                      
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
@@ -349,7 +354,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
 
             print('len row col %d'%len(row_col))
-'''            
+          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight], fp)
 
