@@ -18,6 +18,8 @@ from scipy.sparse.csgraph import connected_components
 from collections import defaultdict
 import pandas as pd
 import gzip
+from kneed import KneeLocator
+import copy 
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -58,7 +60,8 @@ coordinates = adata_h5.obsm['spatial']
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = adata_X   # rows = cells, columns = genes
+cell_vs_gene = copy.deepcopy(adata_X)
+cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 
 ####################
 '''
@@ -69,9 +72,27 @@ cell_vs_gene = sparse.csr_matrix.toarray(adata_X) #adata_X
 '''
 ####################
 ####################
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
-    cell_percentile.append([np.percentile(sorted(cell_vs_gene[i]), 5), np.percentile(sorted(cell_vs_gene[i]), 50),np.percentile(sorted(cell_vs_gene[i]), 70), np.percentile(sorted(cell_vs_gene[i]), 97)])
+    cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
+
+cell_percentile = []
+for i in range (0, cell_vs_gene.shape[0]):
+    y = sorted(cell_vs_gene[i])
+    x = range(1, len(y)+1)
+    kn = KneeLocator(x, y, curve='convex', direction='increasing')
+    kn_value = y[kn.knee-1]
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 97), kn_value])
+'''
+
+cell_percentile = []
+for i in range (0, cell_vs_gene.shape[0]):
+    y = np.histogram(cell_vs_gene[i])[0]
+    x = range(1, len(y)+1)
+    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
+    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee-1]
+    cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 70), np.percentile(cell_vs_gene[i], 97), kn_value])
 
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
@@ -330,28 +351,41 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
+lig_rec = []
 count_edge = 0
+max_local = 0
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4:
-            #if i==j:
-            count_edge = count_edge + len(cells_ligand_vs_receptor[i][j])
-            '''if len(cells_ligand_vs_receptor[i][j])>0:
+        if distance_matrix[i][j] <= spot_diameter*4: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                count_local = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = cells_ligand_vs_receptor[i][j]
-                    row_col.append([i,j])
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    gene = cells_ligand_vs_receptor[i][j][k][0]
+                    gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                    # above 5th percentile only
+                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
+                        count_edge = count_edge + 1
+                        count_local = count_local + 1
+#print(count_edge)                      
+                        mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
+                        row_col.append([i,j])
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        edge_weight.append([dist_X[i,j], mean_ccc])
+                        lig_rec.append([gene, gene_rec])
+                if max_local < count_local:
+                    max_local = count_local
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
+                lig_rec.append(['', ''])
 
-            print('len row col %d'%len(row_col))
-'''            
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
-    pickle.dump([row_col, edge_weight], fp)
+print('len row col %d'%len(row_col))
+print('count local %d'%count_local) 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
 
