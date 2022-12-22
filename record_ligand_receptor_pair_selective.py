@@ -354,12 +354,13 @@ edge_weight = []
 lig_rec = []
 count_edge = 0
 max_local = 0
+local_list = np.zeros((20))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
         if distance_matrix[i][j] <= spot_diameter*4: 
+            count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
-                count_local = 0
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
@@ -374,12 +375,15 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                         ccc_index_dict[j] = ''
                         edge_weight.append([dist_X[i,j], mean_ccc])
                         lig_rec.append([gene, gene_rec])
+                        
+                
                 if max_local < count_local:
                     max_local = count_local
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
+            local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
