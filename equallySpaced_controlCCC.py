@@ -167,7 +167,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 
-
+activated_cell_index = dict()
 for gene in ligand_list:
     for i in range (0, cell_vs_gene.shape[0]): # ligand                 
         for j in range (0, cell_vs_gene.shape[0]): # receptor
@@ -254,9 +254,12 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0', 'rb') as fp:             
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0', 'rb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
-    row_col, edge_weight = pickle.load(fp)
+#    row_col, edge_weight = pickle.load(fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+    row_col, edge_weight, lig_rec = pickle.load(fp) 
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
@@ -286,8 +289,9 @@ for j in range (0, attention_scores.shape[1]):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_a_attention.npy'
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_a_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
