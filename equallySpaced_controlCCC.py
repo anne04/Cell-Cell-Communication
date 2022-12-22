@@ -29,6 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 spot_diameter = 89.43 #pixels
+threshold_distance = 4
 k_nn = 4
 
 data_fold = args.data_path + 'filtered_feature_bc_matrix.h5'
@@ -37,21 +38,22 @@ print(data_fold)
 #cell_vs_gene = adata_X   # rows = cells, columns = genes
 
 datapoint_size = 2000
-x_max = 200
+x_max = 100
 x_min = 0
-y_max = 40
+y_max = 20
 y_min = 0
 #################################
 temp_x = []
 temp_y = []
 i = x_min
+# row major order, bottom up
 while i < x_max:
     j = y_min
     while j < y_max:
         temp_x.append(i)
         temp_y.append(j)
-        j = j + 2
-    i = i + 2
+        j = j + 1
+    i = i + 1
     
 #0, 2, 4, ...24, 26, 28   
 
@@ -62,12 +64,10 @@ temp_y = np.array(temp_y)
 ##############################################
 
 print(len(temp_x))
-
+plt.gca().set_aspect(1)	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
-
 save_path = '/cluster/home/t116508uhn/64630/'
-
-plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced_data0.svg', dpi=400)
+plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
@@ -92,98 +92,124 @@ for j in range(0, distance_matrix.shape[1]):
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
 	
-    list_indx = list(np.argsort(dist_X[:,j]))
+    '''list_indx = list(np.argsort(dist_X[:,j]))
     k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
     for i in range(0, distance_matrix.shape[0]):
         if i not in k_higher:
+            dist_X[i,j] = -1'''
+    for i in range(0, distance_matrix.shape[0]):
+        if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
             dist_X[i,j] = -1
             
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
-# np.random.normal(loc=2,scale=2,size=len(temp_x)) ...
-# np.random.normal(loc=2,scale=2,size=len(temp_x)) ...
-# np.random.normal(loc=2,scale=2,size=len(temp_x)) ...
-# np.random.normal(loc=2,scale=2,size=len(temp_x)) ...
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
+cell_count = len(temp_x)
+gene_count = 4
+cell_vs_gene = np.zeros((cell_count,gene_count))
+cell_vs_gene[:,0] = np.random.normal(loc=2,scale=5,size=len(temp_x))
+cell_vs_gene[:,1] = np.random.normal(loc=3,scale=5,size=len(temp_x))
+cell_vs_gene[:,2] = np.random.normal(loc=4,scale=5,size=len(temp_x)) # L
+cell_vs_gene[:,3] = np.random.normal(loc=5,scale=5,size=len(temp_x)) # R
 
 # Pick the regions for which l1 should be high. Increase raw gene counts for them by adding +10
-
+ligand_index_x = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20] 
 # Pick the regions for which l2 should be high. Increase raw gene counts for them by adding +15
+receptor_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 
-# take quantile normalization again.
+for i in range (0, len(cell_count)):
+    x_index = coordinates[i][0]
+    if x_index in ligand_index_x:
+        # increase the ligand expression
+        cell_vs_gene[i,2] = cell_vs_gene[i,2] + 10
+    if x_index in receptor_index_x:
+        # increase the receptor expression
+        cell_vs_gene[i,3] = cell_vs_gene[i,3] + 10        
+        
+# take quantile normalization.
+temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
+adata_X = np.transpose(temp)  
+cell_vs_gene = adata_X
 
+###############
+gene_ids = ['A', 'B', 'L1', 'R1']
 
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
+
+gene_index=dict()    
+i = 0
+for gene in gene_ids: 
+    gene_index[gene] = i
+    i = i+1
+#############
+ligand_dict_dataset = defaultdict(list)
+ligand_dict_dataset['L1']=['R1']
+ligand_list = ['L1']
+# ready to go
 ################################################################################################
 # do the usual things
-
-
-region_list = [[50, 125, 10, 30]] #[[20, 40, 3, 7], [40, 80, 12, 18]] #[60, 80, 1, 7] 
-ccc_scores_count = []
-for region in region_list:
-    count = 0
-    for i in range (0, distance_matrix.shape[0]):
-    #ccc_j = []
-        for j in range (0, distance_matrix.shape[1]):
-            if dist_X[i,j] > -1:  
-                region_x_min = region[0]
-                region_x_max = region[1]
-                region_y_min = region[2]
-                region_y_max = region[3]  		
-                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
-                    count = count + 1
-    ccc_scores_count.append(count)          
-
-num1 = np.zeros((1,2)) 
-num_center = np.zeros((1,2))
-num_center[0][0]=100
-num_center[0][1]=20
-a = 20
-b = +558
-limit_list =[[300,500],[100,200]] #data2: [[20,50],[300,500],[100,200]] #data=1:[[200,500],[20,50],[20,50]]
+for gene in ligand_list:
+    for i in range (0, cell_vs_gene.shape[0]): # ligand                 
+        for j in range (0, cell_vs_gene.shape[0]): # receptor
+            for gene_rec in ligand_dict_dataset[gene]:                
+                if distance_matrix[i,j] > threshold_distance:
+                    continue
+                communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]               
+                relation_id = 0
+                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])              
+                activated_cell_index[i] = ''
+                activated_cell_index[j] = ''
+	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a', 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor,-1,ligand_list,activated_cell_index], fp) #a - [0:5]
+    
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
-for region_index in range (0, len(region_list)):
-    region = region_list[region_index]
-    a = limit_list[region_index][0]
-    b = limit_list[region_index][1]
-    ccc_scores = (b - a) * np.random.random_sample(size=ccc_scores_count[region_index]+1) + a
-    k=0
-    for i in range (0, distance_matrix.shape[0]):
-        for j in range (0, distance_matrix.shape[1]):
-            if dist_X[i,j] > -1:
-                flag = 0          
-                region_x_min = region[0]
-                region_x_max = region[1]
-                region_y_min = region[2]
-                region_y_max = region[3]  		
-                if temp_x[i] > region_x_min and temp_x[i] < region_x_max and temp_y[i] > region_y_min and temp_y[i] <  region_y_max: 
-                    num1[0][0]=temp_x[i]
-                    num1[0][1]=temp_y[i]
-                    mean_ccc = euclidean_distances(num1, num_center)[0][0]
-		    #mean_ccc = ccc_scores[k]
-                    k = k + 1
+lig_rec = []
+count_edge = 0
+max_local = 0
+local_list = np.zeros((20))
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j] <= threshold_distance: 
+            count_local = 0
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    gene = cells_ligand_vs_receptor[i][j][k][0]
+                    gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                    count_edge = count_edge + 1
+                    count_local = count_local + 1
+#print(count_edge)                      
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     edge_weight.append([dist_X[i,j], mean_ccc])
-                    
-                    flag = 1
-		    
-print("len row_col with ccc %d"%len(row_col))
-
-for i in range (0, distance_matrix.shape[0]):
-    for j in range (0, distance_matrix.shape[1]):
-        if dist_X[i,j] > -1:
-            if i not in ccc_index_dict and j not in ccc_index_dict:
+                    lig_rec.append([gene, gene_rec])
+                        
+                
+                if max_local < count_local:
+                    max_local = count_local
+            else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
-                #edge_weight.append([0.5, 0])
+                lig_rec.append(['', ''])
+            local_list[count_local] = local_list[count_local] + 1
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0_a', 'wb') as fp:             		 		
-    pickle.dump([row_col, edge_weight], fp)
-		  
-print(len(row_col))
-print(len(temp_x))
+		
+print('len row col %d'%len(row_col))
+print('count local %d'%count_local) 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+
+
+#####
+    
+
 
 ###############################################Visualization starts###################################################################################################
 
