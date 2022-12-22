@@ -71,7 +71,7 @@ plt.savefig(save_path+'synthetic_spatial_plot_equallySpaced.svg', dpi=400)
 #plt.savefig(save_path+'synthetic_spatial_plot_3.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_data0', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_a_xny', 'wb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'wb') as fp:
     pickle.dump([temp_x, temp_y], fp)
 
@@ -106,17 +106,23 @@ for j in range(0, distance_matrix.shape[1]):
 cell_count = len(temp_x)
 gene_count = 4
 cell_vs_gene = np.zeros((cell_count,gene_count))
-cell_vs_gene[:,0] = np.random.normal(loc=2,scale=5,size=len(temp_x))
-cell_vs_gene[:,1] = np.random.normal(loc=3,scale=5,size=len(temp_x))
-cell_vs_gene[:,2] = np.random.normal(loc=4,scale=5,size=len(temp_x)) # L
-cell_vs_gene[:,3] = np.random.normal(loc=5,scale=5,size=len(temp_x)) # R
+cell_vs_gene[:,0] = np.random.normal(loc=2,scale=2,size=len(temp_x))
+cell_vs_gene[:,1] = np.random.normal(loc=3,scale=2,size=len(temp_x))
+cell_vs_gene[:,2] = np.random.normal(loc=30,scale=3,size=len(temp_x)) # L
+cell_vs_gene[:,3] = np.random.normal(loc=35,scale=3,size=len(temp_x)) # R
+
+for i in range (0, gene_count):
+    a = np.min(cell_vs_gene[:,i])
+    if a < 0:
+        cell_vs_gene[:,i] = cell_vs_gene[:,i] - a
+
 
 # Pick the regions for which l1 should be high. Increase raw gene counts for them by adding +10
 ligand_index_x = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20] 
 # Pick the regions for which l2 should be high. Increase raw gene counts for them by adding +15
 receptor_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 
-for i in range (0, len(cell_count)):
+for i in range (0, cell_count):
     x_index = coordinates[i][0]
     if x_index in ligand_index_x:
         # increase the ligand expression
@@ -145,10 +151,23 @@ for gene in gene_ids:
 #############
 ligand_dict_dataset = defaultdict(list)
 ligand_dict_dataset['L1']=['R1']
-ligand_list = ['L1']
+
 # ready to go
 ################################################################################################
 # do the usual things
+ligand_list = list(ligand_dict_dataset.keys())  
+
+cells_ligand_vs_receptor = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cells_ligand_vs_receptor.append([])
+ 
+
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        cells_ligand_vs_receptor[i].append([])
+        cells_ligand_vs_receptor[i][j] = []
+
+
 for gene in ligand_list:
     for i in range (0, cell_vs_gene.shape[0]): # ligand                 
         for j in range (0, cell_vs_gene.shape[0]): # receptor
