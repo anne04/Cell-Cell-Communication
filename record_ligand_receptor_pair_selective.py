@@ -53,6 +53,8 @@ print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
+#sc.pp.log1p(adata_h5)
+#sc.pp.highly_variable_genes(adata_h5)
 print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
@@ -96,6 +98,13 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
+gene_percentile = dict()
+for i in range (0, cell_vs_gene.shape[1]):
+    y = np.histogram(cell_vs_gene[:,i])[0]
+    x = range(1, len(y)+1)
+    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
+    kn_value = np.histogram(cell_vs_gene[:,i])[1][kn.knee-1]
+    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 70), np.percentile(cell_vs_gene[:,i], 97, kn_value)]
 
 gene_info=dict()
 for gene in gene_ids:
@@ -374,8 +383,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                         ccc_index_dict[i] = ''
                         ccc_index_dict[j] = ''
                         edge_weight.append([dist_X[i,j], mean_ccc])
-                        lig_rec.append([gene, gene_rec])
-                        
+                        lig_rec.append([gene, gene_rec])                      
                 
                 if max_local < count_local:
                     max_local = count_local
@@ -391,6 +399,49 @@ print('count local %d'%count_local)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
+
+################################################################################
+ccc_index_dict = dict()
+row_col = []
+edge_weight = []
+lig_rec = []
+count_edge = 0
+max_local = 0
+local_list = np.zeros((20))
+for i in range (0, len(cells_ligand_vs_receptor)):
+    #ccc_j = []
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if distance_matrix[i][j] <= spot_diameter*4: 
+            count_local = 0
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    gene = cells_ligand_vs_receptor[i][j][k][0]
+                    gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                    # above 5th percentile only
+                    if cell_vs_gene[i][gene_index[gene]] > gene_percentile[gene][1] and cell_vs_gene[j][gene_index[gene_rec]] > gene_percentile[gene_rec][1]:
+                        count_edge = count_edge + 1
+                        count_local = count_local + 1
+#print(count_edge)                      
+                        mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
+                        row_col.append([i,j])
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        edge_weight.append([dist_X[i,j], mean_ccc])
+                        lig_rec.append([gene, gene_rec])                      
+                
+                if max_local < count_local:
+                    max_local = count_local
+            else:
+                row_col.append([i,j])
+                edge_weight.append([dist_X[i,j], 0])
+                lig_rec.append(['', ''])
+            local_list[count_local] = local_list[count_local] + 1
+
+print('len row col %d'%len(row_col))
+print('count local %d'%count_local) 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
 ###########################################################Visualization starts ##################
