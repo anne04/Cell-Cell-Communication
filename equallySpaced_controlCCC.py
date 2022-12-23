@@ -294,16 +294,14 @@ for j in range (0, attention_scores.shape[1]):
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
-attention_scores = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+attention_scores = np.zeros((2000,2000))
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    attention_scores[i][j] = X_attention_bundle[2][index][0]
-    '''if attention_scores[i][j]<-.25:
-        attention_scores[i][j] = (attention_scores[i][j]+0.25) * (-1)
-    '''
+    attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
     distribution.append(attention_scores[i][j])
+#########
 ##############
 attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for index in range (0, X_attention_bundle[0].shape[1]):
