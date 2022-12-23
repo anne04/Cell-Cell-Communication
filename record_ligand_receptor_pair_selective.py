@@ -54,7 +54,7 @@ adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5'
 print(adata_h5)
 sc.pp.filter_genes(adata_h5, min_cells=1)
 #sc.pp.log1p(adata_h5)
-#sc.pp.highly_variable_genes(adata_h5)
+#sc.pp.highly_variable_genes(adata_h5) #3952
 print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
