@@ -126,10 +126,10 @@ for i in range (0, cell_count):
     x_index = coordinates[i][0]
     if x_index in ligand_index_x:
         # increase the ligand expression
-        cell_vs_gene[i,2] = cell_vs_gene[i,2] + 10
+        cell_vs_gene[i,2] = cell_vs_gene[i,2] + 40 
     if x_index in receptor_index_x:
         # increase the receptor expression
-        cell_vs_gene[i,3] = cell_vs_gene[i,3] + 10        
+        cell_vs_gene[i,3] = cell_vs_gene[i,3] + 40        
         
 # take quantile normalization.
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
@@ -233,7 +233,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 ###############################################Visualization starts###################################################################################################
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_equallySpaced_data0', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_a_xny', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'scRNAseq_spatial_location_synthetic_2', 'rb') as fp:
     temp_x, temp_y = pickle.load(fp)
 
