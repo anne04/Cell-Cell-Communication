@@ -130,12 +130,14 @@ for i in range (0, cell_count):
     if x_index in receptor_index_x:
         # increase the receptor expression
         cell_vs_gene[i,3] = cell_vs_gene[i,3] + 40        
-        
-# take quantile normalization.
-temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
-adata_X = np.transpose(temp)  
-cell_vs_gene = adata_X
 
+# take quantile normalization.
+#temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
+#adata_X = np.transpose(temp)  
+#cell_vs_gene = adata_X
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_b_quantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
 ###############
 gene_ids = ['A', 'B', 'L1', 'R1']
 
@@ -179,8 +181,9 @@ for gene in ligand_list:
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])              
                 activated_cell_index[i] = ''
                 activated_cell_index[j] = ''
-	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a', 'wb') as fp: #b, b_1, a
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'b', 'wb') as fp: #b, b_1, a
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a_notQuantileTransformed', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,-1,ligand_list,activated_cell_index], fp) #a - [0:5]
     
 ccc_index_dict = dict()
@@ -222,7 +225,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 		
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'b', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
@@ -257,8 +262,8 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced_data0', 'rb') as fp:             
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_total_synthetic_region1_STnCCC_equallySpaced', 'rb') as fp:             
 #    row_col, edge_weight = pickle.load(fp)
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'b', 'rb') as fp: 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) 
 
 attention_scores = np.zeros((datapoint_size,datapoint_size))
@@ -275,7 +280,7 @@ for index in range (0, len(row_col)):
         ccc_index_dict[j] = ''    
 	
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 80)
+threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
@@ -291,7 +296,10 @@ for j in range (0, attention_scores.shape[1]):
 ########
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_a_attention.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_equallySpaced_knn_data0_attention.npy'
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_attention_l1.npy' #a
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_attention_l1.npy' #a
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_b_attention_l1.npy' #a
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_notQuantileTransformed_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_notQuantileTransformed_h1024_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = np.zeros((2000,2000))
@@ -320,7 +328,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 70)
+threshold_down =  np.percentile(sorted(distribution), 99)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
@@ -367,8 +375,8 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 	
 #############
-'''
-datapoint_label = []
+
+'''datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(2)
