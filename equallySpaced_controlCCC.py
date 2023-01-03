@@ -105,20 +105,45 @@ for j in range(0, distance_matrix.shape[1]):
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 cell_count = len(temp_x)
 gene_count = 4
-cell_vs_gene = np.zeros((cell_count,gene_count))
-cell_vs_gene[:,0] = np.random.normal(loc=2,scale=2,size=len(temp_x))
-cell_vs_gene[:,1] = np.random.normal(loc=3,scale=2,size=len(temp_x))
-cell_vs_gene[:,2] = np.random.normal(loc=30,scale=3,size=len(temp_x)) # L
-cell_vs_gene[:,3] = np.random.normal(loc=35,scale=3,size=len(temp_x)) # R
+gene_distribution_active = np.zeros((gene_count, cell_count))
+gene_distribution_inactive = np.zeros((gene_count, cell_count))
+
+gene_distribution_inactive[0,:] = np.random.normal(loc=2,scale=2,size=len(temp_x))
+gene_distribution_inactive[1,:] = np.random.normal(loc=3,scale=2,size=len(temp_x))
+gene_distribution_inactive[2,:] = np.random.normal(loc=5,scale=2,size=len(temp_x)) # L
+gene_distribution_inactive[3,:] = np.random.normal(loc=6,scale=2,size=len(temp_x)) # R
+
+gene_distribution_active[0,:] = gene_distribution_inactive[0,:]
+gene_distribution_active[1,:] = gene_distribution_inactive[1,:]
+gene_distribution_active[2,:] = np.random.normal(loc=30,scale=2,size=len(temp_x)) # L
+gene_distribution_active[3,:] = np.random.normal(loc=35,scale=2,size=len(temp_x)) # R
+
+# ensure that all distributions start from >= 0 
+for i in range (0, gene_count):
+    a = np.min(gene_distribution_inactive[i,:])
+    if a < 0:
+        gene_distribution_inactive[i,:] = gene_distribution_inactive[i,:] - a
 
 for i in range (0, gene_count):
-    a = np.min(cell_vs_gene[:,i])
+    a = np.min(gene_distribution_active[i,:])
     if a < 0:
-        cell_vs_gene[:,i] = cell_vs_gene[:,i] - a
-
-
-# Pick the regions for which l1 should be high. Increase raw gene counts for them by adding +10
+        gene_distribution_active[i,:] = gene_distribution_active[i,:] - a
+#################################################
+cell_vs_gene = np.zeros((cell_count,gene_count))
+# initially all are in inactive state
+for i in range (0, gene_count):
+    cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
+    
+# Pick the regions for which l1 should be high. Increase raw gene counts for them 
 ligand_index_x = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20] 
+for i in range (0, gene_count):
+    cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
+	
+	
+
+
+
+
 # Pick the regions for which l2 should be high. Increase raw gene counts for them by adding +15
 receptor_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 
@@ -384,6 +409,8 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 '''
 ########
+plt.gca().set_aspect(1)	
+
 number = 20
 cmap = plt.get_cmap('tab20')
 colors = [cmap(i) for i in np.linspace(0, 1, number)]
