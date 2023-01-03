@@ -393,13 +393,13 @@ for i in range (0, temp_x.shape[0]):
 	
 #############
 
-'''datapoint_label = []
+datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(2)
     else:
         datapoint_label.append(0)
-'''
+
 ########
 plt.gca().set_aspect(1)	
 
