@@ -517,16 +517,15 @@ ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    
-    attention_scores[i][j] = edge_weight[index][1]
     if edge_weight[index][1]>0:
+        attention_scores[i][j] = edge_weight[index][1]
         distribution.append(attention_scores[i][j])
         ccc_index_dict[i] = ''
         #ccc_index_dict[j] = ''   
 	
-#############
+###########################
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 85)
+threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, attention_scores.shape[1]):
@@ -534,7 +533,8 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
-        
+            ccc_index_dict[i] = ''
+            #ccc_index_dict[j] = ''        
 	
 
 graph = csr_matrix(connecting_edges)
@@ -563,6 +563,16 @@ for i in range (0, len(barcode_info)):
     else: 
         barcode_info[i][3] = 0
        
+
+
+#############
+
+datapoint_label = []
+for i in range (0, datapoint_size):
+    if i in ccc_index_dict:
+        barcode_info[i][3] = 2
+    else:
+        barcode_info[i][3] = 0
 
 ########
 number = 20
@@ -594,12 +604,12 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
 
-cell_count_cluster=np.zeros((labels.shape[0]))
+#cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-#id_label = [0,2]
-#for j in id_label:
-for j in range (0, n_components):
+id_label = [0,2]
+for j in id_label:
+#for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
@@ -609,7 +619,7 @@ for j in range (0, n_components):
         if barcode_info[i][3] == j:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
-            cell_count_cluster[j] = cell_count_cluster[j]+1
+            #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
             if barcode_type[barcode_info[i][0]] == 0:
                 marker_size.append('o') 
