@@ -452,7 +452,7 @@ for i in range (0, datapoint_size):
                 connecting_edges[i][j] = 1
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
-                existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k][1])
                 if lig_rec_dict[i][j][k][1] == 'R2':
                     rec_dict['R2'][temp_x[j]]=''
 		
@@ -463,22 +463,22 @@ for i in range (0, datapoint_size):
                 '''
 
 #############
-confusion_matrix = np.zeros((num_pairs, num_pairs))
+real_count = np.zeros((num_pairs))
+pred_count = np.zeros((num_pairs))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         if len(lig_rec_dict_filtered[i][j])>0:
             #print(lig_rec_dict[i][j])
             for k in range (0, len(lig_rec_dict_filtered[i][j])):
                 if lig_rec_dict_filtered[i][j][k][1] == 'R1':
-                    if 'R1' in existing_lig_rec_dict[i][j][k]:
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    elif 'R2' existing_lig_rec_dict[i][j][k][1]:
-                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1
+                    real_count[0] = real_count[0] + 1
+                    if 'R1' in existing_lig_rec_dict[i][j]:
+                        pred_count[0] = pred_count[0] + 1
+                    
                 elif lig_rec_dict_filtered[i][j][k][1] == 'R2':
-                    if existing_lig_rec_dict[i][j][k][1] == 'R1':
-                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-                    elif existing_lig_rec_dict[i][j][k][1] == 'R2':
-                        confusion_matrix[1][1] = confusion_matrix[1][1] + 1
+                    real_count[1] = real_count[1] + 1
+                    if 'R2' in existing_lig_rec_dict[i][j]:
+                        pred_count[1] = pred_count[1] + 1
 	
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
