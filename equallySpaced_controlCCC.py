@@ -452,8 +452,22 @@ for i in range (0, datapoint_size):
                 '''
 
 #############
-
-
+confusion_matrix = np.zeros((num_pairs, num_pairs))
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(lig_rec_dict[i][j])>0:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                if lig_rec_dict[i][j][k][1] == 'R1':
+                    if existing_lig_rec_dict[i][j][k][1] == 'R1':
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                    elif existing_lig_rec_dict[i][j][k][1] == 'R2':
+                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1
+                elif lig_rec_dict[i][j][k][1] == 'R2':
+                    if existing_lig_rec_dict[i][j][k][1] == 'R1':
+                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                    elif existing_lig_rec_dict[i][j][k][1] == 'R2':
+                        confusion_matrix[1][1] = confusion_matrix[1][1] + 1
+	
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
@@ -565,8 +579,8 @@ y_index=[]
 colors_point = []
 for i in range (0, len(temp_x)):    
     ids.append(i)
-    x_index.append(temp_x[i])
-    y_index.append(temp_y[i])    
+    x_index.append(temp_x[i]*20)
+    y_index.append(temp_y[i]*20)    
     colors_point.append(colors[datapoint_label[i]]) 
   
 max_x = np.max(x_index)
