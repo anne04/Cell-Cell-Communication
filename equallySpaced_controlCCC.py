@@ -314,16 +314,12 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     row_col, edge_weight, lig_rec = pickle.load(fp) 
 #####################################
 lig_rec_dict = []
-lig_rec_dict_filtered = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
     lig_rec_dict.append([])  
-    lig_rec_dict_filtered.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
-        lig_rec_dict_filtered[i].append([])   
-        lig_rec_dict_filtered[i][j] = []
         
 ######################################	
 attention_scores = []
@@ -348,7 +344,15 @@ for index in range (0, len(row_col)):
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
 	
-	
+
+lig_rec_dict_filtered = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_filtered.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_filtered[i].append([])   
+        lig_rec_dict_filtered[i][j] = []
+        	
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
@@ -360,7 +364,7 @@ for j in range (0, datapoint_size):
         for k in range (0, len(atn_score_list)):   
             if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                 connecting_edges[i][j] = 1
-                lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k])
+                lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
 
@@ -470,16 +474,35 @@ for i in range (0, datapoint_size):
         if len(lig_rec_dict_filtered[i][j])>0:
             #print(lig_rec_dict[i][j])
             for k in range (0, len(lig_rec_dict_filtered[i][j])):
-                if lig_rec_dict_filtered[i][j][k][1] == 'R1':
+                if lig_rec_dict_filtered[i][j][k] == 'R1':
                     real_count[0] = real_count[0] + 1
                     if 'R1' in existing_lig_rec_dict[i][j]:
                         pred_count[0] = pred_count[0] + 1
                     
-                elif lig_rec_dict_filtered[i][j][k][1] == 'R2':
+                elif lig_rec_dict_filtered[i][j][k] == 'R2':
                     real_count[1] = real_count[1] + 1
                     if 'R2' in existing_lig_rec_dict[i][j]:
                         pred_count[1] = pred_count[1] + 1
-	
+			
+
+model_count = np.zeros((num_pairs))
+real_lr_count = np.zeros((num_pairs))
+
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(existing_lig_rec_dict[i][j])>0:
+            #print(lig_rec_dict[i][j])
+            for k in range (0, len(existing_lig_rec_dict[i][j])):
+                if existing_lig_rec_dict[i][j][k] == 'R1':
+                    model_count[0] = model_count[0] + 1
+                    if 'R1' in lig_rec_dict_filtered[i][j]:
+                        real_lr_count[0] = real_lr_count[0] + 1
+                    
+                elif existing_lig_rec_dict[i][j][k] == 'R2':
+                    model_count[1] = model_count[1] + 1
+                    if 'R2' in lig_rec_dict_filtered[i][j]:
+                        real_lr_count[1] = real_lr_count[1] + 1	
+			
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
