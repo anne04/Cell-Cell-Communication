@@ -320,11 +320,6 @@ for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):	
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
-
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    lig_rec_dict[i][j].append(lig_rec[index])
 ######################################	
     
 attention_scores = np.zeros((datapoint_size,datapoint_size))
@@ -333,7 +328,7 @@ ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    lig_rec_dict[i][j].append(lig_rec[index])
+    #lig_rec_dict[i][j].append(lig_rec[index])
     attention_scores[i][j] = edge_weight[index][1]
     distribution.append(attention_scores[i][j])
     if edge_weight[index][1]>0:
@@ -342,7 +337,7 @@ for index in range (0, len(row_col)):
 	
 	
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for j in range (0, attention_scores.shape[1]):
@@ -350,6 +345,7 @@ for j in range (0, attention_scores.shape[1]):
     for i in range (0, attention_scores.shape[0]):
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
+            lig_rec_dict[i][j].append(lig_rec[index])
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''
 
@@ -456,6 +452,7 @@ confusion_matrix = np.zeros((num_pairs, num_pairs))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         if len(lig_rec_dict[i][j])>0:
+            print(lig_rec_dict[i][j])
             for k in range (0, len(lig_rec_dict[i][j])):
                 if lig_rec_dict[i][j][k][1] == 'R1':
                     if existing_lig_rec_dict[i][j][k][1] == 'R1':
