@@ -108,26 +108,29 @@ gene_count = 4
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 
-gene_distribution_inactive[0,:] = np.random.normal(loc=2,scale=2,size=len(temp_x))
-gene_distribution_inactive[1,:] = np.random.normal(loc=3,scale=2,size=len(temp_x))
-gene_distribution_inactive[2,:] = np.random.normal(loc=5,scale=2,size=len(temp_x)) # L
-gene_distribution_inactive[3,:] = np.random.normal(loc=6,scale=2,size=len(temp_x)) # R
+gene_distribution_inactive[0,:] = np.random.normal(loc=2,scale=2,size=len(temp_x)) # L1
+gene_distribution_inactive[1,:] = np.random.normal(loc=3,scale=2,size=len(temp_x)) # R1
+gene_distribution_inactive[2,:] = np.random.normal(loc=5,scale=2,size=len(temp_x)) # L2
+gene_distribution_inactive[3,:] = np.random.normal(loc=6,scale=2,size=len(temp_x)) # R2
 
-gene_distribution_active[0,:] = gene_distribution_inactive[0,:]
-gene_distribution_active[1,:] = gene_distribution_inactive[1,:]
-gene_distribution_active[2,:] = np.random.normal(loc=30,scale=2,size=len(temp_x)) # L
-gene_distribution_active[3,:] = np.random.normal(loc=35,scale=2,size=len(temp_x)) # R
+gene_distribution_active[0,:] = np.random.normal(loc=30,scale=2,size=len(temp_x)) # L1
+gene_distribution_active[1,:] = np.random.normal(loc=35,scale=2,size=len(temp_x)) # R1
+gene_distribution_active[2,:] = np.random.normal(loc=40,scale=2,size=len(temp_x)) # L2
+gene_distribution_active[3,:] = np.random.normal(loc=45,scale=2,size=len(temp_x)) # R2
 
 # ensure that all distributions start from >= 0 
 for i in range (0, gene_count):
     a = np.min(gene_distribution_inactive[i,:])
     if a < 0:
         gene_distribution_inactive[i,:] = gene_distribution_inactive[i,:] - a
-
+    print('gene %d, min: %g, max:%g '%(i, np.min(gene_distribution_inactive[i,:]), np.max(gene_distribution_inactive[i,:]) ))
+     
+        
 for i in range (0, gene_count):
     a = np.min(gene_distribution_active[i,:])
     if a < 0:
         gene_distribution_active[i,:] = gene_distribution_active[i,:] - a
+    print('gene %d, min: %g, max:%g '%(i, np.min(gene_distribution_active[i,:]), np.max(gene_distribution_active[i,:]) ))
 #################################################
 cell_vs_gene = np.zeros((cell_count,gene_count))
 # initially all are in inactive state
@@ -135,18 +138,31 @@ for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
     
 # Pick the regions for which L should be high. Increase raw gene counts for them by replacing their values with gene_distribution_active
-ligand_index_x = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20] 
+ligand_1_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+ligand_2_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21] 
 # Pick the regions for which R should be high. Increase raw gene counts for them by adding +15
-receptor_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+receptor_1_index_x = [0, 4, 8, 12, 16, 20] 
+receptor_2_index_x = [2, 6, 10, 14, 18] 
+
+
 for i in range (0, cell_count):
     x_index = coordinates[i][0]
-    if x_index in ligand_index_x:
+    
+    if x_index in ligand_1_index_x:
+        # increase the ligand expression
+        cell_vs_gene[i,0] = gene_distribution_active[0,i]
+        
+    if x_index in receptor_1_index_x:
+        # increase the receptor expression
+        cell_vs_gene[i,1] = gene_distribution_active[1,i] 
+
+    if x_index in ligand_2_index_x:
         # increase the ligand expression
         cell_vs_gene[i,2] = gene_distribution_active[2,i]
-    if x_index in receptor_index_x:
-        # increase the receptor expression
-        cell_vs_gene[i,3] = gene_distribution_active[3,i] 
 
+    if x_index in receptor_2_index_x:
+        # increase the receptor expression
+        cell_vs_gene[i,3] = gene_distribution_active[3,i]
 
 # take quantile normalization.
 #temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
@@ -156,7 +172,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_c
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_b_quantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
 ###############
-gene_ids = ['A', 'B', 'L1', 'R1']
+gene_ids = ['L1', 'R1', 'L2', 'R2']
 
 gene_info=dict()
 for gene in gene_ids:
@@ -170,7 +186,7 @@ for gene in gene_ids:
 #############
 ligand_dict_dataset = defaultdict(list)
 ligand_dict_dataset['L1']=['R1']
-
+ligand_dict_dataset['L2']=['R2']
 # ready to go
 ################################################################################################
 # do the usual things
@@ -248,10 +264,20 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
-#####
-    
 
-
+'''
+2000
+gene 0, min: 0, max:13.7769 
+gene 1, min: 0, max:13.4894 
+gene 2, min: 0, max:13.7656 
+gene 3, min: 0, max:13.8944 
+gene 0, min: 22.5465, max:37.0469 
+gene 1, min: 28.4818, max:41.517 
+gene 2, min: 34.072, max:45.9164 
+gene 3, min: 38.2734, max:53.4325 
+len row col 177016
+count local 2
+'''
 ###############################################Visualization starts###################################################################################################
 
 
