@@ -314,23 +314,36 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     row_col, edge_weight, lig_rec = pickle.load(fp) 
 #####################################
 lig_rec_dict = []
+lig_rec_dict_filtered = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
-    lig_rec_dict.append([])   
+    lig_rec_dict.append([])  
+    lig_rec_dict_filtered.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
+        lig_rec_dict_filtered[i].append([])   
+        lig_rec_dict_filtered[i][j] = []
+        
 ######################################	
-    
-attention_scores = np.zeros((datapoint_size,datapoint_size))
+attention_scores = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+	    
+#attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    #lig_rec_dict[i][j].append(lig_rec[index])
-    attention_scores[i][j] = edge_weight[index][1]
-    distribution.append(attention_scores[i][j])
+    lig_rec_dict[i][j].append(lig_rec[index])
+    #attention_scores[i][j] = edge_weight[index][1]
+    attention_scores[i][j].append(edge_weight[index][1])
+    distribution.append(edge_weight[index][1])
     if edge_weight[index][1]>0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
@@ -340,14 +353,16 @@ ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for j in range (0, attention_scores.shape[1]):
+for j in range (0, datapoint_size):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-    for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
-            connecting_edges[i][j] = 1
-            lig_rec_dict[i][j].append(lig_rec[index])
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''
+    for i in range (0, datapoint_size):
+        atn_score_list = attention_scores[i][j]
+        for k in range (0, len(atn_score_list)):   
+            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                connecting_edges[i][j] = 1
+                lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k])
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
 
 ################
 
@@ -451,15 +466,15 @@ for i in range (0, datapoint_size):
 confusion_matrix = np.zeros((num_pairs, num_pairs))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if len(lig_rec_dict[i][j])>0:
-            print(lig_rec_dict[i][j])
-            for k in range (0, len(lig_rec_dict[i][j])):
-                if lig_rec_dict[i][j][k][1] == 'R1':
-                    if existing_lig_rec_dict[i][j][k][1] == 'R1':
+        if len(lig_rec_dict_filtered[i][j])>0:
+            #print(lig_rec_dict[i][j])
+            for k in range (0, len(lig_rec_dict_filtered[i][j])):
+                if lig_rec_dict_filtered[i][j][k][1] == 'R1':
+                    if 'R1' in existing_lig_rec_dict[i][j][k]:
                         confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    elif existing_lig_rec_dict[i][j][k][1] == 'R2':
+                    elif 'R2' existing_lig_rec_dict[i][j][k][1]:
                         confusion_matrix[0][1] = confusion_matrix[0][1] + 1
-                elif lig_rec_dict[i][j][k][1] == 'R2':
+                elif lig_rec_dict_filtered[i][j][k][1] == 'R2':
                     if existing_lig_rec_dict[i][j][k][1] == 'R1':
                         confusion_matrix[1][0] = confusion_matrix[1][0] + 1
                     elif existing_lig_rec_dict[i][j][k][1] == 'R2':
