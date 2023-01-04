@@ -428,11 +428,12 @@ for i in range (0, datapoint_size):
         existing_lig_rec_dict[i][j] = []
         
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for j in range (0, datapoint_size):
-    for i in range (0, datapoint_size):
+rec_dict = defaultdict(dict)
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         for k in range (0, len(atn_score_list)):
@@ -441,6 +442,9 @@ for j in range (0, datapoint_size):
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
                 existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                if lig_rec_dict[i][j][k][1] == 'R2':
+                    rec_dict['R2'][temp_x[j]]=''
+		
                 '''if k==0:
                     c1_list.append([i, j, temp_x[i],temp_y[i]])	
                 elif k==1:
@@ -571,11 +575,11 @@ max_y = np.max(y_index)
 
 from pyvis.network import Network
 import networkx as nx
-
+import matplotlib#.colors.rgb2hex as rgb2hex
     
 g = nx.DiGraph(directed=True) #nx.Graph()
 marker_size = 'circle'
-for i in range (0, len(barcode_info)):
+for i in range (0, len(temp_x)):
     '''if barcode_type[barcode_info[i][0]] == 0:
         marker_size = 'circle'
     elif barcode_type[barcode_info[i][0]] == 1:
@@ -583,14 +587,14 @@ for i in range (0, len(barcode_info)):
     else:
         marker_size = 'ellipse'
     '''
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=True, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network("500px", "500px", directed=True)
 nt.from_nx(g)
-for i in range (0, attention_scores.shape[0]):
-    for j in range (0, attention_scores.shape[1]):
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         for k in range (0, len(atn_score_list)):
