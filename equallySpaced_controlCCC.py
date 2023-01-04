@@ -171,6 +171,10 @@ for i in range (0, cell_count):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_c_notQuantileTransformed', 'wb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_b_quantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
+    
+###############
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_c_notQuantileTransformed', 'rb') as fp:
+    cell_vs_gene = pickle.load(fp)
 ###############
 gene_ids = ['L1', 'R1', 'L2', 'R2']
 
@@ -308,19 +312,34 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) 
+#####################################
+lig_rec_dict = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    lig_rec_dict.append([])   
+    for j in range (0, datapoint_size):	
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
 
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    lig_rec_dict[i][j].append(lig_rec[index])
+######################################	
+    
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    
+    lig_rec_dict[i][j].append(lig_rec[index])
     attention_scores[i][j] = edge_weight[index][1]
     distribution.append(attention_scores[i][j])
     if edge_weight[index][1]>0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
+	
 	
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 95)
@@ -343,25 +362,42 @@ for j in range (0, attention_scores.shape[1]):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_b_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_notQuantileTransformed_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_a_notQuantileTransformed_h1024_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_c_notQuantileTransformed_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_c_notQuantileTransformed_h512_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
-attention_scores = np.zeros((2000,2000))
+attention_scores = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+	
+#attention_scores = np.zeros((2000,2000))
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    distribution.append(attention_scores[i][j])
+    ###################################
+    '''if i==row_col[index][0] and j==row_col[index][1]:
+        continue
+    else:
+        print('found mismatch')
+        break
+    '''
+    ###################################
+    attention_scores[i][j].append(X_attention_bundle[3][index][0]) #X_attention_bundle[2][index][0]
+    distribution.append(X_attention_bundle[3][index][0])
+    #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
+    #distribution.append(attention_scores[i][j])
 #######################
-attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+'''attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
     #attention_scores[i][j] =  X_attention_bundle[1][index][0]
     #distribution.append(attention_scores[i][j])
-    
 ##############
 adjacency_matrix = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -369,20 +405,47 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     j = X_attention_bundle[0][1][index]
     adjacency_matrix [i][j] = 1
 
-
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 99)
+threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
 for j in range (0, attention_scores.shape[1]):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
+        
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
             connecting_edges[i][j] = 1
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''
-
+'''
+existing_lig_rec_dict = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    existing_lig_rec_dict.append([])   
+    for j in range (0, datapoint_size):	
+        existing_lig_rec_dict[i].append([])   
+        existing_lig_rec_dict[i][j] = []
+        
+ccc_index_dict = dict()
+threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_up =  np.percentile(sorted(distribution), 100)
+connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+for j in range (0, datapoint_size):
+    for i in range (0, datapoint_size):
+        atn_score_list = attention_scores[i][j]
+        #print(len(atn_score_list))
+        for k in range (0, len(atn_score_list)):
+            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                connecting_edges[i][j] = 1
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+                existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                '''if k==0:
+                    c1_list.append([i, j, temp_x[i],temp_y[i]])	
+                elif k==1:
+                    c2_list.append([i, j, temp_x[i],temp_y[i]])
+                '''
 
 #############
 
@@ -418,14 +481,14 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(0)
 	
 #############
-
+'''
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
         datapoint_label.append(2)
     else:
         datapoint_label.append(0)
-
+'''
 ########
 plt.gca().set_aspect(1)	
 
@@ -490,3 +553,53 @@ plt.hist(distribution, color = 'blue',
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
+####################
+
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(temp_x)):    
+    ids.append(i)
+    x_index.append(temp_x[i])
+    y_index.append(temp_y[i])    
+    colors_point.append(colors[datapoint_label[i]]) 
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
+
+
+from pyvis.network import Network
+import networkx as nx
+
+    
+g = nx.DiGraph(directed=True) #nx.Graph()
+marker_size = 'circle'
+for i in range (0, len(barcode_info)):
+    '''if barcode_type[barcode_info[i][0]] == 0:
+        marker_size = 'circle'
+    elif barcode_type[barcode_info[i][0]] == 1:
+        marker_size = 'box'
+    else:
+        marker_size = 'ellipse'
+    '''
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		
+#nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
+#g.toggle_physics(True)
+nt = Network("500px", "500px", directed=True)
+nt.from_nx(g)
+for i in range (0, attention_scores.shape[0]):
+    for j in range (0, attention_scores.shape[1]):
+        atn_score_list = attention_scores[i][j]
+        #print(len(atn_score_list))
+        for k in range (0, len(atn_score_list)):
+            if attention_scores[i][j][k] >= threshold_down:
+                #print('hello')
+                nt.add_edge(int(i), int(j)) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
+
+nt.show('mygraph.html')
+
+
+#g.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
