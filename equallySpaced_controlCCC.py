@@ -255,7 +255,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)                      
-                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
@@ -282,6 +282,9 @@ print('count local %d'%count_local)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_nn_'+'c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
+
 
 
 
@@ -456,7 +459,7 @@ for i in range (0, datapoint_size):
         existing_lig_rec_dict[i][j] = []
         
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 97)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 rec_dict = defaultdict(dict)
@@ -622,15 +625,14 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
 ####################
-
 ids = []
 x_index=[]
 y_index=[]
 colors_point = []
 for i in range (0, len(temp_x)):    
     ids.append(i)
-    x_index.append(temp_x[i]*20)
-    y_index.append(temp_y[i]*20)    
+    x_index.append(temp_x[i]*100)
+    y_index.append(temp_y[i]*100)    
     colors_point.append(colors[datapoint_label[i]]) 
   
 max_x = np.max(x_index)
@@ -651,7 +653,7 @@ for i in range (0, len(temp_x)):
     else:
         marker_size = 'ellipse'
     '''
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=True, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
