@@ -222,7 +222,20 @@ for gene in ligand_list:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a', 'wb') as fp: #b, b_1, a
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,-1,ligand_list,activated_cell_index], fp) #a - [0:5]
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
+    cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
+
+     
     
+lig_rec_dict_TP = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_TP.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_TP[i].append([])   
+        lig_rec_dict_TP[i][j] = []
+        	
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -241,14 +254,17 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     count_edge = count_edge + 1
                     count_local = count_local + 1
-#print(count_edge)                      
+                    #print(count_edge)                      
                     mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     edge_weight.append([dist_X[i,j], mean_ccc])
                     lig_rec.append([gene, gene_rec])
-                        
+                    if (gene_rec=='R1' and temp_x[j] in receptor_1_index_x) and (temp_x[i] in ligand_1_index_x):
+                        lig_rec_dict_TP[i][j].append(gene_rec) #append([gene, gene_rec])
+                    elif (gene_rec=='R2' and temp_x[j] in receptor_2_index_x) and (temp_x[i] in ligand_2_index_x):
+                        lig_rec_dict_TP[i][j].append(gene_rec) #append([gene, gene_rec])
                 
                 if max_local < count_local:
                     max_local = count_local
@@ -265,7 +281,7 @@ print('count local %d'%count_local)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'b', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
+    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
 
 
 
@@ -311,7 +327,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #    row_col, edge_weight = pickle.load(fp)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    row_col, edge_weight, lig_rec = pickle.load(fp) 
+    row_col, edge_weight, lig_rec, lig_rec_dict_TP = pickle.load(fp) 
 #####################################
 lig_rec_dict = []
 datapoint_size = temp_x.shape[0]
@@ -321,6 +337,10 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
         
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    lig_rec_dict[i][j].append(lig_rec[index])        
 ######################################	
 attention_scores = []
 datapoint_size = temp_x.shape[0]
@@ -345,14 +365,7 @@ for index in range (0, len(row_col)):
         ccc_index_dict[j] = ''    
 	
 
-lig_rec_dict_filtered = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size): 
-    lig_rec_dict_filtered.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict_filtered[i].append([])   
-        lig_rec_dict_filtered[i][j] = []
-        	
+
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
@@ -364,7 +377,7 @@ for j in range (0, datapoint_size):
         for k in range (0, len(atn_score_list)):   
             if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                 connecting_edges[i][j] = 1
-                lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
+                #lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
 
@@ -443,7 +456,7 @@ for i in range (0, datapoint_size):
         existing_lig_rec_dict[i][j] = []
         
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 98)
+threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 rec_dict = defaultdict(dict)
@@ -457,34 +470,31 @@ for i in range (0, datapoint_size):
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
                 existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k][1])
-                if lig_rec_dict[i][j][k][1] == 'R2':
-                    rec_dict['R2'][temp_x[j]]=''
-		
-                '''if k==0:
-                    c1_list.append([i, j, temp_x[i],temp_y[i]])	
-                elif k==1:
-                    c2_list.append([i, j, temp_x[i],temp_y[i]])
-                '''
+                
 
 #############
+num_pairs = 2
 real_count = np.zeros((num_pairs))
 pred_count = np.zeros((num_pairs))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if len(lig_rec_dict_filtered[i][j])>0:
-            #print(lig_rec_dict[i][j])
-            for k in range (0, len(lig_rec_dict_filtered[i][j])):
-                if lig_rec_dict_filtered[i][j][k] == 'R1':
+        if len(lig_rec_dict_TP[i][j])>0:
+            #print(lig_rec_dict_TP[i][j])
+            
+            for k in range (0, len(lig_rec_dict_TP[i][j])):
+                if lig_rec_dict_TP[i][j][k] == 'R1':
                     real_count[0] = real_count[0] + 1
                     if 'R1' in existing_lig_rec_dict[i][j]:
                         pred_count[0] = pred_count[0] + 1
                     
-                elif lig_rec_dict_filtered[i][j][k] == 'R2':
+                elif lig_rec_dict_TP[i][j][k] == 'R2':
                     real_count[1] = real_count[1] + 1
                     if 'R2' in existing_lig_rec_dict[i][j]:
                         pred_count[1] = pred_count[1] + 1
-			
 
+print('real_count',real_count)
+print('pred_count',pred_count)
+			
 model_count = np.zeros((num_pairs))
 real_lr_count = np.zeros((num_pairs))
 
@@ -495,14 +505,19 @@ for i in range (0, datapoint_size):
             for k in range (0, len(existing_lig_rec_dict[i][j])):
                 if existing_lig_rec_dict[i][j][k] == 'R1':
                     model_count[0] = model_count[0] + 1
-                    if 'R1' in lig_rec_dict_filtered[i][j]:
+                    if 'R1' in lig_rec_dict_TP[i][j]:
                         real_lr_count[0] = real_lr_count[0] + 1
                     
                 elif existing_lig_rec_dict[i][j][k] == 'R2':
                     model_count[1] = model_count[1] + 1
-                    if 'R2' in lig_rec_dict_filtered[i][j]:
+                    if 'R2' in lig_rec_dict_TP[i][j]:
                         real_lr_count[1] = real_lr_count[1] + 1	
-			
+
+print('model_count',model_count )
+print('real_lr_count',real_lr_count)
+
+                        
+                        
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
