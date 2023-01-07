@@ -314,9 +314,9 @@ for index in range (0, len(x_R2)):
     datapoint_L2_right = index_dict[index_i+1][index_j] 
     datapoint_L2_diagonal_right = index_dict[index_i+1][index_j+1] 
     
-    cell_vs_gene[datapoint_R2,3] = 12
-    cell_vs_gene[datapoint_L2_right,2] = 12
-    cell_vs_gene[datapoint_L2_diagonal_right,2] = 12
+    cell_vs_gene[datapoint_R2,3] = 8
+    cell_vs_gene[datapoint_L2_right,2] = 8
+    cell_vs_gene[datapoint_L2_diagonal_right,2] = 8
 
 # do the usual things
 ligand_list = list(ligand_dict_dataset.keys())  
@@ -343,11 +343,12 @@ for gene in ligand_list:
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])              
                 activated_cell_index[i] = ''
                 activated_cell_index[j] = ''
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'wb') as fp: #b, b_1, a
+                
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_c_notQuantileTransformed', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,-1,ligand_list,activated_cell_index], fp) #a - [0:5]
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'rb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
     cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
 
     
@@ -378,7 +379,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)                      
-                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j]
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2] #*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
@@ -404,9 +405,9 @@ print('count local %d'%count_local)
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_nn_'+'d_b_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_nn_'+'d_b_notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp) #nn_
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_nn_'+'d_c_notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec, lig_rec_dict_TP = pickle.load(fp)
 
 ###########################################################
@@ -425,6 +426,39 @@ len row col 177016
 count local 2
 '''
 ###############################################Visualization starts###################################################################################################
+import os
+#import glob
+import pandas as pd
+#import shutil
+import csv
+import numpy as np
+import sys
+import scikit_posthocs as post
+import altair as alt
+from collections import defaultdict
+import stlearn as st
+import scanpy as sc
+import qnorm
+import scipy
+import pickle
+import gzip
+import matplotlib.pyplot as plt
+from scipy import sparse
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components
+from sklearn.metrics.pairwise import euclidean_distances
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+args = parser.parse_args()
+#th_dist = 4
+spot_diameter = 89.43 #pixels
+threshold_distance = 1.5 #4 : a, b, c
+k_nn = 4
 
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_a_xny', 'rb') as fp:
@@ -455,6 +489,16 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'rb') as fp: 
     row_col, edge_weight, lig_rec, lig_rec_dict_TP = pickle.load(fp) 
+    
+#####################################
+keep_i = []
+for i in range (0, len(row_col)):
+    item_i = row_col[i][0]
+    item_j = row_col[i][1]
+    if temp_x[item_i]<=21 or temp_x[item_j]<=21: 
+        keep_i.append(i)
+    
+    
 #####################################
 lig_rec_dict = []
 datapoint_size = temp_x.shape[0]
@@ -464,11 +508,18 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
         
+total_type = np.zeros((2))        
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    lig_rec_dict[i][j].append(lig_rec[index])        
+    lig_rec_dict[i][j].append(lig_rec[index])  
+    if temp_x[i]<=21 or temp_x[j]<=21:
+        if lig_rec[index][1]=='R1':
+            total_type[0] = total_type[0]+1
+        elif lig_rec[index][1]=='R2':
+            total_type[1] = total_type[1]+1
 ######################################	
+
 attention_scores = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
@@ -578,74 +629,87 @@ for j in range (0, attention_scores.shape[1]):
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''
 '''
-existing_lig_rec_dict = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size):
-    existing_lig_rec_dict.append([])   
-    for j in range (0, datapoint_size):	
-        existing_lig_rec_dict[i].append([])   
-        existing_lig_rec_dict[i][j] = []
-        
-ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
-threshold_up =  np.percentile(sorted(distribution), 100)
-connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-rec_dict = defaultdict(dict)
-for i in range (0, datapoint_size):
-    for j in range (0, datapoint_size):
-        atn_score_list = attention_scores[i][j]
-        #print(len(atn_score_list))
-        for k in range (0, len(atn_score_list)):
-            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                connecting_edges[i][j] = 1
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-                existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k][1])
-                
+for percentage_value in [67, 70, 75, 78, 85, 90, 93, 95, 97]:
+#for percentage_value in [79, 85, 90, 93, 95, 97]:
+    existing_lig_rec_dict = []
+    datapoint_size = temp_x.shape[0]
+    for i in range (0, datapoint_size):
+        existing_lig_rec_dict.append([])   
+        for j in range (0, datapoint_size):	
+            existing_lig_rec_dict[i].append([])   
+            existing_lig_rec_dict[i][j] = []
 
-#############
-num_pairs = 2
-real_count = np.zeros((num_pairs))
-pred_count = np.zeros((num_pairs))
-for i in range (0, datapoint_size):
-    for j in range (0, datapoint_size):
-        if len(lig_rec_dict_TP[i][j])>0:
-            #print(lig_rec_dict_TP[i][j])
-            
-            for k in range (0, len(lig_rec_dict_TP[i][j])):
-                if lig_rec_dict_TP[i][j][k] == 'R1':
-                    real_count[0] = real_count[0] + 1
-                    if 'R1' in existing_lig_rec_dict[i][j]:
-                        pred_count[0] = pred_count[0] + 1
-                    
-                elif lig_rec_dict_TP[i][j][k] == 'R2':
-                    real_count[1] = real_count[1] + 1
-                    if 'R2' in existing_lig_rec_dict[i][j]:
-                        pred_count[1] = pred_count[1] + 1
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), percentage_value)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+    rec_dict = defaultdict(dict)
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            atn_score_list = attention_scores[i][j]
+            #print(len(atn_score_list))
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k][1])
 
-print('real_count',real_count)
-print('pred_count',pred_count)
-			
-model_count = np.zeros((num_pairs))
-real_lr_count = np.zeros((num_pairs))
 
-for i in range (0, datapoint_size):
-    for j in range (0, datapoint_size):
-        if len(existing_lig_rec_dict[i][j])>0:
-            #print(lig_rec_dict[i][j])
-            for k in range (0, len(existing_lig_rec_dict[i][j])):
-                if existing_lig_rec_dict[i][j][k] == 'R1':
-                    model_count[0] = model_count[0] + 1
-                    if 'R1' in lig_rec_dict_TP[i][j]:
-                        real_lr_count[0] = real_lr_count[0] + 1
-                    
-                elif existing_lig_rec_dict[i][j][k] == 'R2':
-                    model_count[1] = model_count[1] + 1
-                    if 'R2' in lig_rec_dict_TP[i][j]:
-                        real_lr_count[1] = real_lr_count[1] + 1	
+    #############
+    num_pairs = 2
+    real_count = np.zeros((num_pairs))
+    pred_count = np.zeros((num_pairs))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if temp_x[i]<=21 or temp_x[j]<=21: 
+                if len(lig_rec_dict_TP[i][j])>0:
+                    #print(lig_rec_dict_TP[i][j])
+                    for k in range (0, len(lig_rec_dict_TP[i][j])):
+                        if lig_rec_dict_TP[i][j][k] == 'R1':
+                            real_count[0] = real_count[0] + 1
+                            if 'R1' in existing_lig_rec_dict[i][j]:
+                                pred_count[0] = pred_count[0] + 1
 
-print('model_count',model_count )
-print('real_lr_count',real_lr_count)
+                        elif lig_rec_dict_TP[i][j][k] == 'R2':
+                            real_count[1] = real_count[1] + 1
+                            if 'R2' in existing_lig_rec_dict[i][j]:
+                                pred_count[1] = pred_count[1] + 1
+
+
+    model_count = np.zeros((num_pairs))
+    real_lr_count = np.zeros((num_pairs))
+
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if temp_x[i]<=21 or temp_x[j]<=21:
+                if len(existing_lig_rec_dict[i][j])>0:
+                    #print(lig_rec_dict[i][j])
+                    for k in range (0, len(existing_lig_rec_dict[i][j])):
+                        if existing_lig_rec_dict[i][j][k] == 'R1':
+                            model_count[0] = model_count[0] + 1
+                            if 'R1' in lig_rec_dict_TP[i][j]:
+                                real_lr_count[0] = real_lr_count[0] + 1
+
+                        elif existing_lig_rec_dict[i][j][k] == 'R2':
+                            model_count[1] = model_count[1] + 1
+                            if 'R2' in lig_rec_dict_TP[i][j]:
+                                real_lr_count[1] = real_lr_count[1] + 1	
+    '''
+    print('real_count',real_count)
+    print('pred_count',pred_count)
+    print('model_count',model_count )
+    print('real_lr_count',real_lr_count)
+    '''
+    TN = 14820 # 7656 - 4474 
+    TN = np.zeros((2))
+    TN[0] = total_type[0] - real_count[0]
+    TN[1] = total_type[1] - real_count[1]
+    '''for i in range (0, num_pairs):
+        #print('%d, %d, %d, %d, %d, %g, %g'%(i, real_count[i], pred_count[i], model_count[i], real_lr_count[i], (pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/14820))
+        print('%g, %g'%((pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/TN))
+    '''
+    print('%g, %g, %g, %g'%((pred_count[0]/real_count[0]),(model_count[0]-real_lr_count[0])/TN[0],(pred_count[1]/real_count[1]),(model_count[1]-real_lr_count[1])/TN[1]))
 
                         
                         
