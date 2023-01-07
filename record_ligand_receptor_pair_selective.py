@@ -63,7 +63,7 @@ temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
-cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
+#cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 
 ####################
 '''
@@ -78,7 +78,7 @@ cell_vs_gene = sparse.csr_matrix.toarray(adata_X) #adata_X
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
-
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -86,11 +86,12 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 97), kn_value])
-'''
 
+
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
-    y = np.histogram(cell_vs_gene[i])[0]
+    y = np.histogram(cell_vs_gene[i])[0] # density: 
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee-1]
@@ -104,8 +105,8 @@ for i in range (0, cell_vs_gene.shape[1]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[:,i])[1][kn.knee-1]
-    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 70), np.percentile(cell_vs_gene[:,i], 97, kn_value)]
-
+    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 70), np.percentile(cell_vs_gene[:,i], 97), kn_value]
+'''
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
@@ -203,6 +204,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
+
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
@@ -219,7 +221,7 @@ for j in range(0, distance_matrix.shape[1]):
     #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > spot_diameter*4: #i not in k_higher:
-            dist_X[i,j] = -1
+            dist_X[i,j] = 0 #-1
             
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
@@ -363,7 +365,7 @@ edge_weight = []
 lig_rec = []
 count_edge = 0
 max_local = 0
-local_list = np.zeros((20))
+local_list = np.zeros((102))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
@@ -374,7 +376,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     # above 5th percentile only
-                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
+                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] or cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
                         count_edge = count_edge + 1
                         count_local = count_local + 1
 #print(count_edge)                      
@@ -395,8 +397,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
@@ -407,7 +409,7 @@ edge_weight = []
 lig_rec = []
 count_edge = 0
 max_local = 0
-local_list = np.zeros((20))
+#local_list = np.zeros((20))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
@@ -435,12 +437,12 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
-            local_list[count_local] = local_list[count_local] + 1
+            #local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
@@ -482,13 +484,24 @@ with open(barcode_file) as file:
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_kneepoint_r1_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
-attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+
+attention_scores = []
+datapoint_size = len(barcode_info)
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+	
+#attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    distribution.append(attention_scores[i][j])
+    #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
+    #distribution.append(attention_scores[i][j])
+    attention_scores[i][j].append(X_attention_bundle[3][index][0]) #X_attention_bundle[2][index][0]
+    distribution.append(X_attention_bundle[3][index][0])
 ##############
 attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -508,9 +521,23 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    row_col, edge_weight, lig_rec = pickle.load(fp) 
-	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+    row_col, edge_weight, lig_rec = pickle.load(fp) # density_
+
+lig_rec_dict = []
+for i in range (0, datapoint_size):
+    lig_rec_dict.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
+        
+total_type = np.zeros((2))        
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    lig_rec_dict[i][j].append(lig_rec[index])  
+    
+    
 attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 ccc_index_dict = dict()
@@ -528,13 +555,18 @@ ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-for j in range (0, attention_scores.shape[1]):
+for j in range (0, datapoint_size):
     #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-    for i in range (0, attention_scores.shape[0]):
-        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
-            connecting_edges[i][j] = 1
-            ccc_index_dict[i] = ''
-            #ccc_index_dict[j] = ''        
+    for i in range (0, datapoint_size):
+        atn_score_list = attention_scores[i][j]
+        #print(len(atn_score_list))
+        s = min(0,len(atn_score_list)-1)
+        for k in range (0, len(atn_score_list)):
+            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                connecting_edges[i][j] = 1
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''
+     
 	
 
 graph = csr_matrix(connecting_edges)
@@ -566,14 +598,14 @@ for i in range (0, len(barcode_info)):
 
 
 #############
-
+'''
 datapoint_label = []
 for i in range (0, datapoint_size):
     if i in ccc_index_dict:
         barcode_info[i][3] = 2
     else:
         barcode_info[i][3] = 0
-
+'''
 ########
 number = 20
 cmap = plt.get_cmap('tab20')
@@ -607,9 +639,9 @@ colors=colors+colors_2
 #cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-id_label = [0,2]
-for j in id_label:
-#for j in range (0, n_components):
+#id_label = [0,2]
+#for j in id_label:
+for j in range (0, n_components):
     label_i = j
     x_index=[]
     y_index=[]
@@ -651,3 +683,55 @@ plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
+
+
+
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(barcode_info)):    
+    ids.append(i)
+    x_index.append(barcode_info[i][1])
+    y_index.append(barcode_info[i][2])    
+    colors_point.append(colors[barcode_info[i][3]]) 
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
+
+
+from pyvis.network import Network
+import networkx as nx
+
+    
+g = nx.MultiDiGraph(directed=True) #nx.Graph()
+for i in range (0, len(barcode_info)):
+    if barcode_type[barcode_info[i][0]] == 0:
+        marker_size = 'circle'
+    elif barcode_type[barcode_info[i][0]] == 1:
+        marker_size = 'box'
+    else:
+        marker_size = 'ellipse'
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		
+#nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
+#g.toggle_physics(True)
+nt = Network( directed=True) #"500px", "500px",
+nt.from_nx(g)
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        atn_score_list = attention_scores[i][j]
+        #print(len(atn_score_list))
+        
+        for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
+            if attention_scores[i][j][k] >= threshold_down:
+                #print('hello')
+                title_str =  ""+lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]
+                nt.add_edge(int(i), int(j), title =title_str) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
+
+nt.show('mygraph.html')
+
+
+#g.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
