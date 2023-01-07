@@ -103,7 +103,7 @@ for j in range(0, distance_matrix.shape[1]):
             dist_X[i,j] = -1'''
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
-            dist_X[i,j] = -1
+            dist_X[i,j] = 0 #-1
             
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
@@ -487,7 +487,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #    row_col, edge_weight = pickle.load(fp)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_b_notQuantileTransformed', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_c_notQuantileTransformed', 'rb') as fp: 
     row_col, edge_weight, lig_rec, lig_rec_dict_TP = pickle.load(fp) 
     
 #####################################
@@ -572,7 +572,7 @@ for j in range (0, datapoint_size):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_b_notQuantileTransformed_h512_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_b_notQuantileTransformed_h1024_r3_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_b_notQuantileTransformed_h2048_r3_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_b_notQuantileTransformed_h1024_attention_l1.npy' 
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_c_notQuantileTransformed_h1024_attention_l1.npy' 
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = []
@@ -835,7 +835,7 @@ from pyvis.network import Network
 import networkx as nx
 import matplotlib#.colors.rgb2hex as rgb2hex
     
-g = nx.DiGraph(directed=True) #nx.Graph()
+g = nx.MultiDiGraph(directed=True) #nx.Graph() MultiDiGraph
 marker_size = 'circle'
 for i in range (0, len(temp_x)):
     '''if barcode_type[barcode_info[i][0]] == 0:
@@ -849,7 +849,7 @@ for i in range (0, len(temp_x)):
    		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network("500px", "500px", directed=True)
+nt = Network( directed=True) #"500px", "500px",
 nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
@@ -858,7 +858,7 @@ for i in range (0, datapoint_size):
         for k in range (0, len(atn_score_list)):
             if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
-                nt.add_edge(int(i), int(j)) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
+                nt.add_edge(int(i), int(j), title = ) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
 
 nt.show('mygraph.html')
 
