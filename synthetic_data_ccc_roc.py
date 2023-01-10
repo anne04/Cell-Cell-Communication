@@ -107,40 +107,26 @@ for j in range(0, distance_matrix.shape[1]):
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 cell_count = len(temp_x)
-gene_count = 4
+gene_count = 50
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
-
-gene_distribution_inactive[0,:] = np.random.normal(loc=2,scale=2,size=len(temp_x)) # L1
-gene_distribution_inactive[1,:] = np.random.normal(loc=3,scale=2,size=len(temp_x)) # R1
-gene_distribution_inactive[2,:] = np.random.normal(loc=5,scale=2,size=len(temp_x)) # L2
-gene_distribution_inactive[3,:] = np.random.normal(loc=6,scale=2,size=len(temp_x)) # R2
-
-gene_distribution_active[0,:] = np.random.normal(loc=30,scale=2,size=len(temp_x)) # L1
-gene_distribution_active[1,:] = np.random.normal(loc=35,scale=2,size=len(temp_x)) # R1
-gene_distribution_active[2,:] = np.random.normal(loc=40,scale=2,size=len(temp_x)) # L2
-gene_distribution_active[3,:] = np.random.normal(loc=45,scale=2,size=len(temp_x)) # R2
-
-# ensure that all distributions start from >= 0 
 for i in range (0, gene_count):
+	gene_distribution_inactive[i,:] = np.random.normal(loc=i,scale=2,size=len(temp_x)) # L1
+	# ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_inactive[i,:])
     if a < 0:
         gene_distribution_inactive[i,:] = gene_distribution_inactive[i,:] - a
-    print('gene %d, min: %g, max:%g '%(i, np.min(gene_distribution_inactive[i,:]), np.max(gene_distribution_inactive[i,:]) ))
-     
-        
+
+max_value = np.max(gene_distribution_inactive) 
 for i in range (0, gene_count):
-    a = np.min(gene_distribution_active[i,:])
-    if a < 0:
-        gene_distribution_active[i,:] = gene_distribution_active[i,:] - a
-    print('gene %d, min: %g, max:%g '%(i, np.min(gene_distribution_active[i,:]), np.max(gene_distribution_active[i,:]) ))
+	gene_distribution_active[i,:] = np.random.normal(loc=max_value+10+i, scale=2, size=len(temp_x)) # loc is set such that it does not overlap with inactive state
 #################################################
 cell_vs_gene = np.zeros((cell_count,gene_count))
 # initially all are in inactive state
 for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
     
-# Pick the regions for which L should be high. Increase raw gene counts for them by replacing their values with gene_distribution_active
+# Pick the regions for Ligands
 ligand_1_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 ligand_2_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21] 
 # Pick the regions for which R should be high. Increase raw gene counts for them by adding +15
