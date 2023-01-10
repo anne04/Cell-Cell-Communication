@@ -103,11 +103,12 @@ for j in range(0, distance_matrix.shape[1]):
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
             dist_X[i,j] = 0 #-1
-            
+####################################################################################            
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
+
 cell_count = len(temp_x)
-gene_count = 50
+gene_count = 50 # and 25 pairs
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 for i in range (0, gene_count):
@@ -127,6 +128,11 @@ for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
     
 # Pick the regions for Ligands
+# choose at random 10% cells
+cell_percent = 20
+ligand_cells = np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)
+
+
 ligand_1_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 ligand_2_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21] 
 # Pick the regions for which R should be high. Increase raw gene counts for them by adding +15
