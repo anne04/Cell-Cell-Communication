@@ -31,7 +31,12 @@ args = parser.parse_args()
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.5 #4 : a, b, c
 k_nn = 4
-
+data_type = 'equally_spaced'
+cell_percent = 20 # choose at random 10% cells
+neighbor_percent = 70
+lr_percent = 30
+receptor_connections = 'all_same' #'all_not_same'
+options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 define get_data(x_max, x_min, y_max, y_min, datatype)
     temp_x = []
@@ -64,8 +69,7 @@ x_max = 50 #100
 x_min = 0
 y_max = 20
 y_min = 0
-#################################
-data_type = 'equally_spaced' 
+################################# 
 temp_x, temp_y = get_data(x_max, x_min, y_max, y_min, datatype)
 #############################################
 print(len(temp_x))
@@ -173,12 +177,6 @@ for i in range (0, datapoint_size):
         lig_rec_dict_TP[i][j] = []
         	
 # Pick the regions for Ligands
-# choose at random 10% cells
-cell_percent = 20
-neighbor_percent = 70
-lr_percent = 30
-receptor_connections = 'all_same' #'all_not_same'
-options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 set_ligand_cells = []
 ligand_cells = np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)
 for i in ligand_cells:
