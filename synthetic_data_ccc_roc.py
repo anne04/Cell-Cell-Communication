@@ -31,14 +31,13 @@ args = parser.parse_args()
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.5 #4 : a, b, c
 k_nn = 4
-data_type = 'equally_spaced'
+datatype = 'equally_spaced'
 cell_percent = 20 # choose at random 10% cells
 neighbor_percent = 70
 lr_percent = 30
 receptor_connections = 'all_same' #'all_not_same'
-options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
-define get_data(x_max, x_min, y_max, y_min, datatype)
+def get_data(x_max, x_min, y_max, y_min, datatype):
     temp_x = []
     temp_y = []
     index_dict = defaultdict(dict)
@@ -76,7 +75,7 @@ print(len(temp_x))
 plt.gca().set_aspect(1)	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'_da.svg', dpi=400)
+plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
 plt.clf()
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'wb') as fp:
@@ -91,7 +90,7 @@ for i in range (0, datapoint_size):
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 cell_neighborhood = []
-for i in range (0, cell_vs_gene.shape[0]):
+for i in range (0, datapoint_size):
     cell_neighborhood.append([])
      
 ########### weighted edge, based on neighborhood ##########
@@ -124,21 +123,24 @@ rec_start = 25
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 for i in range (0, gene_count):
-	gene_distribution_inactive[i,:] = np.random.normal(loc=i,scale=2,size=len(temp_x)) # L1 # you may want to shuffle
-	# ensure that all distributions start from >= 0 
+    gene_distribution_inactive[i,:] = np.random.normal(loc=i,scale=2,size=len(temp_x)) # L1 # you may want to shuffle
+    # ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_inactive[i,:])
     if a < 0:
         gene_distribution_inactive[i,:] = gene_distribution_inactive[i,:] - a
+    print('%g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+
 
 max_value = np.max(gene_distribution_inactive) 
 for i in range (0, gene_count):
-	gene_distribution_active[i,:] = np.random.normal(loc=max_value+10+i, scale=2, size=len(temp_x)) # loc is set such that it does not overlap with inactive state
+    gene_distribution_active[i,:] = np.random.normal(loc=max_value+20+i, scale=2, size=len(temp_x)) 
+    # loc is set such that it does not overlap with inactive state --> scale = 2 gives about 10 unit spread 
     # you may want to shuffle
 	# ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_active[i,:])
     if a < 0:
         gene_distribution_active[i,:] = gene_distribution_active[i,:] - a
-    
+    print('%g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
 #################################################
 cell_vs_gene = np.zeros((cell_count,gene_count))
@@ -202,6 +204,7 @@ for i in range (0, len(set_ligand_cells)):
 #temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
 #adata_X = np.transpose(temp)  
 #cell_vs_gene = adata_X
+options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+  +'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
