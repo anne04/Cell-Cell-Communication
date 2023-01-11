@@ -65,7 +65,7 @@ x_min = 0
 y_max = 20
 y_min = 0
 #################################
-data_type = 'equally_spaced'
+data_type = 'equally_spaced' 
 temp_x, temp_y = get_data(x_max, x_min, y_max, y_min, datatype)
 #############################################
 print(len(temp_x))
@@ -86,6 +86,10 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
+cell_neighborhood = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cell_neighborhood.append([])
+     
 ########### weighted edge, based on neighborhood ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 
@@ -101,18 +105,22 @@ for j in range(0, distance_matrix.shape[1]):
         if i not in k_higher:
             dist_X[i,j] = -1'''
     for i in range(0, distance_matrix.shape[0]):
+        # i to j: ligand is i 
         if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
             dist_X[i,j] = 0 #-1
+        else:
+            cell_neighborhood[i].append(j)
 ####################################################################################            
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 
 cell_count = len(temp_x)
 gene_count = 50 # and 25 pairs
+rec_start = 25
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 for i in range (0, gene_count):
-	gene_distribution_inactive[i,:] = np.random.normal(loc=i,scale=2,size=len(temp_x)) # L1
+	gene_distribution_inactive[i,:] = np.random.normal(loc=i,scale=2,size=len(temp_x)) # L1 # you may want to shuffle
 	# ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_inactive[i,:])
     if a < 0:
@@ -121,59 +129,20 @@ for i in range (0, gene_count):
 max_value = np.max(gene_distribution_inactive) 
 for i in range (0, gene_count):
 	gene_distribution_active[i,:] = np.random.normal(loc=max_value+10+i, scale=2, size=len(temp_x)) # loc is set such that it does not overlap with inactive state
+    # you may want to shuffle
+	# ensure that all distributions start from >= 0 
+    a = np.min(gene_distribution_active[i,:])
+    if a < 0:
+        gene_distribution_active[i,:] = gene_distribution_active[i,:] - a
+    
+    
 #################################################
 cell_vs_gene = np.zeros((cell_count,gene_count))
+gene_ids = []
 # initially all are in inactive state
 for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
-    
-# Pick the regions for Ligands
-# choose at random 10% cells
-cell_percent = 20
-ligand_cells = np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)
-
-
-ligand_1_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
-ligand_2_index_x = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21] 
-# Pick the regions for which R should be high. Increase raw gene counts for them by adding +15
-receptor_1_index_x = [0, 4, 8, 12, 16, 20] 
-receptor_2_index_x = [2, 6, 10, 14, 18] 
-
-
-for i in range (0, cell_count):
-    x_index = coordinates[i][0]
-    
-    if x_index in ligand_1_index_x:
-        # increase the ligand expression
-        cell_vs_gene[i,0] = gene_distribution_active[0,i]
-        
-    if x_index in receptor_1_index_x:
-        # increase the receptor expression
-        cell_vs_gene[i,1] = gene_distribution_active[1,i] 
-
-    if x_index in ligand_2_index_x:
-        # increase the ligand expression
-        cell_vs_gene[i,2] = gene_distribution_active[2,i]
-
-    if x_index in receptor_2_index_x:
-        # increase the receptor expression
-        cell_vs_gene[i,3] = gene_distribution_active[3,i]
-
-# take quantile normalization.
-#temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
-#adata_X = np.transpose(temp)  
-#cell_vs_gene = adata_X
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_d_a_notQuantileTransformed', 'wb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_c_notQuantileTransformed', 'wb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_b_quantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
-    
-###############
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_d_a_notQuantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_cell_vs_gene_control_model_c_notQuantileTransformed', 'rb') as fp:
-    cell_vs_gene = pickle.load(fp)
-###############
-gene_ids = ['L1', 'R1', 'L2', 'R2']
+    gene_ids.append(i) 
 
 gene_info=dict()
 for gene in gene_ids:
@@ -184,10 +153,65 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
-#############
-ligand_dict_dataset = defaultdict(list)
-ligand_dict_dataset['L1']=['R1']
-ligand_dict_dataset['L2']=['R2']
+#######################
+lr_database = []
+for i in range (0, rec_start):
+    lr_database.append([i,rec_start+i])
+    
+ligand_dict_dataset = defaultdict(dict)
+relation_id = 0
+for i in range (0, len(lr_database)):
+    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+    
+#########################
+lig_rec_dict_TP = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_TP.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_TP[i].append([])   
+        lig_rec_dict_TP[i][j] = []
+        	
+# Pick the regions for Ligands
+# choose at random 10% cells
+cell_percent = 20
+neighbor_percent = 70
+lr_percent = 30
+receptor_connections = 'all_same' #'all_not_same'
+options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
+set_ligand_cells = []
+ligand_cells = np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)
+for i in ligand_cells:
+    set_ligand_cells.append([temp_x[ligand_cells[i]], temp_y[ligand_cells[i]]])  
+
+# Pick the regions for which it's -- R should be high. 
+lr_selected_list = []
+for i in range (0, len(set_ligand_cells)):
+    # choose which L-R are working for this ligand i
+    lr_selected_list.append(np.random.randint(0, len(lr_database), size=(len(lr_database)*lr_percent)//100))
+    # neighbour of i: cell_neighborhood[i]
+    # 70% of it's neighbor are acting as it's receptor
+    receptor_list = np.random.randint(0, len(cell_neighborhood[i]), size=(len(cell_neighborhood[i])*neighbor_percent)//100)
+    if receptor_connections == 'all_same': 
+        for lr_i in lr_selected_list:
+            ligand_gene = lr_database[lr_i][0]
+            receptor_gene = lr_database[lr_i][1]
+            cell_vs_gene[i,ligand_gene] = gene_distribution_active[i,ligand_gene]
+            for j in range (0, len(receptor_list)):
+                cell_vs_gene[j,receptor_gene] = gene_distribution_active[j,receptor_gene]
+                lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+# take quantile normalization.
+#temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
+#adata_X = np.transpose(temp)  
+#cell_vs_gene = adata_X
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+  +'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
+    
+###############
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+  +'_cellvsgene_'+ 'notQuantileTransformed', rb') as fp:    
+    cell_vs_gene = pickle.load(fp)
+###############
+
 # ready to go
 ################################################################################################
 # do the usual things
@@ -202,39 +226,29 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-
+        
+        
 activated_cell_index = dict()
-for gene in ligand_list:
-    for i in range (0, cell_vs_gene.shape[0]): # ligand                 
-        for j in range (0, cell_vs_gene.shape[0]): # receptor
-            for gene_rec in ligand_dict_dataset[gene]:                
-                if distance_matrix[i,j] > threshold_distance:
-                    continue
+for i in range (0, cell_vs_gene.shape[0]): # ligand                 
+    for j in range (0, cell_vs_gene.shape[0]): # receptor
+        if distance_matrix[i,j] > threshold_distance:
+            continue
+        for gene in ligand_list:
+            rec_list = ligand_dict_dataset[gene].keys()   
+            for gene_rec in rec_list:                
                 communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]               
-                relation_id = 0
-                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])              
-                activated_cell_index[i] = ''
-                activated_cell_index[j] = ''
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'b', 'wb') as fp: #b, b_1, a
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'a', 'wb') as fp: #b, b_1, a
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'wb') as fp: #b, b_1, a
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'d_a_notQuantileTransformed', 'wb') as fp: #b, b_1, a
-    pickle.dump([cells_ligand_vs_receptor,-1,ligand_list,activated_cell_index], fp) #a - [0:5]
+                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
+
+               
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
     cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
 '''
      
-    
-lig_rec_dict_TP = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size): 
-    lig_rec_dict_TP.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict_TP[i].append([])   
-        lig_rec_dict_TP[i][j] = []
-        	
+
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -259,12 +273,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     edge_weight.append([dist_X[i,j], mean_ccc])
-                    lig_rec.append([gene, gene_rec])
-                    if (gene_rec=='R1' and temp_x[j] in receptor_1_index_x) and (temp_x[i] in ligand_1_index_x):
-                        lig_rec_dict_TP[i][j].append(gene_rec) #append([gene, gene_rec])
-                    elif (gene_rec=='R2' and temp_x[j] in receptor_2_index_x) and (temp_x[i] in ligand_2_index_x):
-                        lig_rec_dict_TP[i][j].append(gene_rec) #append([gene, gene_rec])
-                
+                    lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
                 if max_local < count_local:
                     max_local = count_local
             else:
@@ -277,16 +286,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 		
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'b', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'a', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_nn_'+'c_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
-'''
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_a_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lig_rec_dict_TP], fp)
+    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
 
 ################## introducing pattern ####################
 # (x,y) indexes whose R2 gene exp has to be changed. receptor_2_index_x = [2, 6, 10, 14, 18] 
