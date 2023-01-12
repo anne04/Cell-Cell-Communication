@@ -37,39 +37,156 @@ neighbor_percent = 70
 lr_percent = 10
 receptor_connections = 'all_same' #'all_not_same'
 
-def get_data(x_max, x_min, y_max, y_min, datatype):
-    temp_x = []
-    temp_y = []
-    index_dict = defaultdict(dict)
-    i = x_min
-    # row major order, bottom up
-    k = 0
-    while i < x_max:
-      j = y_min
-      while j < y_max:
-          temp_x.append(i)
-          temp_y.append(j)
-          index_dict[i][j] = k
-          k = k+1
+def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
+    if datatype == '':
+        temp_x = []
+        temp_y = []
+        index_dict = defaultdict(dict)
+        i = x_min
+        # row major order, bottom up
+        k = 0
+        while i < x_max:
+          j = y_min
+          while j < y_max:
+              temp_x.append(i)
+              temp_y.append(j)
+              index_dict[i][j] = k
+              k = k+1
 
-          j = j + 1
+              j = j + 1
 
-      i = i + 1
+          i = i + 1
+        
+        #0, 2, 4, ...24, 26, 28   
+        temp_x = np.array(temp_x)
+        temp_y = np.array(temp_y)
+        return temp_x, temp_y
+    
+    elif datatype == '':
+        temp_x = []
+        temp_y = []
+        i = x_min
+        while i < x_max:
+            j = y_min
+            while j < y_max:
+                temp_x.append(i)
+                temp_y.append(j)
+                j = j + 2
+            i = i + 2
 
-    #0, 2, 4, ...24, 26, 28   
-    temp_x = np.array(temp_x)
-    temp_y = np.array(temp_y)
-    return temp_x, temp_y
+        #0, 2, 4, ...24, 26, 28   
+        region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+        for region in region_list:
+            x_max = region[1]
+            x_min = region[0]
+            y_min = region[2]
+            y_max = region[3]
+            i = x_min
+            while i < x_max:
+                j = y_min
+                while j < y_max:
+                    temp_x.append(i)
+                    temp_y.append(j)
+                    j = j + 2
+                i = i + 2
+                
+        high_density_regions = []        
+        for i in range (0, len(temp_x)):
+            for region in region_list:
+                x_max = region[1]
+                x_min = region[0]
+                y_min = region[2]
+                y_max = region[3]
+                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
+                    high_density_regions.append(i)
+                    
+        temp_x = np.array(temp_x)
+        temp_y = np.array(temp_y)
+              
+        return temp_x, temp_y, high_density_regions
+    
+    elif datatype == '':
+        a = x_min
+        b = x_max
+        #coord_x = np.random.randint(a, b, size=(datapoint_size))
+        coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+
+        a = y_min
+        b = y_max
+        coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+        #coord_y = np.random.randint(a, b, size=(datapoint_size))
+
+        temp_x = coord_x
+        temp_y = coord_y
 
 
+        coord_x_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x,coord_x_t))
+        temp_y = np.concatenate((temp_y,coord_y_t))
 
+        coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100,scale=20,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x,coord_x_t))
+        temp_y = np.concatenate((temp_y,coord_y_t))
+
+
+        coord_x_t = np.random.normal(loc=200,scale=10,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=150,scale=10,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x,coord_x_t))
+        temp_y = np.concatenate((temp_y,coord_y_t))
+
+
+        coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x,coord_x_t))
+        temp_y = np.concatenate((temp_y,coord_y_t))
+
+
+        discard_points = dict()
+        for i in range (0, temp_x.shape[0]):
+            if i not in discard_points:
+                for j in range (i+1, temp_x.shape[0]):
+                    if j not in discard_points:
+                        if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
+                            print('i: %d and j: %d'%(i,j))
+                            discard_points[j]=''
+
+        coord_x = []
+        coord_y = []
+        for i in range (0, temp_x.shape[0]):
+            if i not in discard_points:
+                coord_x.append(temp_x[i])
+                coord_y.append(temp_y[i])
+
+        temp_x = coord_x
+        temp_y = coord_y
+        region_list =  [[0, 100, 150, 250], [182, 230, 125, 170], [350, 450, 50, 150], [350, 450, 170, 225]] #data2
+        high_density_regions = []        
+        for i in range (0, len(temp_x)):
+            for region in region_list:
+                x_max = region[1]
+                x_min = region[0]
+                y_min = region[2]
+                y_max = region[3]
+                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
+                    high_density_regions.append(i)
+                    
+        temp_x = np.array(temp_x)
+        temp_y = np.array(temp_y)
+              
+        return temp_x, temp_y, high_density_regions
+          
+        
+        
+        
 datapoint_size = 2000
 x_max = 50 #100
 x_min = 0
 y_max = 20
 y_min = 0
 ################################# 
-temp_x, temp_y = get_data(x_max, x_min, y_max, y_min, datatype)
+temp_x, temp_y = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
 #############################################
 print(len(temp_x))
 plt.gca().set_aspect(1)	
@@ -288,7 +405,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_a_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
 
 ################## introducing pattern ####################
