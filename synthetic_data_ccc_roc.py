@@ -32,9 +32,9 @@ args = parser.parse_args()
 threshold_distance = 1.5 #4 : a, b, c
 k_nn = 4
 datatype = 'equally_spaced'
-cell_percent = 20 # choose at random 10% cells
+cell_percent = 10 # choose at random N% ligand cells
 neighbor_percent = 70
-lr_percent = 30
+lr_percent = 10
 receptor_connections = 'all_same' #'all_not_same'
 
 def get_data(x_max, x_min, y_max, y_min, datatype):
@@ -143,11 +143,8 @@ for i in range (0, gene_count):
     print('%g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
 #################################################
-cell_vs_gene = np.zeros((cell_count,gene_count))
 gene_ids = []
-# initially all are in inactive state
 for i in range (0, gene_count):
-    cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
     gene_ids.append(i) 
 
 gene_info=dict()
@@ -169,7 +166,12 @@ relation_id = 0
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
     
-#########################
+#########################      	
+cell_vs_gene = np.zeros((cell_count,gene_count))
+# initially all are in inactive state
+for i in range (0, gene_count):
+    cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
+
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size): 
@@ -177,39 +179,38 @@ for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):	
         lig_rec_dict_TP[i].append([])   
         lig_rec_dict_TP[i][j] = []
-        	
+	
 # Pick the regions for Ligands
 set_ligand_cells = []
-ligand_cells = np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)
+ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution
 for i in ligand_cells:
-    set_ligand_cells.append([temp_x[ligand_cells[i]], temp_y[ligand_cells[i]]])  
-
-# Pick the regions for which it's -- R should be high. 
-lr_selected_list = []
-for i in range (0, len(set_ligand_cells)):
+    set_ligand_cells.append([temp_x[i], temp_y[i]])  
+	
+for i in ligand_cells:
     # choose which L-R are working for this ligand i
-    lr_selected_list.append(np.random.randint(0, len(lr_database), size=(len(lr_database)*lr_percent)//100))
+    lr_selected_list = list(np.random.randint(0, len(lr_database), size=(len(lr_database)*lr_percent)//100))
     # neighbour of i: cell_neighborhood[i]
     # 70% of it's neighbor are acting as it's receptor
-    receptor_list = np.random.randint(0, len(cell_neighborhood[i]), size=(len(cell_neighborhood[i])*neighbor_percent)//100)
+    neighbour_index = list(np.random.randint(0, len(cell_neighborhood[i]), size=(len(cell_neighborhood[i])*neighbor_percent)//100))
+    receptor_list = list(np.array(cell_neighborhood[i])[neighbour_index])
     if receptor_connections == 'all_same': 
         for lr_i in lr_selected_list:
             ligand_gene = lr_database[lr_i][0]
             receptor_gene = lr_database[lr_i][1]
-            cell_vs_gene[i,ligand_gene] = gene_distribution_active[i,ligand_gene]
-            for j in range (0, len(receptor_list)):
-                cell_vs_gene[j,receptor_gene] = gene_distribution_active[j,receptor_gene]
+            cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i]
+            for j in receptor_list:
+                cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
 # take quantile normalization.
 #temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
 #adata_X = np.transpose(temp)  
 #cell_vs_gene = adata_X
-options = 'dt-'+datatype+'lrc'+len(lr_database)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+  +'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
 ###############
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+  +'_cellvsgene_'+ 'notQuantileTransformed', rb') as fp:    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_' +'_cellvsgene_'+ 'notQuantileTransformed', rb') as fp:    
     cell_vs_gene = pickle.load(fp)
 ###############
 
@@ -228,21 +229,20 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
         
-        
-activated_cell_index = dict()
+
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if distance_matrix[i,j] > threshold_distance:
             continue
         for gene in ligand_list:
-            rec_list = ligand_dict_dataset[gene].keys()   
+            rec_list = list(ligand_dict_dataset[gene].keys())
             for gene_rec in rec_list:                
                 communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]               
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
 
                
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
-    pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
+    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
@@ -281,12 +281,12 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
-            local_list[count_local] = local_list[count_local] + 1
+            #local_list[count_local] = local_list[count_local] + 1
 
 
 		
 print('len row col %d'%len(row_col))
-print('count local %d'%count_local) 
+print('max local %d'%max_local) 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_communication_scores_control_model_'+'d_a_notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
