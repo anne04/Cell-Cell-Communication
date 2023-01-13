@@ -34,10 +34,10 @@ k_nn = 4
 datatype = 'equally_spaced' #'high_density_grid' 'uniform_normal'
 cell_percent = 10 # choose at random N% ligand cells
 neighbor_percent = 70
-lr_percent = 30 #10
+lr_percent = 40 #10
 receptor_connections = 'all_same' #'all_not_same'
-gene_count = 20 #50 # and 25 pairs
-rec_start = 10 # 25
+gene_count = 10 #20 #50 # and 25 pairs
+rec_start = 5 #10 # 25
 
 
 def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
@@ -474,7 +474,7 @@ spot_diameter = 89.43 #pixels
 threshold_distance = 1.5 #4 : a, b, c
 k_nn = 4
 
-               
+# 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'              
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
@@ -515,13 +515,17 @@ for i in range (0, len(lig_rec_dict_TP)):
 ######################################	
 
 attention_scores = []
+lig_rec_dict = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
     attention_scores.append([])   
+    lig_rec_dict.append([])   
     for j in range (0, datapoint_size):	
         attention_scores[i].append([])   
         attention_scores[i][j] = []
-	    
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
+        
 #attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
 ccc_index_dict = dict()
@@ -530,8 +534,11 @@ for index in range (0, len(row_col)):
     j = row_col[index][1]
     lig_rec_dict[i][j].append(lig_rec[index])
     #attention_scores[i][j] = edge_weight[index][1]
-    attention_scores[i][j].append(edge_weight[index][1])
-    distribution.append(edge_weight[index][1])
+    #attention_scores[i][j].append(edge_weight[index][1])
+    #distribution.append(edge_weight[index][1])
+    attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
+    distribution.append(edge_weight[index][1]*edge_weight[index][0])
+    
     if edge_weight[index][1]>0:
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''    
@@ -605,7 +612,8 @@ threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
 
 for j in range (0, attention_scores.shape[1]):
-    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+
+#threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
     for i in range (0, attention_scores.shape[0]):
         
         if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
@@ -613,7 +621,9 @@ for j in range (0, attention_scores.shape[1]):
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''
 '''
-for percentage_value in [67, 70, 75, 78, 85, 90, 93, 95, 97]:
+percentage_value = 100
+while percentage_value > 75:
+    percentage_value = percentage_value - 2
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -637,64 +647,78 @@ for percentage_value in [67, 70, 75, 78, 85, 90, 93, 95, 97]:
                     connecting_edges[i][j] = 1
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k][1])
+                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
 
 
     #############
-    num_pairs = 2
+    positive_class = 0  
+    negative_class = 0
+    confusion_matrix = np.zeros((2,2))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if len(lig_rec_dict[i][j])>0:
+                for k in lig_rec_dict[i][j]:   
+                    if k in lig_rec_dict_TP[i][j]:
+                        positive_class = positive_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        else:
+                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    else:
+                        negative_class = negative_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                        else:
+                            confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+                            
+    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))                           
+    '''
+    num_pairs = len(lr_database)
+    confusion_matrix = np.zeros((2,2))
+    
     real_count = np.zeros((num_pairs))
     pred_count = np.zeros((num_pairs))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if temp_x[i]<=21 or temp_x[j]<=21: 
+            #if temp_x[i]<=21 or temp_x[j]<=21: 
                 if len(lig_rec_dict_TP[i][j])>0:
                     #print(lig_rec_dict_TP[i][j])
-                    for k in range (0, len(lig_rec_dict_TP[i][j])):
-                        if lig_rec_dict_TP[i][j][k] == 'R1':
-                            real_count[0] = real_count[0] + 1
-                            if 'R1' in existing_lig_rec_dict[i][j]:
-                                pred_count[0] = pred_count[0] + 1
-
-                        elif lig_rec_dict_TP[i][j][k] == 'R2':
-                            real_count[1] = real_count[1] + 1
-                            if 'R2' in existing_lig_rec_dict[i][j]:
-                                pred_count[1] = pred_count[1] + 1
-
+                    for k in lig_rec_dict_TP[i][j]:                        
+                        real_count[k] = real_count[k] + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            pred_count[k] = pred_count[k] + 1
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        else:
+                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1
 
     model_count = np.zeros((num_pairs))
     real_lr_count = np.zeros((num_pairs))
 
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if temp_x[i]<=21 or temp_x[j]<=21:
+            #if temp_x[i]<=21 or temp_x[j]<=21:
                 if len(existing_lig_rec_dict[i][j])>0:
-                    #print(lig_rec_dict[i][j])
-                    for k in range (0, len(existing_lig_rec_dict[i][j])):
-                        if existing_lig_rec_dict[i][j][k] == 'R1':
-                            model_count[0] = model_count[0] + 1
-                            if 'R1' in lig_rec_dict_TP[i][j]:
-                                real_lr_count[0] = real_lr_count[0] + 1
-
-                        elif existing_lig_rec_dict[i][j][k] == 'R2':
-                            model_count[1] = model_count[1] + 1
-                            if 'R2' in lig_rec_dict_TP[i][j]:
-                                real_lr_count[1] = real_lr_count[1] + 1	
-    '''
+                    for k in existing_lig_rec_dict[i][j]:
+                            model_count[k] = model_count[k] + 1
+                            if k in lig_rec_dict_TP[i][j]:
+                                real_lr_count[k] = real_lr_count[k] + 1
+                            else:
+                                confusion_matrix[1][0] = confusion_matrix[1][0] + 1
     print('real_count',real_count)
     print('pred_count',pred_count)
     print('model_count',model_count )
     print('real_lr_count',real_lr_count)
-    '''
+    
     TN = 14820 # 7656 - 4474 
     TN = np.zeros((2))
     TN[0] = total_type[0] - real_count[0]
     TN[1] = total_type[1] - real_count[1]
-    '''for i in range (0, num_pairs):
+    for i in range (0, num_pairs):
         #print('%d, %d, %d, %d, %d, %g, %g'%(i, real_count[i], pred_count[i], model_count[i], real_lr_count[i], (pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/14820))
         print('%g, %g'%((pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/TN))
-    '''
+   
     print('%g, %g, %g, %g'%((pred_count[0]/real_count[0]),(model_count[0]-real_lr_count[0])/TN[0],(pred_count[1]/real_count[1]),(model_count[1]-real_lr_count[1])/TN[1]))
-
+    '''
                         
                         
 graph = csr_matrix(connecting_edges)
