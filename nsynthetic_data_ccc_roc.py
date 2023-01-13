@@ -29,9 +29,10 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 #spot_diameter = 89.43 #pixels
-threshold_distance = 1.5 #4 : a, b, c
-k_nn = 4
-datatype = 'equally_spaced' #'high_density_grid' 'uniform_normal'
+threshold_distance = 1.5 #
+k_nn = 8
+distance_measure = 'knn'
+datatype = 'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
 cell_percent = 10 # choose at random N% ligand cells
 neighbor_percent = 70
 lr_percent = 40 #10
@@ -77,8 +78,9 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
                 j = j + 2
             i = i + 2
 
-        #0, 2, 4, ...24, 26, 28   
-        region_list =  [[25, 75, 1, 15], [125, 175, 11, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 
+        #0, 2, 4, ...24, 26, 28 
+        # high density
+        region_list =  [[5, 20, 5, 15]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 	
         for region in region_list:
             x_max = region[1]
             x_min = region[0]
@@ -92,8 +94,9 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
                     temp_y.append(j)
                     j = j + 2
                 i = i + 2
-                
-        high_density_regions = []        
+        
+        region_list.append([30, 65, 5, 15])       
+        ccc_regions = []        
         for i in range (0, len(temp_x)):
             for region in region_list:
                 x_max = region[1]
@@ -101,12 +104,11 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
                 y_min = region[2]
                 y_max = region[3]
                 if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
-                    high_density_regions.append(i)
+                    ccc_regions.append(i)
                     
         temp_x = np.array(temp_x)
         temp_y = np.array(temp_y)
-              
-        return temp_x, temp_y, high_density_regions
+        return temp_x, temp_y, ccc_regions
     
     elif datatype == 'uniform_normal':
         a = x_min
@@ -185,12 +187,13 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
         
         
 datapoint_size = 1000
-x_max = 50 #100
+x_max = 100 #50 
 x_min = 0
-y_max = 20
+y_max = 40 #20
 y_min = 0
 ################################# 
-temp_x, temp_y, a = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
+#temp_x, temp_y, a = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
+temp_x, temp_y, ccc_region = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
 #############################################
 print(len(temp_x))
 plt.gca().set_aspect(1)	
@@ -222,18 +225,22 @@ for j in range(0, distance_matrix.shape[1]):
     min_value=np.min(distance_matrix[:,j])
     for i in range(distance_matrix.shape[0]):
         dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value)
-	
-    '''list_indx = list(np.argsort(dist_X[:,j]))
-    k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-    for i in range(0, distance_matrix.shape[0]):
-        if i not in k_higher:
-            dist_X[i,j] = -1'''
-    for i in range(0, distance_matrix.shape[0]):
-        # i to j: ligand is i 
-        if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
-            dist_X[i,j] = 0 #-1
-        else:
-            cell_neighborhood[i].append(j)
+        
+    if distance_measure=='knn':
+        list_indx = list(np.argsort(dist_X[:,j]))
+        k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+        for i in range(0, distance_matrix.shape[0]):
+            if i not in k_higher:
+                dist_X[i,j] = 0 #-1
+            else:
+                cell_neighborhood[i].append(j)          
+    else:
+        for i in range(0, distance_matrix.shape[0]):
+            # i to j: ligand is i 
+            if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
+                dist_X[i,j] = 0 #-1
+            else:
+                cell_neighborhood[i].append(j)
 ####################################################################################            
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
@@ -305,7 +312,7 @@ for i in range (0, datapoint_size):
 	
 # Pick the regions for Ligands
 set_ligand_cells = []
-ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution
+ligand_cells = ccc_region #list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution
 for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
@@ -363,7 +370,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
-        if distance_matrix[i,j] > threshold_distance:
+        if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
@@ -392,7 +399,7 @@ local_list = np.zeros((20))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= threshold_distance: 
+        if dist_X[i,j] > 0: #distance_matrix[i][j] <= threshold_distance: 
             count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
@@ -440,40 +447,8 @@ len row col 177016
 count local 2
 '''
 ###############################################Visualization starts###################################################################################################
-import os
-#import glob
-import pandas as pd
-#import shutil
-import csv
-import numpy as np
-import sys
-import scikit_posthocs as post
-import altair as alt
-from collections import defaultdict
-import stlearn as st
-import scanpy as sc
-import qnorm
-import scipy
-import pickle
-import gzip
-import matplotlib.pyplot as plt
-from scipy import sparse
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
-from sklearn.metrics.pairwise import euclidean_distances
-
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
-parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
-parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-args = parser.parse_args()
-#th_dist = 4
-spot_diameter = 89.43 #pixels
-threshold_distance = 1.5 #4 : a, b, c
-k_nn = 4
-
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
 # 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'              
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
@@ -528,7 +503,6 @@ for i in range (0, datapoint_size):
         
 #attention_scores = np.zeros((datapoint_size,datapoint_size))
 distribution = []
-ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
@@ -539,10 +513,6 @@ for index in range (0, len(row_col)):
     attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
     distribution.append(edge_weight[index][1]*edge_weight[index][0])
     
-    if edge_weight[index][1]>0:
-        ccc_index_dict[i] = ''
-        ccc_index_dict[j] = ''    
-	
 
 
 ccc_index_dict = dict()
@@ -622,8 +592,8 @@ for j in range (0, attention_scores.shape[1]):
             ccc_index_dict[j] = ''
 '''
 percentage_value = 100
-while percentage_value > 75:
-    percentage_value = percentage_value - 2
+while percentage_value > 85:
+    percentage_value = percentage_value - 1
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -671,7 +641,8 @@ while percentage_value > 75:
                         else:
                             confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
                             
-    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))                           
+    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))    
+    
     '''
     num_pairs = len(lr_database)
     confusion_matrix = np.zeros((2,2))
@@ -811,7 +782,7 @@ for j in id_label:
     #print(len(x_index))
             
             ##############
-    plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=1)   
+    plt.scatter(x=x_index, y=y_index, label=j, color=colors[j], s=4)   
     
 plt.legend(fontsize=4,loc='upper right')
 
