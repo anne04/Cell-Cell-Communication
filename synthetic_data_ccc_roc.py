@@ -30,9 +30,9 @@ args = parser.parse_args()
 #th_dist = 4
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.5 #
-k_nn = 8
+k_nn = 8 #5
 distance_measure = 'knn'
-datatype = 'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
+datatype = 'high_density_grid' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
 cell_percent = 10 # choose at random N% ligand cells
 neighbor_percent = 70
 lr_percent = 40 #10
@@ -41,7 +41,7 @@ gene_count = 10 #20 #50 # and 25 pairs
 rec_start = 5 #10 # 25
 
 
-def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
+def get_data(datatype):
     if datatype == 'equally_spaced':
         temp_x = []
         temp_y = []
@@ -67,6 +67,11 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
         return temp_x, temp_y, 0
     
     elif datatype == 'high_density_grid':
+        datapoint_size = 1000
+        x_max = 100 #50 
+        x_min = 0
+        y_max = 40 #20
+        y_min = 0
         temp_x = []
         temp_y = []
         i = x_min
@@ -110,7 +115,14 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
         temp_y = np.array(temp_y)
         return temp_x, temp_y, ccc_regions
     
-    elif datatype == 'uniform_normal':
+    elif datatype == 'mixture_of_distribution':
+	
+        datapoint_size = 2000
+        x_max = 500
+        x_min = 0
+        y_max = 300
+        y_min = 0
+	
         a = x_min
         b = x_max
         #coord_x = np.random.randint(a, b, size=(datapoint_size))
@@ -125,29 +137,31 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
         temp_y = coord_y
         region_list = [] 
         
-        coord_x_t = np.random.normal(loc=x_min + (x_max-x_min)/4, scale=5, size=datapoint_size//8)
-        coord_y_t = np.random.normal(loc=y_min + (y_max-y_min)/4, scale=5, size=datapoint_size//8)
+        coord_x_t = np.random.normal(loc=200, scale=5, size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=150, scale=5, size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
         temp_y = np.concatenate((temp_y, coord_y_t))
         region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
 	
-        coord_x_t = np.random.normal(loc=x_min + (x_max-x_min)/4, scale=10, size=datapoint_size//8)
-        coord_y_t = np.random.normal(loc=y_min + (y_max-y_min)/4, scale=10, size=datapoint_size//8)
+        coord_x_t = np.random.normal(loc=100, scale=10, size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100, scale=10, size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
         temp_y = np.concatenate((temp_y, coord_y_t))
-        region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        #region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
         
-        coord_x_t = np.random.normal(loc=200,scale=15,size=datapoint_size//8)
-        coord_y_t = np.random.normal(loc=150,scale=15,size=datapoint_size//8)
+        coord_x_t = np.random.normal(loc=400,scale=15,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100,scale=15,size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
         temp_y = np.concatenate((temp_y, coord_y_t))
-        region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        #region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
         
         coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
         coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
         temp_y = np.concatenate((temp_y, coord_y_t))
         region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        
+        region_list.append([200, 350, 200, 300])
         
         discard_points = dict()
         for i in range (0, temp_x.shape[0]):
@@ -168,7 +182,7 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
         temp_x = coord_x
         temp_y = coord_y
         
-        high_density_regions = []        
+        ccc_regions = []        
         for i in range (0, len(temp_x)):
             for region in region_list:
                 x_max = region[1]
@@ -176,12 +190,12 @@ def get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size):
                 y_min = region[2]
                 y_max = region[3]
                 if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
-                    high_density_regions.append(i)
+                    ccc_regions.append(i)
                     
         temp_x = np.array(temp_x)
         temp_y = np.array(temp_y)
               
-        return temp_x, temp_y, high_density_regions
+        return temp_x, temp_y, ccc_regions
           
         
         
@@ -193,7 +207,7 @@ y_max = 40 #20
 y_min = 0
 ################################# 
 #temp_x, temp_y, a = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
-temp_x, temp_y, ccc_region = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
+temp_x, temp_y, ccc_region = get_data( datatype)
 #############################################
 print(len(temp_x))
 plt.gca().set_aspect(1)	
@@ -203,7 +217,7 @@ plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
 plt.clf()
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y], fp)
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 datapoint_size = temp_x.shape[0]
 coordinates = np.zeros((temp_x.shape[0],2))
@@ -261,7 +275,7 @@ for i in range (0, gene_count):
 
 max_value = np.max(gene_distribution_inactive) 
 for i in range (0, gene_count):
-    gene_distribution_active[i,:] = np.random.normal(loc=max_value+20+i, scale=2, size=len(temp_x)) 
+    gene_distribution_active[i,:] = np.random.normal(loc=max_value+5+i, scale=2, size=len(temp_x))  #20
     # loc is set such that it does not overlap with inactive state --> scale = 2 gives about 10 unit spread 
     # you may want to shuffle
 	# ensure that all distributions start from >= 0 
@@ -341,7 +355,7 @@ for i in ligand_cells:
 #temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
 #adata_X = np.transpose(temp)  
 #cell_vs_gene = adata_X
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections+'_close'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
@@ -447,8 +461,9 @@ len row col 177016
 count local 2
 '''
 ###############################################Visualization starts###################################################################################################
+# 'dt-mixture_of_distribution_lrc5_cp10_np70_lrp40_all_same'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close'
 # 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'              
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
@@ -533,7 +548,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_communication_scores_control_model_d_c_notQuantileTransformed_h1024_attention_l1.npy' 
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_attention_l1.npy' 
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = []
@@ -549,6 +564,8 @@ distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
+    if i>=datapoint_size or j>=datapoint_size:
+        continue
     ###################################
     '''if i==row_col[index][0] and j==row_col[index][1]:
         continue
@@ -610,6 +627,8 @@ while percentage_value > 85:
     rec_dict = defaultdict(dict)
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
+            if i==j: 
+                continue
             atn_score_list = attention_scores[i][j]
             #print(len(atn_score_list))
             for k in range (0, len(atn_score_list)):
@@ -626,6 +645,10 @@ while percentage_value > 85:
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
+
+            if i==j: 
+                continue
+                
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
                     if k in lig_rec_dict_TP[i][j]:
