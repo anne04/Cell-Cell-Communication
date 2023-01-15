@@ -726,8 +726,8 @@ for i in range (0, datapoint_size):
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
             if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
-                title_str =  ""+lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]
-                nt.add_edge(int(i), int(j), title =title_str) #, weight=1, arrowsize=int(20),  arrowstyle='fancy'
+                title_str =  ""+lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
+                nt.add_edge(int(i), int(j), title=title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 
 nt.show('mygraph.html')
 
