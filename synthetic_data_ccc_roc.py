@@ -468,7 +468,7 @@ count local 2
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
-    temp_x, temp_y = pickle.load(fp)
+    temp_x, temp_y= pickle.load(fp) #, ccc_region 
 
 datapoint_size = temp_x.shape[0]
 
@@ -548,7 +548,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_attention_l1.npy' 
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_r3_attention_l1.npy' #  5_close
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = []
@@ -564,15 +564,7 @@ distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    if i>=datapoint_size or j>=datapoint_size:
-        continue
-    ###################################
-    '''if i==row_col[index][0] and j==row_col[index][1]:
-        continue
-    else:
-        print('found mismatch')
-        break
-    '''
+   
     ###################################
     attention_scores[i][j].append(X_attention_bundle[3][index][0]) #X_attention_bundle[2][index][0]
     distribution.append(X_attention_bundle[3][index][0])
