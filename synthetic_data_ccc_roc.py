@@ -548,7 +548,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_attention_l1.npy' # 4_r3, 5_close, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 attention_scores = []
@@ -580,36 +580,6 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 	#distribution.append(X_attention_bundle[3][index][0])
 #######################
 
-
-'''attention_scores_normalized = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-    #attention_scores[i][j] =  X_attention_bundle[1][index][0]
-    #distribution.append(attention_scores[i][j])
-##############
-adjacency_matrix = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    adjacency_matrix [i][j] = 1
-
-ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
-threshold_up =  np.percentile(sorted(distribution), 100)
-connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-
-for j in range (0, attention_scores.shape[1]):
-
-#threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-    for i in range (0, attention_scores.shape[0]):
-        
-        if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
-            connecting_edges[i][j] = 1
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''
-'''
 percentage_value = 100
 while percentage_value > 85:
     percentage_value = percentage_value - 1
