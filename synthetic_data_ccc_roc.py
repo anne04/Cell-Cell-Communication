@@ -37,9 +37,9 @@ cell_percent = 10 # choose at random N% ligand cells
 neighbor_percent = 70
 lr_percent = 40 #10
 receptor_connections = 'all_same' #'all_not_same'
-gene_count = 10 #20 #50 # and 25 pairs
-rec_start = 5 #10 # 25
-noise_add = 1
+gene_count = 10 #100 #20 #50 # and 25 pairs
+rec_start = gene_count//2 #10 # 25
+noise_add = 2 #1
 
 def get_data(datatype):
     if datatype == 'equally_spaced':
@@ -262,8 +262,11 @@ for j in range(0, distance_matrix.shape[1]):
 cell_count = len(temp_x)
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
+#loc_list = np.random.randint(3, 6, size=gene_count)
+#loc_list = np.random.randint(3, 30, size=gene_count)
 for i in range (0, gene_count):
-    gene_distribution_inactive[i,:] = np.random.normal(loc=2+i,scale=1,size=len(temp_x)) # L1 # you may want to shuffle
+    #gene_distribution_inactive[i,:] = np.random.normal(loc=loc_list[i],scale=1,size=len(temp_x)) # L1 # you may want to shuffle
+    gene_distribution_inactive[i,:] = np.random.normal(loc=5+i,scale=2,size=len(temp_x)) # L1 # you may want to shuffle
     # ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_inactive[i,:])
     '''    
@@ -274,7 +277,10 @@ for i in range (0, gene_count):
 
 
 max_value = np.max(gene_distribution_inactive) 
+#loc_list = np.random.randint(6, 8, size=gene_count)
+#loc_list = np.random.randint(20, 60, size=gene_count)
 for i in range (0, gene_count):
+#    gene_distribution_active[i,:] = np.random.normal(loc=loc_list[i], scale=1, size=len(temp_x))  #20
     gene_distribution_active[i,:] = np.random.normal(loc=max_value+5+i, scale=2, size=len(temp_x))  #20
     # loc is set such that it does not overlap with inactive state --> scale = 2 gives about 10 unit spread 
     # you may want to shuffle
@@ -358,12 +364,20 @@ for i in ligand_cells:
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections+'_close'
 if noise_add == 1:
     for i in range (0, gene_count):
-        gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
+        gene_distribution_noise = np.random.normal(loc=0, scale=0.5, size = cell_vs_gene.shape[0])
+        np.random.shuffle(gene_distribution_noise)
         cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
     options = options + '_noisy'
+elif noise_add == 2:
+    for i in range (0, gene_count):
+        gene_distribution_noise = np.random.normal(loc=0, scale=6, size = cell_vs_gene.shape[0])
+        np.random.shuffle(gene_distribution_noise)
+        cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
+    options = options + '_heavy_noisy'
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
-    
+   
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
@@ -400,6 +414,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
 
                
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
@@ -471,7 +486,10 @@ count local 2
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_noisy'
-# 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'              
+# 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'
+# 
+# 'dt-high_density_grid_lrc50_cp10_np70_lrp40_all_same_close_noisy'
+
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
@@ -588,7 +606,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 #######################
 
 percentage_value = 100
-while percentage_value > 85:
+while percentage_value > 50:
     percentage_value = percentage_value - 1
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
