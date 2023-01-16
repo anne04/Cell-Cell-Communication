@@ -39,7 +39,7 @@ lr_percent = 40 #10
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 10 #20 #50 # and 25 pairs
 rec_start = 5 #10 # 25
-
+noise_add = 1
 
 def get_data(datatype):
     if datatype == 'equally_spaced':
@@ -227,12 +227,12 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-cell_neighborhood = []
-for i in range (0, datapoint_size):
-    cell_neighborhood.append([])
      
 ########### weighted edge, based on neighborhood ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
+cell_neighborhood = []
+for i in range (0, datapoint_size):
+    cell_neighborhood.append([])
 
 for j in range(0, distance_matrix.shape[1]):
     max_value=np.max(distance_matrix[:,j])
@@ -356,14 +356,20 @@ for i in ligand_cells:
 #adata_X = np.transpose(temp)  
 #cell_vs_gene = adata_X
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections+'_close'
+if noise_add == 1:
+    for i in range (0, gene_count):
+        gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
+        cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
+    options = options + '_noisy'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
 ###############
 '''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_' +'_cellvsgene_'+ 'notQuantileTransformed', rb') as fp:    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
     cell_vs_gene = pickle.load(fp)
 '''
+
 ###############
 
 # ready to go
@@ -464,11 +470,12 @@ count local 2
 # 'dt-mixture_of_distribution_lrc5_cp10_np70_lrp40_all_same'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close'
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_noisy'
 # 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'              
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
-    temp_x, temp_y = pickle.load(fp) #, ccc_region 
+    temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
 
