@@ -487,8 +487,9 @@ count local 2
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_noisy'
 # 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'
-# 
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_noisy'
 # 'dt-high_density_grid_lrc50_cp10_np70_lrp40_all_same_close_noisy'
+# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_heavy_noisy'
 
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
@@ -573,16 +574,11 @@ for j in range (0, datapoint_size):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
+
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
-attention_scores = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
 
 distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
@@ -593,16 +589,28 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 max_value = np.max(distribution)
 	
 #attention_scores = np.zeros((2000,2000))
+tweak = 0
 distribution = []
+attention_scores = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]   
+    j = X_attention_bundle[0][1][index] 
+    if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+        continue
     ###################################
- 
-    attention_scores[i][j].append(max_value+(X_attention_bundle[3][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-    distribution.append(max_value+(X_attention_bundle[3][index][0]*(-1)) )
-    #attention_scores[i][j].append( X_attention_bundle[3][index][0])) 
-	#distribution.append(X_attention_bundle[3][index][0])
+    if tweak == 1:         
+        attention_scores[i][j].append(max_value+(X_attention_bundle[3][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
+        distribution.append(max_value+(X_attention_bundle[3][index][0]*(-1)) )
+    else:
+        attention_scores[i][j].append(X_attention_bundle[3][index][0]) 
+        distribution.append(X_attention_bundle[3][index][0])
 #######################
 
 percentage_value = 100
