@@ -32,15 +32,15 @@ args = parser.parse_args()
 threshold_distance = 1.5 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' #'knn'
-datatype = 'high_density_grid' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 10 # choose at random N% ligand cells
+datatype = 'pattern_equally_spaced' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
+cell_percent = 50 # choose at random N% ligand cells
 neighbor_percent = 70
 lr_percent = 40 #10
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 10 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 10
+random_active_percent = 30
 
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
@@ -75,11 +75,11 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
             break
     if outside_boundary == 1:
         return -1
-    else 
+    else :
         return receptor_list
 
 def get_data(datatype):
-    if datatype == 'equally_spaced':
+    if datatype == 'pattern_equally_spaced':
         x_max = 50 
         x_min = 0
         y_max = 20
@@ -107,7 +107,7 @@ def get_data(datatype):
         temp_y = np.array(temp_y)
         return temp_x, temp_y, 0
     
-    elif datatype == 'high_density_grid':
+    elif datatype == 'pattern_high_density_grid':
         datapoint_size = 1000
         x_max = 100 #50 
         x_min = 0
@@ -156,7 +156,7 @@ def get_data(datatype):
         temp_y = np.array(temp_y)
         return temp_x, temp_y, ccc_regions
     
-    elif datatype == 'mixture_of_distribution':
+    elif datatype == 'pattern_mixture_of_distribution':
 	
         datapoint_size = 2000
         x_max = 500
@@ -311,7 +311,9 @@ gene_distribution_inactive = np.zeros((gene_count, cell_count))
 #loc_list = np.random.randint(3, 30, size=gene_count)
 for i in range (0, gene_count):
     #gene_distribution_inactive[i,:] = np.random.normal(loc=loc_list[i],scale=1,size=len(temp_x)) # L1 # you may want to shuffle
-    gene_distribution_inactive[i,:] = np.random.shuffle(np.random.normal(loc=5+i,scale=2,size=len(temp_x)))  # L1 # you may want to shuffle
+    gene_exp_list = np.random.normal(loc=5+i,scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,:] =  gene_exp_list # # L1 # you may want to shuffle
     # ensure that all distributions start from >= 0 
     a = np.min(gene_distribution_inactive[i,:])
     '''    
@@ -326,7 +328,9 @@ max_value = np.max(gene_distribution_inactive)
 #loc_list = np.random.randint(20, 60, size=gene_count)
 for i in range (0, gene_count):
 #    gene_distribution_active[i,:] = np.random.normal(loc=loc_list[i], scale=1, size=len(temp_x))  #20
-    gene_distribution_active[i,:] = np.random.shuffle(np.random.normal(loc=max_value+20+i, scale=2, size=len(temp_x)))  #20
+    gene_exp_list = np.random.normal(loc=max_value+20+i, scale=.3, size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_active[i,:] = gene_exp_list  #20
     
     # loc is set such that it does not overlap with inactive state --> scale = 2 gives about 10 unit spread 
     # you may want to shuffle
@@ -373,8 +377,8 @@ random_activation = []
 for j in range (0, gene_count):
     random_activation_temp = list(np.random.randint(0, cell_count, size=(cell_count*random_active_percent)//100)) #“discrete uniform” distribution
     for i in random_activation_temp: 
-        cell_vs_gene[i,j] = gene_distribution_active[i,j]
-    random_activation.extend(random_activation)
+        cell_vs_gene[i,j] = gene_distribution_active[j, i]
+    random_activation.extend(random_activation_temp)
     
 random_activation = list(set(random_activation))    
     
@@ -408,7 +412,7 @@ for i in ligand_cells:
     #receptor_list = list(np.array(cell_neighborhood[i])[neighbour_index])
     if receptor_connections == 'all_same': 
         for lr_i in lr_selected_list:            
-            receptor_list = get_receptors(lr_i+1, temp_x[i], temp_y[i], x_min, x_max, y_min, y_max)
+            receptor_list = get_receptors(lr_i+1, temp_x[i], temp_y[i], 0, 50-1, 0, 20-1)
             if receptor_list==-1:
                 continue
             ligand_gene = lr_database[lr_i][0]
@@ -419,11 +423,8 @@ for i in ligand_cells:
                 cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
-# take quantile normalization.
-#temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
-#adata_X = np.transpose(temp)  
-#cell_vs_gene = adata_X
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_percent)+'_randp'+str(random_active_percent)+'_'+receptor_connections+#'_close'
+
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_percent)+'_randp'+str(random_active_percent)+'_'+receptor_connections#'_close'
 if noise_add == 1:
     for i in range (0, gene_count):
         gene_distribution_noise = np.random.normal(loc=0, scale=0.5, size = cell_vs_gene.shape[0])
@@ -436,10 +437,18 @@ elif noise_add == 2:
         np.random.shuffle(gene_distribution_noise)
         cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
     options = options + '_heavy_noisy'
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
+    
+# take quantile normalization.
+temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
+adata_X = np.transpose(temp)  
+cell_vs_gene = adata_X
+'''
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'quantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
-   
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'#+ 'notQuantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
+   '''
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
@@ -476,10 +485,13 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
 
                
+'''
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
+    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-
+'''
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
     cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
@@ -523,10 +535,13 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 		
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
+'''
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
-
+'''
 
 ###########################################################
 
@@ -552,7 +567,7 @@ count local 2
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_noisy'
 # 'dt-high_density_grid_lrc50_cp10_np70_lrp40_all_same_close_noisy'
 # 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_heavy_noisy'
-
+# 'dt-pattern_equally_spaced_lrc5_cp50_lrp40_randp30_all_same'
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
@@ -569,6 +584,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP = pickle.load(fp) 
 
@@ -615,9 +631,67 @@ for index in range (0, len(row_col)):
     #distribution.append(edge_weight[index][1])
     attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
     distribution.append(edge_weight[index][1]*edge_weight[index][0])
-    
+
+percentage_value = 100
+while percentage_value > 50:
+    percentage_value = percentage_value - 1
+#for percentage_value in [79, 85, 90, 93, 95, 97]:
+    existing_lig_rec_dict = []
+    datapoint_size = temp_x.shape[0]
+    for i in range (0, datapoint_size):
+        existing_lig_rec_dict.append([])   
+        for j in range (0, datapoint_size):	
+            existing_lig_rec_dict[i].append([])   
+            existing_lig_rec_dict[i][j] = []
+
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), percentage_value)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+    rec_dict = defaultdict(dict)
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if i==j: 
+                continue
+            atn_score_list = attention_scores[i][j]
+            #print(len(atn_score_list))
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
 
 
+    #############
+    positive_class = 0  
+    negative_class = 0
+    confusion_matrix = np.zeros((2,2))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+
+            if i==j: 
+                continue
+                
+            if len(lig_rec_dict[i][j])>0:
+                for k in lig_rec_dict[i][j]:   
+                    if k in lig_rec_dict_TP[i][j]:
+                        positive_class = positive_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        else:
+                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    else:
+                        negative_class = negative_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                        else:
+                            confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+                            
+    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))    
+
+
+'''
 ccc_index_dict = dict()
 threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
@@ -632,12 +706,12 @@ for j in range (0, datapoint_size):
                 #lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
                 ccc_index_dict[i] = ''
                 ccc_index_dict[j] = ''
-
+'''
 ################
 
 ########
-
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_2_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
@@ -664,8 +738,8 @@ for i in range (0, datapoint_size):
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index] 
-    if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
-        continue
+    #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+    #    continue
     ###################################
     if tweak == 1:         
         attention_scores[i][j].append(max_value+(X_attention_bundle[3][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
@@ -733,54 +807,7 @@ while percentage_value > 50:
                             
     print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))    
     
-    '''
-    num_pairs = len(lr_database)
-    confusion_matrix = np.zeros((2,2))
-    
-    real_count = np.zeros((num_pairs))
-    pred_count = np.zeros((num_pairs))
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-            #if temp_x[i]<=21 or temp_x[j]<=21: 
-                if len(lig_rec_dict_TP[i][j])>0:
-                    #print(lig_rec_dict_TP[i][j])
-                    for k in lig_rec_dict_TP[i][j]:                        
-                        real_count[k] = real_count[k] + 1
-                        if k in existing_lig_rec_dict[i][j]:
-                            pred_count[k] = pred_count[k] + 1
-                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                        else:
-                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1
-
-    model_count = np.zeros((num_pairs))
-    real_lr_count = np.zeros((num_pairs))
-
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-            #if temp_x[i]<=21 or temp_x[j]<=21:
-                if len(existing_lig_rec_dict[i][j])>0:
-                    for k in existing_lig_rec_dict[i][j]:
-                            model_count[k] = model_count[k] + 1
-                            if k in lig_rec_dict_TP[i][j]:
-                                real_lr_count[k] = real_lr_count[k] + 1
-                            else:
-                                confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-    print('real_count',real_count)
-    print('pred_count',pred_count)
-    print('model_count',model_count )
-    print('real_lr_count',real_lr_count)
-    
-    TN = 14820 # 7656 - 4474 
-    TN = np.zeros((2))
-    TN[0] = total_type[0] - real_count[0]
-    TN[1] = total_type[1] - real_count[1]
-    for i in range (0, num_pairs):
-        #print('%d, %d, %d, %d, %d, %g, %g'%(i, real_count[i], pred_count[i], model_count[i], real_lr_count[i], (pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/14820))
-        print('%g, %g'%((pred_count[i]/real_count[i]),(model_count[i]-real_lr_count[i])/TN))
-   
-    print('%g, %g, %g, %g'%((pred_count[0]/real_count[0]),(model_count[0]-real_lr_count[0])/TN[0],(pred_count[1]/real_count[1]),(model_count[1]-real_lr_count[1])/TN[1]))
-    '''
-                        
+                     
                         
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
