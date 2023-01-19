@@ -638,6 +638,8 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc5_cp50_lrp40_randp30_all_same'
 # 'dt-pattern_equally_spaced_lrc5_cp50_lrp20_randp5_all_same'
 # 'dt-pattern_equally_spaced_lrc5_cp80_lrp3_randp0_all_same'
+# 'dt-pattern_equally_spaced_lrc5_cp80_lrp20_randp0_all_same' 
+# 
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
