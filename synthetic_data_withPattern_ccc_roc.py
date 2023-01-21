@@ -33,12 +33,12 @@ threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' #'knn'
 datatype = 'pattern_equally_spaced' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 10 # choose at random N% ligand cells
+cell_percent = 50 # choose at random N% ligand cells
 neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
-gene_count = 2 #10 #100 #20 #50 # and 25 pairs
+gene_count = 10 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
 random_active_percent = 0
@@ -46,13 +46,13 @@ random_active_percent = 0
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
     if pattern_id == 1: 
-        receptor_list.append([i+1,j])
-        receptor_list.append([i-1,j])
-        receptor_list.append([i,j-1])
-        receptor_list.append([i,j+1])  
-        
         #receptor_list.append([i+1,j])
+        #receptor_list.append([i-1,j])
         #receptor_list.append([i,j-1])
+        #receptor_list.append([i,j+1])  
+        
+        receptor_list.append([i+1,j])
+        receptor_list.append([i,j-1])
         #receptor_list.append([i+1,j-1])
         
     elif pattern_id == 2:
@@ -90,9 +90,9 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
 
 def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
-        x_max = 50 
+        x_max = 50 #50 
         x_min = 0
-        y_max = 20
+        y_max = 50 #20
         y_min = 0
         temp_x = []
         temp_y = []
@@ -327,8 +327,9 @@ for i in range (0, gene_count):
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    #np.min(gene_distribution_inactive[i,:])-1, scale=.1
-    gene_exp_list = np.random.normal(loc=np.min(gene_distribution_inactive[i,:])-3, scale=.5, size=len(temp_x))
+    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
+    gene_exp_list = np.random.normal(loc=np.min(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
+    #gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
     print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
@@ -676,6 +677,8 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc1_cp90_lrp1_randp0_all_same' --withFeature_pattern_4_attention, model_4_pattern_attention
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same'
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_broad_active'
+# 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_overlapped_lowscale'
+# 'dt-pattern_equally_spaced_lrc5_cp50_lrp1_randp0_all_same_differentLRs'
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
@@ -818,7 +821,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_pattern_4_tp7p_attention_l1.npy' # tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
