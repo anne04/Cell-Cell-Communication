@@ -92,7 +92,7 @@ def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 50 #20
+        y_max = 30 #20
         y_min = 0
         temp_x = []
         temp_y = []
@@ -821,7 +821,8 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_differentLRs_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
@@ -837,7 +838,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 max_value = np.max(distribution)
 	
 #attention_scores = np.zeros((2000,2000))
-tweak = 1
+tweak = 0
 distribution = []
 attention_scores = []
 datapoint_size = temp_x.shape[0]
