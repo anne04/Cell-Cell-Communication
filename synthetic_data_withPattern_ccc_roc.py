@@ -40,7 +40,7 @@ receptor_connections = 'all_same' #'all_not_same'
 gene_count = 8 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 0
+random_active_percent = 10
 
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
@@ -91,7 +91,7 @@ def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 20 #30 
+        y_max = 50 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -327,7 +327,7 @@ for i in range (0, gene_count):
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.5, size=len(temp_x))
     #gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
@@ -405,8 +405,8 @@ for lr_i in range (0, len(lr_database)):
     k = k + per_lr
 
 random_activation = list(set(random_activation))  
-
-
+all_used = []
+all_used.extend(random_activation)
 
 available_cells = list(set(available_cells) - set(random_activation))
 np.random.shuffle(available_cells) 
@@ -440,7 +440,7 @@ for i in ligand_cells:
 lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k = 0
 P_class = 0
-all_used = []
+
 
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -571,8 +571,8 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-        #if i in all_used or j in all_used:
-        #    continue
+        if i in all_used or j in all_used:
+            continue
                 
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
@@ -678,6 +678,7 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_broad_active'
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_overlapped_lowscale'
 # 'dt-pattern_equally_spaced_lrc5_cp50_lrp1_randp0_all_same_differentLRs'
+# 'dt-pattern_equally_spaced_lrc4_cp50_lrp1_randp0_all_sameoverlapped_highertail'
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
@@ -798,7 +799,7 @@ while percentage_value > 0:
                         else:
                             confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
                             
-    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))    
+    print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
 
 
 '''
