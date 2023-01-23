@@ -92,7 +92,7 @@ def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 30 #20
+        y_max = 20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -328,7 +328,7 @@ for i in range (0, gene_count):
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    gene_exp_list = np.random.normal(loc=np.min(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     #gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
@@ -572,8 +572,8 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-        if i in all_used or j in all_used:
-            continue
+        #if i in all_used or j in all_used:
+        #    continue
                 
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
