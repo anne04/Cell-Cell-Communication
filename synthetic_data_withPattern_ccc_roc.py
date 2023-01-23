@@ -5,7 +5,6 @@ import pandas as pd
 import csv
 import numpy as np
 import sys
-import scikit_posthocs as post
 import altair as alt
 from collections import defaultdict
 import stlearn as st
