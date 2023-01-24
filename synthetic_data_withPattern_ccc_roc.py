@@ -752,7 +752,7 @@ for index in range (0, len(row_col)):
 
 percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 10
+    percentage_value = percentage_value - 5
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -826,7 +826,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_differentLRs_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_highertail_attention_l1.npy' # tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
@@ -869,7 +869,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 10
+    percentage_value = percentage_value - 5
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -923,7 +923,7 @@ while percentage_value > 0:
                         else:
                             confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
                             
-    print('%d, %g, %g'%(percentage_value, confusion_matrix[1][0]/negative_class, confusion_matrix[0][0]/positive_class))    
+    print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
     
                      
                         
