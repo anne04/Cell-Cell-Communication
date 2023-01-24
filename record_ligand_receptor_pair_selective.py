@@ -593,12 +593,13 @@ for i in range (0, len(labels)):
            
 print(count_points_component)
 
-id_label = 0  
+id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
 index_dict = dict()
 for i in range (0, count_points_component.shape[0]):
     if count_points_component[i]>1:
-        id_label = id_label+1
         index_dict[i] = id_label
+        id_label = id_label+1
+        
 print(id_label)
     
  
@@ -606,10 +607,32 @@ for i in range (0, len(barcode_info)):
 #    if barcode_info[i][0] in barcode_label:
     if count_points_component[labels[i]] > 1:
         barcode_info[i][3] = index_dict[labels[i]] #2
-    else: 
+    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+        barcode_info[i][3] = 1
+    else:
         barcode_info[i][3] = 0
        
+###############
+csv_record = []
+csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+for j in range (0, len(barcode_info)):
+    for i in range (0, len(barcode_info)):
+        atn_score_list = attention_scores[i][j]
+        if i==j:
+            if len(lig_rec_dict[i][j])==0:
+                continue
+        for k in range (0, len(atn_score_list)):
+            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
+                if barcode_info[i][3]==0:
+                    print('error')
+                elif barcode_info[i][3]==1:
+                    csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
+                else:
+                    csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
 
+                
+df = pd.DataFrame(csv_record)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, header=False)
 
 #############
 '''
@@ -650,12 +673,16 @@ colors_2 = [cmap(i) for i in np.linspace(0, 1, number)]
 colors=colors+colors_2
 
 
+colors_point = []
+for i in range (0, len(barcode_info)):      
+    colors_point.append(colors[barcode_info[i][3]]) 
+  
 #cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-id_label = [0,2]
-for j in id_label:
-#for j in range (0, n_components):
+#id_label = [0,2]
+#for j in id_label:
+for j in range (0, id_label):
     label_i = j
     x_index=[]
     y_index=[]
@@ -668,25 +695,28 @@ for j in id_label:
             #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
             if barcode_type[barcode_info[i][0]] == 0:
-                marker_size.append('o') 
+                marker_size.append("o") 
                 #fillstyles_type.append('full') 
             elif barcode_type[barcode_info[i][0]] == 1:
-                marker_size.append('^')  
+                marker_size.append("^")  
                 #fillstyles_type.append('full') 
             else:
-                marker_size.append('*') 
+                marker_size.append("*") 
                 #fillstyles_type.append('full') 
             
             ###############
-            
-    
+    marker_type = []        
     for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
-    filltype = 'full'
-    #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, marker=marker_size)     
+        marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
+
+    #for i in range (0, len(x_index)):  
+    #    plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    #filltype = 'full'
+    if len(x_index)>0:
+        plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, s=15) #marker=marker_size, 
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
     
-#plt.legend(fontsize=4,loc='upper right')
+plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
