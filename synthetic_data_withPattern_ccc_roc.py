@@ -32,7 +32,7 @@ threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' #'knn'
 datatype = 'pattern_equally_spaced' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 70 # choose at random N% ligand cells
+cell_percent = 50 # choose at random N% ligand cells
 neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
@@ -40,18 +40,19 @@ receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 20
+random_active_percent = 0
 
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
     if pattern_id == 1: 
-        #receptor_list.append([i+1,j])
-        #receptor_list.append([i-1,j])
-        #receptor_list.append([i,j-1])
-        #receptor_list.append([i,j+1])  
-        
+        receptor_list.append([i+1,j])
+        receptor_list.append([i-1,j])
+        receptor_list.append([i,j-1])
+        receptor_list.append([i,j+1])  
+        '''
         receptor_list.append([i+1,j])
         receptor_list.append([i,j-1])
+	    '''
         #receptor_list.append([i+1,j-1])
         
     elif pattern_id == 2:
@@ -325,7 +326,7 @@ for i in range (0, gene_count):
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.5, size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.2, size=len(temp_x))
     #gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
@@ -390,6 +391,7 @@ for i in range (0, datapoint_size):
 # Pick the regions for Ligands
 
 ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
+set_ligand_cells = []
 for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
@@ -484,48 +486,6 @@ for i in ligand_cells:
                 #########
                 
 # choose some random cells for activating without pattern
-available_cells = []
-for i in range (0, temp_x.shape[0]):
-    if i in all_used:
-            continue
-    available_cells.append(i)
-    
-np.random.shuffle(available_cells) 
-       
-per_lr = int(len(available_cells)*(random_active_percent/2.0))//100
-random_activation_index = list(np.random.randint(0, len(available_cells), size=int(len(available_cells)*(random_active_percent/2.0))//100))
-random_activation_lr = list(np.random.randint(0, len(lr_database), size= len(random_activation_index)*lr_count_percell)) #“discrete uniform” distribution
-random_activation = []
-k = 0
-for index in random_activation_index:
-    i = available_cells[index]  
-    for p in range (k, k+lr_count_percell):
-        lr_i = random_activation_lr[p]
-        receptor_list = get_receptors(lr_i+1, temp_x[i], temp_y[i], 0, 50-1, 0, 50-1)
-        if receptor_list==-1:
-            continue  
-            
-        flag = 0  
-        for rec in receptor_list:                
-            j = get_cell[rec[0]][rec[1]]
-            if j in all_used :
-                flag = 1
-                break
-        if flag == 1:        
-            continue
-                
-        ligand_gene = lr_database[lr_i][0]
-        cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i] 
-        receptor_gene = lr_database[lr_i][1]
-        rec = receptor_list[0]
-        j = get_cell[rec[0]][rec[1]]
-        cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j] 
-        random_activation.append(i)
-        random_activation.append(j)
-        
-    k = k + lr_count_percell
-
-random_activation = list(set(random_activation))  
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_count_percell)+'_randp'+str(random_active_percent)+'_'+receptor_connections#'_close'
 if noise_add == 1:
@@ -582,6 +542,51 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
 
                
+
+
+'''
+
+available_edges = []
+for i in range (0, temp_x.shape[0]):
+    for j in range (0, temp_x.shape[0]):
+        if len(lig_rec_dict_TP[i][j])>0:
+            continue
+        if len(cells_ligand_vs_receptor[i][j]) > 0:
+            lig = cells_ligand_vs_receptor[i][j][0][0]
+            rec = lig = cells_ligand_vs_receptor[i][j][0][1]
+            if cells_ligand_vs_receptor[i][j][0][2] < np.mean(gene_distribution_inactive[lig,:])*np.mean(gene_distribution_inactive[rec,:]): #distance_matrix[i,j] > threshold_distance:
+                available_edges.append([i,j])  
+                       
+random_activation = []
+random_activation_index = list(np.random.randint(0, len(available_edges), size=int(len(available_edges)*(random_active_percent))//100))
+random_activation_lr = list(np.random.randint(0, len(lr_database), size= len(random_activation_index)*lr_count_percell)) #“discrete uniform” distribution
+k = 0
+p=0
+for index in random_activation_index:
+    i = available_edges[index][0]
+    j = available_edges[index][1]
+    
+    lr_i = random_activation_lr[p]
+    p = p + 1
+                
+    ligand_gene = lr_database[lr_i][0]
+    cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i] 
+    
+    receptor_gene = lr_database[lr_i][1]
+    cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j] 
+    
+    if cells_ligand_vs_receptor[i][j][lr_i][0] == ligand_gene and cells_ligand_vs_receptor[i][j][lr_i][1] == receptor_gene:
+        cells_ligand_vs_receptor[i][j][lr_i][2] = cell_vs_gene[i,ligand_gene]*cell_vs_gene[j,receptor_gene]
+        
+    
+    
+    random_activation.append(i)
+    random_activation.append(j)
+        
+    #k = k + lr_count_percell
+random_activation = list(set(random_activation))  
+'''     
+    
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
@@ -593,12 +598,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     pickle.dump([temp_x, temp_y, ccc_region], fp)
     
     
-'''
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
-    cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
-'''
-     
+'''    
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -638,7 +638,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 		
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
-print('random_activation %d'%len(random_activation))
+print('random_activation %d'%len(random_activation_index))
 print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 '''
