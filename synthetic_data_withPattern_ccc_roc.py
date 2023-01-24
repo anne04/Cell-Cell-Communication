@@ -32,15 +32,15 @@ threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' #'knn'
 datatype = 'pattern_equally_spaced' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 50 # choose at random N% ligand cells
+cell_percent = 70 # choose at random N% ligand cells
 neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
-gene_count = 8 #100 #20 #50 # and 25 pairs
+gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 10
+random_active_percent = 20
 
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
@@ -266,8 +266,6 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
 plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 get_cell = defaultdict(dict)  
 available_cells = []
@@ -378,38 +376,7 @@ cell_vs_gene = np.zeros((cell_count,gene_count))
 for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 
-available_cells = []
-for i in range (0, temp_x.shape[0]):
-    available_cells.append(i)
-    
-# choose some random cells for activating without pattern
-per_lr = int(cell_count*(random_active_percent/2.0))//100
-random_activation_temp = list(np.random.randint(0, cell_count, size=len(lr_database)*per_lr )) #“discrete uniform” distribution
-random_activation = []
-k = 0
-for lr_i in range (0, len(lr_database)):
-    for index in range (k, k+per_lr):
-        i = random_activation_temp[index]  
-        receptor_list = get_receptors(lr_i+1, temp_x[i], temp_y[i], 0, 50-1, 0, 20-1)
-        if receptor_list==-1:
-            continue        
-        ligand_gene = lr_database[lr_i][0]
-        cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i] 
-        receptor_gene = lr_database[lr_i][1]
-        rec = receptor_list[0]
-        j = get_cell[rec[0]][rec[1]]
-        cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j] 
-        random_activation.append(i)
-        random_activation.append(j)
-        
-    k = k + per_lr
 
-random_activation = list(set(random_activation))  
-all_used = []
-all_used.extend(random_activation)
-
-available_cells = list(set(available_cells) - set(random_activation))
-np.random.shuffle(available_cells) 
 
 # record true positive connections    
 lig_rec_dict_TP = []
@@ -421,27 +388,18 @@ for i in range (0, datapoint_size):
         lig_rec_dict_TP[i][j] = []
 	
 # Pick the regions for Ligands
-set_ligand_cells = []
-ligand_cells = []
-ligand_cells_index = list(np.random.randint(0, len(available_cells), size=(len(available_cells)*cell_percent)//100)) 
-ligand_cells_index  = list(set(ligand_cells_index))
-for i in ligand_cells_index:
-    ligand_cells.append(available_cells[i])
-    set_ligand_cells.append([temp_x[available_cells[i]], temp_y[available_cells[i]]])  
-    
-'''
+
 ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
-ligand_cells = list(set(ligand_cells)-set(random_activation))
 for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
-'''
+
 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells))) 
 lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k = 0
 P_class = 0
 
-
+all_used = []
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -454,7 +412,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 for i in ligand_cells:
     # choose which L-R are working for this ligand i
     #lr_selected_list = [lr_selected_list_allcell[k]] 
-    if i in all_used:
+    if i in all_used :
         print('skip')
         continue
         
@@ -500,7 +458,7 @@ for i in ligand_cells:
             flag = 0  
             for rec in receptor_list:                
                 j = get_cell[rec[0]][rec[1]]
-                if j in all_used:
+                if j in all_used :
                     flag = 1
                     break
             if flag == 1:        
@@ -525,7 +483,49 @@ for i in ligand_cells:
                 
                 #########
                 
+# choose some random cells for activating without pattern
+available_cells = []
+for i in range (0, temp_x.shape[0]):
+    if i in all_used:
+            continue
+    available_cells.append(i)
+    
+np.random.shuffle(available_cells) 
+       
+per_lr = int(len(available_cells)*(random_active_percent/2.0))//100
+random_activation_index = list(np.random.randint(0, len(available_cells), size=int(len(available_cells)*(random_active_percent/2.0))//100))
+random_activation_lr = list(np.random.randint(0, len(lr_database), size= len(random_activation_index)*lr_count_percell)) #“discrete uniform” distribution
+random_activation = []
+k = 0
+for index in random_activation_index:
+    i = available_cells[index]  
+    for p in range (k, k+lr_count_percell):
+        lr_i = random_activation_lr[p]
+        receptor_list = get_receptors(lr_i+1, temp_x[i], temp_y[i], 0, 50-1, 0, 50-1)
+        if receptor_list==-1:
+            continue  
+            
+        flag = 0  
+        for rec in receptor_list:                
+            j = get_cell[rec[0]][rec[1]]
+            if j in all_used :
+                flag = 1
+                break
+        if flag == 1:        
+            continue
                 
+        ligand_gene = lr_database[lr_i][0]
+        cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i] 
+        receptor_gene = lr_database[lr_i][1]
+        rec = receptor_list[0]
+        j = get_cell[rec[0]][rec[1]]
+        cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j] 
+        random_activation.append(i)
+        random_activation.append(j)
+        
+    k = k + lr_count_percell
+
+random_activation = list(set(random_activation))  
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_count_percell)+'_randp'+str(random_active_percent)+'_'+receptor_connections#'_close'
 if noise_add == 1:
@@ -588,6 +588,11 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
+    
+    
 '''
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
