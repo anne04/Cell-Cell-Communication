@@ -457,11 +457,11 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 'tumor' #1
+        barcode_type[pathologist_label[i][0]] = '2_tumor' #1
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 'stroma_deserted'#0
+        barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'#
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 'acinar_reactive' #2
+        barcode_type[pathologist_label[i][0]] = '1_acinar_reactive' #2
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 
@@ -634,10 +634,15 @@ for j in range (0, len(barcode_info)):
 df = pd.DataFrame(csv_record)
 df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, header=False)
 
+import altairThemes
+# register the custom theme under a chosen name
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
 
 data_list=dict()
 data_list['pathology_label']=[]
-data_list['cluster_label']=[]
+data_list['component_label']=[]
 data_list['X']=[]
 data_list['Y']=[]
 
@@ -645,37 +650,31 @@ for i in range (0, len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 'zero':
         continue
     data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['cluster_label'].append(barcode_info[i][3])
+    data_list['component_label'].append(barcode_info[i][3])
     data_list['X'].append(barcode_info[i][1])
     data_list['Y'].append(-barcode_info[i][2])
     
 
 data_list_pd = pd.DataFrame(data_list)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv', index=False)
 
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv')
+
+set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
-chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
     shape = "pathology_label",
-    color=alt.Color('cluster_label:N', scale=alt.Scale(range=colors)),
-    tooltip=['cluster_label']
-).configure_legend(labelFontSize=6, symbolLimit=50)
+    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+    tooltip=['component_label']
+)#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
 
-chart =alt.Chart(source).mark_point().encode(
-    x = 'petalLength', 
-    y = 'petalWidth', 
-    shape = 'species'
-)
 
 
-alt.Chart(data_list_pd).mark_point().encode(
-    x = 'X', 
-    y = 'Y', 
-    shape = 'pathology_label'
-)
 #############
 '''
 datapoint_label = []
