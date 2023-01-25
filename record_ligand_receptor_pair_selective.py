@@ -457,11 +457,11 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = '2_tumor' #1
+        barcode_type[pathologist_label[i][0]] = 1
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'#
+        barcode_type[pathologist_label[i][0]] = 0
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = '1_acinar_reactive' #2
+        barcode_type[pathologist_label[i][0]] = 2
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 
@@ -636,9 +636,9 @@ df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, he
 
 import altairThemes
 # register the custom theme under a chosen name
-alt.themes.register("publishTheme", altairThemes.publishTheme)
+#alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
-alt.themes.enable("publishTheme")
+#alt.themes.enable("publishTheme")
 
 data_list=dict()
 data_list['pathology_label']=[]
@@ -792,9 +792,9 @@ import networkx as nx
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 0:
+    if barcode_type[barcode_info[i][0]] == 0: #stroma
         marker_size = 'circle'
-    elif barcode_type[barcode_info[i][0]] == 1:
+    elif barcode_type[barcode_info[i][0]] == 1: #tumor
         marker_size = 'box'
     else:
         marker_size = 'ellipse'
@@ -802,7 +802,7 @@ for i in range (0, len(barcode_info)):
    		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network( directed=True, select_menu=True, filter_menu=True) #"500px", "500px",
+nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
 nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
