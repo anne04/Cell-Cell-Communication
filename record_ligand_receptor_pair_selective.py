@@ -457,13 +457,13 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
+        barcode_type[pathologist_label[i][0]] = 'tumor' #1
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[pathologist_label[i][0]] = 'stroma_deserted'#0
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
+        barcode_type[pathologist_label[i][0]] = 'acinar_reactive' #2
     else:
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[pathologist_label[i][0]] = 'zero' #0
 
 
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
@@ -634,6 +634,48 @@ for j in range (0, len(barcode_info)):
 df = pd.DataFrame(csv_record)
 df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, header=False)
 
+
+data_list=dict()
+data_list['pathology_label']=[]
+data_list['cluster_label']=[]
+data_list['X']=[]
+data_list['Y']=[]
+
+for i in range (0, len(barcode_info)):
+    if barcode_type[barcode_info[i][0]] == 'zero':
+        continue
+    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+    data_list['cluster_label'].append(barcode_info[i][3])
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
+    
+
+data_list_pd = pd.DataFrame(data_list)
+
+    
+chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    shape = "pathology_label",
+    color=alt.Color('cluster_label:N', scale=alt.Scale(range=colors)),
+    tooltip=['cluster_label']
+).configure_legend(labelFontSize=6, symbolLimit=50)
+
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
+
+chart =alt.Chart(source).mark_point().encode(
+    x = 'petalLength', 
+    y = 'petalWidth', 
+    shape = 'species'
+)
+
+
+alt.Chart(data_list_pd).mark_point().encode(
+    x = 'X', 
+    y = 'Y', 
+    shape = 'pathology_label'
+)
 #############
 '''
 datapoint_label = []
