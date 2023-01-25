@@ -32,7 +32,7 @@ threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' #'knn'
 datatype = 'pattern_equally_spaced' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 50 # choose at random N% ligand cells
+cell_percent = 70 # choose at random N% ligand cells
 neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
@@ -40,7 +40,7 @@ receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 0
+random_active_percent = 20
 
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y):
     receptor_list = []
@@ -370,6 +370,8 @@ ligand_dict_dataset = defaultdict(dict)
 relation_id = 0
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+
+ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
 cell_vs_gene = np.zeros((cell_count,gene_count))
@@ -525,7 +527,6 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 # ready to go
 ################################################################################################
 # do the usual things
-ligand_list = list(ligand_dict_dataset.keys())   
 
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
@@ -544,7 +545,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                
 
 
-'''
+
 
 available_edges = []
 for i in range (0, temp_x.shape[0]):
@@ -580,12 +581,12 @@ for index in random_activation_index:
         
     
     
-    random_activation.append(i)
-    random_activation.append(j)
+    random_activation.append([i,j])
+    
         
     #k = k + lr_count_percell
-random_activation = list(set(random_activation))  
-'''     
+ 
+  
     
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
@@ -626,12 +627,13 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
                 if max_local < count_local:
                     max_local = count_local
-            '''        
-            else:
+                   
+            elif i in all_used and j in all_used:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
-            '''
+                
+            ''' '''
             #local_list[count_local] = local_list[count_local] + 1
 
 
@@ -646,7 +648,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
+    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, random_activation], fp)
 
 '''
 ###########################################################
@@ -686,7 +688,7 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc4_cp50_lrp1_randp0_all_sameoverlapped_highertail'
 options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
@@ -699,10 +701,10 @@ for i in range (0, datapoint_size):
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-#####################################
+#####################################, random_activation
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP = pickle.load(fp) 
+    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, dummy = pickle.load(fp) 
 
               
 total_type = np.zeros((len(lr_database)))
@@ -826,11 +828,12 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_highertail_attention_l1.npy' # tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_overlapped_highertail_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-#**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
+#**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -839,11 +842,12 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     distribution.append(X_attention_bundle[3][index][0])
+    #distribution.append(X_attention_bundle[2][index][0])
 
 max_value = np.max(distribution)
 	
 #attention_scores = np.zeros((2000,2000))
-tweak = 0
+tweak = 1
 distribution = []
 attention_scores = []
 datapoint_size = temp_x.shape[0]
@@ -859,12 +863,13 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
     #    continue
     ###################################
+    l=3#2 ## 
     if tweak == 1:         
-        attention_scores[i][j].append(max_value+(X_attention_bundle[3][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-        distribution.append(max_value+(X_attention_bundle[3][index][0]*(-1)) )
+        attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
+        distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
     else:
-        attention_scores[i][j].append(X_attention_bundle[3][index][0]) 
-        distribution.append(X_attention_bundle[3][index][0])
+        attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+        distribution.append(X_attention_bundle[l][index][0])
 #######################
 
 percentage_value = 100
@@ -965,6 +970,11 @@ for i in range (0, temp_x.shape[0]):
         datapoint_label.append(2)
     else:
         datapoint_label.append(0)
+        
+for i in random_activation:
+    datapoint_label[i[0]] = 1 
+    datapoint_label[i[1]] = 1 
+
 '''
 ########
 plt.gca().set_aspect(1)	
