@@ -30,14 +30,14 @@ args = parser.parse_args()
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
+'''
+distance_measure = 'threshold_dist' # 'knn'  #<-----------
+datatype = 'pattern_equally_spaced' #
 
-#distance_measure = 'threshold_dist' # 'knn'  #<-----------
-#datatype = 'pattern_equally_spaced' #
-
-
+'''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------
-cell_percent = 20 #30 # choose at random N% ligand cells
+cell_percent = 30 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
@@ -45,11 +45,12 @@ receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 0 #20
-active_type = 'midrange_overlap' #'highrange_overlap'
+random_active_percent = 20
+active_type = 'highrange_overlap' #'midrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
     receptor_list = []
     if pattern_id == 1:
+        '''	
         for n in cell_neighborhood:
             i_n = n[0]
             j_n = n[1]
@@ -68,7 +69,7 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
         receptor_list.append([i-1,j])
         receptor_list.append([i,j-1])       
         receptor_list.append([i,j+1]) 
-        '''
+        
         
         
         '''
@@ -319,14 +320,23 @@ for j in range(0, distance_matrix.shape[1]):
             if i not in k_higher:
                 dist_X[i,j] = 0 #-1
             else:
-                cell_neighborhood[i].append(j)          
+                cell_neighborhood[i].append([j, dist_X[i,j]])          
     else:
         for i in range(0, distance_matrix.shape[0]):
             # i to j: ligand is i 
             if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
                 dist_X[i,j] = 0 #-1
             else:
-                cell_neighborhood[i].append(j)
+                cell_neighborhood[i].append([j, dist_X[i,j]])
+		
+	
+
+for cell in range (0, len(cell_neighborhood)):
+    cell_neighborhood_temp = cell_neighborhood[cell] 
+    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1]) # sort based on distance
+    cell_neighborhood[cell] = [] # to record the neighbor cells in that order
+    for items in cell_neighborhood_temp:
+        cell_neighborhood[cell].append(items[0])
 ####################################################################################            
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
@@ -344,7 +354,7 @@ for i in range (0, gene_count):
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
     if active_type == 'highrange_overlap':
-        gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.2, size=len(temp_x))
+        gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.1, size=len(temp_x))
     elif active_type == 'midrange_overlap':
         gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
@@ -689,7 +699,7 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #####################################, random_activation
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, dummy = pickle.load(fp) 
+    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp) 
 
               
 total_type = np.zeros((len(lr_database)))
@@ -739,7 +749,7 @@ for index in range (0, len(row_col)):
 
 percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 5
+    percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -860,7 +870,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 10
+    percentage_value = percentage_value - 5
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
