@@ -30,13 +30,14 @@ args = parser.parse_args()
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
-'''
+
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'pattern_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------
+'''
 cell_percent = 30 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
@@ -348,7 +349,7 @@ gene_distribution_inactive = np.zeros((gene_count, cell_count))
 #loc_list = np.random.randint(3, 30, size=gene_count)
 for i in range (0, gene_count):
     #gene_distribution_inactive[i,:] = np.random.normal(loc=loc_list[i],scale=1,size=len(temp_x)) # L1 # you may want to shuffle
-    gene_exp_list = np.random.normal(loc=10+i,scale=1,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=4+i,scale=1,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
@@ -360,8 +361,11 @@ for i in range (0, gene_count):
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
     print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
-    
 
+    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+10, scale=.8, size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_noise[i,:] = gene_exp_list  
+	
 #################################################
 gene_ids = []
 for i in range (0, gene_count):
@@ -747,9 +751,9 @@ for index in range (0, len(row_col)):
         attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
         distribution.append(edge_weight[index][1]*edge_weight[index][0])
 
-percentage_value = 100
+percentage_value = 65
 while percentage_value > 0:
-    percentage_value = percentage_value - 10
+    percentage_value = percentage_value - 1
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -823,13 +827,13 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_highertail_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_overlapped_highertail_high_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
@@ -868,9 +872,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
         distribution.append(X_attention_bundle[l][index][0])
 #######################
 
-percentage_value = 100
+percentage_value = 60
 while percentage_value > 0:
-    percentage_value = percentage_value - 5
+    percentage_value = percentage_value - 1
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
