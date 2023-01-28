@@ -46,7 +46,7 @@ receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
 noise_add = 0 #2 #1
-random_active_percent = 20
+random_active_percent = 50
 active_type = 'highrange_overlap' #'midrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
     receptor_list = []
@@ -557,10 +557,10 @@ for index in random_activation_index:
     p = p + 1
                 
     ligand_gene = lr_database[lr_i][0]
-    cell_vs_gene[i,ligand_gene] = gene_distribution_noise[ligand_gene, i] 
+    cell_vs_gene[i,ligand_gene] = cell_vs_gene[i,ligand_gene] + gene_distribution_noise[ligand_gene, i] 
     
     receptor_gene = lr_database[lr_i][1]
-    cell_vs_gene[j,receptor_gene] = gene_distribution_noise[receptor_gene, j] 
+    cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[receptor_gene, j] 
     
     if cells_ligand_vs_receptor[i][j][lr_i][0] == ligand_gene and cells_ligand_vs_receptor[i][j][lr_i][1] == receptor_gene:
         cells_ligand_vs_receptor[i][j][lr_i][2] = cell_vs_gene[i,ligand_gene]*cell_vs_gene[j,receptor_gene]
