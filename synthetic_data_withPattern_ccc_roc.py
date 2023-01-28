@@ -828,7 +828,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_highertail_high_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_overlapped_highertail_randomEdge_noise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
