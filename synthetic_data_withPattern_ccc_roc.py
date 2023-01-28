@@ -30,14 +30,14 @@ args = parser.parse_args()
 #spot_diameter = 89.43 #pixels
 threshold_distance = 1.3 #
 k_nn = 8 # #5 = h
-
+'''
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'pattern_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------
-'''
+
 cell_percent = 30 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
@@ -45,7 +45,7 @@ lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 0 #2 #1
+noise_add = 1 #0 #2 #
 random_active_percent = 50
 active_type = 'highrange_overlap' #'midrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
@@ -487,19 +487,19 @@ for i in ligand_cells:
 # choose some random cells for activating without pattern
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_count_percell)+'_randp'+str(random_active_percent)+'_'+receptor_connections#'_close'
+# randomly select noise percentage cell for adding noise
 if noise_add == 1:
-    for i in range (0, gene_count):
-        gene_distribution_noise = np.random.normal(loc=0, scale=0.5, size = cell_vs_gene.shape[0])
-        np.random.shuffle(gene_distribution_noise)
-        cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
-    options = options + '_noisy'
+    gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
+    np.random.shuffle(gene_distribution_noise)
+    options = options + '_noise' + str(noise_percent)
 elif noise_add == 2:
-    for i in range (0, gene_count):
-        gene_distribution_noise = np.random.normal(loc=0, scale=6, size = cell_vs_gene.shape[0])
-        np.random.shuffle(gene_distribution_noise)
-        cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
-    options = options + '_heavy_noisy'
+    gene_distribution_noise = np.random.normal(loc=0, scale=1, size = cell_vs_gene.shape[0])
+    np.random.shuffle(gene_distribution_noise)
+    options = options + '_heavyNoise' + str(noise_percent)
     
+noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
+for cell in noise cells:
+	cell_vs_gene[cell,:] = cell_vs_gene[cell,:] + gene_distribution_noise[cell]
 # take quantile normalization.
 '''
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
