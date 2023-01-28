@@ -345,6 +345,7 @@ for cell in range (0, len(cell_neighborhood)):
 cell_count = len(temp_x)
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
+gene_distribution_noise = np.zeros((gene_count, cell_count))
 #loc_list = np.random.randint(3, 6, size=gene_count)
 #loc_list = np.random.randint(3, 30, size=gene_count)
 for i in range (0, gene_count):
@@ -365,7 +366,7 @@ for i in range (0, gene_count):
     gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+10, scale=.8, size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_noise[i,:] = gene_exp_list  
-	
+    print('noise: %g to %g'%(np.min(gene_distribution_noise[i,:]),np.max(gene_distribution_noise[i,:]) ))
 #################################################
 gene_ids = []
 for i in range (0, gene_count):
@@ -556,10 +557,10 @@ for index in random_activation_index:
     p = p + 1
                 
     ligand_gene = lr_database[lr_i][0]
-    cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i] 
+    cell_vs_gene[i,ligand_gene] = gene_distribution_noise[ligand_gene, i] 
     
     receptor_gene = lr_database[lr_i][1]
-    cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j] 
+    cell_vs_gene[j,receptor_gene] = gene_distribution_noise[receptor_gene, j] 
     
     if cells_ligand_vs_receptor[i][j][lr_i][0] == ligand_gene and cells_ligand_vs_receptor[i][j][lr_i][1] == receptor_gene:
         cells_ligand_vs_receptor[i][j][lr_i][2] = cell_vs_gene[i,ligand_gene]*cell_vs_gene[j,receptor_gene]
@@ -751,9 +752,9 @@ for index in range (0, len(row_col)):
         attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
         distribution.append(edge_weight[index][1]*edge_weight[index][0])
 
-percentage_value = 65
+percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 1
+    percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
@@ -827,7 +828,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_overlapped_highertail_high_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_highertail_high_noisy_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
@@ -872,9 +873,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
         distribution.append(X_attention_bundle[l][index][0])
 #######################
 
-percentage_value = 60
+percentage_value = 70
 while percentage_value > 0:
-    percentage_value = percentage_value - 1
+    percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
