@@ -37,21 +37,22 @@ datatype = 'pattern_equally_spaced' #
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------
-
-cell_percent = 30 # choose at random N% ligand cells
+'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
+cell_percent = 20 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 1 #0 #2 #
-random_active_percent = 50
-active_type = 'highrange_overlap' #'midrange_overlap' #
+noise_add = 2  #2 #1
+noise_percent = 30
+random_active_percent = 0
+active_type = 'midrange_overlap' #'highrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
     receptor_list = []
     if pattern_id == 1:
-        '''	
+        	
         for n in cell_neighborhood:
             i_n = n[0]
             j_n = n[1]
@@ -71,7 +72,7 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
         receptor_list.append([i,j-1])       
         receptor_list.append([i,j+1]) 
         
-        
+        '''
         
         '''
         receptor_list.append([i+1,j])
@@ -399,8 +400,24 @@ cell_vs_gene = np.zeros((cell_count,gene_count))
 for i in range (0, gene_count):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 
+noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
+if noise_add == 1:
+    gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
+    np.random.shuffle(gene_distribution_noise)	
+    
+    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+elif noise_add == 2:
+    gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
+    np.random.shuffle(gene_distribution_noise)	
+    
+    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    
 
-
+'''	
+for i in range (0, len(noise_cells)):
+    cell = noise_cells[i]
+    cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i]
+'''
 # record true positive connections    
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
@@ -469,12 +486,19 @@ for i in ligand_cells:
             #all_receptor.extend(receptor_list)                         
             ligand_gene = lr_database[lr_i][0]
             cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i]
+            if i in noise_cells:
+                cell_vs_gene[i, ligand_gene] = cell_vs_gene[i, ligand_gene] + gene_distribution_noise[i]
+
             all_used.append(i)
             receptor_gene = lr_database[lr_i][1]
             for rec in receptor_list:                
                 j = get_cell[rec[0]][rec[1]]
                 all_used.append(j)
                 cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
+                if j in noise_cells:
+                    cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
+             
+                
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
                 #########
@@ -486,20 +510,7 @@ for i in ligand_cells:
                 
 # choose some random cells for activating without pattern
 
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_count_percell)+'_randp'+str(random_active_percent)+'_'+receptor_connections#'_close'
-# randomly select noise percentage cell for adding noise
-if noise_add == 1:
-    gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)
-    options = options + '_noise' + str(noise_percent)
-elif noise_add == 2:
-    gene_distribution_noise = np.random.normal(loc=0, scale=1, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)
-    options = options + '_heavyNoise' + str(noise_percent)
-    
-noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
-for cell in noise cells:
-	cell_vs_gene[cell,:] = cell_vs_gene[cell,:] + gene_distribution_noise[cell]
+
 # take quantile normalization.
 '''
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
@@ -523,7 +534,12 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
-            for gene_rec in rec_list:                
+            for gene_rec in rec_list:   
+                if i in noise_cells:
+                    cell_vs_gene[i][gene_index[gene]] = cell_vs_gene[i][gene_index[gene]] + gene_distribution_noise[i]
+                if j in noise_cells:
+                    cell_vs_gene[j][gene_index[gene_rec]]  = cell_vs_gene[j][gene_index[gene_rec]]  + gene_distribution_noise[j]
+              
                 communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]     
                 communication_score = max(communication_score, 0)
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
@@ -619,6 +635,13 @@ print('max local %d'%max_local)
 print('random_activation %d'%len(random_activation_index))
 print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
+
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_lrp'+str(lr_count_percell)+'_randp'+str(random_active_percent)+'_'+receptor_connections+'_noise'+str(noise_percent)#'_close'
+if noise_add == 1:
+    options = options + '_lowNoise'
+if noise_add == 2:
+    options = options + '_heavyNoise'
+options = options+ '_' + active_type
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
