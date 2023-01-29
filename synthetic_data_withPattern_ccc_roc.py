@@ -858,6 +858,7 @@ X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthe
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
@@ -896,9 +897,9 @@ for index in range (0, X_attention_bundle[0].shape[1]):
         distribution.append(X_attention_bundle[l][index][0])
 #######################
 
-percentage_value = 70
+percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 10
+    percentage_value = percentage_value - 5
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
