@@ -39,12 +39,10 @@ if __name__ == "__main__":
     coordinates = np.load(generated_data_fold+'coordinates.npy')
     cell_barcode = np.load(generated_data_fold+'barcode.npy', allow_pickle=True)
     barcode_info=[]
-    i=0
-    with open(barcode_file) as file:
-        tsv_file = csv.reader(file, delimiter="\t")
-        for line in tsv_file:
-            barcode_info.append([cell_barcode[0], coordinates[i,0],coordinates[i,1],0])
-            i=i+1
+
+    for i in range (0, coordinates.shape[0]):
+        barcode_info.append([cell_barcode[i], coordinates[i,0],coordinates[i,1],0])
+
 
 
     ############################################################################################################
