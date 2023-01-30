@@ -36,7 +36,6 @@ spot_diameter = 89.43 #pixels
 ############
 
 ############
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
 barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
 barcode_info=[]
 #barcode_info.append("")
@@ -348,6 +347,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 ccc_index_dict[j] = ''
                 edge_weight.append([dist_X[i,j], mean_ccc])
             #elif i==j: # if not onlyccc, then remove the condition i==j
+                
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
@@ -389,15 +389,18 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 
                 if max_local < count_local:
                     max_local = count_local
+            '''
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
+            '''
             local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
@@ -433,16 +436,19 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 
                 if max_local < count_local:
                     max_local = count_local
+           
             else:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
+           
             #local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
 print('count local %d'%count_local) 
+
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
@@ -792,21 +798,21 @@ import networkx as nx
 
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
-for i in range (0, len(barcode_info)):
+for i in range (0, 200): #len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 0: #stroma
         marker_size = 'circle'
     elif barcode_type[barcode_info[i][0]] == 1: #tumor
         marker_size = 'box'
     else:
         marker_size = 'ellipse'
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		#, physics=False
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		#
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
 nt.from_nx(g)
-for i in range (0, datapoint_size):
-    for j in range (0, datapoint_size):
+for i in range (0, 200): #datapoint_size):
+    for j in range (0, 200): #datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         
