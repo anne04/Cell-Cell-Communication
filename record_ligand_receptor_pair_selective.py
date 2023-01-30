@@ -574,7 +574,7 @@ for j in range (0, datapoint_size):
     for i in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
-        s = min(0,len(atn_score_list)-1)
+        #s = min(0,len(atn_score_list)-1)
         for k in range (0, len(atn_score_list)):
             if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                 connecting_edges[i][j] = 1
@@ -799,8 +799,8 @@ for i in range (0, len(barcode_info)):
         marker_size = 'box'
     else:
         marker_size = 'ellipse'
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		#, physics=False
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
