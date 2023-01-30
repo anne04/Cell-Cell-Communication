@@ -24,7 +24,7 @@ def main(args):
     gene_ids = list(adata_h5.var_names)
     cell_coordinates = adata_h5.obsm['spatial']
     cell_coordinates = np.array(cell_coordinates)
-    cell_barcode = list(adata_h5.obs.index)
+    cell_barcode = np.array(adata_h5.obs.index)
 
     # combine cell barcodes and coordinates into one data structure
     barcode_info=[]
