@@ -798,7 +798,7 @@ import networkx as nx
 
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
-for i in range (0, 200): #len(barcode_info)):
+for i in range (0, len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 0: #stroma
         marker_size = 'circle'
     elif barcode_type[barcode_info[i][0]] == 1: #tumor
@@ -811,8 +811,8 @@ for i in range (0, 200): #len(barcode_info)):
 #g.toggle_physics(True)
 nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
 nt.from_nx(g)
-for i in range (0, 200): #datapoint_size):
-    for j in range (0, 200): #datapoint_size):
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         
