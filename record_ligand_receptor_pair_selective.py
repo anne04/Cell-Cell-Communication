@@ -799,7 +799,7 @@ import networkx as nx
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-	label_str =  str(i)+'_'
+	label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
 	if barcode_type[barcode_info[i][0]] == 0: #stroma
 		marker_size = 'circle'
 		label_str = label_str + 'stroma'
@@ -822,7 +822,7 @@ for i in range (0, datapoint_size):
         #print(len(atn_score_list))
         
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            #if attention_scores[i][j][k] >= threshold_down:
+            if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
@@ -830,7 +830,7 @@ for i in range (0, datapoint_size):
 #nt.show('mygraph.html')
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_all.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_th95.dot")
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
