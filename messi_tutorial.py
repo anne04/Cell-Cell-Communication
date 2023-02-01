@@ -21,8 +21,8 @@ from messi.data_processing import *
 from messi.hme import hme
 from messi.gridSearch import gridSearch
 
-input_path = '../../input/merfish/'
-output_path = '../output/'
+input_path = 'input/'
+output_path = 'output/'
 data_type = 'merfish'
 sex = 'Female'
 behavior = 'Parenting'
@@ -70,11 +70,11 @@ lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
 lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
 l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
-l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
-r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+l_u_search = [] # set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+r_u_search = [] # set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
-
+'''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'gene_ids_messi_us', 'rb') as fp: #b, b_1, a
     genes_list_us_messi = pickle.load(fp) 
 
@@ -128,13 +128,13 @@ l_u_search = set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
 r_u_search = set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
-
+'''
 # read in meta information about the dataset # meta_all = cell x metadata
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
 response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_space, sex, l_u, r_u)  # TO BE MODIFIED: number of responses
 
 
-genes_list_u = genes_list_us_messi
+#genes_list_u = genes_list_us_messi
    
 
 
@@ -158,14 +158,15 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
                                                 bregma=bregma)
 ##################################################################
 data_sets = []
-
+data_sets_gatconv = []
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     # remove genes which are not in common list genes_list_us_messi
    
-    
+    '''
     hp_genes_filtered = hp_genes[genes_list_us_messi]   
     hp_genes = hp_genes_filtered
+    '''
     #####################
     if hp is not None:
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
@@ -173,12 +174,23 @@ for animal_id, bregma in meta_per_dataset_train:
     else:
         hp_columns = None
         hp_np = None
+        
+        
     hp_cor_columns = dict(zip(hp_cor.columns, range(0, len(hp_cor.columns))))
     hp_genes_columns = dict(zip(hp_genes.columns, range(0, len(hp_genes.columns))))
     data_sets.append([hp_np, hp_columns, hp_cor.to_numpy(), hp_cor_columns,
                       hp_genes.to_numpy(), hp_genes_columns])
+    
+    
+    cell_barcodes = data_sets[0][0][:,0]
+    coordinates = data_sets[0][0][:,5:7]
+    cell_vs_gene  = data_sets[0][4]
+    data_sets_gatconv.append([cell_barcodes, coordinates, cell_vs_gene])
+    
     del hp, hp_cor, hp_genes
 
+
+    
 datasets_train = data_sets
 ################
 data_sets = []
@@ -206,6 +218,8 @@ for animal_id, bregma in meta_per_dataset_test:
 datasets_test = data_sets
 
 del data_sets
+
+
 
 #############
 if data_type == 'merfish_rna_seq':
