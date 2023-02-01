@@ -36,8 +36,7 @@ datatype = 'pattern_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
-datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------
-'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
+datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 cell_percent = 20 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
@@ -45,7 +44,7 @@ lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 2  #2 #1
+noise_add = 1  #2 #1
 noise_percent = 30
 random_active_percent = 0
 active_type = 'midrange_overlap' #'highrange_overlap' #
@@ -485,19 +484,24 @@ for i in ligand_cells:
             # not receptors nor the ligands are used
             #all_receptor.extend(receptor_list)                         
             ligand_gene = lr_database[lr_i][0]
+            receptor_gene = lr_database[lr_i][1]
+            
             cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i]
+            cell_vs_gene[i,receptor_gene] = 0 ## CHECK ##
             if i in noise_cells:
                 cell_vs_gene[i, ligand_gene] = cell_vs_gene[i, ligand_gene] + gene_distribution_noise[i]
-
+                cell_vs_gene[i,receptor_gene] = cell_vs_gene[i,receptor_gene] + gene_distribution_noise[i] ## CHECK ##
+                
             all_used.append(i)
             receptor_gene = lr_database[lr_i][1]
             for rec in receptor_list:                
                 j = get_cell[rec[0]][rec[1]]
                 all_used.append(j)
                 cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
+                cell_vs_gene[j,ligand_gene] = 0 ## CHECK ##
                 if j in noise_cells:
                     cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
-             
+                    cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + cell_vs_gene[j,ligand_gene] ## CHECK ##
                 
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
@@ -642,6 +646,8 @@ if noise_add == 1:
 if noise_add == 2:
     options = options + '_heavyNoise'
 options = options+ '_' + active_type
+options = options+ '_' + 'wFeature'
+
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
@@ -858,7 +864,7 @@ X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthe
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
