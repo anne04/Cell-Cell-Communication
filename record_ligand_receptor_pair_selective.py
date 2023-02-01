@@ -799,32 +799,38 @@ import networkx as nx
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 0: #stroma
-        marker_size = 'circle'
-    elif barcode_type[barcode_info[i][0]] == 1: #tumor
-        marker_size = 'box'
-    else:
-        marker_size = 'ellipse'
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		#
+	label_str =  str(i)+'_'
+	if barcode_type[barcode_info[i][0]] == 0: #stroma
+		marker_size = 'circle'
+		label_str = label_str + 'stroma'
+	elif barcode_type[barcode_info[i][0]] == 1: #tumor
+		marker_size = 'box'
+		label_str = label_str + 'tumor'
+	else:
+		marker_size = 'ellipse'
+		label_str = label_str + 'acinar_reactive'
+		
+	g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), pos = str(x_index[i])+","+str(y_index[i])+" !", label = label_str, physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		# str(i)
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
-nt.from_nx(g)
+#nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            if attention_scores[i][j][k] >= threshold_down:
+            #if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
-                title_str =  ""+lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
-                nt.add_edge(int(i), int(j), title=title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+                title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
+                g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+				# title=
+#nt.show('mygraph.html')
 
-nt.show('mygraph.html')
-
-
+from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_all.dot")
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
