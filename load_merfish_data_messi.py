@@ -108,6 +108,7 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
 ##################################################################
 data_sets = []
 data_sets_gatconv = []
+i = 0
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     
@@ -125,18 +126,18 @@ for animal_id, bregma in meta_per_dataset_train:
     data_sets.append([hp_np, hp_columns, hp_cor.to_numpy(), hp_cor_columns,
                       hp_genes.to_numpy(), hp_genes_columns])
         
-    cell_barcodes = data_sets[0][0][:,0]
-    coordinates = data_sets[0][0][:,5:7]
-    cell_vs_gene  = data_sets[0][4]
-    cell_vs_animal_id_sex_behavior_bregma = data_sets[0][0][:,1:5]
-    cell_vs_class_neuron_cluster_id = data_sets[0][0][:,7:]
-    gene_ids = data_sets[0][5]
+    cell_barcodes = data_sets[i][0][:,0]
+    coordinates = data_sets[i][0][:,5:7]
+    cell_vs_gene  = data_sets[i][4]
+    cell_vs_animal_id_sex_behavior_bregma = data_sets[i][0][:,1:5]
+    cell_vs_class_neuron_cluster_id = data_sets[i][0][:,7:]
+    gene_ids = data_sets[i][5]
     data_sets_gatconv.append([cell_barcodes, coordinates, cell_vs_gene, gene_ids, cell_vs_animal_id_sex_behavior_bregma, cell_vs_class_neuron_cluster_id])
-    
+    i = i + 1
     del hp, hp_cor, hp_genes
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'messi_merfish_data', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'messi_merfish_data', 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([data_sets_gatconv, lr_pairs], fp) 
     
