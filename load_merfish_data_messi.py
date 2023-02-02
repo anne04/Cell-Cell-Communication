@@ -130,7 +130,8 @@ for animal_id, bregma in meta_per_dataset_train:
     cell_vs_gene  = data_sets[0][4]
     cell_vs_animal_id_sex_behavior_bregma = data_sets[0][0][:,1:5]
     cell_vs_class_neuron_cluster_id = data_sets[0][0][:,7:]
-    data_sets_gatconv.append([cell_barcodes, coordinates, cell_vs_gene, cell_vs_animal_id_sex_behavior_bregma, cell_vs_class_neuron_cluster_id])
+    gene_ids = data_sets[0][5]
+    data_sets_gatconv.append([cell_barcodes, coordinates, cell_vs_gene, gene_ids, cell_vs_animal_id_sex_behavior_bregma, cell_vs_class_neuron_cluster_id])
     
     del hp, hp_cor, hp_genes
 
