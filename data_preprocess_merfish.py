@@ -20,25 +20,37 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
-
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') 
-parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
-parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
-parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/Embedding_data_ccc_gatconv/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='messi_merfish_data', help='The name of dataset')
+#parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-spot_diameter = 89.43 #pixels
-
+spot_diameter = 100 # micrometer
+threshold_distance = spot_diameter
+distance_measure = 'threshold_distance'
 ############
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'messi_merfish_data', 'wb') as rb:    
+with gzip.open(args.data_path + args.data_name, 'rb') as fp:    
     data_sets_gatconv, lr_pairs = pickle.load(fp) 
 ############
+# bregma = 16
+bregma = data_sets_gatconv[0][4][0][3]
+animal_id = data_sets_gatconv[0][4][0][0]
 cell_barcodes = data_sets_gatconv[0][0]
 coordinates = data_sets_gatconv[0][1]
 cell_vs_gene = data_sets_gatconv[0][2]
-gene_ids = data_sets_gatconv[0][3]
+##############################################
+gene_index = dict()
+gene_list = data_sets_gatconv[0][3].keys()
+for gene in gene_list:
+    gene_index[data_sets_gatconv[0][3][gene]] = gene
+    
+gene_ids = []
+gene_list = sorted(gene_index.keys())
+for index in gene_list:
+    gene_ids.append(gene_index[index])
+
 ############
 barcode_info=[]
 for i in range (0, len(cell_barcodes)):
@@ -79,14 +91,14 @@ for gene in gene_ids:
 	
 ligand_dict_dataset = defaultdict(list)
 for i in range (0, len(lr_pairs)):
-    ligand = lr_pairs[i][0]
+    ligand = lr_pairs['ligand'][i]  
     if ligand not in gene_info:
         continue
     '''
     if df["annotation"][i] == 'ECM-Receptor':    
         continue
     '''
-    receptor = lr_pairs[i][1]
+    receptor = lr_pairs['receptor'][i]  
     if receptor not in gene_info:
         continue
         
@@ -119,6 +131,8 @@ for gene in list(ligand_dict_dataset.keys()):
     for receptor_gene in ligand_dict_dataset[gene]:
         relation_id[gene][receptor_gene] = count
         count = count + 1
+        
+print('number of relations found %d'%count)        
 ##################################################################
 
 ligand_list = list(ligand_dict_dataset.keys())  
@@ -194,8 +208,8 @@ for gene in ligand_list[start_index: end_index]: #[0:5]:
         #print("%d - %d , max %g and min %g "%(i, count_rec, max_score, min_score))
     
 
-	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'merfish_mouse_cortex_communication_scores', 'wb') as fp: #b, b_1, a
+print("total edges possible: %d "%(count_total_edges))	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'merfish_mouse_cortex_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
 
@@ -211,7 +225,7 @@ local_list = np.zeros((102))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4: 
+        if dist_X[i,j] > 0: # distance_matrix[i][j] <= spot_diameter*4: 
             count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
@@ -240,8 +254,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
             local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
-print('count local %d'%count_local) 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+print('max_local %d'%max_local) 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
