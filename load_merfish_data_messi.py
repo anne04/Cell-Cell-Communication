@@ -1,4 +1,4 @@
-%matplotlib inline
+# data downloaded by readydata.py from MESSI
 
 import copy
 import os
@@ -25,10 +25,12 @@ input_path = 'input/'
 output_path = 'output/'
 data_type = 'merfish'
 sex = 'Female'
-behavior = 'Parenting'
+behavior = 'Virgin_Parenting' #'Parenting'
 behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
+data_options = sex + '_' + behavior + '' + current_cell_type
+
 
 grid_search = True #False #
 n_sets = 5  # for example usage only; we recommend 5
@@ -137,7 +139,7 @@ for animal_id, bregma in meta_per_dataset_train:
     del hp, hp_cor, hp_genes
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'messi_merfish_data', 'wb') as fp:  #b, a:[0:5]           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'messi_merfish_data_'+data_options, 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     pickle.dump([data_sets_gatconv, lr_pairs], fp) 
     
