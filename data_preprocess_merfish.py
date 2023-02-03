@@ -20,26 +20,37 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
+
+options = 'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/Embedding_data_ccc_gatconv/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='messi_merfish_data', help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 spot_diameter = 100 # micrometer
 threshold_distance = spot_diameter
-distance_measure = 'threshold_distance'
+distance_measure = 'knn' #'threshold_distance'
+k_nn = 50
+
+
+
 ############
 with gzip.open(args.data_path + args.data_name, 'rb') as fp:    
     data_sets_gatconv, lr_pairs = pickle.load(fp) 
 ############
-# bregma = 16
-bregma = data_sets_gatconv[0][4][0][3]
-animal_id = data_sets_gatconv[0][4][0][0]
-cell_barcodes = data_sets_gatconv[0][0]
-coordinates = data_sets_gatconv[0][1]
-cell_vs_gene = data_sets_gatconv[0][2]
+# animal_id = 16
+bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
+bregma_id = 3
+animal_id = 20 #data_sets_gatconv[0][4][0][0]
+
+for index in range (0,len(data_sets_gatconv)):
+    if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+        cell_barcodes = data_sets_gatconv[index][0]
+        coordinates = data_sets_gatconv[index][1]
+        cell_vs_gene = data_sets_gatconv[index][2]
+        break
 ##############################################
 gene_index = dict()
 gene_list = data_sets_gatconv[0][3].keys()
@@ -209,9 +220,10 @@ for gene in ligand_list[start_index: end_index]: #[0:5]:
     
 
 print("total edges possible: %d "%(count_total_edges))	
+'''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'merfish_mouse_cortex_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-
+'''
 
 
 ################################################################################
@@ -255,11 +267,14 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 
 print('len row col %d'%len(row_col))
 print('max_local %d'%max_local) 
+
+data_options = options + '_' + str(bregma[bregma_id ]) + '_' + str(animal_id) 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_knn_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
-
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'merfish_mouse_cortex_records_GAT_knn_cell_vs_gene_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
 
 ###########################################################Visualization starts ##################
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
