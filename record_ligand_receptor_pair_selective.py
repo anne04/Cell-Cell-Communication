@@ -487,7 +487,7 @@ with open(barcode_file) as file:
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_kneepoint_r1_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_kneepoint_woBlankEdges_r1_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -638,13 +638,26 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, header=False)
-
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_woBlankEdges.csv', index=False, header=False)
+############################
 import altairThemes
+import altair as alt
 # register the custom theme under a chosen name
 #alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 #alt.themes.enable("publishTheme")
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[pathologist_label[i][0]] = '2_tumor'
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
+    else:
+        barcode_type[pathologist_label[i][0]] = 'zero' #0
+
 
 data_list=dict()
 data_list['pathology_label']=[]
@@ -662,9 +675,9 @@ for i in range (0, len(barcode_info)):
     
 
 data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot_woBlankEdges.csv', index=False)
 
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv')
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot_woBlankEdges.csv')
 
 set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
