@@ -878,7 +878,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 max_value = np.max(distribution)
 	
 #attention_scores = np.zeros((2000,2000))
-tweak = 1
+tweak = 0
 distribution = []
 attention_scores = []
 datapoint_size = temp_x.shape[0]
@@ -905,7 +905,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 percentage_value = 100
 while percentage_value > 0:
-    percentage_value = percentage_value - 5
+    percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
