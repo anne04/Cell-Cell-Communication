@@ -277,41 +277,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_co
     pickle.dump(cell_vs_gene, fp)
 
 ###########################################################Visualization starts ##################
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
 
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
-    else:
-        barcode_type[pathologist_label[i][0]] = 'zero' #0
-
-
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=[]
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
-        i=i+1
-        
-#####
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_kneepoint_r1_attention_l1.npy' #a
+X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -347,11 +314,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 
 ##############
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-#    row_col, edge_weight = pickle.load(fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_knn_'+data_options+'_all_kneepoint_woBlankedge', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -462,7 +426,7 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records' + data_options + '.csv', index=False, header=False)
 
 import altairThemes
 # register the custom theme under a chosen name
