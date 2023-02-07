@@ -31,7 +31,7 @@ parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+opti
 args = parser.parse_args()
 spot_diameter = 100 # micrometer
 threshold_distance = spot_diameter
-distance_measure = 'knn' #'threshold_distance'
+distance_measure = 'threshold_distance' #'knn' #
 k_nn = 50
 
 
@@ -42,8 +42,8 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 ############
 # animal_id = 16
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
-bregma_id = 3
-animal_id = 20 #data_sets_gatconv[0][4][0][0]
+bregma_id = 0
+animal_id = 24 #data_sets_gatconv[0][4][0][0]
 
 for index in range (0,len(data_sets_gatconv)):
     if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
@@ -267,10 +267,11 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 
 print('len row col %d'%len(row_col))
 print('max_local %d'%max_local) 
-
-data_options = options + '_' + str(bregma[bregma_id ]) + '_' + str(animal_id) 
+print('total cell %d'%len(cells_ligand_vs_receptor)) 
+data_options = options + '_' +distance_measure+'_' + str(bregma[bregma_id ]) + '_' + str(animal_id) 
+print(data_options)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_knn_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:  # knn_         
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'merfish_mouse_cortex_records_GAT_knn_cell_vs_gene_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:
@@ -278,7 +279,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_co
 
 ###########################################################Visualization starts ##################
 
-X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_attention_l1.npy' #a
+X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_thdist_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
