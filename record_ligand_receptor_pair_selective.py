@@ -827,7 +827,7 @@ for i in range (0, len(barcode_info)):
    		# str(i)
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
+nt = Network( directed=True) #"500px", "500px",, filter_menu=True
 #nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
@@ -835,7 +835,7 @@ for i in range (0, datapoint_size):
         #print(len(atn_score_list))
         
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            #if attention_scores[i][j][k] >= threshold_down:
+            if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
@@ -843,7 +843,7 @@ for i in range (0, datapoint_size):
 #nt.show('mygraph.html')
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_all.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
