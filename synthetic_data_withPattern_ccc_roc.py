@@ -28,14 +28,16 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 #spot_diameter = 89.43 #pixels
-threshold_distance = 1.3 #
+threshold_distance = 2.3 #1.3
 k_nn = 8 # #5 = h
-'''
+
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
+'''
 datatype = 'pattern_equally_spaced' #
 
-'''
+
 distance_measure = 'knn'  #'threshold_dist' # <-----------
+'''
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 cell_percent = 20 # choose at random N% ligand cells
 #neighbor_percent = 70
@@ -645,8 +647,9 @@ if noise_add == 1:
     options = options + '_lowNoise'
 if noise_add == 2:
     options = options + '_heavyNoise'
-options = options+ '_' + active_type
-options = options+ '_' + 'wFeature'
+options = options+ '_' + active_type + '_' + distance_measure
+
+#options = options+ '_' + 'wFeature'
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
@@ -864,7 +867,8 @@ X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthe
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_wFeature_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_wFeature_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_lowNoise_threshold_distance_attention_l1.npy' #wFeature
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
@@ -1098,7 +1102,7 @@ for i in range (0, len(temp_x)):
    		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network( directed=True) #"500px", "500px",
+nt = Network(directed=True) #"500px", "500px",
 nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
