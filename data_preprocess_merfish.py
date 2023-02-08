@@ -297,11 +297,12 @@ distribution = []
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
-    #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    #distribution.append(attention_scores[i][j])
+    #attention_scores[i][j].append(X_attention_bundle[1][index][0]) #X_attention_bundle[2][index][0]
+    #distribution.append(X_attention_bundle[1][index][0])
     attention_scores[i][j].append(X_attention_bundle[3][index][0]) #X_attention_bundle[2][index][0]
     distribution.append(X_attention_bundle[3][index][0])
 ##############
+'''
 attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
@@ -314,7 +315,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     j = X_attention_bundle[0][1][index]
     adjacency_matrix [i][j] = 1
 
-
+'''
 ##############
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_knn_'+data_options+'_all_kneepoint_woBlankedge', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
@@ -362,7 +363,7 @@ for j in range (0, datapoint_size):
                 ccc_index_dict[j] = ''
 '''
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 99.9)
+threshold_down =  np.percentile(sorted(distribution), 95)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, datapoint_size):
