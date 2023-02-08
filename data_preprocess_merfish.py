@@ -279,7 +279,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_co
 
 ###########################################################Visualization starts ##################
 
-X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_thdist_attention_l1.npy' #a
+#X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_thdist_attention_l1.npy' #a
+X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_p11_24_thdist_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -361,7 +362,7 @@ for j in range (0, datapoint_size):
                 ccc_index_dict[j] = ''
 '''
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 99.9)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, datapoint_size):
@@ -436,31 +437,31 @@ import altairThemes
 #alt.themes.enable("publishTheme")
 
 data_list=dict()
-data_list['pathology_label']=[]
+#data_list['pathology_label']=[]
 data_list['component_label']=[]
 data_list['X']=[]
 data_list['Y']=[]
 
 for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+    #if barcode_type[barcode_info[i][0]] == 0:
+    #    continue
+    #data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
     data_list['component_label'].append(barcode_info[i][3])
     data_list['X'].append(barcode_info[i][1])
     data_list['Y'].append(-barcode_info[i][2])
     
 
 data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_'+data_options+'_tissue_plot.csv', index=False)
 
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot.csv')
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_'+data_options+'_tissue_plot.csv')
 
 set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
-chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1, size=2).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = "pathology_label",
+    #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
     tooltip=['component_label']
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
