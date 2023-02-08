@@ -28,17 +28,16 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 #spot_diameter = 89.43 #pixels
-threshold_distance = 2.3 #1.3
+threshold_distance = 1.3 #2.3 #
 k_nn = 8 # #5 = h
 
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
-'''
+
 datatype = 'pattern_equally_spaced' #
-
-
-distance_measure = 'knn'  #'threshold_dist' # <-----------
 '''
+distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
+'''
 cell_percent = 20 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
@@ -53,7 +52,7 @@ active_type = 'midrange_overlap' #'highrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
     receptor_list = []
     if pattern_id == 1:
-        	
+        '''	
         for n in cell_neighborhood:
             i_n = n[0]
             j_n = n[1]
@@ -73,7 +72,7 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
         receptor_list.append([i,j-1])       
         receptor_list.append([i,j+1]) 
         
-        '''
+        
         
         '''
         receptor_list.append([i+1,j])
@@ -116,9 +115,9 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
 
 def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
-        x_max = 50 #50 
+        x_max = 100 #50 #50 
         x_min = 0
-        y_max = 50 #20 #30 
+        y_max = 100 #50 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -282,11 +281,11 @@ def get_data(datatype):
 temp_x, temp_y, ccc_region = get_data(datatype)
 #############################################
 print(len(temp_x))
-plt.gca().set_aspect(1)	
-plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
-save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
-plt.clf()
+#plt.gca().set_aspect(1)	
+#plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
+#save_path = '/cluster/home/t116508uhn/64630/'
+#plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
+#plt.clf()
 
 
 get_cell = defaultdict(dict)  
@@ -647,10 +646,26 @@ if noise_add == 1:
     options = options + '_lowNoise'
 if noise_add == 2:
     options = options + '_heavyNoise'
-options = options+ '_' + active_type + '_' + distance_measure
+
+total_cells = len(cells_ligand_vs_receptor)
+
+options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
+
+lig_rec_dict_TP_temp = defaultdict(dict)
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            lig_rec_dict_TP_temp[i][j] = []
+            
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            for k in range (0, len(lig_rec_dict_TP[i][j])):
+               lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
+            
+lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 #options = options+ '_' + 'wFeature'
-
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
@@ -663,17 +678,19 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     
 '''   
 '''
-
 options = options + '_' + active_type + '_' + 'noisy'    
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
-    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
+#    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
     
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, random_activation], fp)
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
     
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
+        
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
    
@@ -736,13 +753,16 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 #####################################, random_activation
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp) 
-
-              
+    row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
+        
+datapoint_size = temp_x.shape[0]              
 total_type = np.zeros((len(lr_database)))
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(lig_rec_dict_TP[i][j]) > 0:
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
             for k in range (0, len(lig_rec_dict_TP[i][j])):
                total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
                
@@ -750,9 +770,9 @@ positive_class = np.sum(total_type)
 negative_class = len(row_col) - positive_class           
 ############# draw the points which are participating in positive classes  ######################
 ccc_index_dict = dict()               
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(lig_rec_dict_TP[i][j]) > 0:
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
             #if 1 in lig_rec_dict_TP[i][j]:                
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''               
@@ -825,7 +845,7 @@ while percentage_value > 0:
                 
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
-                    if k in lig_rec_dict_TP[i][j]:
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
                         positive_class = positive_class + 1
                         if k in existing_lig_rec_dict[i][j]:
                             confusion_matrix[0][0] = confusion_matrix[0][0] + 1
