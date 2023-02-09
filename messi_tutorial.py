@@ -25,12 +25,12 @@ input_path = 'input/'
 output_path = 'output/'
 data_type = 'merfish'
 sex = 'Female'
-behavior = 'Parenting'
+behavior = 'Virgin Parenting'
 behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 
-grid_search = True #False #
+grid_search = False #True #
 n_sets = 5  # for example usage only; we recommend 5
 
 n_classes_0 = 1
@@ -141,7 +141,7 @@ response_list_prior, regulator_list_prior = read_meta('input/', behavior_no_spac
 # get all available animals/samples -- get unique IDs
 all_animals = list(set(meta_all[:, meta_all_columns['Animal_ID']])) # 16, 17, 18, 19
 
-test_animal  = 16
+test_animal  = 24
 test_animals = [test_animal]
 samples_test = np.array(test_animals)
 samples_train = np.array(list(set(all_animals)-set(test_animals)))
@@ -158,7 +158,7 @@ meta_per_dataset_test = find_idx_for_train_test(samples_train, samples_test,
                                                 bregma=bregma)
 ##################################################################
 data_sets = []
-data_sets_gatconv = []
+#data_sets_gatconv = []
 for animal_id, bregma in meta_per_dataset_train:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     # remove genes which are not in common list genes_list_us_messi
@@ -181,12 +181,12 @@ for animal_id, bregma in meta_per_dataset_train:
     data_sets.append([hp_np, hp_columns, hp_cor.to_numpy(), hp_cor_columns,
                       hp_genes.to_numpy(), hp_genes_columns])
     
-    
+    '''
     cell_barcodes = data_sets[0][0][:,0]
     coordinates = data_sets[0][0][:,5:7]
     cell_vs_gene  = data_sets[0][4]
     data_sets_gatconv.append([cell_barcodes, coordinates, cell_vs_gene])
-    
+    '''
     del hp, hp_cor, hp_genes
 
 
@@ -198,9 +198,10 @@ data_sets = []
 for animal_id, bregma in meta_per_dataset_test:
     hp, hp_cor, hp_genes = read_data('input/', bregma, animal_id, genes_list, genes_list_u)
     # remove genes which are not in common list genes_list_us_messi
-    
+    '''
     hp_genes_filtered = hp_genes[genes_list_us_messi]   
     hp_genes = hp_genes_filtered
+    '''
     #####################
     if hp is not None: # meta data
         hp_columns = dict(zip(hp.columns, range(0, len(hp.columns))))
@@ -227,7 +228,7 @@ if data_type == 'merfish_rna_seq':
     neighbors_test = None
 else: 
     if data_type == 'merfish':
-        dis_filter = 300
+        dis_filter = 100
     else:
         dis_filter = 1e9  
         
@@ -409,7 +410,7 @@ model = hme(**model_params)
 model.train(X_train, X_train_clf_1, X_train_clf_2, Y_train)
 
 
-filename = f"hme_model{suffix}.pickle"
+filename = f"hme_model{suffix}"+'_noGrid_'+".pickle"
 pickle.dump(model, open(os.path.join(current_dir, filename), 'wb'))
 
 #################
@@ -428,7 +429,7 @@ total_regulators_neighbor = total_regulators + neighbor_ligands
 total_regulators_neighbor_c = [g.capitalize() for g in total_regulators_neighbor]
 
 sns.set_context("paper", font_scale=1.2) 
-_expert = [0,6]
+_expert = [0,1]
 
 if "None" in sub_condition:
     # dispersion = Y_train.var(axis=0) / abs(Y_train_raw.mean(axis=0)+1e-6)
@@ -441,6 +442,14 @@ response_list_dispersion = np.array(response_list_c)[idx_dispersion]
 
 # model_experts is a dictionary index by 1st layer class and 2nd layer class
 _weights = saved_model.model_experts[_expert[0]][_expert[1]].W[:,idx_dispersion]
+total_correlation_regulators = np.sum(_weights, axis=1)
+df_plot_total_correlation_regulators = pd.DataFrame(total_correlation_regulators)
+df_plot_total_correlation_regulators.index = total_regulators_neighbor_c
+df_plot_total_correlation_regulators.columns = ['total_correlation']
+df_plot_total_correlation_regulators.sort_values(by=['total_correlation'], ascending=False, inplace=True)
+
+for i in range (0, len(df_plot_total_correlation_regulators)):
+    print("%s: %g"%(df_plot_total_correlation_regulators.index[i], df_plot_total_correlation_regulators.values[i]))
 
 df_plot = pd.DataFrame(_weights)
 df_plot.index = total_regulators_neighbor_c
