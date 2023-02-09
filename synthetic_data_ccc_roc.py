@@ -32,14 +32,14 @@ args = parser.parse_args()
 threshold_distance = 1.5 #
 k_nn = 8 # #5 = h
 distance_measure = 'knn'
-datatype = 'high_density_grid' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
-cell_percent = 10 # choose at random N% ligand cells
+datatype = 'mixture_of_distribution' #'high_density_grid' #'mixture_of_distribution' #'high_density_grid' #'equally_spaced' #'high_density_grid' 'uniform_normal'
+cell_percent = 20 # choose at random N% ligand cells
 neighbor_percent = 70
-lr_percent = 40 #10
+lr_percent = 50 #10
 receptor_connections = 'all_same' #'all_not_same'
-gene_count = 10 #100 #20 #50 # and 25 pairs
+gene_count = 4 #10 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 2 #1
+noise_add = 0 #2 #1
 
 def get_data(datatype):
     if datatype == 'equally_spaced':
@@ -209,15 +209,8 @@ y_min = 0
 #temp_x, temp_y, a = get_data(x_max, x_min, y_max, y_min, datatype, datapoint_size)
 temp_x, temp_y, ccc_region = get_data( datatype)
 #############################################
-print(len(temp_x))
-plt.gca().set_aspect(1)	
-plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
-save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
-plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ datatype +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
+
 
 datapoint_size = temp_x.shape[0]
 coordinates = np.zeros((temp_x.shape[0],2))
@@ -281,10 +274,11 @@ max_value = np.max(gene_distribution_inactive)
 #loc_list = np.random.randint(20, 60, size=gene_count)
 for i in range (0, gene_count):
 #    gene_distribution_active[i,:] = np.random.normal(loc=loc_list[i], scale=1, size=len(temp_x))  #20
-    gene_distribution_active[i,:] = np.random.normal(loc=max_value+5+i, scale=2, size=len(temp_x))  #20
+    gene_distribution_active[i,:] = np.random.normal(loc=max_value+5+i, scale=1, size=len(temp_x))  #20
     # loc is set such that it does not overlap with inactive state --> scale = 2 gives about 10 unit spread 
     # you may want to shuffle
 	# ensure that all distributions start from >= 0 
+	
     a = np.min(gene_distribution_active[i,:])
     '''
     if a < 0:
@@ -375,17 +369,8 @@ elif noise_add == 2:
         cell_vs_gene[:,i] = cell_vs_gene[:,i] + gene_distribution_noise
     options = options + '_heavy_noisy'
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
-   
-###############
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
-    cell_vs_gene = pickle.load(fp)
-'''
 
 ###############
-
 # ready to go
 ################################################################################################
 # do the usual things
@@ -414,16 +399,6 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
 
                
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
-    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
-    cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
-'''
-     
-
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -462,10 +437,45 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
 
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
+'''
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
+    cell_vs_gene = pickle.load(fp)
+'''
+
+'''
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
+    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_control_model_'+'c_notQuantileTransformed', 'rb') as fp: #b, b_1, a
+    cells_ligand_vs_receptor,a,ligand_list,activated_cell_index = pickle.load(fp) #a - [0:5]
+'''
+lig_rec_dict_TP_temp = defaultdict(dict)
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            lig_rec_dict_TP_temp[i][j] = []
+            
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            for k in range (0, len(lig_rec_dict_TP[i][j])):
+               lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
+            
+lig_rec_dict_TP = lig_rec_dict_TP_temp
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([lr_database, lig_rec_dict_TP], fp)
+'''  
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'notQuantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
-
-
+'''
 ###########################################################
 
 '''
