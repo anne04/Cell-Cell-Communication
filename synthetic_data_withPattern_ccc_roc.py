@@ -970,7 +970,7 @@ while percentage_value > 0:
                 
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
-                    if k in lig_rec_dict_TP[i][j]:
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
                         positive_class = positive_class + 1
                         if k in existing_lig_rec_dict[i][j]:
                             confusion_matrix[0][0] = confusion_matrix[0][0] + 1
