@@ -74,15 +74,15 @@ def main():
   # enable the newly registered theme
   alt.themes.enable("publishTheme")
   #data_options = 'Female_Virgin_ParentingExcitatory_0.21_20'
-  inFile = '/cluster/home/t116508uhn/64630/ccc_th95_records' + data_options + '.csv'
-  #inFile = '/cluster/home/t116508uhn/64630/ccc_th95_records_woBlankEdges.csv' #sys.argv[1]
+  inFile = '/cluster/home/t116508uhn/64630/ccc_th98_records' + data_options + '.csv'
+  #inFile = '/cluster/home/t116508uhn/64630/ccc_th98_records_woBlankEdges.csv' #sys.argv[1]
   df = readCsv(inFile)
   df = preprocessDf(df)
   outPathRoot = inFile.split('.')[0]
 
   p = plot(df)
-  outPath = '/cluster/home/t116508uhn/64630/ccc_th95_hist_'+data_options+'_woBlankEdges.html' #outPathRoot + "_histogram.html"
-  #outPath = '/cluster/home/t116508uhn/64630/ccc_th95_hist_woBlankEdges.html' #outPathRoot + "_histogram.html"
+  outPath = '/cluster/home/t116508uhn/64630/ccc_th98_hist_'+data_options+'_woBlankEdges.html' #outPathRoot + "_histogram.html"
+  #outPath = '/cluster/home/t116508uhn/64630/ccc_th98_hist_woBlankEdges.html' #outPathRoot + "_histogram.html"
   p.save(outPath)
 
   # outStatsPath = outPath + "_stats"
