@@ -363,7 +363,7 @@ for j in range (0, datapoint_size):
                 ccc_index_dict[j] = ''
 '''
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 98)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, datapoint_size):
@@ -429,7 +429,7 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records' + data_options + '.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th98_records' + data_options + '.csv', index=False, header=False)
 
 import altairThemes
 # register the custom theme under a chosen name
@@ -453,13 +453,13 @@ for i in range (0, len(barcode_info)):
     
 
 data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_'+data_options+'_tissue_plot.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th98_'+data_options+'_tissue_plot.csv', index=False)
 
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_'+data_options+'_tissue_plot.csv')
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th98_'+data_options+'_tissue_plot.csv')
 
 set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
-chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1, size=2).encode(
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1, size=1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
     #shape = "pathology_label",
