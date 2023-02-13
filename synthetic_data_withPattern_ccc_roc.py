@@ -502,7 +502,7 @@ for i in ligand_cells:
                 cell_vs_gene[j,ligand_gene] = 0 ## CHECK ##
                 if j in noise_cells:
                     cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
-                    cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + cell_vs_gene[j,ligand_gene] ## CHECK ##
+                    cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + gene_distribution_noise[j] ## CHECK ##
                 
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
