@@ -115,9 +115,9 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
 
 def get_data(datatype):
     if datatype == 'pattern_equally_spaced':
-        x_max = 100 #50 #50 
+        x_max = 50 #50 
         x_min = 0
-        y_max = 100 #50 #20 #30 
+        y_max = 50 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -491,7 +491,7 @@ for i in ligand_cells:
             cell_vs_gene[i,receptor_gene] = 0 ## CHECK ##
             if i in noise_cells:
                 cell_vs_gene[i, ligand_gene] = cell_vs_gene[i, ligand_gene] + gene_distribution_noise[i]
-                cell_vs_gene[i,receptor_gene] = cell_vs_gene[i,receptor_gene] + gene_distribution_noise[i] ## CHECK ##
+                #cell_vs_gene[i,receptor_gene] = cell_vs_gene[i,receptor_gene] + gene_distribution_noise[i] ## CHECK ##
                 
             all_used.append(i)
             receptor_gene = lr_database[lr_i][1]
@@ -502,14 +502,15 @@ for i in ligand_cells:
                 cell_vs_gene[j,ligand_gene] = 0 ## CHECK ##
                 if j in noise_cells:
                     cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
-                    cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + gene_distribution_noise[j] ## CHECK ##
+                    #cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + gene_distribution_noise[j] ## CHECK ##
                 
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
                 #########
                 communication_score = cell_vs_gene[i,ligand_gene] * cell_vs_gene[j,receptor_gene] 
                 communication_score = max(communication_score, 0)
-                cells_ligand_vs_receptor[i][j].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+                if communication_score>0:
+                    cells_ligand_vs_receptor[i][j].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
                 
                 #########
                 
@@ -650,7 +651,7 @@ if noise_add == 2:
 total_cells = len(cells_ligand_vs_receptor)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
-
+'''
 lig_rec_dict_TP_temp = defaultdict(dict)
 for i in range (0, len(lig_rec_dict_TP)):
     for j in range (0, len(lig_rec_dict_TP)):
@@ -664,7 +665,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
             
 lig_rec_dict_TP = lig_rec_dict_TP_temp
-
+'''
 #options = options+ '_' + 'wFeature'
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
@@ -762,20 +763,22 @@ datapoint_size = temp_x.shape[0]
 total_type = np.zeros((len(lr_database)))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
-            for k in range (0, len(lig_rec_dict_TP[i][j])):
-               total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
-               
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+            if len(lig_rec_dict_TP[i][j]) > 0:
+                for k in range (0, len(lig_rec_dict_TP[i][j])):
+                   total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
+
 positive_class = np.sum(total_type)
 negative_class = len(row_col) - positive_class           
 ############# draw the points which are participating in positive classes  ######################
 ccc_index_dict = dict()               
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
-            #if 1 in lig_rec_dict_TP[i][j]:                
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''               
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+            if len(lig_rec_dict_TP[i][j]) > 0:
+                #if 1 in lig_rec_dict_TP[i][j]:                
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''               
 
 ######################################	
 
@@ -845,12 +848,13 @@ while percentage_value > 0:
                 
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        positive_class = positive_class + 1
-                        if k in existing_lig_rec_dict[i][j]:
-                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                        else:
-                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]: 
+                        if k in lig_rec_dict_TP[i][j]:
+                            positive_class = positive_class + 1
+                            if k in existing_lig_rec_dict[i][j]:
+                                confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                            else:
+                                confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
                     else:
                         negative_class = negative_class + 1
                         if k in existing_lig_rec_dict[i][j]:
