@@ -113,7 +113,7 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
         return receptor_list
 
 def get_data(datatype):
-    if datatype == 'pattern_equally_spaced':
+    if datatype == 'path_equally_spaced':
         x_max = 50 #50 
         x_min = 0
         y_max = 50 #20 #30 
@@ -347,32 +347,19 @@ gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 gene_distribution_noise = np.zeros((gene_count, cell_count))
 
-gene_distribution_inactive[i,:] = np.random.normal(loc=loc_list[i],scale=1,size=len(temp_x))
-
-'''
+start_loc = 4
 for i in range (0, gene_count):
-    
-    #gene_distribution_inactive[i,:] = np.random.normal(loc=loc_list[i],scale=1,size=len(temp_x)) # L1 # you may want to shuffle
-    gene_exp_list = np.random.normal(loc=4+i,scale=1,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+i,scale=.5,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('inactive: %g to %g'%(np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    if active_type == 'random_overlap':
-        gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])-.1, scale=.1, size=len(temp_x))
-    elif active_type == 'midrange_overlap':
-        gene_exp_list = np.random.normal(loc=np.mean(gene_distribution_inactive[i,:])-1, scale=.1, size=len(temp_x))
-        
+    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+1, scale=.1, size=len(temp_x))   
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] = gene_exp_list  
     print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
-    
-    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+10, scale=.8, size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_noise[i,:] = gene_exp_list  
-    print('noise: %g to %g'%(np.min(gene_distribution_noise[i,:]),np.max(gene_distribution_noise[i,:]) ))
-    
-  '''  
+    start_loc = np.max(gene_distribution_active[i,:])+3
+
 #################################################
 gene_ids = []
 for i in range (0, gene_count):
@@ -459,12 +446,12 @@ for i in range (0, cell_vs_gene.shape[0]):
 for i in ligand_cells:
     # choose which L-R are working for this ligand i
     #lr_selected_list = [lr_selected_list_allcell[k]] 
-    if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i]][0] in all_used:
+    if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used:
         print('skip')
         continue
     cell_vs_gene[i, :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
     cell_vs_gene[cell_neighborhood[i][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-    cell_vs_gene[cell_neighborhood[cell_neighborhood[i]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
+    cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
     edge_list = []
     ##########################################    
     lr_i = 0
@@ -474,38 +461,38 @@ for i in ligand_cells:
     cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
     cell_id = cell_neighborhood[i][0]
     cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append[i, cell_neighborhood[i][0], ligand_gene, receptor_gene]
+    edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
     #########################################
     lr_i = 1
     ligand_gene = lr_database[lr_i][0]
     receptor_gene = lr_database[lr_i][1]
     cell_id = cell_neighborhood[i][0]
     cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[cell_neighborhood[i]][0]
+    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
     cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append[cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i]][0], ligand_gene, receptor_gene]
+    edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
     ##########################################
     all_used[i] = ''
     all_used[cell_neighborhood[i][0]] = ''
-    all_used[cell_neighborhood[cell_neighborhood[i]][0]] = ''
+    all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
     ##########################################
-    for i in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
-        if i in noise_cells:
-            for j in range (0, cell_vs_gene.shape[1]):
-                if cell_vs_gene[i][j] != 0: ## CHECK ##
-                    cell_vs_gene[i, j] = cell_vs_gene[i, j] + gene_distribution_noise[i]
+    for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
+        if c in noise_cells:
+            for g in range (0, cell_vs_gene.shape[1]):
+                if cell_vs_gene[c][g] != 0: ## CHECK ##
+                    cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
                     
     for edge in edge_list:
-        i = edge[0]
-        j = edge[1]
+        c1 = edge[0]
+        c2 = edge[1]
         ligand_gene = edge[2]
         receptor_gene = edge[3]
-        lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+        lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
         P_class = P_class+1
         #########
-        communication_score = cell_vs_gene[i,ligand_gene] * cell_vs_gene[j,receptor_gene] 
+        communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
         communication_score = max(communication_score, 0)
-        cells_ligand_vs_receptor[i][j].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+        cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
         #########
                 
 # choose some random cells for activating without pattern
@@ -542,7 +529,8 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
               
                 communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]     
                 communication_score = max(communication_score, 0)
-                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
+                if communication_score>0:
+                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]])              
             
 
 available_edges = []
@@ -871,15 +859,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_overlapped_highertail_randomEdge_noise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy' # tp7p_, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-#**X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_pattern_4_tp7p_broad_active_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_heavy_noise_attention_l1.npy' # 4_r3,5_close, overlap_noisy, 6_r3
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_h1024_attention_l1.npy' # 4_r3,5_close , 6_r3
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_wFeature_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_lowNoise_threshold_distance_attention_l1.npy' #wFeature
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pathway_random_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
