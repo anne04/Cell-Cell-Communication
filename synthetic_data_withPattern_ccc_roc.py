@@ -599,19 +599,20 @@ for index in random_activation_index:
         
     #k = k + lr_count_percell
  
-indegree_matrix = np.zeros((len(cells_ligand_vs_receptor)))  
-for j in range (0, len(cells_ligand_vs_receptor)):
-    for i in range (0, len(cells_ligand_vs_receptor)):
+outdegree_matrix = np.zeros((len(cells_ligand_vs_receptor)))  
+outdegree_matrix[:] = 1
+for i in range (0, len(cells_ligand_vs_receptor)):
+    for j in range (0, len(cells_ligand_vs_receptor)):
         if dist_X[i,j] > 0: 
             if len(cells_ligand_vs_receptor[i][j])>0:
-                indegree_matrix[j] = indegree_matrix[j] + len(cells_ligand_vs_receptor[i][j])
+                outdegree_matrix[j] = outdegree_matrix[j] + len(cells_ligand_vs_receptor[i][j])
                 
 for i in range (0, len(cells_ligand_vs_receptor)):
     for j in range (0, len(cells_ligand_vs_receptor)):
         if dist_X[i,j] > 0:
             if len(cells_ligand_vs_receptor[i][j])>0:
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    cells_ligand_vs_receptor[i][j][k][2] = cells_ligand_vs_receptor[i][j][k][2] * (1/indegree_matrix[i])
+                    cells_ligand_vs_receptor[i][j][k][2] = cells_ligand_vs_receptor[i][j][k][2] * (1/outdegree_matrix[i])
                  
                             
 ccc_index_dict = dict()
