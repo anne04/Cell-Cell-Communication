@@ -77,6 +77,7 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 '''
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -84,9 +85,9 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 97), kn_value])
-
-
 '''
+
+
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = np.histogram(cell_vs_gene[i])[0] # density: 
@@ -94,7 +95,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee-1]
     cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 70), np.percentile(cell_vs_gene[i], 97), kn_value])
-
+'''
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 
 gene_percentile = dict()
@@ -210,8 +211,8 @@ for g in range(start_index, end_index):
         count_rec = 0    
         if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
-                #if distance_matrix[i,j] > spot_diameter*4:
-                #    continue
+                if distance_matrix[i,j] > spot_diameter*4:
+                    continue
           
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
@@ -251,34 +252,12 @@ for g in range(start_index, end_index):
 print(count_total_edges)	
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(args.slice), 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[start_index, end_index],activated_cell_index], fp) #a - [0:5]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_bothAboveDensity', 'wb') as fp: #b, b_1, a
+    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
 
-ccc_index_dict = dict()
-row_col = []
-edge_weight = []
-for i in range (0, len(cells_ligand_vs_receptor)):
-    #ccc_j = []
-    for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4:
-            #if i==j:
-            if len(cells_ligand_vs_receptor[i][j])>0:
-                mean_ccc = 0
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2]
-                #mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
-                row_col.append([i,j])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-                edge_weight.append([dist_X[i,j], mean_ccc])
-            #elif i==j: # if not onlyccc, then remove the condition i==j
-            else:
-                row_col.append([i,j])
-                edge_weight.append([dist_X[i,j], 0])
-
-		
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+str(args.slice), 'wb') as fp:  #b, a:[0:5]           
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-    pickle.dump([row_col, edge_weight], fp)
 ############################################################
 	
     
@@ -308,35 +287,7 @@ while slice < 544:
             if len(cells_ligand_vs_receptor_temp[i][j])>0:
                 cells_ligand_vs_receptor[i][j].extend(cells_ligand_vs_receptor_temp[i][j]) 
 ###############################
-ccc_index_dict = dict()
-row_col = []
-edge_weight = []
-for i in range (0, len(cells_ligand_vs_receptor)):
-    #ccc_j = []
-    for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4:
-            #if i==j:
-            if len(cells_ligand_vs_receptor[i][j])>0:
-                mean_ccc = 0
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    mean_ccc = mean_ccc + cells_ligand_vs_receptor[i][j][k][2] #*dist_X[i,j]
-                mean_ccc = mean_ccc/len(cells_ligand_vs_receptor[i][j])
-                row_col.append([i,j])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-                edge_weight.append([dist_X[i,j], mean_ccc])
-            #elif i==j: # if not onlyccc, then remove the condition i==j
-                
-            else:
-                row_col.append([i,j])
-                edge_weight.append([dist_X[i,j], 0])
-                
-print('len row col %d'%len(row_col))
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STtimesCCC_c_'+'all_avg', 'wb') as fp:  #b, a:[0:5]  
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_sum', 'wb') as fp:  #b, a:[0:5]           
-    pickle.dump([row_col, edge_weight], fp)
 ################################################################################
 ccc_index_dict = dict()
 row_col = []
@@ -344,7 +295,7 @@ edge_weight = []
 lig_rec = []
 count_edge = 0
 max_local = 0
-local_list = np.zeros((102))
+#local_list = np.zeros((102))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
@@ -355,7 +306,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     # above 5th percentile only
-                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] or cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
+                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
                         count_edge = count_edge + 1
                         count_local = count_local + 1
 #print(count_edge)                      
@@ -374,62 +325,18 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', ''])
             '''
-            local_list[count_local] = local_list[count_local] + 1
-
-print('len row col %d'%len(row_col))
-print('count local %d'%count_local) 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-
-
-################################################################################
-ccc_index_dict = dict()
-row_col = []
-edge_weight = []
-lig_rec = []
-count_edge = 0
-max_local = 0
-#local_list = np.zeros((20))
-for i in range (0, len(cells_ligand_vs_receptor)):
-    #ccc_j = []
-    for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4: 
-            count_local = 0
-            if len(cells_ligand_vs_receptor[i][j])>0:
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    gene = cells_ligand_vs_receptor[i][j][k][0]
-                    gene_rec = cells_ligand_vs_receptor[i][j][k][1]
-                    # above 5th percentile only
-                    if cell_vs_gene[i][gene_index[gene]] > gene_percentile[gene][1] and cell_vs_gene[j][gene_index[gene_rec]] > gene_percentile[gene_rec][1]:
-                        count_edge = count_edge + 1
-                        count_local = count_local + 1
-#print(count_edge)                      
-                        mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
-                        row_col.append([i,j])
-                        ccc_index_dict[i] = ''
-                        ccc_index_dict[j] = ''
-                        edge_weight.append([dist_X[i,j], mean_ccc])
-                        lig_rec.append([gene, gene_rec])                      
-                
-                if max_local < count_local:
-                    max_local = count_local
-           
-            else:
-                row_col.append([i,j])
-                edge_weight.append([dist_X[i,j], 0])
-                lig_rec.append(['', ''])
-           
             #local_list[count_local] = local_list[count_local] + 1
 
 print('len row col %d'%len(row_col))
-print('count local %d'%count_local) 
-
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_alonggene_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+print('count local %d'%max_local) 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(cell_vs_gene, fp)
+################################################################################
 
 ###########################################################Visualization starts ##################
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
