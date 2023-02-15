@@ -489,20 +489,22 @@ for i in ligand_cells:
             receptor_gene = lr_database[lr_i][1]
             
             cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i]
-            '''
+            
             cell_vs_gene[i,receptor_gene] = 0 ## CHECK ##
+            '''
             if i in noise_cells:
                 cell_vs_gene[i, ligand_gene] = cell_vs_gene[i, ligand_gene] + gene_distribution_noise[i]
                 #cell_vs_gene[i,receptor_gene] = cell_vs_gene[i,receptor_gene] + gene_distribution_noise[i] ## CHECK ##
-                '''
+            '''
             all_used.append(i)
             receptor_gene = lr_database[lr_i][1]
             for rec in receptor_list:                
                 j = get_cell[rec[0]][rec[1]]
                 all_used.append(j)
                 cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
-                '''
+                
                 cell_vs_gene[j,ligand_gene] = 0 ## CHECK ##
+                '''
                 if j in noise_cells:
                     cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
                     #cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + gene_distribution_noise[j] ## CHECK ##
@@ -597,9 +599,21 @@ for index in random_activation_index:
         
     #k = k + lr_count_percell
  
-  
-    
-
+indegree_matrix = np.zeros((len(cells_ligand_vs_receptor)))  
+for j in range (0, len(cells_ligand_vs_receptor)):
+    for i in range (0, len(cells_ligand_vs_receptor)):
+        if dist_X[i,j] > 0: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                indegree_matrix[j] = indegree_matrix[j] + len(cells_ligand_vs_receptor[i][j])
+                
+for i in range (0, len(cells_ligand_vs_receptor)):
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if dist_X[i,j] > 0:
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    cells_ligand_vs_receptor[i][j][k][2] = cells_ligand_vs_receptor[i][j][k][2] * (1/indegree_matrix[i])
+                 
+                            
 ccc_index_dict = dict()
 row_col = []
 edge_weight = []
@@ -654,6 +668,9 @@ if noise_add == 2:
 total_cells = len(cells_ligand_vs_receptor)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
+
+options = options + '_degMatrix' 
+
 '''
 lig_rec_dict_TP_temp = defaultdict(dict)
 for i in range (0, len(lig_rec_dict_TP)):
@@ -895,7 +912,7 @@ X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthe
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_wFeature_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_knn_attention_l1.npy' #wFeature
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_knn_r1_attention_l1.npy' #wFeature
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_midrange_overlapped_lowNoise_threshold_distance_cellcount2500_attention_l1.npy' #wFeature
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
