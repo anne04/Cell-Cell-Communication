@@ -358,22 +358,13 @@ for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 
 
-coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=[]
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
-        i=i+1
+
         
 #####
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_kneepoint_woBlankEdges_r1_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -413,7 +404,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -524,7 +515,7 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_woBlankEdges.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_woBlankEdges.csv', index=False, header=False)
 ############################
 import altairThemes
 import altair as alt
