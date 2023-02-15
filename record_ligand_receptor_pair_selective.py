@@ -23,7 +23,7 @@ import copy
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') 
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
@@ -35,17 +35,6 @@ args = parser.parse_args()
 spot_diameter = 89.43 #pixels
 ############
 
-############
-barcode_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/barcodes.tsv'
-barcode_info=[]
-#barcode_info.append("")
-i=0
-with open(barcode_file) as file:
-    tsv_file = csv.reader(file, delimiter="\t")
-    for line in tsv_file:
-        barcode_info.append([line[0], coordinates[i,0],coordinates[i,1],0])
-        i=i+1
- 
 ####### get the gene expressions ######
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -57,6 +46,14 @@ sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
+cell_barcode = np.array(adata_h5.obs.index)
+barcode_info=[]
+#barcode_info.append("")
+i=0
+for cell_code in cell_barcode:
+    barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
+    i=i+1
+
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
 adata_X = np.transpose(temp)  
@@ -125,7 +122,7 @@ for i in range (0, df["Name"].shape[0]):
 '''
 
 ligand_dict_dataset = defaultdict(list)
-cell_chat_file = '/cluster/home/t116508uhn/64630/Human-2020-Jin-LR-pairs_cellchat.csv'
+cell_chat_file = '/cluster/home/t116508uhn/Human-2020-Jin-LR-pairs_cellchat.csv'
 df = pd.read_csv(cell_chat_file)
 cell_cell_contact = []
 for i in range (0, df["ligand_symbol"].shape[0]):
@@ -150,7 +147,7 @@ for i in range (0, df["ligand_symbol"].shape[0]):
             
 print(len(ligand_dict_dataset.keys()))
 
-nichetalk_file = '/cluster/home/t116508uhn/64630/NicheNet-LR-pairs.csv'   
+nichetalk_file = '/cluster/home/t116508uhn/NicheNet-LR-pairs.csv'   
 df = pd.read_csv(nichetalk_file)
 for i in range (0, df["from"].shape[0]):
     ligand = df["from"][i]
