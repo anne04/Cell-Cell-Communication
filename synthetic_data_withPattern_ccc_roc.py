@@ -28,16 +28,16 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 #th_dist = 4
 #spot_diameter = 89.43 #pixels
-threshold_distance = 1.3 #2.3 #
+threshold_distance = 2.3 # 1.3 #
 k_nn = 8 # #5 = h
-
+'''
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
-
 datatype = 'pattern_equally_spaced' #
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
+
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
-'''
+
 cell_percent = 20 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
@@ -45,14 +45,14 @@ lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 2 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 1  #2 #1
-noise_percent = 30
+noise_add = 0 #1  #2 #1
+noise_percent = 0 #30
 random_active_percent = 0
 active_type = 'midrange_overlap' #'highrange_overlap' #
 def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
     receptor_list = []
     if pattern_id == 1:
-        '''	
+        	
         for n in cell_neighborhood:
             i_n = n[0]
             j_n = n[1]
@@ -71,7 +71,7 @@ def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhoo
         receptor_list.append([i-1,j])
         receptor_list.append([i,j-1])       
         receptor_list.append([i,j+1]) 
-        
+        '''
         
         
         '''
@@ -479,8 +479,9 @@ for i in ligand_cells:
                 if j in all_used :
                     flag = 1
                     break
-            if flag == 1:        
-                continue  
+            if flag == 1:   
+                break
+                #continue  
                 
             # not receptors nor the ligands are used
             #all_receptor.extend(receptor_list)                         
@@ -488,29 +489,31 @@ for i in ligand_cells:
             receptor_gene = lr_database[lr_i][1]
             
             cell_vs_gene[i,ligand_gene] = gene_distribution_active[ligand_gene, i]
+            '''
             cell_vs_gene[i,receptor_gene] = 0 ## CHECK ##
             if i in noise_cells:
                 cell_vs_gene[i, ligand_gene] = cell_vs_gene[i, ligand_gene] + gene_distribution_noise[i]
                 #cell_vs_gene[i,receptor_gene] = cell_vs_gene[i,receptor_gene] + gene_distribution_noise[i] ## CHECK ##
-                
+                '''
             all_used.append(i)
             receptor_gene = lr_database[lr_i][1]
             for rec in receptor_list:                
                 j = get_cell[rec[0]][rec[1]]
                 all_used.append(j)
                 cell_vs_gene[j,receptor_gene] = gene_distribution_active[receptor_gene, j]
+                '''
                 cell_vs_gene[j,ligand_gene] = 0 ## CHECK ##
                 if j in noise_cells:
                     cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[j]
                     #cell_vs_gene[j,ligand_gene] = cell_vs_gene[j, ligand_gene] + gene_distribution_noise[j] ## CHECK ##
-                
+                '''
                 lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
                 #########
                 communication_score = cell_vs_gene[i,ligand_gene] * cell_vs_gene[j,receptor_gene] 
                 communication_score = max(communication_score, 0)
-                if communication_score>0:
-                    cells_ligand_vs_receptor[i][j].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+                #if communication_score>0:
+                cells_ligand_vs_receptor[i][j].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
                 
                 #########
                 
@@ -763,7 +766,7 @@ datapoint_size = temp_x.shape[0]
 total_type = np.zeros((len(lr_database)))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+        #if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
             if len(lig_rec_dict_TP[i][j]) > 0:
                 for k in range (0, len(lig_rec_dict_TP[i][j])):
                    total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
@@ -774,7 +777,7 @@ negative_class = len(row_col) - positive_class
 ccc_index_dict = dict()               
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+        #if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
             if len(lig_rec_dict_TP[i][j]) > 0:
                 #if 1 in lig_rec_dict_TP[i][j]:                
                 ccc_index_dict[i] = ''
@@ -848,13 +851,13 @@ while percentage_value > 0:
                 
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]: 
-                        if k in lig_rec_dict_TP[i][j]:
-                            positive_class = positive_class + 1
-                            if k in existing_lig_rec_dict[i][j]:
-                                confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                            else:
-                                confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    #if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]: 
+                    if k in lig_rec_dict_TP[i][j]:
+                        positive_class = positive_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        else:
+                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
                     else:
                         negative_class = negative_class + 1
                         if k in existing_lig_rec_dict[i][j]:
@@ -892,8 +895,8 @@ X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthe
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pattern_overlapped_lowscale_attention_l1.npy'
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_5_pattern_midrange_overlapped_lowNoise_wFeature_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_lowNoise_threshold_distance_attention_l1.npy' #wFeature
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_midrange_overlapped_lowNoise_threshold_distance_cellcount10000_attention_l1.npy' #wFeature
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_5_pattern_midrange_overlapped_knn_attention_l1.npy' #wFeature
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pattern_midrange_overlapped_lowNoise_threshold_distance_cellcount2500_attention_l1.npy' #wFeature
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
@@ -975,7 +978,8 @@ while percentage_value > 0:
                 
             if len(lig_rec_dict[i][j])>0:
                 for k in lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                    #if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and 
+                    if k in lig_rec_dict_TP[i][j]:
                         positive_class = positive_class + 1
                         if k in existing_lig_rec_dict[i][j]:
                             confusion_matrix[0][0] = confusion_matrix[0][0] + 1
