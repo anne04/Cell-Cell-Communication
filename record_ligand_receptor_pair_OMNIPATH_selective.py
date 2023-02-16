@@ -85,9 +85,9 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 97), kn_value])
+
+
 '''
-
-
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     print(np.histogram(cell_vs_gene[i]))
@@ -106,7 +106,7 @@ for i in range (0, cell_vs_gene.shape[1]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[:,i])[1][kn.knee-1]
-    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 70), np.percentile(cell_vs_gene[:,i], 97), kn_value]
+    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 80), np.percentile(cell_vs_gene[:,i], 97), kn_value]
 '''
 gene_info=dict()
 for gene in gene_ids:
@@ -129,16 +129,26 @@ for i in range (0, df["Name"].shape[0]):
 ligand_dict_dataset = defaultdict(list)
 OMNIPATH_file = '/cluster/home/t116508uhn/64630/omnipath_records_2023Feb.csv'   
 df = pd.read_csv(OMNIPATH_file)
+cell_cell_contact = dict()
+
+
 for i in range (0, df['genesymbol_intercell_source'].shape[0]):
+    
     ligand = df['genesymbol_intercell_source'][i]
-    #if ligand not in gene_marker_ids:
+    if 'ligand' not in  df['category_intercell_source'][i]:
+        continue
     if ligand not in gene_info:
         continue
+        
     receptor = df['genesymbol_intercell_target'][i]
-    #if receptor not in gene_marker_ids:
+    if 'receptor' not in df['category_intercell_target'][i]:
+        continue
     if receptor not in gene_info:
         continue
     ligand_dict_dataset[ligand].append(receptor)
+    if df['category_intercell_source'][i] == 'cell_surface_ligand':
+        cell_cell_contact[ligand] = ''
+    
     
 print('number of ligands %d '%len(ligand_dict_dataset.keys()))
 count_pair = 0
@@ -211,13 +221,16 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        #if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:
-        for j in range (0, cell_vs_gene.shape[0]): # receptor
+        if cell_vs_gene[i][gene_index[gene]] > gene_percentile[gene][2]: # >= cell_percentile[i][4]:
+            for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if distance_matrix[i,j] > spot_diameter*4:
                     continue
-          
+                
+                if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                    continue
+
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4] or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] > gene_percentile[gene_rec][2]: # >= cell_percentile[j][4]:  #or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
                             '''
                             if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                                 continue
@@ -251,9 +264,9 @@ for g in range(start_index, end_index):
     
     print(g)
     
-print(count_total_edges)	
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_communication_scores_selective_lr_STnCCC_c_'+str(args.slice), 'wb') as fp: #b, b_1, a
-    pickle.dump([cells_ligand_vs_receptor,l_r_pair,ligand_list[start_index, end_index],activated_cell_index], fp) #a - [0:5]
+print(count_total_edges)
+
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_bothAboveDensity', 'wb') as fp: #b, b_1, a
@@ -311,7 +324,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     # above 5th percentile only
-                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
+                    if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]:
                         count_edge = count_edge + 1
                         count_local = count_local + 1
 #print(count_edge)                      
@@ -436,7 +449,7 @@ for index in range (0, len(row_col)):
         attention_scores[i][j] = edge_weight[index][1] * edge_weight[index][0]
         distribution.append(attention_scores[i][j])
         ccc_index_dict[i] = ''
-        #ccc_index_dict[j] = ''   
+        ccc_index_dict[j] = ''   
 	
 ###########################
 '''
@@ -622,9 +635,9 @@ for i in range (0, len(barcode_info)):
 #cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-#id_label = [0,2]
-#for j in id_label:
-for j in range (0, id_label):
+id_label = [0,2] #
+for j in id_label:
+#for j in range (0, id_label):
     label_i = j
     x_index=[]
     y_index=[]
