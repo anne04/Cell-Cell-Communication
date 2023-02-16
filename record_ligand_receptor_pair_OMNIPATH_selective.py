@@ -25,7 +25,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
@@ -77,7 +77,7 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 '''
-'''
+
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -90,14 +90,16 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
+    print(np.histogram(cell_vs_gene[i]))
     y = np.histogram(cell_vs_gene[i])[0] # density: 
-    x = range(1, len(y)+1)
+    x = range(0, len(y))
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
-    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee-1]
+    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
+    print('%d'%(kn.knee ))
     cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 70), np.percentile(cell_vs_gene[i], 97), kn_value])
 '''
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
-
+'''
 gene_percentile = dict()
 for i in range (0, cell_vs_gene.shape[1]):
     y = np.histogram(cell_vs_gene[:,i])[0]
@@ -209,13 +211,13 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:
-            for j in range (0, cell_vs_gene.shape[0]): # receptor
+        #if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:
+        for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if distance_matrix[i,j] > spot_diameter*4:
                     continue
           
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4] or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:#gene_list_percentile[gene_rec][1]: #global_percentile: #
                             '''
                             if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                                 continue
@@ -257,7 +259,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_co
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_bothAboveDensity', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
 
-
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveCellKnee', 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_eitherAboveCellKnee', 'wb') as fp: #b, b_1, a
+    pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 ############################################################
 	
     
@@ -339,7 +344,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gen
 ################################################################################
 
 ###########################################################Visualization starts ##################
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -552,9 +557,9 @@ for i in range (0, len(barcode_info)):
     
 
 data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot_woBlankEdges.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_woBlankEdges.csv', index=False)
 
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/ccc_th95_tissue_plot_woBlankEdges.csv')
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_woBlankEdges.csv')
 
 set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
