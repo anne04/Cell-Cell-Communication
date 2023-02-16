@@ -65,20 +65,62 @@ else:
 # read in ligand and receptor lists
 #l_u, r_u = get_lr_pairs(input_path='../messi/input/')  # may need to change to the default value
 
+
+#
+ligand_dict_dataset = defaultdict(list)
+OMNIPATH_file = '/cluster/home/t116508uhn/64630/omnipath_records_2023Feb.csv'   
+df = pd.read_csv(OMNIPATH_file)
+cell_cell_contact = dict()
+for i in range (0, df['genesymbol_intercell_source'].shape[0]):
+    
+    ligand = df['genesymbol_intercell_source'][i]
+    if 'ligand' not in  df['category_intercell_source'][i]:
+        continue
+
+        
+    receptor = df['genesymbol_intercell_target'][i]
+    if 'receptor' not in df['category_intercell_target'][i]:
+        continue
+
+    ligand_dict_dataset[ligand].append(receptor)
+    if df['category_intercell_source'][i] == 'cell_surface_ligand':
+        cell_cell_contact[ligand] = ''
+   
+
+######################################
+lr_pairs = []
+count = 0
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    for receptor_gene in ligand_dict_dataset[gene]:
+        lr_pairs.append([gene, receptor_gene])
+        count = count + 1
+##################################################################
+print(count)
+lr_pairs = pd.DataFrame(lr_pairs)
+lr_pairs.columns = ['ligand','receptor']
+'''
 lr_pairs = pd.read_html(os.path.join('input/','ligand_receptor_pairs2.txt'), header=None)[0] #pd.read_table(os.path.join(input_path, filename), header=None)
 lr_pairs.columns = ['ligand','receptor']
 lr_pairs[['ligand','receptor']] = lr_pairs['receptor'].str.split('\t',expand=True)
 lr_pairs['ligand'] = lr_pairs['ligand'].apply(lambda x: x.upper())
 lr_pairs['receptor'] = lr_pairs['receptor'].apply(lambda x: x.upper())
-
-
 l_u_p = set([l.upper() for l in lr_pairs['ligand']])
 r_u_p = set([g.upper() for g in lr_pairs['receptor']])
 l_u_search = [] # set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
 r_u_search = [] # set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
 l_u = l_u_p.union(l_u_search)
 r_u = r_u_p.union(r_u_search)
+'''
 
+
+l_u_p = set(list(lr_pairs['ligand'])) 
+r_u_p = set(list(lr_pairs['receptor'])) 
+
+l_u_search = [] # set(['CBLN1', 'CXCL14', 'CBLN2', 'VGF','SCG2','CARTPT','TAC2'])
+r_u_search = [] # set(['CRHBP', 'GABRA1', 'GPR165', 'GLRA3', 'GABRG1', 'ADORA2A'])
+l_u = l_u_p.union(l_u_search)
+r_u = r_u_p.union(r_u_search)
 
 # read in meta information about the dataset # meta_all = cell x metadata
 meta_all, meta_all_columns, cell_types_dict, genes_list, genes_list_u, \
@@ -141,6 +183,6 @@ for animal_id, bregma in meta_per_dataset_train:
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'messi_merfish_data_'+data_options, 'wb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-    pickle.dump([data_sets_gatconv, lr_pairs], fp) 
+    pickle.dump([data_sets_gatconv, lr_pairs, cell_cell_contact], fp) 
     
     
