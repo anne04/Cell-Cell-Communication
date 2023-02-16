@@ -29,8 +29,8 @@ parser.add_argument( '--embedding_data_path', type=str, default='/cluster/projec
 parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-spot_diameter = 100 # micrometer
-threshold_distance = spot_diameter
+#spot_diameter = 100 # micrometer
+threshold_distance = 100 #spot_diameter
 distance_measure = 'threshold_distance' #'knn' #
 k_nn = 50
 
@@ -38,7 +38,7 @@ k_nn = 50
 
 ############
 with gzip.open(args.data_path + args.data_name, 'rb') as fp:    
-    data_sets_gatconv, lr_pairs = pickle.load(fp) 
+    data_sets_gatconv, lr_pairs, cell_cell_contact= pickle.load(fp) 
 ############
 # animal_id = 16
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
@@ -73,6 +73,7 @@ temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))
 cell_vs_gene = np.transpose(temp)  
 ####################
 ####################
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -89,7 +90,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee-1]
     cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 70), np.percentile(cell_vs_gene[i], 97), kn_value])
-'''
+
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
@@ -105,19 +106,13 @@ for i in range (0, len(lr_pairs)):
     ligand = lr_pairs['ligand'][i]  
     if ligand not in gene_info:
         continue
-    '''
-    if df["annotation"][i] == 'ECM-Receptor':    
-        continue
-    '''
+
     receptor = lr_pairs['receptor'][i]  
     if receptor not in gene_info:
         continue
         
     ligand_dict_dataset[ligand].append(receptor)
-    '''
-    if df["annotation"][i] == 'Cell-Cell Contact':
-        cell_cell_contact.append(receptor)
-    '''               
+              
             
 print(len(ligand_dict_dataset.keys()))
 
@@ -148,14 +143,6 @@ print('number of relations found %d'%count)
 
 ligand_list = list(ligand_dict_dataset.keys())  
 
-cells_ligand_vs_receptor = []
-for i in range (0, cell_vs_gene.shape[0]):
-    cells_ligand_vs_receptor.append([])
-
-for i in range (0, cell_vs_gene.shape[0]):
-    for j in range (0, cell_vs_gene.shape[0]):
-        cells_ligand_vs_receptor[i].append([])
-        cells_ligand_vs_receptor[i][j] = []
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -186,6 +173,14 @@ for j in range(0, distance_matrix.shape[1]):
             else:
                 cell_neighborhood[i].append([j, dist_X[i,j]])
 		
+cells_ligand_vs_receptor = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cells_ligand_vs_receptor.append([])
+
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        cells_ligand_vs_receptor[i].append([])
+        cells_ligand_vs_receptor[i][j] = []
             
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 count_total_edges = 0
@@ -194,15 +189,15 @@ start_index = 0 #args.slice
 end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
 for gene in ligand_list[start_index: end_index]: #[0:5]: 
     for i in range (0, cell_vs_gene.shape[0]): # ligand
-        #if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4]:
+        #if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 for gene_rec in ligand_dict_dataset[gene]:
-                    #if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    #if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]: #gene_list_percentile[gene_rec][1]: #global_percentile: #
                         #if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                         #    continue
                         #else:
-                            '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
-                                print(gene)'''
+                            #if gene in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
+                            #    continue
                             if dist_X[i,j] <= 0:
                                 continue
                             communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
@@ -244,7 +239,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     # above knee point only
-                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] or cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
+                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:
                         count_edge = count_edge + 1
                         count_local = count_local + 1
                    
@@ -271,7 +266,8 @@ print('total cell %d'%len(cells_ligand_vs_receptor))
 data_options = options + '_' +distance_measure+'_' + str(bregma[bregma_id ]) + '_' + str(animal_id) 
 print(data_options)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_distance_threshold_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:  # knn_         
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:  # total edges possible: 9811570         
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+data_options+'_bothAbove_kneepoint_woBlankedge', 'wb') as fp:  # knn_         
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'merfish_mouse_cortex_records_GAT_knn_cell_vs_gene_'+data_options+'_all_kneepoint_woBlankedge', 'wb') as fp:
