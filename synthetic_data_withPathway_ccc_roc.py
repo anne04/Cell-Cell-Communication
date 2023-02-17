@@ -27,7 +27,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 1.3 #2.3 #
+threshold_distance = 4 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -43,8 +43,8 @@ lr_count_percell = 1
 receptor_connections = 'all_same' #'all_not_same'
 gene_count = 4 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 #10 # 25
-noise_add = 1  #2 #1
-noise_percent = 30
+noise_add = 0  #2 #1
+noise_percent = 0
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -116,7 +116,7 @@ def get_data(datatype):
     if datatype == 'path_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 50 #20 #30 
+        y_max = 30 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -859,7 +859,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_pathway_random_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_withFeature_4_pathway_random_overlapped_lowNoise_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 l=3 #2 ## 
