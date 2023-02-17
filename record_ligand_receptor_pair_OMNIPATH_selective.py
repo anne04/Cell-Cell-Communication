@@ -356,7 +356,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gen
 	pickle.dump(cell_vs_gene, fp)
 ################################################################################
 
-###########################################################Visualization starts ##################
+########################################################### Visualization starts ##################
 pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
@@ -383,7 +383,7 @@ for i in range (1, len(pathologist_label)):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
 X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
-X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
 
 attention_scores = []
@@ -533,7 +533,8 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_woBlankEdges.csv', index=False, header=False)
+
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
 ############################
 import altairThemes
 import altair as alt
@@ -570,9 +571,9 @@ for i in range (0, len(barcode_info)):
     
 
 data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_woBlankEdges.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
 
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_woBlankEdges.csv')
+df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
 
 set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
@@ -704,22 +705,32 @@ max_y = np.max(y_index)
 from pyvis.network import Network
 import networkx as nx
 
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'tumor': #'Tumour':
+        barcode_type[pathologist_label[i][0]] = 1
+    elif pathologist_label[i][1] =='stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = 0
+    elif pathologist_label[i][1] =='acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = 2
+    else:
+        barcode_type[pathologist_label[i][0]] = 'zero' #0
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-	label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
+	#label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
 	if barcode_type[barcode_info[i][0]] == 0: #stroma
 		marker_size = 'circle'
-		label_str = label_str + 'stroma'
+		#label_str = label_str + 'stroma'
 	elif barcode_type[barcode_info[i][0]] == 1: #tumor
 		marker_size = 'box'
-		label_str = label_str + 'tumor'
+		#label_str = label_str + 'tumor'
 	else:
 		marker_size = 'ellipse'
-		label_str = label_str + 'acinar_reactive'
+		#label_str = label_str + 'acinar_reactive'
 		
-	g.add_node(int(ids[i]), x=int(x_index[i]), y=-int(y_index[i]), pos = str(x_index[i])+","+str(-y_index[i])+" !", label = label_str, physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		# str(i)
+	g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		#  label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !"
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True) #"500px", "500px",, filter_menu=True
@@ -733,12 +744,14 @@ for i in range (0, datapoint_size):
             if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
-                g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
-				# title=
+                g.add_edge(int(i), int(j), title = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+				# label = 
 #nt.show('mygraph.html')
+nt.from_nx(g)
+nt.show('mygraph.html')
 
-from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
-#g.show('mygraph.html')
+#from networkx.drawing.nx_agraph import write_dot
+#write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
+#
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
