@@ -276,7 +276,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_co
 ###########################################################Visualization starts ##################
 
 #X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_3_thdist_attention_l1.npy' #a
-X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_all_kneepoint_woBlankedge_p11_24_thdist_h1024_attention_l1.npy' #a
+X_attention_filename = '/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/embedding_ccc_gatconv/merfish_mouse_cortex_16_p11_parent_female_exitatory/' + 'merfish_mouse_cortex_withFeature_bothAbove_kneepoint_woBlankedge_p11_24_thdist_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
 
@@ -313,8 +313,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 
 '''
 ##############
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_knn_'+data_options+'_all_kneepoint_woBlankedge', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
+data_options = 'Female_Virgin_ParentingExcitatory_threshold_distance_0.11_24'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" + 'adjacency_merfish_mouse_cortex_records_GAT_'+data_options+'_bothAbove_kneepoint_woBlankedge', 'rb') as fp:  # at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -426,7 +426,7 @@ for j in range (0, len(barcode_info)):
                 
 df = pd.DataFrame(csv_record)
 df.to_csv('/cluster/home/t116508uhn/64630/ccc_th98_records' + data_options + '.csv', index=False, header=False)
-
+import altair as alt
 import altairThemes
 # register the custom theme under a chosen name
 #alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -586,6 +586,7 @@ import networkx as nx
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
+	'''
 	label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
 	if barcode_type[barcode_info[i][0]] == 0: #stroma
 		marker_size = 'circle'
@@ -596,28 +597,28 @@ for i in range (0, len(barcode_info)):
 	else:
 		marker_size = 'ellipse'
 		label_str = label_str + 'acinar_reactive'
-		
-	g.add_node(int(ids[i]), x=int(x_index[i]), y=-int(y_index[i]), pos = str(x_index[i])+","+str(-y_index[i])+" !", label = label_str, physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		# str(i)
+	'''
+	g.add_node(int(ids[i]), x=int(x_index[i]), y=-int(y_index[i]), label = str(i), physics=False, color=matplotlib.colors.rgb2hex(colors_point[i]))
+   		# 
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True, select_menu=True) #"500px", "500px",, filter_menu=True
-#nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            #if attention_scores[i][j][k] >= threshold_down:
+            if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
-                g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
-				# title=
-#nt.show('mygraph.html')
+                g.add_edge(int(i), int(j), title= title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+				# 
+nt.from_nx(g)			
+nt.show('mygraph.html')
 
-from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_all.dot")
+#from networkx.drawing.nx_agraph import write_dot
+#write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_all.dot")
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
