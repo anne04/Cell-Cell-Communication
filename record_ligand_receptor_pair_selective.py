@@ -174,7 +174,17 @@ for gene in gene_info.keys():
         count = count + 1
 print(count)
 affected_gene_count = count
-
+#######################################
+lr_pairs = []
+count = 0
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    for receptor_gene in ligand_dict_dataset[gene]:
+        lr_pairs.append([gene, receptor_gene])
+        count = count + 1
+print(count)
+lr_pairs = pd.DataFrame(lr_pairs)
+lr_pairs.columns = ['ligand','receptor']
 
 ######################################
 total_relation = 0
