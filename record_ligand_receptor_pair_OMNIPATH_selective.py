@@ -77,7 +77,7 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 '''
-
+'''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -90,14 +90,14 @@ for i in range (0, cell_vs_gene.shape[0]):
 '''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
-    print(np.histogram(cell_vs_gene[i]))
+    #print(np.histogram(cell_vs_gene[i]))
     y = np.histogram(cell_vs_gene[i])[0] # density: 
     x = range(0, len(y))
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
-    print('%d'%(kn.knee ))
+    #print('%d'%(kn.knee ))
     cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 70), np.percentile(cell_vs_gene[i], 97), kn_value])
-'''
+
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 '''
 gene_percentile = dict()
@@ -127,11 +127,10 @@ for i in range (0, df["Name"].shape[0]):
 '''
 
 ligand_dict_dataset = defaultdict(list)
+cell_cell_contact = dict()
+'''
 OMNIPATH_file = '/cluster/home/t116508uhn/64630/omnipath_records_2023Feb.csv'   
 df = pd.read_csv(OMNIPATH_file)
-cell_cell_contact = dict()
-
-
 for i in range (0, df['genesymbol_intercell_source'].shape[0]):
     
     ligand = df['genesymbol_intercell_source'][i]
@@ -148,8 +147,46 @@ for i in range (0, df['genesymbol_intercell_source'].shape[0]):
     ligand_dict_dataset[ligand].append(receptor)
     if df['category_intercell_source'][i] == 'cell_surface_ligand':
         cell_cell_contact[ligand] = ''
+'''    
+   
+cell_chat_file = '/cluster/home/t116508uhn/Human-2020-Jin-LR-pairs_cellchat.csv'
+df = pd.read_csv(cell_chat_file)
+for i in range (0, df["ligand_symbol"].shape[0]):
+    ligand = df["ligand_symbol"][i]
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
+        continue
+        
+    if df["annotation"][i] == 'ECM-Receptor':    
+        continue
+        
+    receptor_symbol_list = df["receptor_symbol"][i]
+    receptor_symbol_list = receptor_symbol_list.split("&")
+    for receptor in receptor_symbol_list:
+        if receptor in gene_info:
+        #if receptor in gene_marker_ids:
+            ligand_dict_dataset[ligand].append(receptor)
+            #######
+            if df["annotation"][i] == 'Cell-Cell Contact':
+                cell_cell_contact[receptor] = ''
+            #######                
+            
+print(len(ligand_dict_dataset.keys()))
+
+nichetalk_file = '/cluster/home/t116508uhn/NicheNet-LR-pairs.csv'   
+df = pd.read_csv(nichetalk_file)
+for i in range (0, df["from"].shape[0]):
+    ligand = df["from"][i]
+    #if ligand not in gene_marker_ids:
+    if ligand not in gene_info:
+        continue
+    receptor = df["to"][i]
+    #if receptor not in gene_marker_ids:
+    if receptor not in gene_info:
+        continue
+    ligand_dict_dataset[ligand].append(receptor)
     
-    
+##############################################################
 print('number of ligands %d '%len(ligand_dict_dataset.keys()))
 count_pair = 0
 for gene in list(ligand_dict_dataset.keys()): 
@@ -168,19 +205,6 @@ for gene in gene_info.keys():
 print('number of affected genes %d '%count)
 affected_gene_count = count
 
-
-######################################
-total_relation = 0
-l_r_pair = dict()
-count = 0
-for gene in list(ligand_dict_dataset.keys()): 
-    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
-    l_r_pair[gene] = dict()
-    for receptor_gene in ligand_dict_dataset[gene]:
-        l_r_pair[gene][receptor_gene] = -1 #count #
-        count = count + 1
-##################################################################
-print(count)
 
 ligand_list = list(ligand_dict_dataset.keys())  
 print('len ligand_list %d'%len(ligand_list))
@@ -204,6 +228,20 @@ for j in range(0, distance_matrix.shape[1]):
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 
 ########
+######################################
+total_relation = 0
+l_r_pair = dict()
+count = 0
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    l_r_pair[gene] = dict()
+    for receptor_gene in ligand_dict_dataset[gene]:
+        l_r_pair[gene][receptor_gene] = -1 #count #
+        count = count + 1
+##################################################################
+print(count)
+
+
 count_total_edges = 0
 activated_cell_index = dict()
 
@@ -221,21 +259,21 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] > gene_percentile[gene][2]: # >= cell_percentile[i][4]:
+        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][4]:
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if distance_matrix[i,j] > spot_diameter*4:
                     continue
                 
-                if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
-                    continue
+                #if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                #    continue
 
                 for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] > gene_percentile[gene_rec][2]: # >= cell_percentile[j][4]:  #or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
-                            '''
+                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4]:  #or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                            
                             if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                                 continue
-                            else:
-                            '''
+                            
+                            
         
                             '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
                                 print(gene)'''
@@ -251,6 +289,8 @@ for g in range(start_index, end_index):
                                 pair_id = pair_id + 1 
                             '''
                             relation_id = l_r_pair[gene][gene_rec]
+                            l_r_pair[gene][gene_rec] = 1
+                            print("%s - %s "%(gene, gene_rec))
                             cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
                             count_rec = count_rec + 1
                             count_total_edges = count_total_edges + 1
@@ -330,8 +370,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 #print(count_edge)                      
                         mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
                         row_col.append([i,j])
-                        ccc_index_dict[i] = ''
-                        ccc_index_dict[j] = ''
+                        if gene=='SERPINA1' or gene=='MIF':
+                            ccc_index_dict[i] = ''
+                        #ccc_index_dict[j] = ''
                         edge_weight.append([dist_X[i,j], mean_ccc])
                         lig_rec.append([gene, gene_rec])                      
                 
@@ -349,7 +390,9 @@ print('len row col %d'%len(row_col))
 print('count local %d'%max_local) 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
@@ -650,6 +693,7 @@ for j in id_label:
             y_index.append(barcode_info[i][2])
             #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
+    '''
             if barcode_type[barcode_info[i][0]] == 0:
                 marker_size.append("o") 
                 #fillstyles_type.append('full') 
@@ -664,7 +708,7 @@ for j in id_label:
     marker_type = []        
     for i in range (0, len(x_index)):  
         marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
-
+    '''
     #for i in range (0, len(x_index)):  
     #    plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
     #filltype = 'full'
