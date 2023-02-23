@@ -27,9 +27,10 @@ DefaultAssay(pancreas) <- "Spatial"
 pancreas <- NormalizeData(pancreas)
 
 pancreas <- SeuratWrappers::RunALRA(pancreas)
-
+lr_db <- read.csv("/cluster/home/t116508uhn/64630/lr_cellchat_nichenet.csv")
 NICHES_output <- RunNICHES(object = pancreas,
-                           LR.database = "fantom5",
+                           LR.database = "custom",
+                           custom_LR_database = lr_db,
                            species = "human",
                            assay = "alra",
                            position.x = 'x',
