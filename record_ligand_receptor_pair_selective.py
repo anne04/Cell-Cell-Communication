@@ -185,6 +185,7 @@ for gene in list(ligand_dict_dataset.keys()):
 print(count)
 lr_pairs = pd.DataFrame(lr_pairs)
 lr_pairs.columns = ['ligand','receptor']
+lr_pairs.to_csv('/cluster/home/t116508uhn/64630/lr_cellchat_nichenet.csv', index=False, header=False)
 
 ######################################
 total_relation = 0
