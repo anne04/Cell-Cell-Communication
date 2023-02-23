@@ -18,7 +18,7 @@ pancreas <- FindClusters(pancreas, verbose = FALSE)
 pancreas <- RunUMAP(pancreas, reduction = "pca", dims = 1:30)
 p1 <- DimPlot(pancreas, reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
 p2 <- SpatialDimPlot(pancreas, label = TRUE,group.by = 'seurat_clusters', label.size = 3)
-ggsave("myplot.png", plot = (p1+p2))
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = (p1+p2))
 
 pancreas@meta.data$x <- pancreas@images$slice1@coordinates$row
 pancreas@meta.data$y <- pancreas@images$slice1@coordinates$col
@@ -35,7 +35,7 @@ NICHES_output <- RunNICHES(object = pancreas,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 4, 
+                           k = 12, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -51,14 +51,18 @@ Idents(niche) <- niche[['ReceivingType']]
 niche <- ScaleData(niche)
 niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
-ElbowPlot(niche,ndims = 50)                          
-niche <- RunUMAP(niche,dims = 1:10)                           
+p <- ElbowPlot(niche,ndims = 50)
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+
+niche <- RunUMAP(niche,dims = 1:10)  
+p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+
 mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
 GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
-
-p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ 
-  scale_fill_gradientn(colors = c("grey","white", "blue")) 
-  
-ggsave("myplot.png", plot = p)
+p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
   
