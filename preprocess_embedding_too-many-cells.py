@@ -20,11 +20,13 @@ if __name__ == "__main__":
     parser.add_argument( '--result_path', type=str, default='result/')
     args = parser.parse_args()
     
-    
+    #args.data_name = 'exp2_V10M25_61_D1_64630_Spatial10X' 
+    #args.model_name = 'exp2_V10M25_61_D1_64630_Spatial10X_test1' 
     cell_barcode = np.load(args.generated_data_path + args.data_name+'/'+'barcodes.npy', allow_pickle=True)
     barcode_info=[]
-    for i in range (0, coordinates.shape[0]):
-        barcode_info.append([cell_barcode[i]])
+    barcode_info.append('')
+    for i in range (0, cell_barcode.shape[0]):
+        barcode_info.append(cell_barcode[i])
 
 ##############################################
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     X_embedding_T = np.transpose(X_embedding) # To match with the too-many-cells input format
     
     toomanycells_input_filename = args.result_path +'/'+ args.data_name +'/' + args.model_name  + '_node_embedding.csv'
-    f=open(X_embedding_filename, 'w', encoding='UTF8', newline='')
+    f=open(toomanycells_input_filename, 'w', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # write the header
     writer.writerow(barcode_info)
