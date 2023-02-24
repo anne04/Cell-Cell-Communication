@@ -461,7 +461,7 @@ print('count local %d'%count_local)
 
 
 ###########################################################Visualization starts ##################
-pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -471,11 +471,11 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
+        barcode_type[pathologist_label[i][0]] = 'tumor' #1
+    elif pathologist_label[i][1] == 'stroma_deserted':
+        barcode_type[pathologist_label[i][0]] = 'stroma_deserted' #0
+    elif pathologist_label[i][1] == 'acinar_reactive':
+        barcode_type[pathologist_label[i][0]] = 'acinar_reactive' #2
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 
@@ -820,23 +820,27 @@ import networkx as nx
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-	label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
-	if barcode_type[barcode_info[i][0]] == 0: #stroma
-		marker_size = 'circle'
-		label_str = label_str + 'stroma'
-	elif barcode_type[barcode_info[i][0]] == 1: #tumor
-		marker_size = 'box'
-		label_str = label_str + 'tumor'
-	else:
-		marker_size = 'ellipse'
-		label_str = label_str + 'acinar_reactive'
-		
-	g.add_node(int(ids[i]), x=int(x_index[i]), y=-int(y_index[i]), pos = str(x_index[i])+","+str(-y_index[i])+" !", label = label_str, physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    r_c = matplotlib.colors.to_rgb(colors_point[i])[0]
+    g_c = matplotlib.colors.to_rgb(colors_point[i])[1]
+    b_c = matplotlib.colors.to_rgb(colors_point[i])[2]
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
+    if barcode_type[barcode_info[i][0]] == 'stroma_deserted': #stroma
+        marker_size = 'circle'
+        label_str = label_str + 'stroma'
+        node_color = matplotlib.colors.rgb2hex((r_c, g_c, b_c, 1), keep_alpha = True)
+    elif barcode_type[barcode_info[i][0]] == 'tumor': #tumor
+        marker_size = 'box'
+        label_str = label_str + 'tumor'
+        node_color = matplotlib.colors.rgb2hex((r_c, g_c, b_c, 1), keep_alpha = True)
+    else:
+        marker_size = 'ellipse'
+        label_str = label_str + 'acinar_reactive'
+        node_color = matplotlib.colors.rgb2hex((r_c, g_c, b_c, 1), keep_alpha = True)
+
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, color=node_color, style='bold' , shape = marker_size ) #	
+	#g.add_node(int(ids[i]), x=int(x_index[i]), y=-int(y_index[i]), label = label_str, physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		# str(i)
-#nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
-#g.toggle_physics(True)
-nt = Network( directed=True) #"500px", "500px",, filter_menu=True
-#nt.from_nx(g)
+
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -848,10 +852,13 @@ for i in range (0, datapoint_size):
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# title=
-#nt.show('mygraph.html')
+			
+nt = Network(directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
+nt.from_nx(g)
+nt.show('mygraph.html')
 
-from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
+#from networkx.drawing.nx_agraph import write_dot
+#write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
