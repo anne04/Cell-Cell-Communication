@@ -427,12 +427,12 @@ for i in range (1, len(pathologist_label)):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_attention_l1.npy' #a
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-
+l = 2
 attention_scores = []
 datapoint_size = len(barcode_info)
 for i in range (0, datapoint_size):
@@ -448,9 +448,10 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     j = X_attention_bundle[0][1][index]
     #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
     #distribution.append(attention_scores[i][j])
-    attention_scores[i][j].append(X_attention_bundle[3][index][0]) #X_attention_bundle[2][index][0]
-    distribution.append(X_attention_bundle[3][index][0])
+    attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
+    distribution.append(X_attention_bundle[l][index][0])
 ##############
+'''
 attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
 for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
@@ -462,14 +463,14 @@ for index in range (0, X_attention_bundle[0].shape[1]):
     i = X_attention_bundle[0][0][index]
     j = X_attention_bundle[0][1][index]
     adjacency_matrix [i][j] = 1
-
+'''
 
 ##############
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
