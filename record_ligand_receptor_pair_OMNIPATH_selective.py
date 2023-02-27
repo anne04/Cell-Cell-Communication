@@ -412,11 +412,11 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
+        barcode_type[pathologist_label[i][0]] = 'tumor'
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
+        barcode_type[pathologist_label[i][0]] = 'stroma_deserted'
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
+        barcode_type[pathologist_label[i][0]] = 'acinar_reactive'
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 
@@ -487,15 +487,22 @@ for index in range (0, len(row_col)):
     lig_rec_dict[i][j].append(lig_rec[index])  
     
     
-attention_scores = np.zeros((datapoint_size,datapoint_size))
+attention_scores = []
+datapoint_size = len(barcode_info)
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+
 distribution = []
 ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
     if edge_weight[index][1]>0:
-        attention_scores[i][j] = edge_weight[index][1] * edge_weight[index][0]
-        distribution.append(attention_scores[i][j])
+        attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0])
+        distribution.append(edge_weight[index][1] * edge_weight[index][0])
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''   
 	
@@ -581,8 +588,9 @@ for j in range (0, len(barcode_info)):
 
                 
 df = pd.DataFrame(csv_record)
+df.to_csv('/cluster/home/t116508uhn/64630/input_edge_ccc_th95_records_woBlankEdges.csv', index=False, header=False)
 
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
 ############################
 import altairThemes
 import altair as alt
@@ -684,9 +692,9 @@ for i in range (0, len(barcode_info)):
 #cell_count_cluster=np.zeros((labels.shape[0]))
 filltype='none'
 
-id_label = [0,2] #
-for j in id_label:
-#for j in range (0, id_label):
+#id_label = [0,2] #
+#for j in id_label:
+for j in range (0, id_label):
     label_i = j
     x_index=[]
     y_index=[]
@@ -698,11 +706,11 @@ for j in id_label:
             y_index.append(barcode_info[i][2])
             #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
-    '''
-            if barcode_type[barcode_info[i][0]] == 0:
+   
+            if barcode_type[barcode_info[i][0]] == 'stroma_deserted':
                 marker_size.append("o") 
                 #fillstyles_type.append('full') 
-            elif barcode_type[barcode_info[i][0]] == 1:
+            elif barcode_type[barcode_info[i][0]] == 'tumor':
                 marker_size.append("^")  
                 #fillstyles_type.append('full') 
             else:
@@ -713,15 +721,16 @@ for j in id_label:
     marker_type = []        
     for i in range (0, len(x_index)):  
         marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
+     
+    for i in range (0, len(x_index)):  
+        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    filltype = 'full'
     '''
-    #for i in range (0, len(x_index)):  
-    #    plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
-    #filltype = 'full'
     if len(x_index)>0:
         plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, s=15) #marker=marker_size, 
     #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
-    
-plt.legend(fontsize=4,loc='upper right')
+    '''
+#plt.legend(fontsize=4,loc='upper right')
 
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
