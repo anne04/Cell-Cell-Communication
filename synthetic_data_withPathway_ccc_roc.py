@@ -524,7 +524,8 @@ cell_vs_gene = adata_X
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i])
     min_value = np.min(cell_vs_gene[i])
-    for j in range (0, )
+    for j in range (0, cell_vs_gene.shape[1]):
+	cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
 
 
 
