@@ -36,7 +36,7 @@ datatype = 'path_equally_spaced' #
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
-cell_percent = 50 # choose at random N% ligand cells
+cell_percent = 100 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
@@ -373,12 +373,12 @@ for i in range (0, rec_gene):
 start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = gene_count//2
 for i in range (0, rec_gene):
-    gene_exp_list = np.random.normal(loc=start_loc+i,scale=.02,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc,scale=.02+i,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+i+1,scale=.02,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc,scale=.02+i+1,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
@@ -479,6 +479,7 @@ for i in ligand_cells:
     cell_id = cell_neighborhood[i][0]
     cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
     edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
+
     #########################################
     lr_i = 1
     ligand_gene = lr_database[lr_i][0]
@@ -488,10 +489,22 @@ for i in ligand_cells:
     cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
     cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
     edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
+	
+    #########################################
+    lr_i = 2
+    ligand_gene = lr_database[lr_i][0]
+    receptor_gene = lr_database[lr_i][1]
+    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
+    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+    cell_id = cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]
+    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+    edge_list.append([cell_neighborhood[cell_neighborhood[i][0]][0], cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0], ligand_gene, receptor_gene])
+	
     ##########################################
     all_used[i] = ''
     all_used[cell_neighborhood[i][0]] = ''
     all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+    all_used[cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]] = ''
     ##########################################
     for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
         if c in noise_cells:
@@ -521,6 +534,8 @@ temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 
+
+''''''
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
@@ -706,8 +721,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     count_edge = count_edge + 1
                     count_local = count_local + 1
-                    #print(count_edge)                      
-                    mean_ccc = (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)   #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
+                    #print(count_edge)  
+                    #mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
+                    mean_ccc = (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
@@ -739,10 +755,17 @@ if noise_add == 1:
 if noise_add == 2:
     options = options + '_heavyNoise'
 
-total_cells = len(cells_ligand_vs_receptor)
+total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
+
+options = options + '_b'
+
 options = options + '_scaled'
+
+#save_lig_rec_dict_TP = lig_rec_dict_TP
+#lig_rec_dict_TP = save_lig_rec_dict_TP
+
 lig_rec_dict_TP_temp = defaultdict(dict)
 for i in range (0, len(lig_rec_dict_TP)):
     for j in range (0, len(lig_rec_dict_TP)):
@@ -754,7 +777,8 @@ for i in range (0, len(lig_rec_dict_TP)):
         if len(lig_rec_dict_TP[i][j]) > 0:
             for k in range (0, len(lig_rec_dict_TP[i][j])):
                lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
-            
+
+lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 #options = options+ '_' + 'wFeature'
@@ -770,10 +794,11 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     
 '''   
 '''
-options = options + '_' + active_type + '_' + 'noisy'    
+  
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
-
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
+#    cell_vs_gene = pickle.load(fp)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
 #    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
     
@@ -973,7 +998,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_scaled_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_scaled_3h_h64_3l_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
