@@ -18,7 +18,7 @@ from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
-
+from kneed import KneeLocator
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -522,10 +522,10 @@ adata_X = np.transpose(temp)
 cell_vs_gene = adata_X
 
 for i in range (0, cell_vs_gene.shape[0]):
-    max_value = np.max(cell_vs_gene[i])
-    min_value = np.min(cell_vs_gene[i])
+    max_value = np.max(cell_vs_gene[i][:])
+    min_value = np.min(cell_vs_gene[i][:])
     for j in range (0, cell_vs_gene.shape[1]):
-	cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
+	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
 
 
 
@@ -571,7 +571,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 '''
                 
                 if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]:
-                    communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]# * dist_X[i,j]    
+                    communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
                     communication_score = max(communication_score, 0)
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
@@ -594,7 +594,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                     min_score_global=cells_ligand_vs_receptor[i][j][k][2]
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
                 
-print('%d, %d'%(min_score_global, max_score_global))
+print('%g, %g'%(min_score_global, max_score_global))
 
 
 
@@ -625,7 +625,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
                 count = count + 1
 
-print('count=%d, %d, %d, %g'%(count, min_score, max_score, np.std(dist)))
+print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
 #################
 min_score = 1000
 max_score = -1000
@@ -643,7 +643,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                 if cells_ligand_vs_receptor[i][j][k][2]<min_score:
                     min_score=cells_ligand_vs_receptor[i][j][k][2]
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
-print('%d, %d, %g'%(min_score, max_score, np.std(dist)))
+print('%g, %g, %g'%(min_score, max_score, np.std(dist)))
                         
 '''                        
 available_edges = []
@@ -742,7 +742,7 @@ if noise_add == 2:
 total_cells = len(cells_ligand_vs_receptor)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
-
+options = options + '_scaled'
 lig_rec_dict_TP_temp = defaultdict(dict)
 for i in range (0, len(lig_rec_dict_TP)):
     for j in range (0, len(lig_rec_dict_TP)):
