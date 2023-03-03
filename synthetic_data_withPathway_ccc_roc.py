@@ -451,7 +451,7 @@ for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
 
-lr_selected_list_allcell = list(np.random.randint(0, 5, size=len(ligand_cells))) 
+lr_selected_list_allcell = list(np.random.randint(0, 2, size=len(ligand_cells))) 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k = 0
 P_class = 0
@@ -477,6 +477,7 @@ for i in ligand_cells:
     elif lr_selected_list == 1:
         a = 2
         b = 3
+    '''
     elif lr_selected_list == 2:
         a = 4
         b = 5
@@ -486,6 +487,7 @@ for i in ligand_cells:
     elif lr_selected_list == 4:
         a = 8
         b = 9
+    '''
     ##########################################    
     lr_i = a
     ligand_gene = lr_database[lr_i][0]
@@ -769,8 +771,8 @@ options = options + '_b'
 
 options = options + '_scaled'
 
-#save_lig_rec_dict_TP = lig_rec_dict_TP
-#lig_rec_dict_TP = save_lig_rec_dict_TP
+#save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
+#lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
 
 lig_rec_dict_TP_temp = defaultdict(dict)
 for i in range (0, len(lig_rec_dict_TP)):
@@ -799,12 +801,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     pickle.dump(cell_vs_gene, fp)
     
 '''   
+
 '''
-  
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
-#    cell_vs_gene = pickle.load(fp)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
 #    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
     
@@ -818,7 +818,46 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
    
- '''  
+ ''' 
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
+    cell_vs_gene = pickle.load(fp)
+    
+cell_vs_gene_temp = np.zeros((cell_vs_gene.shape[1]+1, cell_vs_gene.shape[0]+1))
+for j in range (1, cell_vs_gene_temp.shape[1]):
+    for i in range (1, cell_vs_gene_temp.shape[0]):
+        cell_vs_gene_temp[i][j] = cell_vs_gene[j-1][i-1]
+        
+for i in range (1, cell_vs_gene_temp.shape[0]):   
+    cell_vs_gene_temp[i][0] = i - 1
+    
+for j in range (1, cell_vs_gene_temp.shape[1]):   
+    cell_vs_gene_temp[0][j] = j - 1
+
+data_list=defaultdict(list)
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[1]):
+        data_list[str(i)].append(cell_vs_gene[i][j])
+
+
+
+data_list['pathology_label']=[]
+data_list['component_label']=[]
+data_list['X']=[]
+data_list['Y']=[]
+
+for i in range (0, len(barcode_info)):
+    if barcode_type[barcode_info[i][0]] == 'zero':
+        continue
+    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+    data_list['component_label'].append(barcode_info[i][3])
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])    
+data_list_pd = pd.DataFrame(data_list)    
+  
+data_list_pd = pd.DataFrame(cell_vs_gene_temp)    
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv', index=False, header=False)
+    
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
@@ -1004,7 +1043,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h128_3l_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
