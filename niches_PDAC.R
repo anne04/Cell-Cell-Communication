@@ -66,5 +66,69 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 
-countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv')
-Tumor2 <- CreateSeuratObject(counts = t(countsData))
+df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_x.csv', header = FALSE)
+cell_x=list()  
+for(i in 1:ncol(df)) {      
+  cell_x[[i]] <- df[ , i]    
+}
+df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_y.csv', header = FALSE)
+cell_y=list()  
+for(i in 1:ncol(df)) {      
+  cell_y[[i]] <- df[ , i]    
+}
+
+countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv',row.names = 1)
+pdac_sample <- CreateSeuratObject(counts = countsData)
+temp <- SCTransform(pdac_sample, verbose = FALSE)
+#DefaultAssay(temp) <- "integrated"
+temp <- RunPCA(temp, verbose = FALSE)
+temp <- FindNeighbors(temp, reduction = "pca", dims = 1:19)
+temp <- FindClusters(temp, verbose = FALSE)
+temp <- RunUMAP(temp , reduction = "pca", dims = 1:19)
+p1 <- DimPlot(temp , reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
+p2 <- SpatialDimPlot(temp , label = TRUE,group.by = 'seurat_clusters', label.size = 3)
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = (p1+p2))
+temp@meta.data$x <- cell_x[[1]]
+temp@meta.data$y <- cell_y[[1]]
+#DefaultAssay(temp) <- "Spatial"
+temp <- NormalizeData(temp)
+
+temp <- SeuratWrappers::RunALRA(temp)
+
+lr_db <- read.csv("/cluster/home/t116508uhn/synthetic_lr.csv")
+NICHES_output <- RunNICHES(object = temp,
+                           LR.database = "custom",
+                           custom_LR_database = lr_db,
+                           species = "human",
+                           assay = "alra",
+                           position.x = 'x',
+                           position.y = 'y',
+                           k = 12, 
+                           cell_types = "seurat_clusters",
+                           min.cells.per.ident = 0,
+                           min.cells.per.gene = NULL,
+                           meta.data.to.map = c('orig.ident','seurat_clusters'),
+                           CellToCell = F,CellToSystem = F,SystemToCell = F,
+                           CellToCellSpatial = F,CellToNeighborhood = F,NeighborhoodToCell = T)
+        
+niche <- NICHES_output[['NeighborhoodToCell']]
+Idents(niche) <- niche[['ReceivingType']]
+
+# Scale and visualize
+niche <- ScaleData(niche)
+niche <- FindVariableFeatures(niche,selection.method = "disp")
+niche <- RunPCA(niche)
+p <- ElbowPlot(niche,ndims = 50)
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+
+niche <- RunUMAP(niche,dims = 1:10)  
+p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+
+mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
+GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
+p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
