@@ -41,7 +41,7 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 10 #100 #20 #50 # and 25 pairs
+gene_count = 20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
 noise_add = 0  #2 #1
 noise_percent = 0
@@ -451,17 +451,18 @@ for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
 
-#lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells))) 
+lr_selected_list_allcell = list(np.random.randint(0, 5, size=len(ligand_cells))) 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k = 0
 P_class = 0
 
 all_used = dict()
-   
+k= -1
 for i in ligand_cells:
     # choose which L-R are working for this ligand i
-    #lr_selected_list = [lr_selected_list_allcell[k]] 
-    if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used:
+    k = k + 1 
+    lr_selected_list = lr_selected_list_allcell[k] 
+    if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
         #print('skip')
         continue
     '''
@@ -470,8 +471,23 @@ for i in ligand_cells:
     cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
     '''
     edge_list = []
+    if lr_selected_list == 0:
+        a = 0
+        b = 1
+    elif lr_selected_list == 1:
+        a = 2
+        b = 3
+    elif lr_selected_list == 2:
+        a = 4
+        b = 5
+    elif lr_selected_list == 3:
+        a = 6
+        b = 7
+    elif lr_selected_list == 4:
+        a = 8
+        b = 9
     ##########################################    
-    lr_i = 0
+    lr_i = a
     ligand_gene = lr_database[lr_i][0]
     receptor_gene = lr_database[lr_i][1]
     cell_id = i
@@ -481,7 +497,7 @@ for i in ligand_cells:
     edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
 
     #########################################
-    lr_i = 1
+    lr_i = b
     ligand_gene = lr_database[lr_i][0]
     receptor_gene = lr_database[lr_i][1]
     cell_id = cell_neighborhood[i][0]
@@ -490,21 +506,11 @@ for i in ligand_cells:
     cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
     edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
 	
-    #########################################
-    lr_i = 2
-    ligand_gene = lr_database[lr_i][0]
-    receptor_gene = lr_database[lr_i][1]
-    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
-    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]
-    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append([cell_neighborhood[cell_neighborhood[i][0]][0], cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0], ligand_gene, receptor_gene])
-	
     ##########################################
     all_used[i] = ''
     all_used[cell_neighborhood[i][0]] = ''
     all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
-    all_used[cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]] = ''
+    #all_used[cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]] = ''
     ##########################################
     for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
         if c in noise_cells:
@@ -550,7 +556,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 85), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 95) , kn_value])
 
 ###############
 
@@ -998,7 +1004,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_scaled_3h_h64_3l_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h128_3l_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
