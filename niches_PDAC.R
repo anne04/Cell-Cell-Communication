@@ -65,4 +65,6 @@ GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
-  
+
+countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv')
+Tumor2 <- CreateSeuratObject(counts = t(countsData))
