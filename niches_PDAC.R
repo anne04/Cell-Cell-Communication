@@ -85,6 +85,10 @@ temp <- RunPCA(temp, verbose = FALSE)
 temp <- FindNeighbors(temp, reduction = "pca", dims = 1:19)
 temp <- FindClusters(temp, verbose = FALSE)
 temp <- RunUMAP(temp , reduction = "pca", dims = 1:19)
+
+temp@images$slice1@coordinates$row <- cell_x[[1]]
+temp@images$slice1@coordinates$col <- cell_y[[1]]
+
 p1 <- DimPlot(temp , reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
 p2 <- SpatialDimPlot(temp , label = TRUE,group.by = 'seurat_clusters', label.size = 3)
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = (p1+p2))
