@@ -819,45 +819,41 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     pickle.dump([temp_x, temp_y, ccc_region], fp)
    
  ''' 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
+    temp_x, temp_y, ccc_region  = pickle.load(fp)
+
+data_list_pd = pd.DataFrame(temp_x)        
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_x.csv', index=False, header=False)
+data_list_pd = pd.DataFrame(temp_y)        
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_y.csv', index=False, header=False)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
     cell_vs_gene = pickle.load(fp)
-    
-cell_vs_gene_temp = np.zeros((cell_vs_gene.shape[1]+1, cell_vs_gene.shape[0]+1))
-for j in range (1, cell_vs_gene_temp.shape[1]):
-    for i in range (1, cell_vs_gene_temp.shape[0]):
-        cell_vs_gene_temp[i][j] = cell_vs_gene[j-1][i-1]
-        
-for i in range (1, cell_vs_gene_temp.shape[0]):   
-    cell_vs_gene_temp[i][0] = i - 1
-    
-for j in range (1, cell_vs_gene_temp.shape[1]):   
-    cell_vs_gene_temp[0][j] = j - 1
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[1]):
-        data_list[str(i)].append(cell_vs_gene[i][j])
-
-
-
-data_list['pathology_label']=[]
-data_list['component_label']=[]
-data_list['X']=[]
-data_list['Y']=[]
-
-for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['component_label'].append(barcode_info[i][3])
-    data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])    
+        data_list['a-'+str(i)].append(cell_vs_gene[i][j])
 data_list_pd = pd.DataFrame(data_list)    
-  
-data_list_pd = pd.DataFrame(cell_vs_gene_temp)    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv', index=False, header=False)
+gene_name = []
+for i in range (0, gene_count):
+    gene_name.append('g'+str(i))
     
+data_list_pd[' ']=gene_name   
+data_list_pd = data_list_pd.set_index(' ')    
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv')
+
+data_list=dict()
+data_list['ligand']=[]
+data_list['receptor']=[]
+for i in range (0, len(lr_database)):
+    data_list['ligand'].append('g'+str(lr_database[i][0]))
+    data_list['receptor'].append('g'+str(lr_database[i][1]))
+    
+data_list_pd = pd.DataFrame(data_list)        
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr.csv', index=False)
+	
+	
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
@@ -1043,7 +1039,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h4_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
