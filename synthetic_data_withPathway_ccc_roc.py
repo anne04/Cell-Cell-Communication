@@ -373,12 +373,12 @@ for i in range (0, rec_gene):
 start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = gene_count//2
 for i in range (0, rec_gene):
-    gene_exp_list = np.random.normal(loc=start_loc,scale=.02+i,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+i,scale=.02,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc,scale=.02+i+1,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+i+1,scale=.02,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
@@ -451,7 +451,7 @@ for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
 
-lr_selected_list_allcell = list(np.random.randint(0, 2, size=len(ligand_cells))) 
+lr_selected_list_allcell = list(np.random.randint(0, 5, size=len(ligand_cells))) 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k = 0
 P_class = 0
@@ -477,7 +477,7 @@ for i in ligand_cells:
     elif lr_selected_list == 1:
         a = 2
         b = 3
-    '''
+    
     elif lr_selected_list == 2:
         a = 4
         b = 5
@@ -487,7 +487,7 @@ for i in ligand_cells:
     elif lr_selected_list == 4:
         a = 8
         b = 9
-    '''
+    ''''''
     ##########################################    
     lr_i = a
     ligand_gene = lr_database[lr_i][0]
@@ -542,14 +542,14 @@ temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 
-
-''''''
+'''
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
     for j in range (0, cell_vs_gene.shape[1]):
 	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
-
+        
+'''
 
 
 cell_percentile = []
@@ -732,6 +732,7 @@ edge_list = sorted(edge_list, key = lambda x: x[0])
 ###########################################
 edge_list = []
 true_edge = []
+
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
@@ -741,8 +742,10 @@ for index in range (0, len(row_col)):
     else:
         edge_list.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
 
-
-edge_list = sorted(edge_list, key = lambda x: x[0], reverse=True) # small to large. We will remove small valued edges. 
+   
+    
+    
+edge_list = sorted(edge_list, key = lambda x: x[4], reverse=True) # small to large. We will remove small valued edges. 
 
 row_col = []
 edge_weight = []
@@ -752,11 +755,24 @@ for index in range (0, len(true_edge)):
     edge_weight.append([true_edge[index][3], true_edge[index][4]])
     lig_rec.append(true_edge[index][5])
 
-max_limit = len(edge_list)-15000
+max_limit = len(edge_list)-10000
 for index in range (0, max_limit):
     row_col.append([edge_list[index][1], edge_list[index][2]])
     edge_weight.append([edge_list[index][3], edge_list[index][4]])
     lig_rec.append(edge_list[index][5])
+
+# scaling
+max_value = -1000
+min_value = 10000
+for index in range (0, len(edge_weight)):
+    if edge_weight[index][1] > max_value:
+        max_value = edge_weight[index][1]
+    if edge_weight[index][1] < min_value:
+        min_value = edge_weight[index][1]
+
+
+for index in range (0, len(edge_weight)):
+    edge_weight[index][1] = 0.1 + ((edge_weight[index][1] - min_value)/(max_value-min_value))*(1-0.1)
 
 options = options + '_filtered'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
@@ -967,12 +983,13 @@ from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################, random_activation
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+    lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
+
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'rb') as fp:  # +'_'+'quantileTransformed' at least one of lig or rec has exp > respective knee point          
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
-    lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
         
 datapoint_size = temp_x.shape[0]              
 total_type = np.zeros((len(lr_database)))
@@ -1096,7 +1113,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h2048_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
@@ -1348,3 +1365,7 @@ nt.show('mygraph.html')
 
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+#################################################################################
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
+df_cluster_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+
