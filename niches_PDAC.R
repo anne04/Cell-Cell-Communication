@@ -65,7 +65,7 @@ GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
-
+##########################################################################################
 df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
@@ -86,8 +86,8 @@ temp <- FindNeighbors(temp, reduction = "pca", dims = 1:19)
 temp <- FindClusters(temp, verbose = FALSE)
 temp <- RunUMAP(temp , reduction = "pca", dims = 1:19)
 
-temp@images$slice1@coordinates$row <- cell_x[[1]]
-temp@images$slice1@coordinates$col <- cell_y[[1]]
+#temp@images$slice1@coordinates$row <- cell_x[[1]]
+#temp@images$slice1@coordinates$col <- cell_y[[1]]
 
 p1 <- DimPlot(temp , reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
 p2 <- SpatialDimPlot(temp , label = TRUE,group.by = 'seurat_clusters', label.size = 3)
@@ -135,4 +135,11 @@ mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
 GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+temp_matrix = GetAssayData(object = niche, slot = "counts")
+temp_matrix = as.matrix(temp_matrix)
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
+
+temp_matrix = niche[['seurat_clusters']]
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 
