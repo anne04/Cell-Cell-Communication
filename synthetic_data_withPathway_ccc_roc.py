@@ -708,8 +708,62 @@ for index in random_activation_index:
         
     #k = k + lr_count_percell
 '''
-  
+'''  
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'rb') as fp: #b, b_1, a
+    cells_ligand_vs_receptor = pickle.load(fp) 
     
+edge_list = []
+for i in range (0, len(cells_ligand_vs_receptor)):
+    for j in range (0, len(cells_ligand_vs_receptor)):
+        if dist_X[i,j] > 0: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+	            # check if they are TP or no
+                    for l in range (0, len(lig_rec_dict_TP[i][j])):
+                        if cells_ligand_vs_receptor[i][j][k][3] == lig_rec_dict_TP[i][j][l]:
+                            continue
+                        else:
+                            edge_list.append([cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j], i, j, k])
+                            
+                            
+edge_list = sorted(edge_list, key = lambda x: x[0])
+
+
+###########################################
+edge_list = []
+true_edge = []
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    k = lig_rec[index]
+    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+        true_edge.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
+    else:
+        edge_list.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
+
+
+edge_list = sorted(edge_list, key = lambda x: x[0], reverse=True) # small to large. We will remove small valued edges. 
+
+row_col = []
+edge_weight = []
+lig_rec = []
+for index in range (0, len(true_edge)):
+    row_col.append([true_edge[index][1], true_edge[index][2]])
+    edge_weight.append([true_edge[index][3], true_edge[index][4]])
+    lig_rec.append(true_edge[index][5])
+
+max_limit = len(edge_list)-15000
+for index in range (0, max_limit):
+    row_col.append([edge_list[index][1], edge_list[index][2]])
+    edge_weight.append([edge_list[index][3], edge_list[index][4]])
+    lig_rec.append(edge_list[index][5])
+
+options = options + '_filtered'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+    
+'''
+
 
 ccc_index_dict = dict()
 row_col = []
@@ -805,6 +859,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
+
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
 #    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
     
@@ -817,8 +872,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
         
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
-   
- ''' 
+
+
+
+''' 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
@@ -1039,7 +1096,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h4_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
