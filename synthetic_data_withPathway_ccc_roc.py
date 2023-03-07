@@ -27,7 +27,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 6 #2.3 #
+threshold_distance = 3 #6 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -343,6 +343,13 @@ for cell in range (0, len(cell_neighborhood)):
 # take gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 
+max_neighbor = 0
+for i in range (0, len(cell_neighborhood)):
+    if len(cell_neighborhood[i])>max_neighbor:
+        max_neighbor = len(cell_neighborhood[i])
+print('max neighborhood: %d'%max_neighbor)
+
+
 cell_count = len(temp_x)
 gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
@@ -370,7 +377,7 @@ for i in range (0, rec_gene):
     start_loc = np.max(gene_distribution_inactive[i,:])+2
     '''
     
-start_loc = np.max(gene_distribution_inactive)+30
+start_loc = np.max(gene_distribution_inactive)+50
 rec_gene = gene_count//2
 for i in range (0, rec_gene):
     gene_exp_list = np.random.normal(loc=start_loc+i,scale=.02,size=len(temp_x)) #
@@ -437,34 +444,42 @@ for i in range (0, len(noise_cells)):
 # record true positive connections    
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
+
 for i in range (0, datapoint_size): 
     lig_rec_dict_TP.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict_TP[i].append([])   
         lig_rec_dict_TP[i][j] = []
 	
-# Pick the regions for Ligands
+P_class = 0
+all_used = dict()
+all_used_0 = dict()
+all_used_1 = dict()
+all_used_2 = dict()
+all_used_3 = dict()
 
-ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
+# Pick the regions for Ligands
+ligand_cells = np.arange(cell_count)
+np.random.shuffle(ligand_cells)
+ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
+#ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
 set_ligand_cells = []
 for i in ligand_cells:
     set_ligand_cells.append([temp_x[i], temp_y[i]])  
 
 
-lr_selected_list_allcell = list(np.random.randint(0, 5, size=len(ligand_cells))) 
+lr_selected_list_allcell = list(np.random.randint(0, 1, size=len(ligand_cells))) 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
-k = 0
-P_class = 0
-
-all_used = dict()
 k= -1
 for i in ligand_cells:
     # choose which L-R are working for this ligand i
     k = k + 1 
     lr_selected_list = lr_selected_list_allcell[k] 
+    '''
     if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
         #print('skip')
         continue
+    '''
     '''
     cell_vs_gene[i, :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
     cell_vs_gene[cell_neighborhood[i][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
@@ -472,22 +487,34 @@ for i in ligand_cells:
     '''
     edge_list = []
     if lr_selected_list == 0:
-        a = 0
-        b = 1
+        if i in all_used_0 or cell_neighborhood[i][0] in all_used_0 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+        #print('skip')
+            continue          
+        a = 0 # 10
+        b = 1 # 11
     elif lr_selected_list == 1:
-        a = 2
-        b = 3
-    
+        a = 2 # 12
+        b = 3 # 13
+        if i in all_used_1 or cell_neighborhood[i][0] in all_used_1 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+        #print('skip')
+            continue        
     elif lr_selected_list == 2:
         a = 4
         b = 5
+        if i in all_used_2 or cell_neighborhood[i][0] in all_used_2 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+        #print('skip')
+            continue            
     elif lr_selected_list == 3:
         a = 6
         b = 7
+        if i in all_used_3 or cell_neighborhood[i][0] in all_used_3 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_3: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+        #print('skip')
+            continue         
+    '''
     elif lr_selected_list == 4:
         a = 8
         b = 9
-    ''''''
+    '''
     ##########################################    
     lr_i = a
     ligand_gene = lr_database[lr_i][0]
@@ -509,10 +536,62 @@ for i in ligand_cells:
     edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
 	
     ##########################################
+    ##########################################
+    
+    if lr_selected_list == 0:
+        a = 4 # 14
+        b = 5 # 15
+    elif lr_selected_list == 1:
+        a = 6 # 16
+        b = 7 # 17
+	###########################################
+    lr_i = a
+    ligand_gene = lr_database[lr_i][0]
+    receptor_gene = lr_database[lr_i][1]
+    cell_id = i
+    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+    cell_id = cell_neighborhood[i][0]
+    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+    edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
+    #########################################
+    lr_i = b
+    ligand_gene = lr_database[lr_i][0]
+    receptor_gene = lr_database[lr_i][1]
+    cell_id = cell_neighborhood[i][0]
+    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
+    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+    edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
+    ''''''
+    ##########################################
+
+
+
     all_used[i] = ''
     all_used[cell_neighborhood[i][0]] = ''
     all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
-    #all_used[cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0]] = ''
+    
+    if lr_selected_list == 0:
+        all_used_0[i] = ''
+        all_used_0[cell_neighborhood[i][0]] = ''
+        all_used_0[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+        
+    if lr_selected_list == 1:
+        all_used_1[i] = ''
+        all_used_1[cell_neighborhood[i][0]] = ''
+        all_used_1[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+
+    if lr_selected_list == 2:
+        all_used_2[i] = ''
+        all_used_2[cell_neighborhood[i][0]] = ''
+        all_used_2[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+    
+    if lr_selected_list == 3:
+        all_used_3[i] = ''
+        all_used_3[cell_neighborhood[i][0]] = ''
+        all_used_3[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''    
+    
+    
     ##########################################
     for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
         if c in noise_cells:
@@ -542,23 +621,36 @@ temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 
+
 '''
+for i in range (0, cell_vs_gene.shape[0]):
+    total_sum = np.sum(cell_vs_gene[i,:])
+    for j in range (0, cell_vs_gene.shape[1]):
+        cell_vs_gene[i,j] = cell_vs_gene[i,j] / total_sum
+'''
+'''''' 
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
     for j in range (0, cell_vs_gene.shape[1]):
 	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
-        
-'''
+       
 
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
+    '''
+    y_1 = np.histogram(cell_vs_gene[i])[0] # density: 
+    x = range(0, len(y_1))
+    kn = KneeLocator(x, y_1, curve='convex', direction='decreasing')
+    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]    
+    '''
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 95) , kn_value])
+    
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 84), np.percentile(y, 95) , kn_value])
 
 ###############
 
@@ -593,7 +685,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     cell_vs_gene[j][gene_index[gene_rec]]  = cell_vs_gene[j][gene_index[gene_rec]]  + gene_distribution_noise[j]
                 '''
                 
-                if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]:
+                if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
                     communication_score = max(communication_score, 0)
                     if communication_score>0:
@@ -626,27 +718,22 @@ max_score = -1000
 count = 0
 dist = []
 for i in range (0, len(lig_rec_dict_TP)):
+    flag_debug = 0
     for j in range (0, len(lig_rec_dict_TP)):
+        flag_found = 0
         if len(lig_rec_dict_TP[i][j])>0 and len(cells_ligand_vs_receptor[i][j])>0: 
-            flag_found = 0
-            if len(cells_ligand_vs_receptor[i][j])>1:
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    if lig_rec_dict_TP[i][j][0]==cells_ligand_vs_receptor[i][j][k][3]:
-                        flag_found = 1
-                        break
-            elif lig_rec_dict_TP[i][j][0]==cells_ligand_vs_receptor[i][j][0][0]:
-                flag_found = 1
-                k = 0
+            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                for l in range (0, len(lig_rec_dict_TP[i][j])):
+                    if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
+                        dist.append(cells_ligand_vs_receptor[i][j][k][2])
+                        count = count + 1
+                        if cells_ligand_vs_receptor[i][j][k][2]>max_score:
+                            max_score=cells_ligand_vs_receptor[i][j][k][2]
+                        if cells_ligand_vs_receptor[i][j][k][2]<min_score:
+                            min_score=cells_ligand_vs_receptor[i][j][k][2]                       
+
+                        
                 
-            if flag_found == 1:
-                #print('%d, %d: '%(i,j))
-                #print(cells_ligand_vs_receptor[i][j])
-                if cells_ligand_vs_receptor[i][j][k][2]>max_score:
-                    max_score=cells_ligand_vs_receptor[i][j][k][2]
-                if cells_ligand_vs_receptor[i][j][k][2]<min_score:
-                    min_score=cells_ligand_vs_receptor[i][j][k][2]
-                dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                count = count + 1
 
 print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
 #################
@@ -709,8 +796,6 @@ for index in random_activation_index:
     #k = k + lr_count_percell
 '''
 '''  
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'rb') as fp: #b, b_1, a
-    cells_ligand_vs_receptor = pickle.load(fp) 
     
 edge_list = []
 for i in range (0, len(cells_ligand_vs_receptor)):
@@ -755,7 +840,7 @@ for index in range (0, len(true_edge)):
     edge_weight.append([true_edge[index][3], true_edge[index][4]])
     lig_rec.append(true_edge[index][5])
 
-max_limit = len(edge_list)-10000
+max_limit = len(edge_list)-55000
 for index in range (0, max_limit):
     row_col.append([edge_list[index][1], edge_list[index][2]])
     edge_weight.append([edge_list[index][3], edge_list[index][4]])
@@ -769,8 +854,7 @@ for index in range (0, len(edge_weight)):
         max_value = edge_weight[index][1]
     if edge_weight[index][1] < min_value:
         min_value = edge_weight[index][1]
-
-
+        
 for index in range (0, len(edge_weight)):
     edge_weight[index][1] = 0.1 + ((edge_weight[index][1] - min_value)/(max_value-min_value))*(1-0.1)
 
@@ -837,7 +921,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_b'
+options = options + '_c'
 
 options = options + '_scaled'
 
@@ -1113,7 +1197,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_b_scaled_h2048_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_c_scaled_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
@@ -1362,10 +1446,99 @@ for i in range (0, datapoint_size):
 
 nt.show('mygraph.html')
 
-
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 #################################################################################
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
-df_cluster_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+attention_scores = []
+lig_rec_dict = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    lig_rec_dict.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
 
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
+df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+distribution = []
+for col in range (1, len(df_pair_vs_cells.columns)):
+    col_name = df_pair_vs_cells.columns[col]
+    l_c = df_pair_vs_cells.columns[col].split("—")[0]
+    r_c = df_pair_vs_cells.columns[col].split("—")[1]
+    l_c = l_c.split('.')[1]
+    r_c = r_c.split('.')[1]
+    i = int(l_c)
+    j = int(r_c)
+    
+    for index in range (0, len(df_pair_vs_cells.index)):
+        lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
+        attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+
+percentage_value = 100
+while percentage_value > 0:
+    percentage_value = percentage_value - 10
+#for percentage_value in [79, 85, 90, 93, 95, 97]:
+    existing_lig_rec_dict = []
+    datapoint_size = temp_x.shape[0]
+    for i in range (0, datapoint_size):
+        existing_lig_rec_dict.append([])   
+        for j in range (0, datapoint_size):	
+            existing_lig_rec_dict[i].append([])   
+            existing_lig_rec_dict[i][j] = []
+
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), percentage_value)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+    rec_dict = defaultdict(dict)
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if i==j: 
+                continue
+            atn_score_list = attention_scores[i][j]
+            #print(len(atn_score_list))
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+
+
+    ############# 
+    negative_class = 0
+    confusion_matrix = np.zeros((2,2))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+
+            if i==j: 
+                continue
+            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+                for k in range (0, len(lig_rec_dict_TP[i][j])):
+                    if k in existing_lig_rec_dict[i][j]:
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                    else:
+                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
+
+            '''
+            if len(lig_rec_dict[i][j])>0:
+                for k in lig_rec_dict[i][j]:   
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                        
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        else:
+                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    else:
+                        negative_class = negative_class + 1
+                        if k in existing_lig_rec_dict[i][j]:
+                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                        else:
+                            confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+              '''
+    print('%d, %g'%(percentage_value, (confusion_matrix[0][0]/positive_class)*100))    
+    
