@@ -459,16 +459,18 @@ all_used_2 = dict()
 all_used_3 = dict()
 
 # Pick the regions for Ligands
+ 
+for lr_type_index-1 ilr_type_index range (1,4): 
+	
 ligand_cells = np.arange(cell_count)
 np.random.shuffle(ligand_cells)
 ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
 #ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
 set_ligand_cells = []
 for i in ligand_cells:
-    set_ligand_cells.append([temp_x[i], temp_y[i]])  
-
-
-lr_selected_list_allcell = list(np.random.randint(0, 1, size=len(ligand_cells))) 
+    set_ligand_cells.append([temp_x[i], temp_y[i]]) 4 
+	
+lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells))) 
 #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
 k= -1
 for i in ligand_cells:
