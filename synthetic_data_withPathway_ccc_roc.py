@@ -539,11 +539,11 @@ for i in ligand_cells:
     ##########################################
     
     if lr_selected_list == 0:
-        a = 4 # 14
-        b = 5 # 15
+        a = 8 # 14
+        b = 9 # 15
     elif lr_selected_list == 1:
-        a = 6 # 16
-        b = 7 # 17
+        a = 10 # 16
+        b = 11 # 17
 	###########################################
     lr_i = a
     ligand_gene = lr_database[lr_i][0]
@@ -650,7 +650,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 96), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 60), np.percentile(y, 95) , kn_value])
 
 ###############
 
@@ -925,7 +925,7 @@ options = options + '_c'
 
 options = options + '_scaled'
 
-#save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
+save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
 #lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
 
 lig_rec_dict_TP_temp = defaultdict(dict)
