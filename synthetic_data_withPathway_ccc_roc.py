@@ -27,7 +27,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 3 #6 #2.3 #
+threshold_distance = 4 #6 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -41,7 +41,7 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 20 #100 #20 #50 # and 25 pairs
+gene_count = 100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
 noise_add = 0  #2 #1
 noise_percent = 0
@@ -355,10 +355,10 @@ gene_distribution_active = np.zeros((gene_count, cell_count))
 gene_distribution_inactive = np.zeros((gene_count, cell_count))
 gene_distribution_noise = np.zeros((gene_count, cell_count))
 
-start_loc = 4
+start_loc = 5
 rec_gene = gene_count//2
 for i in range (0, rec_gene):
-    gene_exp_list = np.random.normal(loc=start_loc+i,scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
@@ -380,7 +380,7 @@ for i in range (0, rec_gene):
 start_loc = np.max(gene_distribution_inactive)+50
 rec_gene = gene_count//2
 for i in range (0, rec_gene):
-    gene_exp_list = np.random.normal(loc=start_loc+i,scale=.02,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
@@ -650,7 +650,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 84), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 96), np.percentile(y, 95) , kn_value])
 
 ###############
 
@@ -884,8 +884,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)  
-                    #mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
-                    mean_ccc = (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
+                    #mean_ccc = (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
