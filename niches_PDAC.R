@@ -113,7 +113,7 @@ NICHES_output <- RunNICHES(object = temp,
                            min.cells.per.gene = NULL,
                            meta.data.to.map = c('orig.ident','seurat_clusters'),
                            CellToCell = F,CellToSystem = F,SystemToCell = F,
-                           CellToCellSpatial = F,CellToNeighborhood = F,NeighborhoodToCell = T)
+                           CellToCellSpatial = T, CellToNeighborhood = F,NeighborhoodToCell = F)
         
 niche <- NICHES_output[['NeighborhoodToCell']]
 Idents(niche) <- niche[['ReceivingType']]
@@ -122,13 +122,13 @@ Idents(niche) <- niche[['ReceivingType']]
 niche <- ScaleData(niche)
 niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
-p <- ElbowPlot(niche,ndims = 50)
-ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+#p <- ElbowPlot(niche,ndims = 50)
+#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 
-niche <- RunUMAP(niche,dims = 1:10)  
-p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
-ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+#niche <- RunUMAP(niche,dims = 1:10)  
+#p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
+#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 
 mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
@@ -140,6 +140,6 @@ temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
 
-temp_matrix = niche[['seurat_clusters']]
+temp_matrix = niche[['seurat_clusters.Joint_clusters']]
 write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 
