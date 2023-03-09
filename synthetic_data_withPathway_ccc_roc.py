@@ -489,7 +489,10 @@ for lr_type_index in range (1,4):
         '''
         a_cell = i
         b_cell = cell_neighborhood[i][1]
-        c_cell = list(set(cell_neighborhood[cell_neighborhood[i][1]])-{a_cell})[1] 
+        if cell_neighborhood[b_cell][1]!=a_cell:
+            c_cell = cell_neighborhood[b_cell][1]
+        else:
+            c_cell = cell_neighborhood[b_cell][2]
         
         edge_list = []
         if lr_selected_list == 0:
@@ -556,55 +559,56 @@ for lr_type_index in range (1,4):
         receptor_gene = lr_database[lr_i][1]
         cell_id = a_cell
         cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        cell_id = cell_neighborhood[i][0]
+        cell_id = b_cell
         cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
+        edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
         #########################################
         lr_i = b
         ligand_gene = lr_database[lr_i][0]
         receptor_gene = lr_database[lr_i][1]
-        cell_id = cell_neighborhood[i][0]
+        cell_id = b_cell
         cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
+        cell_id = c_cell
         cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
+        edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
         ''''''
         ##########################################
 
 
-
-        all_used[i] = ''
-        all_used[cell_neighborhood[i][0]] = ''
-        all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+        print('%d, %d, %d'%(a_cell, b_cell, c_cell))
+        all_used[a_cell] = ''
+        all_used[b_cell] = ''
+        all_used[c_cell] = ''
 
         if lr_selected_list == 0:
-            all_used_0[i] = ''
-            all_used_0[cell_neighborhood[i][0]] = ''
-            all_used_0[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+            all_used_0[a_cell] = ''
+            all_used_0[b_cell] = ''
+            all_used_0[c_cell] = ''
 
         if lr_selected_list == 1:
-            all_used_1[i] = ''
-            all_used_1[cell_neighborhood[i][0]] = ''
-            all_used_1[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+            all_used_1[a_cell] = ''
+            all_used_1[b_cell] = ''
+            all_used_1[c_cell] = ''
 
         if lr_selected_list == 2:
-            all_used_2[i] = ''
-            all_used_2[cell_neighborhood[i][0]] = ''
-            all_used_2[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+            all_used_2[a_cell] = ''
+            all_used_2[b_cell] = ''
+            all_used_2[c_cell] = ''
 
         if lr_selected_list == 3:
-            all_used_3[i] = ''
-            all_used_3[cell_neighborhood[i][0]] = ''
-            all_used_3[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''    
+            all_used_3[a_cell] = ''
+            all_used_3[b_cell] = ''
+            all_used_3[c_cell] = ''    
 
 
         ##########################################
+        '''
         for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
             if c in noise_cells:
                 for g in range (0, cell_vs_gene.shape[1]):
                     if cell_vs_gene[c][g] != 0: ## CHECK ##
                         cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
-
+        '''
         for edge in edge_list:
             c1 = edge[0]
             c2 = edge[1]
@@ -700,23 +704,6 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                         
 print('total edges %d'%count)
 ################
-min_score_global = 1000
-max_score_global = -1000
-dist = []
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-
-                if cells_ligand_vs_receptor[i][j][k][2]>max_score_global:
-                    max_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                if cells_ligand_vs_receptor[i][j][k][2]<min_score_global:
-                    min_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                
-print('%g, %g'%(min_score_global, max_score_global))
-
 
 
 min_score = 1000
@@ -743,6 +730,8 @@ for i in range (0, len(lig_rec_dict_TP)):
 
 print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
 #################
+                        
+'''
 min_score = 1000
 max_score = -1000
 dist = []
@@ -760,8 +749,24 @@ for i in range (0, len(lig_rec_dict_TP)):
                     min_score=cells_ligand_vs_receptor[i][j][k][2]
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
 print('%g, %g, %g'%(min_score, max_score, np.std(dist)))
+min_score_global = 1000
+max_score_global = -1000
+dist = []
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(cells_ligand_vs_receptor[i][j])>0:
+            
+            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+
+                if cells_ligand_vs_receptor[i][j][k][2]>max_score_global:
+                    max_score_global=cells_ligand_vs_receptor[i][j][k][2]
+                if cells_ligand_vs_receptor[i][j][k][2]<min_score_global:
+                    min_score_global=cells_ligand_vs_receptor[i][j][k][2]
+                dist.append(cells_ligand_vs_receptor[i][j][k][2])
+                
+print('%g, %g'%(min_score_global, max_score_global))
+
                         
-'''                        
 available_edges = []
 for i in range (0, temp_x.shape[0]):
     for j in range (0, temp_x.shape[0]):
