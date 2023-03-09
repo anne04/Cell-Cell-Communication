@@ -27,7 +27,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 4 #6 #2.3 #
+threshold_distance = 5 #6 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -36,12 +36,12 @@ datatype = 'path_equally_spaced' #
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
-cell_percent = 100 # choose at random N% ligand cells
+cell_percent = 50 #100 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 100 #20 #100 #20 #50 # and 25 pairs
+gene_count = 50 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
 noise_add = 0  #2 #1
 noise_percent = 0
@@ -334,7 +334,7 @@ for j in range(0, distance_matrix.shape[1]):
 
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
-    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1]) # sort based on distance
+    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance
     cell_neighborhood[cell] = [] # to record the neighbor cells in that order
     for items in cell_neighborhood_temp:
         cell_neighborhood[cell].append(items[0])
@@ -460,159 +460,163 @@ all_used_3 = dict()
 
 # Pick the regions for Ligands
  
-for lr_type_index-1 ilr_type_index range (1,4): 
+for lr_type_index in range (1,4): 
 	
-ligand_cells = np.arange(cell_count)
-np.random.shuffle(ligand_cells)
-ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
-#ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
-set_ligand_cells = []
-for i in ligand_cells:
-    set_ligand_cells.append([temp_x[i], temp_y[i]]) 4 
-	
-lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells))) 
-#lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
-k= -1
-for i in ligand_cells:
-    # choose which L-R are working for this ligand i
-    k = k + 1 
-    lr_selected_list = lr_selected_list_allcell[k] 
-    '''
-    if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-        #print('skip')
-        continue
-    '''
-    '''
-    cell_vs_gene[i, :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-    cell_vs_gene[cell_neighborhood[i][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-    cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-    '''
-    edge_list = []
-    if lr_selected_list == 0:
-        if i in all_used_0 or cell_neighborhood[i][0] in all_used_0 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-        #print('skip')
-            continue          
-        a = 0 # 10
-        b = 1 # 11
-    elif lr_selected_list == 1:
-        a = 2 # 12
-        b = 3 # 13
-        if i in all_used_1 or cell_neighborhood[i][0] in all_used_1 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-        #print('skip')
-            continue        
-    elif lr_selected_list == 2:
-        a = 4
-        b = 5
-        if i in all_used_2 or cell_neighborhood[i][0] in all_used_2 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-        #print('skip')
-            continue            
-    elif lr_selected_list == 3:
-        a = 6
-        b = 7
-        if i in all_used_3 or cell_neighborhood[i][0] in all_used_3 or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used_3: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-        #print('skip')
-            continue         
-    '''
-    elif lr_selected_list == 4:
-        a = 8
-        b = 9
-    '''
-    ##########################################    
-    lr_i = a
-    ligand_gene = lr_database[lr_i][0]
-    receptor_gene = lr_database[lr_i][1]
-    cell_id = i
-    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[i][0]
-    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
+    ligand_cells = np.arange(cell_count)
+    np.random.shuffle(ligand_cells)
+    ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
+    #ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
+    set_ligand_cells = []
+    for i in ligand_cells:
+        set_ligand_cells.append([temp_x[i], temp_y[i]]) 
 
-    #########################################
-    lr_i = b
-    ligand_gene = lr_database[lr_i][0]
-    receptor_gene = lr_database[lr_i][1]
-    cell_id = cell_neighborhood[i][0]
-    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
-    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
-	
-    ##########################################
-    ##########################################
-    
-    if lr_selected_list == 0:
-        a = 8 # 14
-        b = 9 # 15
-    elif lr_selected_list == 1:
-        a = 10 # 16
-        b = 11 # 17
-	###########################################
-    lr_i = a
-    ligand_gene = lr_database[lr_i][0]
-    receptor_gene = lr_database[lr_i][1]
-    cell_id = i
-    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[i][0]
-    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
-    #########################################
-    lr_i = b
-    ligand_gene = lr_database[lr_i][0]
-    receptor_gene = lr_database[lr_i][1]
-    cell_id = cell_neighborhood[i][0]
-    cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-    cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
-    cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-    edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
-    ''''''
-    ##########################################
-
-
-
-    all_used[i] = ''
-    all_used[cell_neighborhood[i][0]] = ''
-    all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
-    
-    if lr_selected_list == 0:
-        all_used_0[i] = ''
-        all_used_0[cell_neighborhood[i][0]] = ''
-        all_used_0[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+    lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells))) 
+    #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
+    k= -1
+    for i in ligand_cells:
+        # choose which L-R are working for this ligand i
+        k = k + 1 
+        lr_selected_list = lr_selected_list_allcell[k] 
+        '''
+        if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+            #print('skip')
+            continue
+        '''
+        '''
+        cell_vs_gene[i, :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
+        cell_vs_gene[cell_neighborhood[i][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
+        cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
+        '''
+        a_cell = i
+        b_cell = cell_neighborhood[i][1]
+        c_cell = list(set(cell_neighborhood[cell_neighborhood[i][1]])-{a_cell})[1] 
         
-    if lr_selected_list == 1:
-        all_used_1[i] = ''
-        all_used_1[cell_neighborhood[i][0]] = ''
-        all_used_1[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+        edge_list = []
+        if lr_selected_list == 0:
+            if a_cell in all_used_0 or b_cell in all_used_0 or c_cell in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+            #print('skip')
+                continue          
+            a = 0 # 10
+            b = 1 # 11
+        elif lr_selected_list == 1:
+            a = 2 # 12
+            b = 3 # 13
+            if a_cell in all_used_1 or b_cell in all_used_1 or c_cell in all_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+            #print('skip')
+                continue        
+        elif lr_selected_list == 2:
+            a = 4
+            b = 5
+            if a_cell in all_used_2 or b_cell in all_used_2 or c_cell in all_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+            #print('skip')
+                continue            
+        elif lr_selected_list == 3:
+            a = 6
+            b = 7
+            if a_cell in all_used_3 or b_cell in all_used_3 or c_cell in all_used_3: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+            #print('skip')
+                continue         
+        '''
+        elif lr_selected_list == 4:
+            a = 8
+            b = 9
+        '''
+        ##########################################    
+        lr_i = a
+        ligand_gene = lr_database[lr_i][0]
+        receptor_gene = lr_database[lr_i][1]
+        cell_id = a_cell
+        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        cell_id = b_cell
+        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+        edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
 
-    if lr_selected_list == 2:
-        all_used_2[i] = ''
-        all_used_2[cell_neighborhood[i][0]] = ''
-        all_used_2[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
-    
-    if lr_selected_list == 3:
-        all_used_3[i] = ''
-        all_used_3[cell_neighborhood[i][0]] = ''
-        all_used_3[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''    
-    
-    
-    ##########################################
-    for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
-        if c in noise_cells:
-            for g in range (0, cell_vs_gene.shape[1]):
-                if cell_vs_gene[c][g] != 0: ## CHECK ##
-                    cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
-                    
-    for edge in edge_list:
-        c1 = edge[0]
-        c2 = edge[1]
-        ligand_gene = edge[2]
-        receptor_gene = edge[3]
-        lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
-        P_class = P_class+1
-        #########
-        communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
-        communication_score = max(communication_score, 0)
-        #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
-        #########
+        #########################################
+        lr_i = b
+        ligand_gene = lr_database[lr_i][0]
+        receptor_gene = lr_database[lr_i][1]
+        cell_id = b_cell
+        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        cell_id = c_cell
+        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+        edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
+
+        ##########################################
+        ##########################################
+
+        if lr_selected_list == 0:
+            a = 8 # 14
+            b = 9 # 15
+        elif lr_selected_list == 1:
+            a = 10 # 16
+            b = 11 # 17
+        ###########################################
+        lr_i = a
+        ligand_gene = lr_database[lr_i][0]
+        receptor_gene = lr_database[lr_i][1]
+        cell_id = a_cell
+        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        cell_id = cell_neighborhood[i][0]
+        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+        edge_list.append([i, cell_neighborhood[i][0], ligand_gene, receptor_gene])
+        #########################################
+        lr_i = b
+        ligand_gene = lr_database[lr_i][0]
+        receptor_gene = lr_database[lr_i][1]
+        cell_id = cell_neighborhood[i][0]
+        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        cell_id = cell_neighborhood[cell_neighborhood[i][0]][0]
+        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+        edge_list.append([cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0], ligand_gene, receptor_gene])
+        ''''''
+        ##########################################
+
+
+
+        all_used[i] = ''
+        all_used[cell_neighborhood[i][0]] = ''
+        all_used[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+
+        if lr_selected_list == 0:
+            all_used_0[i] = ''
+            all_used_0[cell_neighborhood[i][0]] = ''
+            all_used_0[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+
+        if lr_selected_list == 1:
+            all_used_1[i] = ''
+            all_used_1[cell_neighborhood[i][0]] = ''
+            all_used_1[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+
+        if lr_selected_list == 2:
+            all_used_2[i] = ''
+            all_used_2[cell_neighborhood[i][0]] = ''
+            all_used_2[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''
+
+        if lr_selected_list == 3:
+            all_used_3[i] = ''
+            all_used_3[cell_neighborhood[i][0]] = ''
+            all_used_3[cell_neighborhood[cell_neighborhood[i][0]][0]] = ''    
+
+
+        ##########################################
+        for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
+            if c in noise_cells:
+                for g in range (0, cell_vs_gene.shape[1]):
+                    if cell_vs_gene[c][g] != 0: ## CHECK ##
+                        cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
+
+        for edge in edge_list:
+            c1 = edge[0]
+            c2 = edge[1]
+            ligand_gene = edge[2]
+            receptor_gene = edge[3]
+            lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+            P_class = P_class+1
+            #########
+            communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
+            communication_score = max(communication_score, 0)
+            #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+            #########
                 
 # choose some random cells for activating without pattern
 
@@ -652,7 +656,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 60), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 80), np.percentile(y, 95) , kn_value])
 
 ###############
 
@@ -923,7 +927,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_c'
+options = options + '_d'
 
 options = options + '_scaled'
 
