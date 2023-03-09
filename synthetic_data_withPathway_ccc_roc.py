@@ -36,12 +36,12 @@ datatype = 'path_equally_spaced' #
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
-cell_percent = 50 #100 # choose at random N% ligand cells
+cell_percent = 100 #100 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 50 #100 #20 #100 #20 #50 # and 25 pairs
+gene_count = 70 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
 noise_add = 0  #2 #1
 noise_percent = 0
@@ -363,7 +363,7 @@ for i in range (0, rec_gene):
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+i+1,scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -385,7 +385,7 @@ for i in range (0, rec_gene):
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+i+1,scale=.02,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
@@ -460,7 +460,7 @@ all_used_3 = dict()
 
 # Pick the regions for Ligands
  
-for lr_type_index in range (1,4): 
+for lr_type_index in range (2,3): 
 	
     ligand_cells = np.arange(cell_count)
     np.random.shuffle(ligand_cells)
@@ -470,7 +470,7 @@ for lr_type_index in range (1,4):
     for i in ligand_cells:
         set_ligand_cells.append([temp_x[i], temp_y[i]]) 
 
-    lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells))) 
+    lr_selected_list_allcell = list(np.random.randint(0, lr_type_index, size=len(ligand_cells))) 
     #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
     k= -1
     for i in ligand_cells:
@@ -488,11 +488,11 @@ for lr_type_index in range (1,4):
         cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
         '''
         a_cell = i
-        b_cell = cell_neighborhood[i][1]
-        if cell_neighborhood[b_cell][1]!=a_cell:
-            c_cell = cell_neighborhood[b_cell][1]
+        b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])//2]
+        if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2]!=a_cell:
+            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2]
         else:
-            c_cell = cell_neighborhood[b_cell][2]
+            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2 + 1]
         
         edge_list = []
         if lr_selected_list == 0:
@@ -546,7 +546,7 @@ for lr_type_index in range (1,4):
 
         ##########################################
         ##########################################
-
+        '''
         if lr_selected_list == 0:
             a = 8 # 14
             b = 9 # 15
@@ -554,24 +554,25 @@ for lr_type_index in range (1,4):
             a = 10 # 16
             b = 11 # 17
         ###########################################
-        lr_i = a
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
-        cell_id = a_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        cell_id = b_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
-        #########################################
-        lr_i = b
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
-        cell_id = b_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        cell_id = c_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        ''''''
+        if lr_selected_list == 0 or lr_selected_list == 1:
+            lr_i = a
+            ligand_gene = lr_database[lr_i][0]
+            receptor_gene = lr_database[lr_i][1]
+            cell_id = a_cell
+            cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+            cell_id = b_cell
+            cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+            edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
+            #########################################
+            lr_i = b
+            ligand_gene = lr_database[lr_i][0]
+            receptor_gene = lr_database[lr_i][1]
+            cell_id = b_cell
+            cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+            cell_id = c_cell
+            cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
+            edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
+        '''
         ##########################################
 
 
@@ -660,7 +661,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 80), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 95) , kn_value])
 
 ###############
 
