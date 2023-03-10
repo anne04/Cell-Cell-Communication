@@ -495,6 +495,10 @@ for lr_type_index in range (2,3):
             c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2 + 1]
         
         edge_list = []
+        if a_cell in all_used or b_cell in all_used or c_cell in all_used:
+            continue
+		
+	
         if lr_selected_list == 0:
             if a_cell in all_used_0 or b_cell in all_used_0 or c_cell in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
             #print('skip')
@@ -546,7 +550,7 @@ for lr_type_index in range (2,3):
 
         ##########################################
         ##########################################
-        '''
+        
         if lr_selected_list == 0:
             a = 8 # 14
             b = 9 # 15
@@ -572,7 +576,7 @@ for lr_type_index in range (2,3):
             cell_id = c_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
             edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        '''
+        ''''''
         ##########################################
 
 
@@ -933,7 +937,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_d'
+options = options + '_c'
 
 options = options + '_scaled'
 
