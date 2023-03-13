@@ -41,11 +41,20 @@ NICHES_output <- RunNICHES(object = pancreas,
                            min.cells.per.gene = NULL,
                            meta.data.to.map = c('orig.ident','seurat_clusters'),
                            CellToCell = F,CellToSystem = F,SystemToCell = F,
-                           CellToCellSpatial = F,CellToNeighborhood = F,NeighborhoodToCell = T)
+                           CellToCellSpatial = T,CellToNeighborhood = F,NeighborhoodToCell = F)
                            
                            
-niche <- NICHES_output[['NeighborhoodToCell']]
+niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
+
+temp_matrix = GetAssayData(object = niche, slot = "counts")
+temp_matrix = as.matrix(temp_matrix)
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+
+temp_matrix = niche[['seurat_clusters.Joint_clusters']]
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_PDAC_cluster_vs_cells.csv')
+
+
 
 # Scale and visualize
 niche <- ScaleData(niche)
@@ -115,8 +124,11 @@ NICHES_output <- RunNICHES(object = temp,
                            CellToCell = F,CellToSystem = F,SystemToCell = F,
                            CellToCellSpatial = T, CellToNeighborhood = F,NeighborhoodToCell = F)
         
-niche <- NICHES_output[['NeighborhoodToCell']]
+niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
+
+
+
 
 # Scale and visualize
 niche <- ScaleData(niche)
@@ -126,7 +138,7 @@ niche <- RunPCA(niche)
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 
-#niche <- RunUMAP(niche,dims = 1:10)  
+niche <- RunUMAP(niche,dims = 1:10)  
 #p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
