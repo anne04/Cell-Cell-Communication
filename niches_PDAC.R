@@ -47,6 +47,33 @@ NICHES_output <- RunNICHES(object = pancreas,
 niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
 
+
+cc.object <- NICHES_output$CellToCellSpatial #Extract the output of interest
+cc.object <- ScaleData(cc.object) #Scale
+#cc.object <- FindVariableFeatures(cc.object,selection.method="disp") #Identify variable features
+#cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
+#cc.object <- RunUMAP(cc.object,dims = 1:100)
+Idents(cc.object) <- cc.object[['ReceivingType']]
+ec.network <- subset(cc.object,idents ='0')
+Idents(ec.network) <- ec.network[['VectorType']]
+mark.ec <- FindAllMarkers(ec.network,
+                          logfc.threshold = 1,
+                          min.pct = 0.5,
+                          only.pos = T,
+                          test.use = 'roc')
+# Pull markers of interest to plot
+mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
+marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
+ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
+GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
+p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
+
+
+
+
 temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
