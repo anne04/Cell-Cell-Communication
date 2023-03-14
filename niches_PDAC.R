@@ -54,7 +54,7 @@ cc.object <- ScaleData(cc.object) #Scale
 #cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
 #cc.object <- RunUMAP(cc.object,dims = 1:100)
 Idents(cc.object) <- cc.object[['ReceivingType']]
-ec.network <- subset(cc.object,idents ='0')
+ec.network <- subset(cc.object,idents ='8')
 Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,
                           logfc.threshold = 1,
@@ -67,9 +67,6 @@ marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
 p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
-mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
-GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
-p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
 
 
 
