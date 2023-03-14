@@ -717,10 +717,13 @@ for i in range (0, len(barcode_info)):
     colors_point.append(colors[barcode_info[i][3]]) 
   
 #cell_count_cluster=np.zeros((labels.shape[0]))
-filltype='none'
+#filltype='none'
 
 #id_label = [0,2] #
 #for j in id_label:
+import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
+set1 = altairThemes.get_colour_scheme("Set1", id_label)
+colors = set1
 for j in range (0, id_label):
     label_i = j
     x_index=[]
@@ -733,17 +736,16 @@ for j in range (0, id_label):
             y_index.append(barcode_info[i][2])
             #cell_count_cluster[j] = cell_count_cluster[j]+1
             spot_color = colors[j]
-   
             if barcode_type[barcode_info[i][0]] == 'stroma_deserted':
                 marker_size.append("o") 
                 #fillstyles_type.append('full') 
+		        filltype='none'
             elif barcode_type[barcode_info[i][0]] == 'tumor':
                 marker_size.append("^")  
-                #fillstyles_type.append('full') 
+                filltype = 'full'
             else:
                 marker_size.append("*") 
-                #fillstyles_type.append('full') 
-            
+                filltype = 'none'           
             ###############
     marker_type = []        
     for i in range (0, len(x_index)):  
@@ -751,7 +753,7 @@ for j in range (0, id_label):
      
     for i in range (0, len(x_index)):  
         plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
-    filltype = 'full'
+    #filltype = 'full'
     '''
     if len(x_index)>0:
         plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, s=15) #marker=marker_size, 
