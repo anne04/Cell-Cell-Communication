@@ -1002,6 +1002,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
+cell_vs_gene = cell_vs_gene[:,0:gene_count]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
+
 
 
 ''' 
@@ -1015,6 +1019,7 @@ data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_y.csv', index=False
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
     cell_vs_gene = pickle.load(fp)
+
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
@@ -1226,7 +1231,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_d_scaled_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withFeature_threshold_distance_c_scaled_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
