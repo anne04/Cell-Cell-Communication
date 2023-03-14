@@ -36,13 +36,14 @@ datatype = 'path_equally_spaced' #
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
-cell_percent = 100 #100 # choose at random N% ligand cells
+cell_percent = 70 #100 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 70 #100 #20 #100 #20 #50 # and 25 pairs
+gene_count = 8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
+non_lr_genes = 70
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
@@ -351,13 +352,13 @@ print('max neighborhood: %d'%max_neighbor)
 
 
 cell_count = len(temp_x)
-gene_distribution_active = np.zeros((gene_count, cell_count))
-gene_distribution_inactive = np.zeros((gene_count, cell_count))
-gene_distribution_noise = np.zeros((gene_count, cell_count))
+gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
+gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
+gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
 start_loc = 5
 rec_gene = gene_count//2
-for i in range (0, rec_gene):
+for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -376,10 +377,17 @@ for i in range (0, rec_gene):
     print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     start_loc = np.max(gene_distribution_inactive[i,:])+2
     '''
-    
+#################
+for i in range (rec_gene, gene_count + non_lr_genes):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+
+#################
 start_loc = np.max(gene_distribution_inactive)+50
 rec_gene = gene_count//2
-for i in range (0, rec_gene):
+for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
@@ -392,6 +400,9 @@ for i in range (0, rec_gene):
     rec_gene = rec_gene + 1 
    
 #################################################
+
+
+
 gene_ids = []
 for i in range (0, gene_count):
     gene_ids.append(i) 
@@ -418,9 +429,9 @@ for i in range (0, len(lr_database)):
 ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
-cell_vs_gene = np.zeros((cell_count,gene_count))
+cell_vs_gene = np.zeros((cell_count,gene_count + non_lr_genes))
 # initially all are in inactive state
-for i in range (0, gene_count):
+for i in range (0, gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 
 noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
@@ -460,7 +471,7 @@ all_used_3 = dict()
 
 # Pick the regions for Ligands
  
-for lr_type_index in range (2,3): 
+for lr_type_index in range (1,2): 
 	
     ligand_cells = np.arange(cell_count)
     np.random.shuffle(ligand_cells)
@@ -550,7 +561,7 @@ for lr_type_index in range (2,3):
 
         ##########################################
         ##########################################
-        
+        '''
         if lr_selected_list == 0:
             a = 8 # 14
             b = 9 # 15
@@ -576,7 +587,7 @@ for lr_type_index in range (2,3):
             cell_id = c_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
             edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        ''''''
+        '''
         ##########################################
 
 
@@ -665,7 +676,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 95) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -734,6 +745,24 @@ for i in range (0, len(lig_rec_dict_TP)):
                 
 
 print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
+
+min_score_global = 1000
+max_score_global = -1000
+dist = []
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(cells_ligand_vs_receptor[i][j])>0:
+            
+            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+
+                if cells_ligand_vs_receptor[i][j][k][2]>max_score_global:
+                    max_score_global=cells_ligand_vs_receptor[i][j][k][2]
+                if cells_ligand_vs_receptor[i][j][k][2]<min_score_global:
+                    min_score_global=cells_ligand_vs_receptor[i][j][k][2]
+                dist.append(cells_ligand_vs_receptor[i][j][k][2])
+                
+print('%g, %g'%(min_score_global, max_score_global))
+
 #################
                         
 '''
@@ -754,22 +783,6 @@ for i in range (0, len(lig_rec_dict_TP)):
                     min_score=cells_ligand_vs_receptor[i][j][k][2]
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
 print('%g, %g, %g'%(min_score, max_score, np.std(dist)))
-min_score_global = 1000
-max_score_global = -1000
-dist = []
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-
-                if cells_ligand_vs_receptor[i][j][k][2]>max_score_global:
-                    max_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                if cells_ligand_vs_receptor[i][j][k][2]<min_score_global:
-                    min_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                
-print('%g, %g'%(min_score_global, max_score_global))
 
                         
 available_edges = []
@@ -900,8 +913,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)  
-                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
-                    #mean_ccc = (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
+                    #mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
+                    mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
