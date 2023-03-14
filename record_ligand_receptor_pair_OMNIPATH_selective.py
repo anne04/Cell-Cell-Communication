@@ -62,7 +62,16 @@ adata_X = np.transpose(temp)
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
 #cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
+####################
+for i in range (0, cell_vs_gene.shape[0]):
+    max_value = np.max(cell_vs_gene[i][:])
+    min_value = np.min(cell_vs_gene[i][:])
+    for j in range (0, cell_vs_gene.shape[1]):
+        cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed_scaled', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(cell_vs_gene, fp)
+#
 ####################
 '''
 adata_X = sc.pp.normalize_total(adata_h5, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
@@ -400,6 +409,22 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_gene, fp)
 ################################################################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+    row_col, edge_weight, lig_rec = pickle.load(fp)
+
+max_value = -1000
+min_value = 10000
+for index in range (0, len(edge_weight)):
+    if edge_weight[index][1] > max_value:
+        max_value = edge_weight[index][1]
+    if edge_weight[index][1] < min_value:
+        min_value = edge_weight[index][1]
+        
+for index in range (0, len(edge_weight)):
+    edge_weight[index][1] = 0.1 + ((edge_weight[index][1] - min_value)/(max_value-min_value))*(1-0.1)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_scaled', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 ########################################################### Visualization starts ##################
 pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
