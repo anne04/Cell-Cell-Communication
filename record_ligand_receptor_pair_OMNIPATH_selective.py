@@ -63,6 +63,7 @@ adata_X = np.transpose(temp)
 cell_vs_gene = copy.deepcopy(adata_X)
 #cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 ####################
+'''
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
@@ -71,6 +72,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed_scaled', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_gene, fp)
+'''
 #
 ####################
 '''
@@ -452,12 +454,12 @@ for i in range (1, len(pathologist_label)):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_r2_attention_l1.npy' #a
+#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-l = 2
+l = 3
 attention_scores = []
 datapoint_size = len(barcode_info)
 for i in range (0, datapoint_size):
@@ -494,8 +496,8 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
@@ -721,16 +723,18 @@ for i in range (0, len(barcode_info)):
 
 #id_label = [0,2] #
 #for j in id_label:
-import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
-set1 = altairThemes.get_colour_scheme("Set1", id_label)
-colors = set1
+#import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
+#set1 = altairThemes.get_colour_scheme("Set1", id_label)
+#colors = set1
 for j in range (0, id_label):
     label_i = j
     x_index=[]
     y_index=[]
     marker_size = []
-    #fillstyles_type = []
+    fillstyles_type = []
     for i in range (0, len(barcode_info)):
+        if barcode_type[barcode_info[i][0]]== 'zero':
+            continue
         if barcode_info[i][3] == j:
             x_index.append(barcode_info[i][1])
             y_index.append(barcode_info[i][2])
@@ -738,21 +742,23 @@ for j in range (0, id_label):
             spot_color = colors[j]
             if barcode_type[barcode_info[i][0]] == 'stroma_deserted':
                 marker_size.append("o") 
-                #fillstyles_type.append('full') 
-		        filltype='none'
+                fillstyles_type.append('none') 
+                #filltype='none'
             elif barcode_type[barcode_info[i][0]] == 'tumor':
                 marker_size.append("^")  
-                filltype = 'full'
+                fillstyles_type.append('full') 
+                #filltype = 'full'
             else:
                 marker_size.append("*") 
-                filltype = 'none'           
+                fillstyles_type.append('none') 
+                #filltype = 'none'           
             ###############
     marker_type = []        
     for i in range (0, len(x_index)):  
         marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
      
     for i in range (0, len(x_index)):  
-        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+        plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=fillstyles_type[i]), s=15)   
     #filltype = 'full'
     '''
     if len(x_index)>0:
@@ -806,6 +812,8 @@ for i in range (1, len(pathologist_label)):
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
 	#label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
+    if barcode_type[barcode_info[i][0]] == 'zero':
+        continue
 	if barcode_type[barcode_info[i][0]] == 0: #stroma
 		marker_size = 'circle'
 		#label_str = label_str + 'stroma'
