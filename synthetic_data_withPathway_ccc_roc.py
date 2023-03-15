@@ -2,6 +2,7 @@ import os
 #import glob
 import pandas as pd
 #import shutil
+import copy
 import csv
 import numpy as np
 import sys
@@ -27,7 +28,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 5 #6 #2.3 #
+threshold_distance = 8 #6 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -36,7 +37,7 @@ datatype = 'path_equally_spaced' #
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
-cell_percent = 70 #100 # choose at random N% ligand cells
+cell_percent = 100 # choose at random N% ligand cells
 #neighbor_percent = 70
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
@@ -499,13 +500,14 @@ for lr_type_index in range (1,2):
         cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
         '''
         a_cell = i
-        b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])//2]
-        if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2]!=a_cell:
-            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2]
+        b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]
+        if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
+            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
         else:
-            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])//2 + 1]
+            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
         
         edge_list = []
+	
         if a_cell in all_used or b_cell in all_used or c_cell in all_used:
             continue
 		
@@ -953,6 +955,7 @@ options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + 
 options = options + '_c'
 
 options = options + '_scaled'
+
 
 save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
 #lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
