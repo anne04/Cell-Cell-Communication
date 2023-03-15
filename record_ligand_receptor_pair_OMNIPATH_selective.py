@@ -454,7 +454,7 @@ for i in range (1, len(pathologist_label)):
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_scaled_attention_l1.npy' #a
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
 #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
@@ -496,7 +496,7 @@ for index in range (0, X_attention_bundle[0].shape[1]):
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_scaled', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
@@ -550,7 +550,7 @@ for j in range (0, datapoint_size):
                 ccc_index_dict[j] = ''
 '''
 ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
+threshold_down =  np.percentile(sorted(distribution), 97)
 threshold_up =  np.percentile(sorted(distribution), 100)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 for j in range (0, datapoint_size):
@@ -617,7 +617,7 @@ for j in range (0, len(barcode_info)):
                 
 df = pd.DataFrame(csv_record)
 #df.to_csv('/cluster/home/t116508uhn/64630/input_edge_ccc_th95_records_woBlankEdges.csv', index=False, header=False)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_woBlankEdges_bothAbove98th.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv', index=False, header=False)
 
 #df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
 ############################
@@ -726,6 +726,7 @@ for i in range (0, len(barcode_info)):
 #import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 #set1 = altairThemes.get_colour_scheme("Set1", id_label)
 #colors = set1
+colors[0] = '#000000'
 for j in range (0, id_label):
     label_i = j
     x_index=[]
