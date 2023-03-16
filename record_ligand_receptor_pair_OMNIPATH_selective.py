@@ -280,44 +280,44 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
-            for j in range (0, cell_vs_gene.shape[0]): # receptor
-                if distance_matrix[i,j] > spot_diameter*4:
-                    continue
-                
-                #if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
-                #    continue
+        #if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
+        for j in range (0, cell_vs_gene.shape[0]): # receptor
+            if distance_matrix[i,j] > spot_diameter*4:
+                continue
 
-                for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:  #or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
-                            
-                            if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
-                                continue
-                            
-                            
-        
-                            '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
-                                print(gene)'''
-                            
-                            communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                            '''if gene=='L1CAM':
-                                count = count+1
-                            elif gene=='LAMC2':
-                                count2 = count2+1'''
-                            '''
-                            if l_r_pair[gene][gene_rec] == -1: 
-                                l_r_pair[gene][gene_rec] = pair_id
-                                pair_id = pair_id + 1 
-                            '''
-                            relation_id = l_r_pair[gene][gene_rec]
-                            l_r_pair[gene][gene_rec] = 1
-                            #print("%s - %s "%(gene, gene_rec))
-                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
-                            count_rec = count_rec + 1
-                            count_total_edges = count_total_edges + 1
-                            activated_cell_index[i] = ''
-                            activated_cell_index[j] = ''
-                            
+            #if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+            #    continue
+
+            for gene_rec in ligand_dict_dataset[gene]:
+                if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4] or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+
+                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                            continue
+
+
+
+                        '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
+                            print(gene)'''
+
+                        communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                        '''if gene=='L1CAM':
+                            count = count+1
+                        elif gene=='LAMC2':
+                            count2 = count2+1'''
+                        '''
+                        if l_r_pair[gene][gene_rec] == -1: 
+                            l_r_pair[gene][gene_rec] = pair_id
+                            pair_id = pair_id + 1 
+                        '''
+                        relation_id = l_r_pair[gene][gene_rec]
+                        l_r_pair[gene][gene_rec] = 1
+                        #print("%s - %s "%(gene, gene_rec))
+                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                        count_rec = count_rec + 1
+                        count_total_edges = count_total_edges + 1
+                        activated_cell_index[i] = ''
+                        activated_cell_index[j] = ''
+
                             
         cell_rec_count[i] =  count_rec   
         #print("%d - %d "%(i, count_rec))
@@ -385,17 +385,17 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     # above 5th percentile only
-                    if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]:
-                        count_edge = count_edge + 1
-                        count_local = count_local + 1
+                    #if cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][2]:
+                    count_edge = count_edge + 1
+                    count_local = count_local + 1
 #print(count_edge)                      
-                        mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
-                        row_col.append([i,j])
-                        if gene=='SERPINA1': # or gene=='MIF':
-                            ccc_index_dict[i] = ''
-                        #ccc_index_dict[j] = ''
-                        edge_weight.append([dist_X[i,j], mean_ccc])
-                        lig_rec.append([gene, gene_rec])                      
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2]
+                    row_col.append([i,j])
+                    #if gene=='SERPINA1': # or gene=='MIF':
+                    #    ccc_index_dict[i] = ''
+                    #ccc_index_dict[j] = ''
+                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    lig_rec.append([gene, gene_rec])                      
                 
                 if max_local < count_local:
                     max_local = count_local
@@ -412,10 +412,11 @@ print('count local %d'%max_local)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'eitherOne_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
