@@ -461,170 +461,218 @@ for i in range (1, len(pathologist_label)):
 
         
 #####
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
-#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
-X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+csv_record_dict = defaultdict(list)
+run = 0
+filename = ["r3_", "r4_", "r5_"]
+for run_time in range (0, 3):
+    run = run_time
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-l = 3
-attention_scores = []
-datapoint_size = len(barcode_info)
-for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-	
-#attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
-distribution = []
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-    #distribution.append(attention_scores[i][j])
-    attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
-    distribution.append(X_attention_bundle[l][index][0])
-##############
-'''
-attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-##############
-adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
-for index in range (0, X_attention_bundle[0].shape[1]):
-    i = X_attention_bundle[0][0][index]
-    j = X_attention_bundle[0][1][index]
-    adjacency_matrix [i][j] = 1
-'''
-
-##############
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-#    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    row_col, edge_weight, lig_rec = pickle.load(fp) # density_
-
-lig_rec_dict = []
-for i in range (0, datapoint_size):
-    lig_rec_dict.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
-        
-total_type = np.zeros((2))        
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    lig_rec_dict[i][j].append(lig_rec[index])  
-    
-    
-attention_scores = []
-datapoint_size = len(barcode_info)
-for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-
-distribution = []
-ccc_index_dict = dict()
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    if edge_weight[index][1]>0:
-        attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0])
-        distribution.append(edge_weight[index][1] * edge_weight[index][0])
-        ccc_index_dict[i] = ''
-        ccc_index_dict[j] = ''   
-	
-###########################
-'''
-ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 95)
-threshold_up =  np.percentile(sorted(distribution), 100)
-connecting_edges = np.zeros((datapoint_size,datapoint_size))
-for j in range (0, datapoint_size):
-    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+    l = 3
+    attention_scores = []
+    datapoint_size = len(barcode_info)
     for i in range (0, datapoint_size):
-            if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                connecting_edges[i][j] = 1
-                #lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-'''
-ccc_index_dict = dict()
-threshold_down =  np.percentile(sorted(distribution), 97)
-threshold_up =  np.percentile(sorted(distribution), 100)
-connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-for j in range (0, datapoint_size):
-    #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+        attention_scores.append([])   
+        for j in range (0, datapoint_size):	
+            attention_scores[i].append([])   
+            attention_scores[i][j] = []
+
+    #attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+    distribution = []
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index]
+        #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
+        #distribution.append(attention_scores[i][j])
+        attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
+        distribution.append(X_attention_bundle[l][index][0])
+    ##############
+    '''
+    attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index]
+        attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
+    ##############
+    adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index]
+        adjacency_matrix [i][j] = 1
+    '''
+
+    ##############
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+    #    row_col, edge_weight = pickle.load(fp)
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+        row_col, edge_weight, lig_rec = pickle.load(fp) # density_
+
+    lig_rec_dict = []
     for i in range (0, datapoint_size):
-        atn_score_list = attention_scores[i][j]
-        #print(len(atn_score_list))
-        #s = min(0,len(atn_score_list)-1)
-        for k in range (0, len(atn_score_list)):
-            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                connecting_edges[i][j] = 1
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''
-     
+        lig_rec_dict.append([])  
+        for j in range (0, datapoint_size):	
+            lig_rec_dict[i].append([])   
+            lig_rec_dict[i][j] = []
+
+    total_type = np.zeros((2))        
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        lig_rec_dict[i][j].append(lig_rec[index])  
+
+    '''    
+    attention_scores = []
+    datapoint_size = len(barcode_info)
+    for i in range (0, datapoint_size):
+        attention_scores.append([])   
+        for j in range (0, datapoint_size):	
+            attention_scores[i].append([])   
+            attention_scores[i][j] = []
+
+    distribution = []
+    ccc_index_dict = dict()
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        if edge_weight[index][1]>0:
+            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0])
+            distribution.append(edge_weight[index][1] * edge_weight[index][0])
+            ccc_index_dict[i] = ''
+            ccc_index_dict[j] = ''   
+    '''	
+    ###########################
+    '''
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((datapoint_size,datapoint_size))
+    for j in range (0, datapoint_size):
+        #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+        for i in range (0, datapoint_size):
+                if attention_scores[i][j] >= threshold_down and attention_scores[i][j] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    #lig_rec_dict_filtered[i][j].append(lig_rec_dict[i][j][k][1])
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+    '''
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), 97)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+    for j in range (0, datapoint_size):
+        #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+        for i in range (0, datapoint_size):
+            atn_score_list = attention_scores[i][j]
+            #print(len(atn_score_list))
+            #s = min(0,len(atn_score_list)-1)
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+
+
+
+    graph = csr_matrix(connecting_edges)
+    n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+    print('number of component %d'%n_components)
+
+    count_points_component = np.zeros((n_components))
+    for i in range (0, len(labels)):
+         count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+
+    print(count_points_component)
+
+    id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
+    index_dict = dict()
+    for i in range (0, count_points_component.shape[0]):
+        if count_points_component[i]>1:
+            index_dict[i] = id_label
+            id_label = id_label+1
+
+    print(id_label)
+
+
+    for i in range (0, len(barcode_info)):
+    #    if barcode_info[i][0] in barcode_label:
+        if count_points_component[labels[i]] > 1:
+            barcode_info[i][3] = index_dict[labels[i]] #2
+        elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+            barcode_info[i][3] = 1
+        else:
+            barcode_info[i][3] = 0
+
+    ###############
+    csv_record = []
+    csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+    for j in range (0, len(barcode_info)):
+        for i in range (0, len(barcode_info)):
+            atn_score_list = attention_scores[i][j]
+            if i==j:
+                if len(lig_rec_dict[i][j])==0:
+                    continue
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
+                    if barcode_info[i][3]==0:
+                        print('error')
+                    elif barcode_info[i][3]==1:
+                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
+                    else:
+                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
+
+
+    ###########	
+    #run = 1
+    #csv_record_dict = defaultdict(list)
+    for i in range (1, len(csv_record)):
+        key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
+        csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump(csv_record_dict, fp)
 	
 
-graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-print('number of component %d'%n_components)
-
-count_points_component = np.zeros((n_components))
-for i in range (0, len(labels)):
-     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-           
-print(count_points_component)
-
-id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
-index_dict = dict()
-for i in range (0, count_points_component.shape[0]):
-    if count_points_component[i]>1:
-        index_dict[i] = id_label
-        id_label = id_label+1
-        
-print(id_label)
-    
- 
-for i in range (0, len(barcode_info)):
-#    if barcode_info[i][0] in barcode_label:
-    if count_points_component[labels[i]] > 1:
-        barcode_info[i][3] = index_dict[labels[i]] #2
-    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
-        barcode_info[i][3] = 1
-    else:
-        barcode_info[i][3] = 0
-       
-###############
+# intersection 
+total_runs = 3
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-for j in range (0, len(barcode_info)):
-    for i in range (0, len(barcode_info)):
-        atn_score_list = attention_scores[i][j]
-        if i==j:
-            if len(lig_rec_dict[i][j])==0:
-                continue
-        for k in range (0, len(atn_score_list)):
-            if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
-                if barcode_info[i][3]==0:
-                    print('error')
-                elif barcode_info[i][3]==1:
-                    csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
-                else:
-                    csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
+for key_value in csv_record_dict.keys():
+    if len(csv_record_dict[key_value])==total_runs:
+        item = key_value.split('-')
+        i = int(item[0])
+        j = int(item[1])
+        ligand = item[2]
+        receptor = item[3]        
+        ###
+        '''
+        score = 0
+        for k in range (0, len(csv_record_dict[key_value])):
+            score = score + csv_record_dict[key_value][k][0]
+        '''
+        ###
+        label = csv_record_dict[key_value][0][1]
+        score = csv_record_dict[key_value][0][0] #score/total_runs
+        csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
+# union 
+###
 
-                
+df = pd.DataFrame(csv_record)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_scaled_intersection.csv', index=False, header=False)
+
+############
+
+
+
+
 df = pd.DataFrame(csv_record)
 #df.to_csv('/cluster/home/t116508uhn/64630/input_edge_ccc_th95_records_woBlankEdges.csv', index=False, header=False)
 df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv', index=False, header=False)
@@ -733,9 +781,9 @@ for i in range (0, len(barcode_info)):
 
 #id_label = [0,2] #
 #for j in id_label:
-#import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
-#set1 = altairThemes.get_colour_scheme("Set1", id_label)
-#colors = set1
+import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
+set1 = altairThemes.get_colour_scheme("Set1", id_label)
+colors = set1
 colors[0] = '#000000'
 for j in range (0, id_label):
     label_i = j
@@ -822,42 +870,53 @@ for i in range (1, len(pathologist_label)):
     
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-	#label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
     if barcode_type[barcode_info[i][0]] == 'zero':
         continue
-	if barcode_type[barcode_info[i][0]] == 0: #stroma
-		marker_size = 'circle'
-		#label_str = label_str + 'stroma'
-	elif barcode_type[barcode_info[i][0]] == 1: #tumor
-		marker_size = 'box'
-		#label_str = label_str + 'tumor'
-	else:
-		marker_size = 'ellipse'
-		#label_str = label_str + 'acinar_reactive'
-		
-	g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    if barcode_type[barcode_info[i][0]] == 0: #stroma
+        marker_size = 'circle'
+        label_str = label_str + 'stroma'
+    elif barcode_type[barcode_info[i][0]] == 1: #tumor
+        marker_size = 'box'
+        label_str = label_str + 'tumor'
+    else:
+        marker_size = 'ellipse'
+        label_str = label_str + 'acinar_reactive'
+    #g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		#  label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !"
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True) #"500px", "500px",, filter_menu=True
 #nt.from_nx(g)
+lr_target = dict()
+lr_target['ITGB1-CD46'] =''
+lr_target['MDK-SDC4'] =''
+lr_target['MDK-SDC1'] =''
+lr_target['NCL'] =''
+lr_target['MDK-SDC4'] =''
+lr_target['FN1-SDC1'] =''
+
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            if attention_scores[i][j][k] >= threshold_down:
-                #print('hello')
-                title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
+            #if attention_scores[i][j][k] >= threshold_down:
+            #    #print('hello')
+            key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
+            key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
+            if len(csv_record_dict[key_value])==4 and key_value_2 in lr_target:                
+                title_str =  lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k]) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
 #nt.show('mygraph.html')
 nt.from_nx(g)
 nt.show('mygraph.html')
-
-#from networkx.drawing.nx_agraph import write_dot
-#write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_th95.dot")
-#
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
+
+from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_bothAbove98_th97.dot")
+#
