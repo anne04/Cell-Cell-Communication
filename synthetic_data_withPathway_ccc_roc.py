@@ -44,7 +44,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #receptor_connections = 'all_same' #'all_not_same'
 gene_count = 8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
-non_lr_genes = 70
+non_lr_genes = gene_count*10
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
@@ -481,7 +481,8 @@ for lr_type_index in range (1,2):
     set_ligand_cells = []
     for i in ligand_cells:
         set_ligand_cells.append([temp_x[i], temp_y[i]]) 
-
+        
+    #lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells)))
     lr_selected_list_allcell = list(np.random.randint(0, lr_type_index, size=len(ligand_cells))) 
     #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
     k= -1
@@ -489,28 +490,20 @@ for lr_type_index in range (1,2):
         # choose which L-R are working for this ligand i
         k = k + 1 
         lr_selected_list = lr_selected_list_allcell[k] 
-        '''
-        if i in all_used or cell_neighborhood[i][0] in all_used or cell_neighborhood[cell_neighborhood[i][0]][0] in all_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-            #print('skip')
-            continue
-        '''
-        '''
-        cell_vs_gene[i, :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-        cell_vs_gene[cell_neighborhood[i][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-        cell_vs_gene[cell_neighborhood[cell_neighborhood[i][0]][0], :] = 0 # to set all other genes to 0, remember cell knee let us keep only active genes and others are set to 0.
-        '''
+
         a_cell = i
         b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]
+        
         if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
             c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
         else:
             c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
         
         edge_list = []
-	
+        
         if a_cell in all_used or b_cell in all_used or c_cell in all_used:
             continue
-		
+        ''''''
 	
         if lr_selected_list == 0:
             if a_cell in all_used_0 or b_cell in all_used_0 or c_cell in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
@@ -550,8 +543,9 @@ for lr_type_index in range (1,2):
         cell_id = b_cell
         cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
         edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
-
+       
         #########################################
+        
         lr_i = b
         ligand_gene = lr_database[lr_i][0]
         receptor_gene = lr_database[lr_i][1]
@@ -560,13 +554,13 @@ for lr_type_index in range (1,2):
         cell_id = c_cell
         cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
         edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-
+        
         ##########################################
         ##########################################
         '''
         if lr_selected_list == 0:
-            a = 8 # 14
-            b = 9 # 15
+            a = 2 # 14
+            b = 3 # 15
         elif lr_selected_list == 1:
             a = 10 # 16
             b = 11 # 17
@@ -656,7 +650,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[1]):
         cell_vs_gene[i,j] = cell_vs_gene[i,j] / total_sum
 '''
-'''''' 
+
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
@@ -719,7 +713,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
-                        
+
 print('total edges %d'%count)
 ################
 
@@ -952,7 +946,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_c'
+options = options + '_d'
 
 options = options + '_scaled'
 
