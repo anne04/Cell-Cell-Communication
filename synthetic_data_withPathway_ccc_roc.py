@@ -386,7 +386,7 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
 
 #################
-start_loc = np.max(gene_distribution_inactive)+50
+start_loc = 45 #np.max(gene_distribution_inactive)+50
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
@@ -650,14 +650,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[1]):
         cell_vs_gene[i,j] = cell_vs_gene[i,j] / total_sum
 '''
-
+'''
 for i in range (0, cell_vs_gene.shape[0]):
     max_value = np.max(cell_vs_gene[i][:])
     min_value = np.min(cell_vs_gene[i][:])
     for j in range (0, cell_vs_gene.shape[1]):
 	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
        
-
+'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -717,7 +717,6 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
 print('total edges %d'%count)
 ################
 
-
 min_score = 1000
 max_score = -1000
 count = 0
@@ -741,7 +740,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                 
 
 print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
-
+'''
 min_score_global = 1000
 max_score_global = -1000
 dist = []
@@ -758,7 +757,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                 dist.append(cells_ligand_vs_receptor[i][j][k][2])
                 
 print('%g, %g'%(min_score_global, max_score_global))
-
+'''
 #################
                         
 '''
@@ -909,8 +908,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)  
-                    #mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
-                    mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
+                    mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
+                    #mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
@@ -1228,7 +1227,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withlrFeature_threshold_distance_c_scaled_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_c_scaled_amsgrad_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
