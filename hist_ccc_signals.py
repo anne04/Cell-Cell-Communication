@@ -76,7 +76,8 @@ def main():
   #data_options = 'Female_Virgin_ParentingExcitatory_0.21_20'
   #inFile = '/cluster/home/t116508uhn/64630/ccc_th98_records' + data_options + '.csv'
   #inFile = '/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv' #sys.argv[1]
-  inFile = '/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv' #sys.argv[1]
+  #inFile = '/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv' #sys.argv[1]
+  inFile = '/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_scaled_intersection.csv' #sys.argv[1]
   df = readCsv(inFile)
   df = preprocessDf(df)
   outPathRoot = inFile.split('.')[0]
