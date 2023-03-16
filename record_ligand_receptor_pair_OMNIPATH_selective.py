@@ -215,7 +215,17 @@ for gene in gene_info.keys():
         count = count + 1
 print('number of affected genes %d '%count)
 affected_gene_count = count
+######################################
+lr_gene_index = []
+for gene in gene_info.keys(): 
+    if gene_info[gene] == 'included':
+        lr_gene_index.append(gene_index[gene])
 
+lr_gene_index = sorted(lr_gene_index)
+cell_vs_lrgene = cell_vs_gene[:, lr_gene_index]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_lrgene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(cell_vs_lrgene, fp)
+######################################
 
 ligand_list = list(ligand_dict_dataset.keys())  
 print('len ligand_list %d'%len(ligand_list))
