@@ -1123,6 +1123,31 @@ plt.hist(distribution, color = 'blue',
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
+############################
+data_list=dict()
+data_list['component_label']=[]
+data_list['X']=[]
+data_list['Y']=[]
+
+for i in range (0, temp_x.shape[0]):
+    data_list['component_label'].append(datapoint_label[i])
+    data_list['X'].append(temp_x[i])
+    data_list['Y'].append(temp_y[i])
+    
+
+data_list_pd = pd.DataFrame(data_list)
+#set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
+    
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+    #tooltip=['component_label']
+)#.configure_legend(labelFontSize=6, symbolLimit=50)
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
+
+
 ####################
 ids = []
 x_index=[]
@@ -1146,11 +1171,9 @@ g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(temp_x)):
     marker_size = 'circle'
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-   		
+    #pos = str(x_index[i])+","+str(y_index[i])+" !",    
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network(directed=True) #"500px", "500px",
-nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1160,13 +1183,20 @@ for i in range (0, datapoint_size):
             #if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  ""+str(lig_rec_dict[i][j][k])+", "+str(attention_scores[i][j][k])
-                nt.add_edge(int(i), int(j), title=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+                g.add_edge(int(i), int(j), label=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 
+nt = Network(directed=True, height='1000px', width='100%') #"500px", "500px",
+nt.from_nx(g)
 nt.show('mygraph.html')
 
 
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
+
+from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_type5_midlevel_overlap.dot")
+
 ###############################################################
 #high_density_grid:
 import altair as alt
