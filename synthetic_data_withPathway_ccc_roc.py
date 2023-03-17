@@ -357,7 +357,7 @@ gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
-start_loc = 5
+start_loc = 15
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
@@ -379,6 +379,7 @@ for i in range (0, gene_count//2):
     start_loc = np.max(gene_distribution_inactive[i,:])+2
     '''
 #################
+start_loc = 10
 for i in range (rec_gene, gene_count + non_lr_genes):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
@@ -386,7 +387,7 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
 
 #################
-start_loc = 45 #np.max(gene_distribution_inactive)+50
+start_loc = np.max(gene_distribution_inactive)+10
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
@@ -471,6 +472,14 @@ all_used_2 = dict()
 all_used_3 = dict()
 
 # Pick the regions for Ligands
+cells_ligand_vs_receptor = []
+for i in range (0, cell_vs_gene.shape[0]):
+    cells_ligand_vs_receptor.append([])
+
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        cells_ligand_vs_receptor[i].append([])
+        cells_ligand_vs_receptor[i][j] = []
  
 for lr_type_index in range (1,2): 
 	
@@ -557,7 +566,7 @@ for lr_type_index in range (1,2):
         
         ##########################################
         ##########################################
-        '''
+        
         if lr_selected_list == 0:
             a = 2 # 14
             b = 3 # 15
@@ -583,7 +592,7 @@ for lr_type_index in range (1,2):
             cell_id = c_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
             edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        '''
+        ''''''
         ##########################################
 
 
@@ -630,8 +639,8 @@ for lr_type_index in range (1,2):
             P_class = P_class+1
             #########
             communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
-            communication_score = max(communication_score, 0)
-            #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+            #communication_score = max(communication_score, 0)
+            cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
                 
 # choose some random cells for activating without pattern
@@ -658,6 +667,12 @@ for i in range (0, cell_vs_gene.shape[0]):
 	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
        
 '''
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        if len(cells_ligand_vs_receptor[i][j])>0:
+            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                cells_ligand_vs_receptor[i][j][k][2] = cell_vs_gene[i,cells_ligand_vs_receptor[i][j][k][0]] * cell_vs_gene[j,cells_ligand_vs_receptor[i][j][k][1]] 
+
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -672,13 +687,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 99) , kn_value])
 
 ###############
 
 # ready to go
 ################################################################################################
 # do the usual things
+'''
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -687,15 +703,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
- 
+''' 
 count = 0
-
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-        #if i in all_used or j in all_used:
-        #    continue
+        if i in all_used or j in all_used:
+            continue
                 
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
@@ -705,18 +720,16 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     cell_vs_gene[i][gene_index[gene]] = cell_vs_gene[i][gene_index[gene]] + gene_distribution_noise[i]
                 if j in noise_cells:
                     cell_vs_gene[j][gene_index[gene_rec]]  = cell_vs_gene[j][gene_index[gene_rec]]  + gene_distribution_noise[j]
-                '''
-                
+                '''                
                 if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
-                    communication_score = max(communication_score, 0)
-                    if communication_score>0:
-                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
-                        count = count + 1
+                    #communication_score = max(communication_score, 0)
+                    #if communication_score>0:
+                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
+                    count = count + 1
 
-print('total edges %d'%count)
-################
-
+print('total neg edges %d'%count)
+#################
 min_score = 1000
 max_score = -1000
 count = 0
@@ -736,10 +749,45 @@ for i in range (0, len(lig_rec_dict_TP)):
                         if cells_ligand_vs_receptor[i][j][k][2]<min_score:
                             min_score=cells_ligand_vs_receptor[i][j][k][2]                       
 
-                        
-                
+print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
-print('count=%d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
+################
+'''
+old_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
+# update TP list
+# mark all the connection between true i and true j as TP if both of them exist in all_used
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[0]):
+        if len(cells_ligand_vs_receptor[i][j])>0:
+            if i in all_used and j in all_used:
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                    ligand_gene = cells_ligand_vs_receptor[i][j][k][0]
+                    receptor_gene = cells_ligand_vs_receptor[i][j][k][1]
+                    lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+
+###################                   
+min_score = 1000
+max_score = -1000
+count = 0
+dist = []
+for i in range (0, len(lig_rec_dict_TP)):
+    flag_debug = 0
+    for j in range (0, len(lig_rec_dict_TP)):
+        flag_found = 0
+        if len(lig_rec_dict_TP[i][j])>0 and len(cells_ligand_vs_receptor[i][j])>0: 
+            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                for l in range (0, len(lig_rec_dict_TP[i][j])):
+                    if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
+                        dist.append(cells_ligand_vs_receptor[i][j][k][2])
+                        count = count + 1
+                        if cells_ligand_vs_receptor[i][j][k][2]>max_score:
+                            max_score=cells_ligand_vs_receptor[i][j][k][2]
+                        if cells_ligand_vs_receptor[i][j][k][2]<min_score:
+                            min_score=cells_ligand_vs_receptor[i][j][k][2]                       
+
+print('Now total TP= %d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
+'''             
+
 '''
 min_score_global = 1000
 max_score_global = -1000
@@ -897,12 +945,32 @@ count_edge = 0
 max_local = 0
 local_list = np.zeros((20))
 for i in range (0, len(cells_ligand_vs_receptor)):
-    #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
         if dist_X[i,j] > 0: #distance_matrix[i][j] <= threshold_distance: 
             count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
+                '''
+                if len(lig_rec_dict_TP[i][j])>0: # they are participating in true connection. So, discard other connections for them. 
+                    for k in range (0, len(cells_ligand_vs_receptor[i][j])):                       
+                        for l in range (0, len(lig_rec_dict_TP[i][j])):
+                            if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
+                                gene = cells_ligand_vs_receptor[i][j][k][0]
+                                gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                                count_edge = count_edge + 1
+                                count_local = count_local + 1
+                                #print(count_edge)  
+                                mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
+                                #mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
+                                row_col.append([i,j])
+                                ccc_index_dict[i] = ''
+                                ccc_index_dict[j] = ''
+                                edge_weight.append([dist_X[i,j], mean_ccc])
+                                lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])                                
+                    # comparison done so continue to next step
+                    continue
+                '''
+                # if not
+                for k in range (0, len(cells_ligand_vs_receptor[i][j])):    
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
                     count_edge = count_edge + 1
@@ -1430,8 +1498,7 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
  
-plt.hist(distribution, color = 'blue',
-         bins = int(len(distribution)/5))
+plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
@@ -1467,12 +1534,11 @@ for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
-        
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
             #if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  ""+str(lig_rec_dict[i][j][k])+", "+str(attention_scores[i][j][k])
-                nt.add_edge(int(i), int(j), title=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+                nt.add_edge(int(i), int(j), label=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 
 nt.show('mygraph.html')
 
