@@ -54,7 +54,7 @@ cc.object <- ScaleData(cc.object) #Scale
 #cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
 #cc.object <- RunUMAP(cc.object,dims = 1:100)
 Idents(cc.object) <- cc.object[['ReceivingType']]
-ec.network <- subset(cc.object,idents ='0')
+ec.network <- subset(cc.object,idents ='8')
 Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,
                           logfc.threshold = 1,
@@ -63,12 +63,12 @@ mark.ec <- FindAllMarkers(ec.network,
                           test.use = 'roc')
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
-temp_matrix = mark.ec[['gene']]
-write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pairs_0.csv')
-
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
-p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
-ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+#p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
+#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+
+temp_matrix = marker.list.ec[['gene']] #mark.ec[['gene']]
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pairs_8_brief.csv')
 
 
 temp_matrix = mark.ec[['gene']]
