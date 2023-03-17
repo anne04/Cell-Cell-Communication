@@ -28,7 +28,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 8 #6 #2.3 #
+threshold_distance = 2 #8 #6 #2.3 #
 k_nn = 8 # #5 = h
 distance_measure = 'threshold_dist' # 'knn'  #<-----------
 datatype = 'path_equally_spaced' #
@@ -387,7 +387,7 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
 
 #################
-start_loc = np.max(gene_distribution_inactive)+10
+start_loc = np.max(gene_distribution_inactive)+40
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
@@ -600,7 +600,15 @@ for lr_type_index in range (1,2):
         all_used[a_cell] = ''
         all_used[b_cell] = ''
         all_used[c_cell] = ''
-
+        for cell in cell_neighborhood[a_cell]:
+            all_used[cell]=''
+        for cell in cell_neighborhood[b_cell]:
+            all_used[cell]=''
+        for cell in cell_neighborhood[c_cell]:
+            all_used[cell]=''
+        
+        
+        
         if lr_selected_list == 0:
             all_used_0[a_cell] = ''
             all_used_0[b_cell] = ''
@@ -640,7 +648,7 @@ for lr_type_index in range (1,2):
             #########
             communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
             #communication_score = max(communication_score, 0)
-            cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
+            #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
                 
 # choose some random cells for activating without pattern
@@ -666,13 +674,13 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[1]):
 	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
        
-'''
+
 for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         if len(cells_ligand_vs_receptor[i][j])>0:
             for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                 cells_ligand_vs_receptor[i][j][k][2] = cell_vs_gene[i,cells_ligand_vs_receptor[i][j][k][0]] * cell_vs_gene[j,cells_ligand_vs_receptor[i][j][k][1]] 
-
+'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -687,14 +695,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 99) , kn_value])
 
 ###############
 
 # ready to go
 ################################################################################################
 # do the usual things
-'''
+''''''
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -703,14 +711,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
-''' 
+ 
 count = 0
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-        if i in all_used or j in all_used:
-            continue
+        #if i in all_used or j in all_used:
+        #    continue
                 
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
@@ -1013,7 +1021,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_d'
+options = options + '_e'
 
 options = options + '_scaled'
 
