@@ -923,3 +923,35 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 from networkx.drawing.nx_agraph import write_dot
 write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_bothAbove98_th97.dot")
 #
+#######################
+pair_list = []
+for cluster in range (0, 9):
+    df = pd.read_csv('/cluster/home/t116508uhn/niches_output_pairs_'+str(cluster)+'_brief.csv')
+    for i in range (0, len(df)):
+        pair_list.append(df['x'][i])
+    
+data_list=dict()
+data_list['X']=[]
+for i in range (0, len(pair_list)):
+    data_list['X'].append(pair_list[i])
+    
+df = pd.DataFrame(data_list)    
+df_temp = df.groupby(['X'])['X'].count()
+df_temp = df_temp.sort_values(ascending=False)
+
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]
+for i in range (0, len(df_temp)):
+    data_list['X'].append(df_temp.index[i])
+    data_list['Y'].append(df_temp[i])
+
+df = pd.DataFrame(data_list)    
+barchart_lrPair = alt.Chart(df).mark_bar().encode(
+        x=alt.X("X:N", sort='-y', axis=alt.Axis(labelAngle=45), ), #
+        y=alt.Y("Y")
+    )
+barchart_lrPair.save('/cluster/home/t116508uhn/64630/niches_output_pairs.html')    
+
+
+
