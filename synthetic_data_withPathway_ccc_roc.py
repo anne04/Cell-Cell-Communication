@@ -687,7 +687,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1172,7 +1172,9 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
-        
+
+	
+	
 datapoint_size = temp_x.shape[0]              
 total_type = np.zeros((len(lr_database)))
 for i in range (0, datapoint_size):
@@ -1184,14 +1186,11 @@ for i in range (0, datapoint_size):
 positive_class = np.sum(total_type)
 negative_class = len(row_col) - positive_class           
 ############# draw the points which are participating in positive classes  ######################
-ccc_index_dict = dict()               
-for i in range (0, datapoint_size):
-    for j in range (0, datapoint_size):
-        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
-            #if 1 in lig_rec_dict_TP[i][j]:                
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''               
-
+ccc_index_dict = dict()     
+for i in lig_rec_dict_TP:
+    ccc_index_dict[i] = ''
+    for j in lig_rec_dict_TP[i]:
+        ccc_index_dict[j] = ''   
 ######################################	
 
 attention_scores = []
@@ -1218,7 +1217,24 @@ for index in range (0, len(row_col)):
         #distribution.append(edge_weight[index][1])    
         attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
         distribution.append(edge_weight[index][1]*edge_weight[index][0])
-
+###########
+for i in range (0, datapoint_size):  
+    for j in range (0, datapoint_size):	
+        if i in ccc_index_dict and j in ccc_index_dict:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                if j not in lig_rec_dict_TP[i]:
+                    lig_rec_dict_TP[i][j] = []
+                lig_rec_dict_TP[i][j].append(lig_rec_dict[i][j][k])
+        
+ccc_index_dict = dict()  
+P_class = 0
+for i in lig_rec_dict_TP:
+    ccc_index_dict[i] = ''
+    for j in lig_rec_dict_TP[i]:
+        ccc_index_dict[j] = ''  
+        P_class = P_class + len(lig_rec_dict_TP[i][j])
+        
+############
 percentage_value = 100
 while percentage_value > 0:
     percentage_value = percentage_value - 10
@@ -1295,7 +1311,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_c_scaled_amsgrad_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_withlrFeature_threshold_distance_c_scaled_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
