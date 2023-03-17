@@ -464,13 +464,13 @@ for i in range (1, len(pathologist_label)):
 #####
 csv_record_dict = defaultdict(list)
 run = 0
-filename = ["r3_", "r4_", "r5_"]
-for run_time in range (0, 3):
+filename = ["", "r2_", "r3_", "r4_"]
+for run_time in range (0, 4):
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
@@ -566,7 +566,7 @@ for run_time in range (0, 3):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 97)
+    threshold_down =  np.percentile(sorted(distribution), 95)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -643,7 +643,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_c
 	
 
 # intersection 
-total_runs = 3
+total_runs = 4
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 for key_value in csv_record_dict.keys():
@@ -660,14 +660,14 @@ for key_value in csv_record_dict.keys():
             score = score + csv_record_dict[key_value][k][0]
         '''
         ###
-        label = csv_record_dict[key_value][0][1]
-        score = csv_record_dict[key_value][0][0] #score/total_runs
+        label = csv_record_dict[key_value][3][1]
+        score = csv_record_dict[key_value][3][0] #score/total_runs
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
 # union 
 ###
 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_scaled_intersection.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_intersection.csv', index=False, header=False)
 
 ############
 
@@ -719,7 +719,7 @@ data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plo
 
 df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
 
-set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
+#set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
     
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
@@ -894,8 +894,10 @@ lr_target = dict()
 lr_target['ITGB1-CD46'] =''
 lr_target['MDK-SDC4'] =''
 lr_target['MDK-SDC1'] =''
-lr_target['NCL'] =''
-lr_target['MDK-SDC4'] =''
+lr_target['MDK-NCL'] =''
+lr_target['ITGB1-SDC1'] =''
+lr_target['APP-TNFRSF21'] =''
+lr_target['ANXA1-MET'] =''
 lr_target['FN1-SDC1'] =''
 
 for i in range (0, datapoint_size):
