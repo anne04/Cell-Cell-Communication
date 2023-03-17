@@ -566,7 +566,7 @@ for run_time in range (0, 4):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 97)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -638,7 +638,7 @@ for run_time in range (0, 4):
         key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
         csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_97th', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump(csv_record_dict, fp)
 	
 
@@ -660,14 +660,14 @@ for key_value in csv_record_dict.keys():
             score = score + csv_record_dict[key_value][k][0]
         '''
         ###
-        label = csv_record_dict[key_value][3][1]
-        score = csv_record_dict[key_value][3][0] #score/total_runs
+        label = csv_record_dict[key_value][total_runs-1][1]
+        score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
 # union 
 ###
 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_intersection.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_97th_intersection.csv', index=False, header=False)
 
 ############
 
@@ -895,8 +895,8 @@ lr_target['ITGB1-CD46'] =''
 lr_target['MDK-SDC4'] =''
 lr_target['MDK-SDC1'] =''
 lr_target['MDK-NCL'] =''
-lr_target['ITGB1-SDC1'] =''
-lr_target['APP-TNFRSF21'] =''
+#lr_target['ITGB1-SDC1'] =''
+#lr_target['APP-TNFRSF21'] =''
 lr_target['ANXA1-MET'] =''
 lr_target['FN1-SDC1'] =''
 
