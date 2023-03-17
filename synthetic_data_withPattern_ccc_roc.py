@@ -1167,3 +1167,51 @@ nt.show('mygraph.html')
 
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+###############################################################
+#high_density_grid:
+import altair as alt
+from vega_datasets import data
+
+FPR = [10.5103, 21.8175, 33.1057, 44.2421, 55.6251, 66.5908, 77.5754, 84.8985, 90.0019, 100]
+TPR_naive_lownoise = [0, 0, 0, 0, 0, 0, 0, 10, 77, 100]
+TPR_us_lownoise = [36.4286, 98.7143, 100, 100, 100, 100, 100, 100, 100, 100]
+TPR_naive_highnoise = [0, 0, 0, 0.130719, 0.130719, 1.83007, 5.62092, 38.8235, 90.1961, 100]
+TPR_us_highnoise = [21.5686, 91.2418, 98.0392, 99.8693, 99.8693, 100, 100, 100, 100, 100]
+
+plot_dict = defaultdict(list)
+
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_naive_lownoise[i])
+    plot_dict['Type'].append('naive_model_lowNoise')
+    
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_us_lownoise[i])
+    plot_dict['Type'].append('our_model_lowNoise')
+    
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_naive_highnoise[i])
+    plot_dict['Type'].append('naive_model_highNoise')
+	
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_us_highnoise[i])
+    plot_dict['Type'].append('our_model_highNoise')
+    
+    
+data_list_pd = pd.DataFrame(plot_dict)    
+
+source = data.stocks()
+
+chart = alt.Chart(data_list_pd).mark_line().encode(
+    x='FPR:T',
+    y='TPR:Q',
+    color='Type:N',
+)	
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
+
+
+
