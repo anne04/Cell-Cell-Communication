@@ -357,7 +357,7 @@ gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
-start_loc = 15
+start_loc = 10
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
@@ -695,7 +695,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1226,6 +1226,7 @@ for index in range (0, len(row_col)):
         attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
         distribution.append(edge_weight[index][1]*edge_weight[index][0])
 ###########
+'''
 for i in range (0, datapoint_size):  
     for j in range (0, datapoint_size):	
         if i in ccc_index_dict and j in ccc_index_dict:
@@ -1241,7 +1242,7 @@ for i in lig_rec_dict_TP:
     for j in lig_rec_dict_TP[i]:
         ccc_index_dict[j] = ''  
         P_class = P_class + len(lig_rec_dict_TP[i][j])
-        
+'''        
 ############
 percentage_value = 100
 while percentage_value > 0:
