@@ -39,16 +39,21 @@ for i in range (1, len(toomany_label)):
         barcode_label_pred[toomany_label[i][0]] = int(toomany_label[i][1])
         cluster_dict[int(toomany_label[i][1])].append(toomany_label[i][0])
 
-print(len(cluster_dict.keys()))
+print('total number of clusters in too-many-cells: %d '%len(cluster_dict.keys()))
 
 #################################################################################       
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' # tumor_64630_D1_IX_annotation.csv' #
 pathologist_label=[]
+cluster_dict=defaultdict(list)
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
     for line in csv_file:
         pathologist_label.append(line)
-
+        line[1]
+        
+        
+        
+        
 barcode_label_pathologist=dict()
 count=np.zeros((4))
 
