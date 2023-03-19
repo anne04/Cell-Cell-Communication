@@ -33,7 +33,6 @@ with open(toomany_label_file) as file:
 
 barcode_label_pred=dict()
 cluster_dict=defaultdict(list)
-
 for i in range (1, len(toomany_label)):
     if len(toomany_label[i])>0 :
         barcode_label_pred[toomany_label[i][0]] = int(toomany_label[i][1])
@@ -43,35 +42,22 @@ print('total number of clusters in too-many-cells: %d '%len(cluster_dict.keys())
 
 #################################################################################       
 pathologist_label_file='/cluster/home/t116508uhn/64630/IX_annotation_artifacts.csv' # tumor_64630_D1_IX_annotation.csv' #
-pathologist_label=[]
-cluster_dict=defaultdict(list)
+pathologist_label=dict()
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
     for line in csv_file:
-        pathologist_label.append(line)
-        line[1]
-        
-        
-        
-        
-barcode_label_pathologist=dict()
-count=np.zeros((4))
+        pathologist_label[line[1]].append(line[0]) # it means: pathologist_label[cluster_id].append(barcode)
 
+                
+barcode_label_pathologist=dict()
+#count=np.zeros((4))
 true_label_dict = defaultdict(list)
-for i in range (1, len(pathologist_label)):
-  if pathologist_label[i][1] == 'tumor': #'Tumour':
-      barcode_label_pathologist[pathologist_label[i][0]] = 0
-      true_label_dict[0].append(pathologist_label[i][0]) 
-  elif pathologist_label[i][1] == 'stroma_deserted': #'Stroma':
-      barcode_label_pathologist[pathologist_label[i][0]] = 1
-      true_label_dict[1].append(pathologist_label[i][0]) 
-  elif pathologist_label[i][1] == 'acinar_reactive': #'Acinar_reactive':  
-      barcode_label_pathologist[pathologist_label[i][0]] = 2
-      true_label_dict[2].append(pathologist_label[i][0]) 
-  elif pathologist_label[i][1] == 'Artifact':  
-      barcode_label_pathologist[pathologist_label[i][0]] = 3
-      true_label_dict[3].append(pathologist_label[i][0]) 
-      
+cluster_id_int = 0
+for cluster_id in pathologist_label: # cluster_id is string. We need int format. 
+    for barcode in pathologist_label[cluster_id]:
+        barcode_label_pathologist[barcode] = cluster_id_int 
+        true_label_dict[cluster_id_int].append(barcode)         
+    cluster_id_int = cluster_id_int + 1
       
 ###################### Homogeneity and ARI ###########################################################  
 
