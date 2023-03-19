@@ -26,8 +26,11 @@ if __name__ == "__main__":
     parser.add_argument( '--true_label_file', type=str, help='true label file?')
     parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='data path')
     parser.add_argument( '--result_path', type=str, default='result/')
-
     args = parser.parse_args()
+    
+    #args.data_name = 'exp2_V10M25_61_D1_64630_Spatial10X'
+    #args.true_label_file = 'V10M25-61_D1_T_64630_Histology_annotation_IX.csv'
+    #args.cluster_label_file = 'exp2_D1_toomanycells_cluster.csv'
     
     generated_data_fold = args.generated_data_path + args.data_name+'/'
     result_path = args.result_path +'/'+ args.data_name +'/'
@@ -59,14 +62,13 @@ if __name__ == "__main__":
     print('total number of predicted clusters: %d '%len(cluster_dict.keys()))
 
 #################################################################################       
-    pathologist_label_file=args.true_label_file
-    pathologist_label=dict()
-    with open(pathologist_label_file) as file:
-        csv_file = csv.reader(file, delimiter=",")
-        for line in csv_file:
-            pathologist_label[line[1]].append(line[0]) # it means: pathologist_label[cluster_id].append(barcode)
+    pathologist_label_file = pd.read_csv(args.true_label_file)
+    pathologist_label=defaultdict(list)
+    for i in range (0, len(pathologist_label_file)):
+        pathologist_label[pathologist_label_file['IX_annotation'][i]].append(pathologist_label_file['Barcode'][i]) 
+        
+    # it means: pathologist_label[cluster_id].append(barcode)
 
-                
     barcode_label_pathologist=dict()
     #count=np.zeros((4))
     true_label_dict = defaultdict(list)
