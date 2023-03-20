@@ -20,6 +20,8 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
+import altairThemes
+import altair as alt
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -50,11 +52,19 @@ print(adata_h5)
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 cell_barcode = np.array(adata_h5.obs.index)
-barcode_info=[]
 #barcode_info.append("")
+
 i=0
+barcode_serial = dict()
+for cell_code in cell_barcode:
+    barcode_serial[cell_code]=i
+    i=i+1
+
+i=0
+barcode_info=[]
 for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
+
     i=i+1
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
@@ -464,8 +474,9 @@ for i in range (1, len(pathologist_label)):
 #####
 csv_record_dict = defaultdict(list)
 run = 0
-filename = ["r1_", "r2_", "r3_", "r4_"]
-for run_time in range (0, 4):
+filename = ["r1_", "r2_", "r3_"] #, "r4_", "r5_"]
+total_runs = 3
+for run_time in range (0, total_runs):
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
@@ -473,7 +484,8 @@ for run_time in range (0, 4):
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_eitherAbove_cell_knee_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_eitherAbove_cell_knee_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
@@ -514,8 +526,8 @@ for run_time in range (0, 4):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
@@ -568,7 +580,7 @@ for run_time in range (0, 4):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 99.999)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -614,6 +626,60 @@ for run_time in range (0, 4):
         else:
             barcode_info[i][3] = 0
 
+    #######################
+
+
+    '''
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        if pathologist_label[i][1] == 'tumor': #'Tumour':
+            barcode_type[pathologist_label[i][0]] = '2_tumor'
+        elif pathologist_label[i][1] =='stroma_deserted':
+            barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
+        elif pathologist_label[i][1] =='acinar_reactive':
+            barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
+        else:
+            barcode_type[pathologist_label[i][0]] = 'zero' #0
+    '''
+    
+    data_list=dict()
+    data_list['pathology_label']=[]
+    data_list['component_label']=[]
+    data_list['X']=[]
+    data_list['Y']=[]
+
+    for i in range (0, len(barcode_info)):
+        if barcode_type[barcode_info[i][0]] == 'zero':
+            continue
+        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+        data_list['component_label'].append(barcode_info[i][3])
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(-barcode_info[i][2])
+
+
+    data_list_pd = pd.DataFrame(data_list)
+    #data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
+    #df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
+    #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
+    set1 = altairThemes.get_colour_scheme("Set1", id_label)
+    set1[0] = '#000000'
+
+    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        shape = "pathology_label",
+        color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+        tooltip=['component_label']
+    )#.configure_legend(labelFontSize=6, symbolLimit=50)
+
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+'pdac_niches.html')
+    #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_scaled_'+filename[run_time]+'.html')
+    #chart.save(save_path+'altair_plot_95_'+filename[run_time]+'.html')
+    
+    
+            
+            
     ###############
     csv_record = []
     csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
@@ -639,13 +705,14 @@ for run_time in range (0, 4):
     for i in range (1, len(csv_record)):
         key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
         csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
+        
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_97th', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump(csv_record_dict, fp)
 	
 
 # intersection 
-total_runs = 4
+
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 for key_value in csv_record_dict.keys():
@@ -669,8 +736,8 @@ for key_value in csv_record_dict.keys():
 ###
 
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_records_woBlankEdges_eitherAbove_cellknee_95th_intersection.csv', index=False, header=False)
-#df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_97th_intersection.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/ccc_records_woBlankEdges_eitherAbove_cellknee_95th_intersection.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_bothAbove98th_withlrFeature_intersection.csv', index=False, header=False)
 
 ############
 
@@ -683,58 +750,6 @@ df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbov
 
 #df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
 ############################
-import altairThemes
-import altair as alt
-# register the custom theme under a chosen name
-#alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-#alt.themes.enable("publishTheme")
-
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = '2_tumor'
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
-    else:
-        barcode_type[pathologist_label[i][0]] = 'zero' #0
-
-
-data_list=dict()
-data_list['pathology_label']=[]
-data_list['component_label']=[]
-data_list['X']=[]
-data_list['Y']=[]
-
-for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['component_label'].append(barcode_info[i][3])
-    data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])
-    
-
-data_list_pd = pd.DataFrame(data_list)
-data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
-
-df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
-
-#set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
-    
-chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
-    alt.X('X', scale=alt.Scale(zero=False)),
-    alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = "pathology_label",
-    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    tooltip=['component_label']
-)#.configure_legend(labelFontSize=6, symbolLimit=50)
-
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
-
 
 
 #############
@@ -927,6 +942,33 @@ from networkx.drawing.nx_agraph import write_dot
 write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_bothAbove98_th97.dot")
 #
 #######################
+attention_scores = []
+lig_rec_dict = []
+datapoint_size = cell_vs_gene.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores.append([])   
+    lig_rec_dict.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores[i].append([])   
+        attention_scores[i][j] = []
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
+
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+#df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+distribution = []
+for col in range (1, len(df_pair_vs_cells.columns)):
+    col_name = df_pair_vs_cells.columns[col]
+    l_c = df_pair_vs_cells.columns[col].split("—")[0]
+    r_c = df_pair_vs_cells.columns[col].split("—")[1]
+    i = int(barcode_serial[l_c])
+    j = int(barcode_serial[r_c])
+    
+    for index in range (0, len(df_pair_vs_cells.index)):
+        lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
+        attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+
 pair_list = []
 for cluster in range (0, 9):
     df = pd.read_csv('/cluster/home/t116508uhn/niches_output_pairs_'+str(cluster)+'_brief.csv')
