@@ -1199,6 +1199,15 @@ write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_type5_midlevel_overlap.d
 import altair as alt
 from vega_datasets import data
 
+
+######################################
+
+
+
+
+
+
+######################################
 FPR = [10.5103, 21.8175, 33.1057, 44.2421, 55.6251, 66.5908, 77.5754, 84.8985, 90.0019, 100]
 TPR_naive_lownoise = [0, 0, 0, 0, 0, 0, 0, 10, 77, 100]
 TPR_us_lownoise = [36.4286, 98.7143, 100, 100, 100, 100, 100, 100, 100, 100]
