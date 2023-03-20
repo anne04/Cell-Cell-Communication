@@ -1137,7 +1137,7 @@ for i in range (0, temp_x.shape[0]):
 
 data_list_pd = pd.DataFrame(data_list)
 #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
-    
+set1 = colors    
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
@@ -1171,28 +1171,25 @@ g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(temp_x)):
     marker_size = 'circle'
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
-    #pos = str(x_index[i])+","+str(y_index[i])+" !",    
+   		
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
+nt = Network(directed=True) #"500px", "500px",
+nt.from_nx(g)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
-        
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
             #if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
                 title_str =  ""+str(lig_rec_dict[i][j][k])+", "+str(attention_scores[i][j][k])
-                g.add_edge(int(i), int(j), label=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+                nt.add_edge(int(i), int(j), label=title_str) #, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 
-nt = Network(directed=True, height='1000px', width='100%') #"500px", "500px",
-nt.from_nx(g)
 nt.show('mygraph.html')
-
 
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
-
 
 from networkx.drawing.nx_agraph import write_dot
 write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_type5_midlevel_overlap.dot")
