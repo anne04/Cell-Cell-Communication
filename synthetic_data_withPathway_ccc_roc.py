@@ -1664,3 +1664,39 @@ while percentage_value > 0:
               '''
     print('%d, %g'%(percentage_value, (confusion_matrix[0][0]/positive_class)*100))    
     
+import altair as alt
+from vega_datasets import data
+
+
+######################################
+FPR = [0, 7.72522, 18.3623, 30.5919, 42.7621, 54.7778, 65.9853, 76.135, 88.0556, 95.6145, 100]
+TPR_naive = [0, 0, 0, 0, 0, 0, 0, 1.82403, 12.6609, 38.5193, 100]
+TPR_us= [50, 50, 50.4292, 56.7597, 62.7682, 70.6009, 75, 82.8326, 91.4163, 95, 100]
+
+plot_dict = defaultdict(list)
+
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_naive[i])
+    plot_dict['Type'].append('naive_model')
+    
+for i in range (0, len(FPR)):
+    plot_dict['FPR'].append(FPR[i])
+    plot_dict['TPR'].append(TPR_us[i])
+    plot_dict['Type'].append('our_model')
+    
+    
+data_list_pd = pd.DataFrame(plot_dict)    
+
+source = data.stocks()
+
+chart = alt.Chart(data_list_pd).mark_line().encode(
+    x='FPR:T',
+    y='TPR:Q',
+    color='Type:N',
+)	
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.html')
+
+
+
