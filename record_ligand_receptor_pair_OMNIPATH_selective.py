@@ -64,7 +64,6 @@ i=0
 barcode_info=[]
 for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
-
     i=i+1
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
@@ -105,14 +104,14 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 97), kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 97), kn_value])
 
 
 '''
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     #print(np.histogram(cell_vs_gene[i]))
-    y = np.histogram(cell_vs_gene[i])[0] # density: 
+    y = np.histogram(cell_vs_gene[i],bins=50 )[0] # density: 
     x = range(0, len(y))
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
@@ -290,7 +289,9 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        #if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2]:
+        if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i][4]:
+            continue
+        
         for j in range (0, cell_vs_gene.shape[0]): # receptor
             if distance_matrix[i,j] > spot_diameter*4:
                 continue
@@ -299,34 +300,31 @@ for g in range(start_index, end_index):
             #    continue
 
             for gene_rec in ligand_dict_dataset[gene]:
-                if cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][4] or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                    if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                        continue
 
-                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
-                            continue
+                    '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
+                        print(gene)'''
 
-
-
-                        '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
-                            print(gene)'''
-
-                        communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                        '''if gene=='L1CAM':
-                            count = count+1
-                        elif gene=='LAMC2':
-                            count2 = count2+1'''
-                        '''
-                        if l_r_pair[gene][gene_rec] == -1: 
-                            l_r_pair[gene][gene_rec] = pair_id
-                            pair_id = pair_id + 1 
-                        '''
-                        relation_id = l_r_pair[gene][gene_rec]
-                        l_r_pair[gene][gene_rec] = 1
-                        #print("%s - %s "%(gene, gene_rec))
-                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
-                        count_rec = count_rec + 1
-                        count_total_edges = count_total_edges + 1
-                        activated_cell_index[i] = ''
-                        activated_cell_index[j] = ''
+                    communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                    '''if gene=='L1CAM':
+                        count = count+1
+                    elif gene=='LAMC2':
+                        count2 = count2+1'''
+                    '''
+                    if l_r_pair[gene][gene_rec] == -1: 
+                        l_r_pair[gene][gene_rec] = pair_id
+                        pair_id = pair_id + 1 
+                    '''
+                    relation_id = l_r_pair[gene][gene_rec]
+                    l_r_pair[gene][gene_rec] = 1
+                    #print("%s - %s "%(gene, gene_rec))
+                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                    count_rec = count_rec + 1
+                    count_total_edges = count_total_edges + 1
+                    activated_cell_index[i] = ''
+                    activated_cell_index[j] = ''
 
                             
         cell_rec_count[i] =  count_rec   
@@ -474,18 +472,18 @@ for i in range (1, len(pathologist_label)):
 #####
 csv_record_dict = defaultdict(list)
 run = 0
-filename = ["r1_", "r2_", "r3_"] #, "r4_", "r5_"]
-total_runs = 3
+filename = ["", "r2_", "r3_", "r4_", "r5_"]
+total_runs = 4
 for run_time in range (0, total_runs):
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'GAT_selective_lr_STnCCC_separate_all_density_kneepoint_r1_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_eitherAbove_cell_knee_'+filename[run_time]+'attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_scaled_'+filename[run_time]+'attention_l1.npy' #a
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
@@ -497,7 +495,7 @@ for run_time in range (0, total_runs):
         for j in range (0, datapoint_size):	
             attention_scores[i].append([])   
             attention_scores[i][j] = []
-
+    min_attention_score = 1000
     #attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
     distribution = []
     for index in range (0, X_attention_bundle[0].shape[1]):
@@ -506,6 +504,8 @@ for run_time in range (0, total_runs):
         #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
         #distribution.append(attention_scores[i][j])
         attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
+        if min_attention_score > X_attention_bundle[l][index][0]:
+            min_attention_score = X_attention_bundle[l][index][0]
         distribution.append(X_attention_bundle[l][index][0])
     ##############
     '''
@@ -563,7 +563,7 @@ for run_time in range (0, total_runs):
             distribution.append(edge_weight[index][1] * edge_weight[index][0])
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''   
-    '''	
+    '''
     ###########################
     '''
     ccc_index_dict = dict()
@@ -580,7 +580,7 @@ for run_time in range (0, total_runs):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 99.999)
+    threshold_down =  np.percentile(sorted(distribution), 97)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -641,7 +641,7 @@ for run_time in range (0, total_runs):
         else:
             barcode_type[pathologist_label[i][0]] = 'zero' #0
     '''
-    
+    '''
     data_list=dict()
     data_list['pathology_label']=[]
     data_list['component_label']=[]
@@ -673,30 +673,40 @@ for run_time in range (0, total_runs):
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
     save_path = '/cluster/home/t116508uhn/64630/'
-    chart.save(save_path+'pdac_niches.html')
+    #chart.save(save_path+'pdac_niches.html')
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_scaled_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_95_'+filename[run_time]+'.html')
-    
+    chart.save(save_path+'altair_plot_'+str(threshold_down)+'th_'+filename[run_time]+'.html')
+    '''
     
             
             
     ###############
     csv_record = []
     csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+    '''
     for j in range (0, len(barcode_info)):
         for i in range (0, len(barcode_info)):
-            atn_score_list = attention_scores[i][j]
+            for k in range (0, len(lig_rec_dict[i][j])):
+                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
+
+    '''
+    min_attention_score = -min_attention_score
+    for j in range (0, len(barcode_info)):
+        for i in range (0, len(barcode_info)):
+            
             if i==j:
                 if len(lig_rec_dict[i][j])==0:
                     continue
+            
+            atn_score_list = attention_scores[i][j]
             for k in range (0, len(atn_score_list)):
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
                     if barcode_info[i][3]==0:
                         print('error')
                     elif barcode_info[i][3]==1:
-                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
+                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
                     else:
-                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
+                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
 
 
     ###########	
@@ -706,15 +716,16 @@ for run_time in range (0, total_runs):
         key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
         csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
         
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_97th', 'wb') as fp:  #b, a:[0:5]   
-    pickle.dump(csv_record_dict, fp)
+#    pickle.dump(csv_record_dict, fp)
 	
 
 # intersection 
-
+#total_runs = 2
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
     if len(csv_record_dict[key_value])==total_runs:
         item = key_value.split('-')
@@ -729,20 +740,54 @@ for key_value in csv_record_dict.keys():
             score = score + csv_record_dict[key_value][k][0]
         '''
         ###
+        
         label = csv_record_dict[key_value][total_runs-1][1]
         score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
+        if ligand+'-'+receptor not in csv_record_intersect_dict or label not in csv_record_intersect_dict[ligand+'-'+receptor]:
+            csv_record_intersect_dict[ligand+'-'+receptor][label] = []
+        
+        csv_record_intersect_dict[ligand+'-'+receptor][label].append(score)
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
-# union 
+        
+
+        
+##########################
+set1 = altairThemes.get_colour_scheme("Set1", id_label)
+#set1[0] = '#000000'
+data_list=dict()
+data_list['lr']=[]
+data_list['component_label']=[]
+data_list['score']=[]
+for lr in csv_record_intersect_dict:
+    for component in csv_record_intersect_dict[lr]:
+        score = np.sum(csv_record_intersect_dict[lr][component]) #len(csv_record_intersect_dict[lr][component])*np.sum(csv_record_intersect_dict[lr][component]) #/len(csv_record_intersect_dict[lr][component])
+        data_list['lr'].append(lr)
+        data_list['component_label'].append(component)
+        data_list['score'].append(score)
+    
+source = pd.DataFrame(data_list)
+
+chart = alt.Chart(source).mark_bar().encode(
+    x=alt.X("lr:N", sort='-y', axis=alt.Axis(labelAngle=45)), 
+    y='score',
+    color=alt.Color("component_label:N", scale = alt.Scale(range=set1)),
+    order=alt.Order("component_label", sort="ascending"),
+    tooltip=["component_label"]
+)        
+
+chart.save(save_path+'test.html')
+       
+        
 ###
 
 df = pd.DataFrame(csv_record)
-#df.to_csv('/cluster/home/t116508uhn/64630/ccc_records_woBlankEdges_eitherAbove_cellknee_95th_intersection.csv', index=False, header=False)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_bothAbove98th_withlrFeature_intersection.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/test_intersection.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_bothAbove98th_withlrFeature_intersection.csv', index=False, header=False)
 
 ############
 
 
-
+################
 
 df = pd.DataFrame(csv_record)
 #df.to_csv('/cluster/home/t116508uhn/64630/input_edge_ccc_th95_records_woBlankEdges.csv', index=False, header=False)
