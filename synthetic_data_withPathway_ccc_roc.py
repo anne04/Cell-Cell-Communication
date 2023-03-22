@@ -42,9 +42,9 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 8 #100 #20 #100 #20 #50 # and 25 pairs
+gene_count = 16 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
-non_lr_genes = gene_count*10
+non_lr_genes = gene_count*20
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
@@ -355,11 +355,12 @@ print('max neighborhood: %d'%max_neighbor)
 cell_count = len(temp_x)
 gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
+gene_distribution_inactive_lrgenes = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
-start_loc = 10
+start_loc = 5
 rec_gene = gene_count//2
-for i in range (0, gene_count//2):
+for i in range (0, 4): #gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -378,7 +379,33 @@ for i in range (0, gene_count//2):
     print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     start_loc = np.max(gene_distribution_inactive[i,:])+2
     '''
-#################
+################
+for i in range (4, gene_count//2): ##):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    
+    ###############
+    gene_exp_list = np.random.normal(loc=25+(i%5),scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
+    #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    ################
+    
+    
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    ###################
+    gene_exp_list = np.random.normal(loc=25+(i%5),scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
+    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    
+    rec_gene = rec_gene + 1 
+
 start_loc = 10
 for i in range (rec_gene, gene_count + non_lr_genes):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
@@ -386,8 +413,10 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
 
+    
+    
 #################
-start_loc = np.max(gene_distribution_inactive)+40
+start_loc = np.max(gene_distribution_inactive_lrgenes)+30
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
@@ -472,6 +501,7 @@ all_used_2 = dict()
 all_used_3 = dict()
 
 # Pick the regions for Ligands
+'''
 cells_ligand_vs_receptor = []
 for i in range (0, cell_vs_gene.shape[0]):
     cells_ligand_vs_receptor.append([])
@@ -480,12 +510,13 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
- 
+'''
 for lr_type_index in range (1,2): 
 	
     ligand_cells = np.arange(cell_count)
     np.random.shuffle(ligand_cells)
     ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
+    print(ligand_cells[0:10])
     #ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
     set_ligand_cells = []
     for i in ligand_cells:
@@ -600,13 +631,14 @@ for lr_type_index in range (1,2):
         all_used[a_cell] = ''
         all_used[b_cell] = ''
         all_used[c_cell] = ''
+        
         for cell in cell_neighborhood[a_cell]:
             all_used[cell]=''
         for cell in cell_neighborhood[b_cell]:
             all_used[cell]=''
         for cell in cell_neighborhood[c_cell]:
             all_used[cell]=''
-        
+        ''''''
         
         
         if lr_selected_list == 0:
@@ -650,10 +682,24 @@ for lr_type_index in range (1,2):
             #communication_score = max(communication_score, 0)
             #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
-                
-# choose some random cells for activating without pattern
+print('P_class %d'%P_class)                
 
 
+############################
+for i in range (0, cell_vs_gene.shape[0]):
+    if i not in all_used:
+        for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
+            cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
+            
+        for gene in [0, 1, 2, 3, 8, 9, 10, 11]:
+            cell_vs_gene[i,gene] = min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile
+            
+    else:
+        for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
+            cell_vs_gene[i,gene] = min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+                    
+
+##############################
 # take quantile normalization.
 
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
@@ -695,7 +741,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 60), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1023,7 +1069,7 @@ options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + 
 
 options = options + '_e'
 
-options = options + '_scaled'
+#options = options + '_scaled'
 
 
 save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
