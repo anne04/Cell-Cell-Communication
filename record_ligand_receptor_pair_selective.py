@@ -849,9 +849,9 @@ for i in range (0, datapoint_size):
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
             if attention_scores[i][j][k] >= threshold_down:
                 #print('hello')
-                title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
-                g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
-				# title=
+                title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1] #+", "+str(attention_scores[i][j][k])
+                g.add_edge(int(i), int(j), title=str(attention_scores[i][j][k]), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+				# title=str(attention_scores[i][j][k])
 			
 nt = Network(directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 nt.from_nx(g)
