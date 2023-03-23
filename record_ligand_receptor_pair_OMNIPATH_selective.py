@@ -429,6 +429,31 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_gene, fp)
+	
+	
+#####################################################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'rb') as fp:
+    cell_vs_gene = pickle.load(fp)
+
+
+data_list=defaultdict(list)
+for i in range (0, cell_vs_gene.shape[0]):
+    for j in range (0, cell_vs_gene.shape[1]):
+        data_list[cell_barcode[i]].append(cell_vs_gene[i][j])
+        
+        
+data_list_pd = pd.DataFrame(data_list)    
+gene_name = []
+for j in range (0, cell_vs_gene.shape[1]):
+    gene_name.append(gene_ids[j])
+    
+data_list_pd[' ']=gene_name   
+data_list_pd = data_list_pd.set_index(' ')    
+data_list_pd.to_csv('/cluster/home/t116508uhn/PDAC_64630_gene_vs_cell.csv')
+	
+	
+	
+	
 ################################################################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
     row_col, edge_weight, lig_rec = pickle.load(fp)
@@ -472,7 +497,7 @@ for i in range (1, len(pathologist_label)):
 #####
 csv_record_dict = defaultdict(list)
 run = 0
-filename = ["", "r2_", "r3_", "r4_", "r5_"]
+filename = ["", "r2_", "r3_", "r4_"]
 total_runs = 4
 for run_time in range (0, total_runs):
     run = run_time
@@ -526,8 +551,8 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
@@ -580,7 +605,7 @@ for run_time in range (0, total_runs):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 97)
+    threshold_down =  np.percentile(sorted(distribution), 80)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -641,7 +666,7 @@ for run_time in range (0, total_runs):
         else:
             barcode_type[pathologist_label[i][0]] = 'zero' #0
     '''
-    '''
+    
     data_list=dict()
     data_list['pathology_label']=[]
     data_list['component_label']=[]
@@ -675,8 +700,8 @@ for run_time in range (0, total_runs):
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+'pdac_niches.html')
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_scaled_'+filename[run_time]+'.html')
-    chart.save(save_path+'altair_plot_'+str(threshold_down)+'th_'+filename[run_time]+'.html')
-    '''
+    chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
+    
     
             
             
@@ -752,29 +777,29 @@ for key_value in csv_record_dict.keys():
 
         
 ##########################
-set1 = altairThemes.get_colour_scheme("Set1", id_label)
+
 #set1[0] = '#000000'
 data_list=dict()
-data_list['lr']=[]
+data_list['ligand-receptor']=[]
 data_list['component_label']=[]
 data_list['score']=[]
 for lr in csv_record_intersect_dict:
     for component in csv_record_intersect_dict[lr]:
-        score = np.sum(csv_record_intersect_dict[lr][component]) #len(csv_record_intersect_dict[lr][component])*np.sum(csv_record_intersect_dict[lr][component]) #/len(csv_record_intersect_dict[lr][component])
-        data_list['lr'].append(lr)
+        score = len(csv_record_intersect_dict[lr][component]) #np.sum(csv_record_intersect_dict[lr][component]) #len(csv_record_intersect_dict[lr][component])*np.sum(csv_record_intersect_dict[lr][component]) #/len(csv_record_intersect_dict[lr][component])
+        data_list['ligand-receptor'].append(lr)
         data_list['component_label'].append(component)
         data_list['score'].append(score)
     
 source = pd.DataFrame(data_list)
-
+set1 = altairThemes.get_colour_scheme("Set1", len(set(data_list['component_label'])))
 chart = alt.Chart(source).mark_bar().encode(
-    x=alt.X("lr:N", sort='-y', axis=alt.Axis(labelAngle=45)), 
+    x=alt.X("ligand-receptor:N", sort='-y', axis=alt.Axis(labelAngle=45)), 
     y='score',
     color=alt.Color("component_label:N", scale = alt.Scale(range=set1)),
     order=alt.Order("component_label", sort="ascending"),
     tooltip=["component_label"]
 )        
-
+save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'test.html')
        
         
