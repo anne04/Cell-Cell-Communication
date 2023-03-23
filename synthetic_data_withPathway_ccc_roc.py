@@ -118,7 +118,7 @@ def get_data(datatype):
     if datatype == 'path_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 30 #20 #30 
+        y_max = 60 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -358,15 +358,15 @@ gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_inactive_lrgenes = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
-start_loc = 5
+start_loc = 15
 rec_gene = gene_count//2
 for i in range (0, 4): #gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -381,25 +381,25 @@ for i in range (0, 4): #gene_count//2):
     '''
 ################
 for i in range (4, gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    gene_exp_list = np.random.normal(loc=25+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=15+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     ################
     
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    gene_exp_list = np.random.normal(loc=25+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=15+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -416,15 +416,15 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     
     
 #################
-start_loc = np.max(gene_distribution_inactive_lrgenes)+30
+start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = gene_count//2
 for i in range (0, gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.01,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.02,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.01,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
@@ -499,7 +499,7 @@ all_used_0 = dict()
 all_used_1 = dict()
 all_used_2 = dict()
 all_used_3 = dict()
-
+active_spot = dict()
 # Pick the regions for Ligands
 '''
 cells_ligand_vs_receptor = []
@@ -644,13 +644,35 @@ for lr_type_index in range (1,2):
         all_used[a_cell] = ''
         all_used[b_cell] = ''
         all_used[c_cell] = ''
-        
+        active_spot[a_cell] = ''
+        active_spot[b_cell] = ''
+        active_spot[c_cell] = ''
         for cell in cell_neighborhood[a_cell]:
             all_used[cell]=''
+            if cell in [a_cell, b_cell, c_cell]:
+                continue
+            
+            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
+                cell_vs_gene[cell, gene] = -10   
+                
         for cell in cell_neighborhood[b_cell]:
             all_used[cell]=''
+            if cell in [a_cell, b_cell, c_cell]:
+                continue
+            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
+                cell_vs_gene[cell, gene] = -10
+                
         for cell in cell_neighborhood[c_cell]:
             all_used[cell]=''
+            if cell in [a_cell, b_cell, c_cell]:
+                continue            
+            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
+                cell_vs_gene[cell, gene] = -10
+            
+            
+            
+            
+            
         ''''''
         
         
@@ -712,20 +734,31 @@ print('P_class %d'%P_class)
 7 - 15
 
 '''
-
+cell_vs_gene[:,7] = -10
+cell_vs_gene[:,15] = -10
+#cell_vs_gene[:,6] = -10
+#cell_vs_gene[:,14] = -10
 ############
 for i in range (0, cell_vs_gene.shape[0]):
+    if i in active_spot:        
+        for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
+            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+
+    '''
     if i not in all_used: 
         for gene in [4, 5, 6, 7,  12, 13, 14, 15]:
             cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
             
         for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile
-            
+            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile       
     else:
-        for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
-            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
-                    
+        if i in active_spot:        
+            for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
+                cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+        else:
+            for gene in [4, 5, 6, 7,  12, 13, 14, 15]:
+                cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
+    '''
 
 ##############################
 # take quantile normalization.
@@ -769,7 +802,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 60), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -805,10 +838,10 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 '''                
                 if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
-                    #communication_score = max(communication_score, 0)
-                    #if communication_score>0:
-                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
-                    count = count + 1
+                    communication_score = max(communication_score, 0)
+                    if communication_score>0:
+                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
+                        count = count + 1
 
 print('total neg edges %d'%count)
 #################
@@ -1171,6 +1204,8 @@ data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[1]):
         data_list['a-'+str(i)].append(cell_vs_gene[i][j])
+        
+        
 data_list_pd = pd.DataFrame(data_list)    
 gene_name = []
 for i in range (0, gene_count):
@@ -1394,7 +1429,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_d_scaled_r1_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_r1_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
