@@ -387,7 +387,7 @@ for i in range (4, gene_count//2): ##):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    gene_exp_list = np.random.normal(loc=25+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=25+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
@@ -399,7 +399,7 @@ for i in range (4, gene_count//2): ##):
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    gene_exp_list = np.random.normal(loc=25+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=25+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -623,7 +623,20 @@ for lr_type_index in range (1,2):
             cell_id = c_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
             edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        ''''''
+            ''''''
+        #################
+        # [0, 1, 2, 3,  8, 9, 10, 11]
+        # a_cell has only 0, 2 active. b_cell has 8, 10, 1, 3 active. c_cell has 9, 11 active.  
+        for gene in [1, 3, 8, 9, 10, 11]:
+            cell_vs_gene[a_cell, gene] = -10
+            
+        for gene in [0, 2, 9, 11]:
+            cell_vs_gene[b_cell, gene] = -10
+            
+        for gene in [0, 1, 2, 3, 8, 10]:
+            cell_vs_gene[c_cell, gene] = -10
+
+	
         ##########################################
 
 
@@ -686,17 +699,32 @@ print('P_class %d'%P_class)
 
 
 ############################
+'''
+
+0 - 8
+1 - 9
+2 - 10
+3 - 11
+
+4 - 12
+5 - 13
+6 - 14
+7 - 15
+
+'''
+
+############
 for i in range (0, cell_vs_gene.shape[0]):
-    if i not in all_used:
-        for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
+    if i not in all_used: 
+        for gene in [4, 5, 6, 7,  12, 13, 14, 15]:
             cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
             
-        for gene in [0, 1, 2, 3, 8, 9, 10, 11]:
-            cell_vs_gene[i,gene] = min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile
+        for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
+            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile
             
     else:
         for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
-            cell_vs_gene[i,gene] = min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
                     
 
 ##############################
