@@ -111,7 +111,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     #print(np.histogram(cell_vs_gene[i]))
-    y = np.histogram(cell_vs_gene[i],bins=50 )[0] # density: 
+    y = np.histogram(cell_vs_gene[i])[0] # density: 
     x = range(0, len(y))
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
