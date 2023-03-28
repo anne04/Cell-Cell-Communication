@@ -666,7 +666,7 @@ for run_time in range (0, total_runs):
         else:
             barcode_type[pathologist_label[i][0]] = 'zero' #0
     '''
-    
+    '''
     data_list=dict()
     data_list['pathology_label']=[]
     data_list['component_label']=[]
@@ -701,8 +701,52 @@ for run_time in range (0, total_runs):
     #chart.save(save_path+'pdac_niches.html')
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_scaled_'+filename[run_time]+'.html')
     chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-    
-    
+    '''
+    ##############
+    for j in range (0, id_label):
+        label_i = j
+        x_index=[]
+        y_index=[]
+        marker_size = []
+        fillstyles_type = []
+        for i in range (0, len(barcode_info)):
+            if barcode_type[barcode_info[i][0]]== 'zero':
+                continue
+            if barcode_info[i][3] == j:
+                x_index.append(barcode_info[i][1])
+                y_index.append(barcode_info[i][2])
+                #cell_count_cluster[j] = cell_count_cluster[j]+1
+                spot_color = colors[j]
+                if barcode_type[barcode_info[i][0]] == 'stroma_deserted':
+                    marker_size.append("o") 
+                    fillstyles_type.append('none') 
+                    #filltype='none'
+                elif barcode_type[barcode_info[i][0]] == 'tumor':
+                    marker_size.append("^")  
+                    fillstyles_type.append('full') 
+                    #filltype = 'full'
+                else:
+                    marker_size.append("*") 
+                    fillstyles_type.append('none') 
+                    #filltype = 'none'           
+                ###############
+        marker_type = []        
+        for i in range (0, len(x_index)):  
+            marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
+
+        for i in range (0, len(x_index)):  
+            plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=fillstyles_type[i]), s=15)   
+        #filltype = 'full'
+        '''
+        if len(x_index)>0:
+            plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j, color=spot_color, s=15) #marker=marker_size, 
+        #plt.scatter(x=np.array(x_index), y=-np.array(y_index), label = j+10)
+        '''
+    plt.legend(fontsize=4,loc='upper right')
+
+    save_path = '/cluster/home/t116508uhn/64630/'
+    plt.savefig(save_path+'matplotlib_plot_'+'80'+'th_'+filename[run_time]+'.svg', dpi=400)
+    plt.clf()
             
             
     ###############
@@ -742,7 +786,7 @@ for run_time in range (0, total_runs):
         csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
         
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_97th', 'wb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_99th', 'wb') as fp:  #b, a:[0:5]   
 #    pickle.dump(csv_record_dict, fp)
 	
 
@@ -764,8 +808,7 @@ for key_value in csv_record_dict.keys():
         for k in range (0, len(csv_record_dict[key_value])):
             score = score + csv_record_dict[key_value][k][0]
         '''
-        ###
-        
+        ###        
         label = csv_record_dict[key_value][total_runs-1][1]
         score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
         if ligand+'-'+receptor not in csv_record_intersect_dict or label not in csv_record_intersect_dict[ligand+'-'+receptor]:
