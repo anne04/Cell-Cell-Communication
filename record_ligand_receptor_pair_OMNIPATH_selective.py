@@ -532,6 +532,10 @@ for run_time in range (0, total_runs):
         if min_attention_score > X_attention_bundle[l][index][0]:
             min_attention_score = X_attention_bundle[l][index][0]
         distribution.append(X_attention_bundle[l][index][0])
+    if min_attention_score<0:
+        min_attention_score = -min_attention_score
+    else: 
+        min_attention_score = 0
     ##############
     '''
     attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
@@ -584,7 +588,7 @@ for run_time in range (0, total_runs):
         i = row_col[index][0]
         j = row_col[index][1]
         if edge_weight[index][1]>0:
-            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0])
+            attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0])
             distribution.append(edge_weight[index][1] * edge_weight[index][0])
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''   
@@ -605,7 +609,7 @@ for run_time in range (0, total_runs):
                     ccc_index_dict[j] = ''
     '''
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 80)
+    threshold_down =  np.percentile(sorted(distribution), 95)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -703,6 +707,7 @@ for run_time in range (0, total_runs):
     chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     '''
     ##############
+    
     for j in range (0, id_label):
         label_i = j
         x_index=[]
@@ -745,9 +750,9 @@ for run_time in range (0, total_runs):
     plt.legend(fontsize=4,loc='upper right')
 
     save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'matplotlib_plot_'+'80'+'th_'+filename[run_time]+'.svg', dpi=400)
+    plt.savefig(save_path+'matplotlib_plot_'+'95'+'th_'+filename[run_time]+'.svg', dpi=400)
     plt.clf()
-            
+    
             
     ###############
     csv_record = []
@@ -759,7 +764,7 @@ for run_time in range (0, total_runs):
                 csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
 
     '''
-    min_attention_score = -min_attention_score
+    
     for j in range (0, len(barcode_info)):
         for i in range (0, len(barcode_info)):
             
@@ -971,7 +976,7 @@ plt.clf()
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
-
+colors[0] = '#000000'
 ids = []
 x_index=[]
 y_index=[]
@@ -993,7 +998,7 @@ barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
         barcode_type[pathologist_label[i][0]] = 1
-    elif pathologist_label[i][1] =='stroma_deserted':
+    elif pathologist_label[i][1] == 'stroma_deserted':
         barcode_type[pathologist_label[i][0]] = 0
     elif pathologist_label[i][1] =='acinar_reactive':
         barcode_type[pathologist_label[i][0]] = 2
@@ -1015,11 +1020,11 @@ for i in range (0, len(barcode_info)):
         marker_size = 'ellipse'
         label_str = label_str + 'acinar_reactive'
     #g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		#  label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !"
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
-nt = Network( directed=True) #"500px", "500px",, filter_menu=True
+nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 #nt.from_nx(g)
 lr_target = dict()
 lr_target['ITGB1-CD46'] =''
@@ -1039,11 +1044,12 @@ for i in range (0, datapoint_size):
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
             #if attention_scores[i][j][k] >= threshold_down:
             #    #print('hello')
-            key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
+            #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
-            if len(csv_record_dict[key_value])==4 and key_value_2 in lr_target:                
-                title_str =  lig_rec_dict[i][j][k][0]+", "+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k]) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
-                g.add_edge(int(i), int(j), label = title_str, value=np.float64(attention_scores[i][j][k])) #,width=, arrowsize=int(20),  arrowstyle='fancy'
+            if len(csv_record_dict[key_value])==4: # and key_value_2 in lr_target: 
+                edge_score = attention_scores[i][j][k] #min_attention_score + 
+                title_str =  "L: "+lig_rec_dict[i][j][k][0]+", R: "+lig_rec_dict[i][j][k][1]+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
+                g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
 #nt.show('mygraph.html')
 nt.from_nx(g)
