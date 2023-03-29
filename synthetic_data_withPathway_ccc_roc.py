@@ -1173,7 +1173,19 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
+
+
+edge_list = []
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    k = lig_rec[index]
     
+    edge_list.append([edge_weight[index][0], edge_weight[index][1], k])
+    
+edge_weight = edge_list
+
+
 random_activation = []
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
