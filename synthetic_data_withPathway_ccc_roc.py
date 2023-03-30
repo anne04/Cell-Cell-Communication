@@ -1176,14 +1176,23 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 
 
 edge_list = []
+lig_rec_list = []
+row_col_list = []
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
     k = lig_rec[index]
-    
-    edge_list.append([edge_weight[index][0], edge_weight[index][1], k])
+    if edge_weight[index][1] > 0:
+        edge_list.append([edge_weight[index][0], edge_weight[index][1], k])
+        lig_rec_list.append(k)
+        row_col_list.append([i,j])
     
 edge_weight = edge_list
+row_col = row_col_list
+lig_rec = lig_rec_list
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options+'_3dim', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 
 random_activation = []
@@ -1294,10 +1303,11 @@ from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################, random_activation
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'rb') as fp:  # +'_'+'quantileTransformed' at least one of lig or rec has exp > respective knee point          
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
@@ -1441,7 +1451,7 @@ for j in range (0, datapoint_size):
 ################
 
 ########withFeature withFeature_
-X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_r1_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_scaled_3dim_r2_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
 l=3 #2 ## 
@@ -1486,6 +1496,7 @@ while percentage_value > 0:
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
+    count = 0
     for i in range (0, datapoint_size):
         existing_lig_rec_dict.append([])   
         for j in range (0, datapoint_size):	
@@ -1509,11 +1520,11 @@ while percentage_value > 0:
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
-
+                    count = count + 1
 
     #############
-    positive_class = 0  
-    negative_class = 0
+    #positive_class = 0  
+    #negative_class = 0
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
@@ -1521,22 +1532,19 @@ while percentage_value > 0:
             if i==j: 
                 continue
                 
-            if len(lig_rec_dict[i][j])>0:
-                for k in lig_rec_dict[i][j]:   
+            if len(existing_lig_rec_dict[i][j])>0:
+                for k in existing_lig_rec_dict[i][j]:   
                     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        positive_class = positive_class + 1
-                        if k in existing_lig_rec_dict[i][j]:
-                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                        else:
-                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                        #positive_class = positive_class + 1                     
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        #else:
+                        #    confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
                     else:
-                        negative_class = negative_class + 1
-                        if k in existing_lig_rec_dict[i][j]:
-                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-                        else:
-                            confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                        #else:
+                        #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
                             
-    print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
+    print('%d, %g, %g, total: %d'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100, count))    
     
                      
                         
