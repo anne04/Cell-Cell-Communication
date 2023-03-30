@@ -8,6 +8,7 @@
 #SBATCH --mem=30GB        # Memory proportional to GPUs: 31500 Cedar, 63500 Graham.
 #SBATCH --time=10:00:00
 #SBATCH --job-name=fatema_test1
+#SBATCH  --constraint=gpu12g
 #SBATCH --output=some_name-%j.out
 # ---------------------------------------------------------------------
 echo "Current working directory: `pwd`"
