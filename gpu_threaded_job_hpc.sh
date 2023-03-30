@@ -1,4 +1,3 @@
-  GNU nano 4.6                                                                                                                                   gpu_threaded_job.sh                                                                                                                                   Modified  
 #!/bin/bash
 # ---------------------------------------------------------------------
 # SLURM script for a multi-step job on a Compute Canada cluster. 
