@@ -8,6 +8,7 @@
 #SBATCH --mem=30GB        # Memory proportional to GPUs: 31500 Cedar, 63500 Graham.
 #SBATCH --time=10:00:00
 #SBATCH --job-name=fatema_test1
+#SBATCH --output=some_name-%j.out
 # ---------------------------------------------------------------------
 echo "Current working directory: `pwd`"
 echo "Starting run at: `date`"
@@ -20,7 +21,7 @@ echo ""
 # activate your virtual environment
 source /cluster/home/t116508uhn/env_CCC_cpu/bin/activate
 cd /cluster/projects/schwartzgroup/fatema/CCST/
-
+echo "Current working directory: `pwd`"
 # load necessary modules
 module load python3
 module load pytorch_gpu
