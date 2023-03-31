@@ -518,13 +518,13 @@ for i in range (1, len(pathologist_label)):
 #####
 csv_record_dict = defaultdict(list)
 run = 0
-filename = ["r1", "r2_", "r3_", "r4_"] #, "r5_"]
+filename = ["r1_", "r2_", "r3_", "r4_"] #, "r5_"]
 total_runs = 1
 for run_time in range (0, total_runs):
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
@@ -586,7 +586,7 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
@@ -619,15 +619,15 @@ for run_time in range (0, total_runs):
         i = row_col[index][0]
         j = row_col[index][1]
         if edge_weight[index][1]>0:
-            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0])
-            distribution.append(edge_weight[index][1] * edge_weight[index][0])
+            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0] * edge_weight[index][2])
+            distribution.append(edge_weight[index][1] * edge_weight[index][0] * edge_weight[index][2])
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''   
     '''
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 99)
+    threshold_down =  np.percentile(sorted(distribution), 98)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -720,8 +720,8 @@ for run_time in range (0, total_runs):
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
     save_path = '/cluster/home/t116508uhn/64630/'
-    chart.save(save_path+'altair_plot_99th_bothAbove98_3dim_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_97th_bothAbove98_input.html')
+    #chart.save(save_path+'altair_plot_99th_bothAbove98_3dim_'+filename[run_time]+'.html')
+    chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
     #chart.save(save_path+'pdac_niches.html')
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
@@ -1029,8 +1029,8 @@ for i in range (1, len(pathologist_label)):
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
+    #if barcode_type[barcode_info[i][0]] == 'zero':
+    #    continue
     if barcode_type[barcode_info[i][0]] == 0: #stroma
         marker_size = 'circle'
         label_str = label_str + 'stroma'
@@ -1040,8 +1040,10 @@ for i in range (0, len(barcode_info)):
     else:
         marker_size = 'ellipse'
         label_str = label_str + 'acinar_reactive'
-    #g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+	
+    #g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
+    #g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = str(i), physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))
    		#  label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !"
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
@@ -1061,15 +1063,14 @@ for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
-        
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            #if attention_scores[i][j][k] >= threshold_down:
+            if attention_scores[i][j][k] >= threshold_down:
             #    #print('hello')
-            key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
-            key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
-            if key_value_2 in lr_target: #len(csv_record_dict[key_value])==4 and : 
-                edge_score = attention_scores[i][j][k] #min_attention_score + 
-                title_str =  "L: "+lig_rec_dict[i][j][k][0]+", R: "+lig_rec_dict[i][j][k][1]+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
+            #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
+            #key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
+            #if key_value_2 in lr_target: #len(csv_record_dict[key_value])==4 and : 
+                edge_score =  0 #min_attention_score + attention_scores[i][j][k]
+                title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
 #nt.show('mygraph.html')
@@ -1079,7 +1080,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/edge_graph_woBlankEdge_bothAbove98_th97.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_bothAbove98_3d_th98.dot")
 #
 #######################
 attention_scores = []
