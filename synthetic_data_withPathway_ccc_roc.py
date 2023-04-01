@@ -1434,8 +1434,8 @@ while percentage_value > 0:
     plot_dict['Type'].append('naive_model')
 
 ###########################################   
-filename = ["r1", "r2", "r3", "r4", "r5"]
-total_runs = 5
+filename = ["r6", "r7", "r8", "r9", "r5"]
+total_runs = 4
 for run_time in range (0, total_runs):
     run = run_time
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
