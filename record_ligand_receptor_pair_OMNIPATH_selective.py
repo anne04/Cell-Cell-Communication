@@ -70,6 +70,16 @@ temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
+#
+'''
+gene_vs_cell = np.transpose(cell_vs_gene)  
+np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed", gene_vs_cell)
+df = pd.DataFrame(gene_ids)
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/gene_ids.csv', index=False, header=False)
+df = pd.DataFrame(cell_barcode)
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cell_barcode.csv', index=False, header=False)
+      
+'''
 #cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 ####################
 '''
