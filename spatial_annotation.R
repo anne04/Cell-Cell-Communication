@@ -11,4 +11,5 @@ cell_barcodes <- read.csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cell_
 gene_ids <- read.csv('/cluster/projects/schwartzgroup/fatema/find_ccc/gene_ids.csv', header = FALSE)
 # nrow(gene_ids) is 19523 and ncol(gene_ids) is 1.
 
+rownames(mat) <- gene_ids
 # Assign cell_barcodes as column names and gene_ids as row names to the mat.   
