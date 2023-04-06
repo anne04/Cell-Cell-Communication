@@ -53,7 +53,7 @@ color = []
 for i in range (0, total_spot):
     x_index.append(coordinates[i,0])
     y_index.append(coordinates[i,1])
-    expresion_value_scaled = # scaled between 0 to 1
+    expresion_value_scaled = # expresion_value[i] is scaled between 0 to 1
     color.append((0,0,0,expresion_value_scaled))
     
 
