@@ -1,4 +1,4 @@
-  GNU nano 2.3.1                                                                                                                                                                                              File: CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                    
+  GNU nano 2.3.1                                                                                                                                                                                                                                                                                                    File: CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
 ##exocrine GCNG with normalized graph matrix
 import os
@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import gzip
-
+import copy
 from sklearn import metrics
 from scipy import sparse
 import pickle
@@ -16,48 +16,24 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import RGCNConv, TAGConv, GCNConv, Linear, DeepGraphInfomax, global_mean_pool, global_max_pool, SAGEConv, ChebConv, RGATConv, GATv2Conv, GraphConv
+from torch_geometric.nn import GATConv, Linear, DeepGraphInfomax, global_mean_pool, global_max_pool, GATv2Conv
 from torch_geometric.data import Data, DataLoader
 
 
 
-def get_graph(adj, X, training_data_name):
-    # create sparse matrix
+def get_graph(X, training_data_name):
 
-    '''row_col = []
-    edge_weight = []
-    edge_type = []
-    rows, cols = adj.nonzero()
-    edge_nums = adj.getnnz()
-    for i in range(edge_nums):
-        row_col.append([rows[i], cols[i]])
-        edge_weight.append(adj.data[i])
-        edge_type.append(1)'''
+    f = gzip.open(training_data_name , 'rb')
+#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + training_data_name , 'rb')
+#    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, dummy = pickle.load(f)
+    row_col, edge_weight, lig_rec = pickle.load(f)
 
-    '''f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_2RGAT_synthetic_region1_STnCCC_70', 'rb') #normalized
-    row_col, edge_weight, edge_rtype = pickle.load(f)
-
-    edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
-    edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
-    edge_type = torch.tensor(np.array(edge_rtype), dtype=torch.int) #float)
-    print('X shape ')
-    print(X.shape)
-    graph_bags = []
-    graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr, edge_type=edge_type)'''
-
-
-#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_onlyccc_97', 'rb') #normalized
-#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_STnCCC_97', 'rb')
-#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/"+'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'rb')
-#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/"+'adjacency_records_GAT_synthetic_region1_STnCCC_70', 'rb')
-#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/"+'adjacency_records_GAT_synthetic_region1_STnCCC_70', 'rb')
-    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/"+training_data_name, 'rb') #'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb')
-    row_col, edge_weight = pickle.load(f)
+#    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/"+training_data_name, 'rb') #'adjacency_records_GAT_total_synthetic_region1_STnCCC', 'rb')
+#    row_col, edge_weight = pickle.load(f)
 
     print("row_col %d"%len(row_col))
     #print(edge_weight)
     ###########
-
 
     edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
@@ -76,61 +52,39 @@ class Encoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, heads):
         super(Encoder, self).__init__()
         print('incoming channel %d'%in_channels)
-        '''self.conv =  RGATConv(in_channels, hidden_channels, 2, edge_dim=1)
-        self.conv_2 =  RGATConv(hidden_channels, hidden_channels, 2, edge_dim=1)
-        self.conv_3 =  RGATConv(hidden_channels, hidden_channels, 2, edge_dim=1)
-        #self.conv_4 =  RGATConv(hidden_channels, hidden_channels, 2, edge_dim=1)'''
+
         heads = heads
-        self.conv =  GATv2Conv(in_channels, hidden_channels, edge_dim=2, heads=heads)
-        self.conv_2 =  GATv2Conv(hidden_channels*heads, hidden_channels, edge_dim=2, heads=1)
-#        self.conv_3 =  GATv2Conv(hidden_channels, hidden_channels, edge_dim=2)
-        '''self.conv_4 =  GATConv(hidden_channels, hidden_channels, edge_dim=1)'''
+        self.conv =  GATv2Conv(in_channels, hidden_channels, edge_dim=3, heads=heads)
+        self.conv_2 =  GATv2Conv(hidden_channels*heads, hidden_channels, edge_dim=3, heads=heads, concat = False) #, dropout=0.5)
+#        self.conv_3 =  GATv2Conv(hidden_channels, hidden_channels, edge_dim=2, heads=1,  concat = False)
 
-
-
-        '''self.conv = RGCNConv(in_channels, hidden_channels, 1)
-        self.conv_2 = RGCNConv(hidden_channels, hidden_channels, 1)
-        self.conv_3 = RGCNConv(hidden_channels, hidden_channels, 1)
-        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 1)'''
-
-        '''self.conv = RGCNConv(in_channels, hidden_channels, 2) #, num_bases=300)
-        self.conv_2 = RGCNConv(hidden_channels, hidden_channels, 2) #,6240, num_bases=300)
-        self.conv_3 = RGCNConv(hidden_channels, hidden_channels, 2) #6240, num_bases=300)
-        self.conv_4 = RGCNConv(hidden_channels, hidden_channels, 2) #6240, num_bases=300)
-        '''
-
-	self.attention_scores_mine = 'attention'
+        self.attention_scores_mine_l1 = 'attention_l1'
+        self.attention_scores_mine_unnormalized_l1 = 'attention_unnormalized_l1'
+        self.attention_scores_mine = 'attention'
         self.attention_scores_mine_unnormalized = 'attention_unnormalized'
         #self.prelu = nn.Tanh(hidden_channels)
         self.prelu = nn.PReLU(hidden_channels)
 
 
     def forward(self, data):
-        #x, edge_index, edge_attr, edge_type = data.x, data.edge_index, data.edge_attr, data.edge_type
-        #x = self.conv(x, edge_index, edge_type = edge_type, edge_attr=edge_attr)
-        #print('1st pass')
-        #print(x)
-        #x = self.conv_2(x, edge_index, edge_type = edge_type, edge_attr=edge_attr)
-        #print('2nd pass')
-        #print(x)
-        #x, attention_scores = self.conv_3(x, edge_index, edge_type = edge_type, edge_attr=edge_attr, return_attention_weights = True)
-#        x = self.conv_4(x, edge_index, edge_type = edge_type, edge_attr=edge_weight)
-#        x = self.conv_5(x, edge_index, edge_type) #, edge_attr=edge_weight)
-#        x = self.conv_6(x, edge_index, edge_type) #, edge_attr=edge_weight)
 
-        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+#        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x, attention_scores, attention_scores_unnormalized = self.conv(data.x, data.edge_index, edge_attr=data.edge_attr, return_attention_weights = True)
+        self.attention_scores_mine_l1 = attention_scores
+        self.attention_scores_mine_unnormalized_l1 = attention_scores_unnormalized
+#        x = F.dropout(x, p=0.5, training=self.training)
+#        x = F.elu(x)
+        x, attention_scores, attention_scores_unnormalized  = self.conv_2(x, data.edge_index, edge_attr=data.edge_attr, return_attention_weights = True)
+        self.attention_scores_mine = attention_scores #self.attention_scores_mine_l1 #attention_scores
+        self.attention_scores_mine_unnormalized = attention_scores_unnormalized #self.attention_scores_mine_unnormalized_l1 #attention_scores_unnormalized
+#        x = F.dropout(x, p=0.5, training=self.training)
 
-#        x, attention_scores = self.conv(x, edge_index, edge_attr=edge_weight, return_attention_weights = True)
-        x = self.conv(x, edge_index, edge_attr=edge_weight)
-        x, attention_scores, attention_scores_unnormalized  = self.conv_2(x, edge_index, edge_attr=edge_weight, return_attention_weights = True)
-#        x, attention_scores = self.conv_3(x, edge_index, edge_attr=edge_weight, return_attention_weights = True)
-        '''x = self.conv_3(x, edge_index, edge_attr=edge_weight)
-        x = self.conv_4(x, edge_index, edge_attr=edge_weight)'''
+
+#        x, attention_scores, attention_scores_unnormalized  = self.conv_3(x, edge_index, edge_attr=edge_weight, return_attention_weights = True)
 
         x = self.prelu(x)
-        self.attention_scores_mine = attention_scores
-        self.attention_scores_mine_unnormalized = attention_scores_unnormalized
-        return x, attention_scores
+
+        return x #, attention_scores
 
 class my_data():
     def __init__(self, x, edge_index, edge_attr):
@@ -153,7 +107,9 @@ def train_DGI(args, data_loader, in_channels):
         corruption=corruption).to(device)
     #print('initialized DGI model')
     #print(DGI_model.encoder.attention_scores_mine)
-    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-5) #6
+    #DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=0.005, weight_decay=5e-4)
+    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-5)#5 #6
+    #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
     DGI_filename = args.model_path+'DGI'+ args.model_name  +'.pth.tar'
     if args.load:
         DGI_model.load_state_dict(torch.load(DGI_filename))
@@ -189,7 +145,7 @@ def train_DGI(args, data_loader, in_channels):
                 DGI_all_loss.append(DGI_loss.item())
                 DGI_optimizer.step()
 
-            if ((epoch+1)%100) == 0:
+            if ((epoch)%500) == 0:
                 print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
                 if np.mean(DGI_all_loss)<min_loss:
                     min_loss=np.mean(DGI_all_loss)
@@ -197,8 +153,16 @@ def train_DGI(args, data_loader, in_channels):
                     save_tupple=[pos_z, neg_z, summary]
                     saved_attention = DGI_model.encoder.attention_scores_mine
                     saved_attention_unnormalized = DGI_model.encoder.attention_scores_mine_unnormalized
-                    print(DGI_model.encoder.attention_scores_mine[0][0:10])
-                    print(DGI_model.encoder.attention_scores_mine[1][0:10])
+                    saved_attention_l1 = DGI_model.encoder.attention_scores_mine_l1
+                    saved_attention_unnormalized_l1 = DGI_model.encoder.attention_scores_mine_unnormalized_l1
+
+                    #print(DGI_model.encoder.attention_scores_mine_l1[0][0:10])
+                    #print(DGI_model.encoder.attention_scores_mine_l1[1][0:10])
+                    #print(saved_attention_unnormalized_l1.shape)
+                    print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
+
+#            if ((epoch)%60000) == 0:
+#                DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6)  #5 #6
 
         end_time = datetime.datetime.now()
 
@@ -212,22 +176,13 @@ def train_DGI(args, data_loader, in_channels):
         print("debug loss min loss tupple %g"%DGI_loss.item())
         DGI_model.encoder.attention_scores_mine = saved_attention
         DGI_model.encoder.attention_scores_mine_unnormalized = saved_attention_unnormalized
+        DGI_model.encoder.attention_scores_mine_l1 = saved_attention_l1
+        DGI_model.encoder.attention_scores_mine_unnormalized_l1 = saved_attention_unnormalized_l1
+
     return DGI_model
 
-def PCA_process(X, nps):
-    from sklearn.decomposition import PCA
-    print('Shape of data to PCA:', X.shape)
-    pca = PCA(n_components=nps)
-    X_PC = pca.fit_transform(X)     #等价于pca.fit(X) pca.transform(X)
-    print('Shape of data output by PCA:', X_PC.shape)
-    print('PCA recover:', pca.explained_variance_ratio_.sum())
-    return X_PC
 
-'''nohup python -u run_CCST.py 
---data_type nsc --data_name V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new --lambda_I 0.8 
---DGI 1 --data_path generated_data_new_quantile/ --model_path new_alignment/model_ccc_rgcn/ 
---embedding_data_path new_alignment/Embedding_data_ccc_rgcn/ --result_path new_alignment/result_ccc_rgcn/ 
---num_epoch 30000 --hidden 512 --cluster 0 --retrain 0 --all_distance 0 --meu 0.2 
---model_name 'totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn' --heads 1 
---training_data 'adjacency_records_GAT_total_synthetic_region1_STnCCC_uniform_normal' > output_totalsynccc_gat_r1_2attr_noFeature_STnCCC_region1_uniform_normal_knn.log &
-  '''
+
+
+
+
