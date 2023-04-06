@@ -59,7 +59,7 @@ for i in range (0, total_spot):
     
 
 for i in range (0, total_spot):  
-    plt.scatter(x=x_index[i], y=y_index[i], alpha=alphas[i], s=10)   
+    plt.scatter(x=x_index[i], y=y_index[i], c='#8c564b', alpha=alphas[i], s=10)   
 
 save_path = '/cluster/project/schwartzlab/'
 plt.savefig(save_path+'tissue_plot.svg', dpi=400)
