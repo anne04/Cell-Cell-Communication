@@ -49,16 +49,17 @@ total_spot = len(coordinates)
 expresion_value = # this is your actual expression list. It has length = total_spot
 x_index = []
 y_index = []
-color = []
+alphas = []
+#######
 for i in range (0, total_spot):
     x_index.append(coordinates[i,0])
     y_index.append(coordinates[i,1])
     expresion_value_scaled = # expresion_value[i] is scaled between 0 to 1
-    color.append((0,0,1,expresion_value_scaled))
+    alphas.append(expresion_value_scaled)
     
 
 for i in range (0, total_spot):  
-    plt.scatter(x=x_index[i], y=y_index[i], color=color[j], s=10)   
+    plt.scatter(x=x_index[i], y=y_index[i], alpha=alphas[i], s=10)   
 
 save_path = '/cluster/project/schwartzlab/'
 plt.savefig(save_path+'tissue_plot.svg', dpi=400)
