@@ -1,6 +1,3 @@
-  GNU nano 2.3.1                                                                                                                                                                                                                                                                                                    File: CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-
-##exocrine GCNG with normalized graph matrix
 import os
 import sys
 import matplotlib
