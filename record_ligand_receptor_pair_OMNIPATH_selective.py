@@ -22,7 +22,7 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
-
+'''
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
@@ -30,6 +30,15 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+args = parser.parse_args()
+'''
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/V10M25-60_C1_PDA_140694_Pa_P_Spatial10x/outs/' , help='The path to dataset') 
+#parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
+#parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
+#parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 
 
@@ -114,7 +123,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 97), kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 98), kn_value])
 
 
 '''
@@ -126,7 +135,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
     #print('%d'%(kn.knee ))
-    cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 95), np.percentile(cell_vs_gene[i], 97), kn_value])
+    cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 95), np.percentile(cell_vs_gene[i], 98), kn_value])
 
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 '''
@@ -282,7 +291,7 @@ for gene in list(ligand_dict_dataset.keys()):
 ##################################################################
 print(lr_id )
 
-
+##############################################################################
 count_total_edges = 0
 activated_cell_index = dict()
 
@@ -300,7 +309,7 @@ for g in range(start_index, end_index):
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
         count_rec = 0    
-        if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i][4]:
+        if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i][3]:
             continue
         
         for j in range (0, cell_vs_gene.shape[0]): # receptor
@@ -311,7 +320,7 @@ for g in range(start_index, end_index):
             #    continue
 
             for gene_rec in ligand_dict_dataset[gene]:
-                if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][4]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][3]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
                     if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
                         continue
 
@@ -329,8 +338,10 @@ for g in range(start_index, end_index):
                         pair_id = pair_id + 1 
                     '''
                     relation_id = l_r_pair[gene][gene_rec]
-                    l_r_pair[gene][gene_rec] = 1
                     #print("%s - %s "%(gene, gene_rec))
+                    if communication_score<=0:
+                        print('zero valued ccc score found')
+                        continue	
                     cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
                     count_rec = count_rec + 1
                     count_total_edges = count_total_edges + 1
@@ -413,7 +424,8 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     #if gene=='SERPINA1': # or gene=='MIF':
                     #    ccc_index_dict[i] = ''
                     #ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    edge_weight.append([dist_X[i,j], mean_ccc,cells_ligand_vs_receptor[i][j][k][3]])
+                    #edge_weight.append([dist_X[i,j], mean_ccc])
                     lig_rec.append([gene, gene_rec])                      
                 
                 if max_local < count_local:
@@ -428,6 +440,19 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 
 print('len row col %d'%len(row_col))
 print('count local %d'%max_local) 
+
+
+
+##########
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(cell_vs_gene, fp)
+
+##########
+
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
 
