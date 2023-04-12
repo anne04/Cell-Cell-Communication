@@ -28,10 +28,10 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 2 #8 #6 #2.3 #
+threshold_distance = 2 #2 = path equally spaced
 k_nn = 8 # #5 = h
-distance_measure = 'threshold_dist' # 'knn'  #<-----------
-datatype = 'path_equally_spaced' #
+distance_measure = 'knn'  #'threshold_dist' # <-----------
+datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -50,69 +50,6 @@ noise_percent = 0
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
-def get_receptors(pattern_id, i, j, min_x, max_x, min_y, max_y, cell_neighborhood): #, dist_X, cell_id, cell_neighborhood):
-    receptor_list = []
-    if pattern_id == 1:
-        '''	
-        for n in cell_neighborhood:
-            i_n = n[0]
-            j_n = n[1]
-            
-            if i_n==i and j_n>j: 
-                receptor_list.append([i,j_n])
-            elif i_n==i and j_n<j:
-                receptor_list.append([i,j_n])
-            elif i_n>i and j_n==j: 
-                receptor_list.append([i_n,j])
-            elif i_n<i and j_n==j:
-                receptor_list.append([i_n,j])
-              
-        '''
-        receptor_list.append([i+1,j])
-        receptor_list.append([i-1,j])
-        receptor_list.append([i,j-1])       
-        receptor_list.append([i,j+1]) 
-        
-        
-        
-        '''
-        receptor_list.append([i+1,j])
-        receptor_list.append([i,j-1])
-	    '''
-        #receptor_list.append([i+1,j-1])
-        
-    elif pattern_id == 2:
-        receptor_list.append([i+1,j])
-        receptor_list.append([i,j+1])
-        #receptor_list.append([i+1,j+1])
-        
-    elif pattern_id == 3: 
-        receptor_list.append([i,j-1])
-        receptor_list.append([i-1,j])
-        #receptor_list.append([i-1,j-1])
-        
-    elif pattern_id == 4: 
-        receptor_list.append([i,j+1])
-        receptor_list.append([i-1,j])
-        #receptor_list.append([i-1,j+1])
-        
-    elif pattern_id == 5: 
-        receptor_list.append([i+1,j])
-        receptor_list.append([i-1,j])
-        receptor_list.append([i,j-1])
-        receptor_list.append([i,j+1])
-        
-    outside_boundary = 0   
-    for index in receptor_list:
-        if index[0] >= min_x and index[0] <= max_x and index[1] >= min_y and index[1] <= max_y:
-            continue
-        else:
-            outside_boundary = 1
-            break
-    if outside_boundary == 1:
-        return -1
-    else :
-        return receptor_list
 
 def get_data(datatype):
     if datatype == 'path_equally_spaced':
@@ -192,7 +129,7 @@ def get_data(datatype):
         temp_y = np.array(temp_y)
         return temp_x, temp_y, ccc_regions
     
-    elif datatype == 'pattern_mixture_of_distribution':
+    elif datatype == 'path_mixture_of_distribution':
 	
         datapoint_size = 2000
         x_max = 500
@@ -337,6 +274,7 @@ for j in range(0, distance_matrix.shape[1]):
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
     cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance
+    
     cell_neighborhood[cell] = [] # to record the neighbor cells in that order
     for items in cell_neighborhood_temp:
         cell_neighborhood[cell].append(items[0])
@@ -418,13 +356,14 @@ for i in range (rec_gene, gene_count + non_lr_genes):
 #################
 start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = gene_count//2
+scale_active_distribution = 1 #0.01
 for i in range (0, gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.01,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=.01,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
@@ -710,11 +649,12 @@ for lr_type_index in range (1,2):
             c2 = edge[1]
             ligand_gene = edge[2]
             receptor_gene = edge[3]
-            lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
-            P_class = P_class+1
             #########
             communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
             #communication_score = max(communication_score, 0)
+            if communication_score > 0:
+                lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+                P_class = P_class+1
             #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
 print('P_class %d'%P_class)                
@@ -734,31 +674,16 @@ print('P_class %d'%P_class)
 7 - 15
 
 '''
+# to reduce number of conections
 cell_vs_gene[:,7] = -10
 cell_vs_gene[:,15] = -10
-#cell_vs_gene[:,6] = -10
-#cell_vs_gene[:,14] = -10
+cell_vs_gene[:,6] = -10
+cell_vs_gene[:,14] = -10
 ############
 for i in range (0, cell_vs_gene.shape[0]):
     if i in active_spot:        
         for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
             cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
-
-    '''
-    if i not in all_used: 
-        for gene in [4, 5, 6, 7,  12, 13, 14, 15]:
-            cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
-            
-        for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # make it minimum so that it does not appear in the top quartile       
-    else:
-        if i in active_spot:        
-            for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
-                cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
-        else:
-            for gene in [4, 5, 6, 7,  12, 13, 14, 15]:
-                cell_vs_gene[i,gene] = gene_distribution_inactive_lrgenes[gene , i]
-    '''
 
 ##############################
 # take quantile normalization.
@@ -802,7 +727,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -843,7 +768,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
 
-print('total neg edges %d'%count)
+print('total edges %d'%count)
 #################
 min_score = 1000
 max_score = -1000
