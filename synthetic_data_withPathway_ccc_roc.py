@@ -1187,7 +1187,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         
 data_list_pd = pd.DataFrame(data_list)    
 gene_name = []
-for i in range (0, gene_count):
+for i in range (0, cell_vs_gene.shape[1]):
     gene_name.append('g'+str(i))
     
 data_list_pd[' ']=gene_name   
