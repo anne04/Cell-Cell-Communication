@@ -482,6 +482,9 @@ for lr_type_index in range (1,2):
         
         if a_cell in all_used or b_cell in all_used or c_cell in all_used:
             continue
+        
+        if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot:
+            continue
         ''''''
 	
         if lr_selected_list == 0:
@@ -580,38 +583,46 @@ for lr_type_index in range (1,2):
 
 
         print('%d, %d, %d'%(a_cell, b_cell, c_cell))
-        all_used[a_cell] = ''
-        all_used[b_cell] = ''
-        all_used[c_cell] = ''
+        #all_used[a_cell] = ''
+        #all_used[b_cell] = ''
+        #all_used[c_cell] = ''
         active_spot[a_cell] = ''
         active_spot[b_cell] = ''
         active_spot[c_cell] = ''
         for cell in cell_neighborhood[a_cell]:
-            all_used[cell]=''
+            
             if cell in [a_cell, b_cell, c_cell]:
                 continue
-            
+            if cell in active_spot:
+                continue
+                
+            all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = -10   
                 
         for cell in cell_neighborhood[b_cell]:
-            all_used[cell]=''
+            
             if cell in [a_cell, b_cell, c_cell]:
                 continue
+            if cell in active_spot:
+                continue
+                
+            all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = -10
                 
         for cell in cell_neighborhood[c_cell]:
-            all_used[cell]=''
+            
             if cell in [a_cell, b_cell, c_cell]:
-                continue            
+                continue
+            if cell in active_spot:
+                continue
+                
+            all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = -10
             
-            
-            
-            
-            
+
         ''''''
         
         
@@ -677,8 +688,8 @@ print('P_class %d'%P_class)
 # to reduce number of conections
 cell_vs_gene[:,7] = -10
 cell_vs_gene[:,15] = -10
-cell_vs_gene[:,6] = -10
-cell_vs_gene[:,14] = -10
+#cell_vs_gene[:,6] = -10
+#cell_vs_gene[:,14] = -10
 ############
 for i in range (0, cell_vs_gene.shape[0]):
     if i in active_spot:        
@@ -727,7 +738,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 70), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -989,26 +1000,6 @@ for i in range (0, len(cells_ligand_vs_receptor)):
         if dist_X[i,j] > 0: #distance_matrix[i][j] <= threshold_distance: 
             count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
-                '''
-                if len(lig_rec_dict_TP[i][j])>0: # they are participating in true connection. So, discard other connections for them. 
-                    for k in range (0, len(cells_ligand_vs_receptor[i][j])):                       
-                        for l in range (0, len(lig_rec_dict_TP[i][j])):
-                            if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
-                                gene = cells_ligand_vs_receptor[i][j][k][0]
-                                gene_rec = cells_ligand_vs_receptor[i][j][k][1]
-                                count_edge = count_edge + 1
-                                count_local = count_local + 1
-                                #print(count_edge)  
-                                mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
-                                #mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
-                                row_col.append([i,j])
-                                ccc_index_dict[i] = ''
-                                ccc_index_dict[j] = ''
-                                edge_weight.append([dist_X[i,j], mean_ccc])
-                                lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])                                
-                    # comparison done so continue to next step
-                    continue
-                '''
                 # if not
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):    
                     gene = cells_ligand_vs_receptor[i][j][k][0]
@@ -1054,7 +1045,7 @@ total_cells = len(temp_x)
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 options = options + '_e'
-
+options = options + '_3dim'
 #options = options + '_scaled'
 
 
