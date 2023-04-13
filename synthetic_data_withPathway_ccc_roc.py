@@ -29,7 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 
 threshold_distance = 2 #2 = path equally spaced
-k_nn = 8 # #5 = h
+k_nn = 10 # #5 = h
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
 
@@ -131,7 +131,7 @@ def get_data(datatype):
     
     elif datatype == 'path_mixture_of_distribution':
 	
-        datapoint_size = 2000
+        datapoint_size = 3000
         x_max = 500
         x_min = 0
         y_max = 300
