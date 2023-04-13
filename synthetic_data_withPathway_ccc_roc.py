@@ -1181,8 +1181,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
+    max_value=np.max(cell_vs_gene[i])
+	min_value=np.min(cell_vs_gene[i])
     for j in range (0, cell_vs_gene.shape[1]):
-        data_list['a-'+str(i)].append(cell_vs_gene[i][j])
+        data_list['a-'+str(i)].append((cell_vs_gene[i][j]-min_value)/(max_value-min_value)) #cell_vs_gene[i][j]
         
         
 data_list_pd = pd.DataFrame(data_list)    
@@ -1692,8 +1694,8 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
 
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
-#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells.csv')
+#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_e.csv')
 #df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 distribution = []
 for col in range (1, len(df_pair_vs_cells.columns)):
@@ -1742,7 +1744,7 @@ while percentage_value > 0:
 
 
     ############# 
-    negative_class = 0
+    #negative_class = 0
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
