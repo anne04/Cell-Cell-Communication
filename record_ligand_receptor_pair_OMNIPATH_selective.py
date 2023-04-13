@@ -22,7 +22,7 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
-'''
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
@@ -40,7 +40,7 @@ parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The n
 #parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-
+'''
 
 
 spot_diameter = 89.43 #pixels
@@ -238,9 +238,12 @@ for gene in list(ligand_dict_dataset.keys()):
 print('number of pairs %d '%count_pair)       
 
 count = 0
+included_gene=[]
 for gene in gene_info.keys(): 
     if gene_info[gene] == 'included':
         count = count + 1
+        included_gene.append(gene)
+        
 print('number of affected genes %d '%count)
 affected_gene_count = count
 ######################################
@@ -447,10 +450,22 @@ print('count local %d'%max_local)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
-
+             
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_gene, fp)
 
+##########
+for lr_pair in lig_rec:
+    gene=lr_pair[0]
+    rec_gene = lr_pair[1]
+    l_r_pair[gene][rec_gene] = '*'
+    
+existing_lr_pair=[]
+for gene in l_r_pair:
+    for rec_gene in l_r_pair[gene]:
+        if l_r_pair[gene][rec_gene] == '*':
+            existing_lr_pair.append(gene+'-'+rec_gene)
+   
 ##########
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
@@ -559,8 +574,18 @@ with open(pathologist_label_file) as file:
         
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
-    if 'tumor' in pathologist_label[i][1]: #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 'tumor'
+    if 'tumor_LVI' in pathologist_label[i][1]:
+        barcode_type[pathologist_label[i][0]] = 'tumor_LVI'
+    elif 'tumor_PNI' in pathologist_label[i][1]:
+        barcode_type[pathologist_label[i][0]] = 'tumor_PNI'
+    elif 'tumor_stroma' in pathologist_label[i][1]:
+        barcode_type[pathologist_label[i][0]] = 'tumor_stroma'
+    elif 'tumor_vs_acinar' in pathologist_label[i][1]:
+        barcode_type[pathologist_label[i][0]] = 'tumor_vs_acinar'     
+    elif 'nerve' in pathologist_label[i][1]: 
+        barcode_type[pathologist_label[i][0]] = 'nerve'
+    elif 'vessel' in pathologist_label[i][1]: 
+        barcode_type[pathologist_label[i][0]] = 'vessel'
     #elif pathologist_label[i][1] =='stroma_deserted':
     #    barcode_type[pathologist_label[i][0]] = 'stroma_deserted'
     #elif pathologist_label[i][1] =='acinar_reactive':
@@ -574,14 +599,15 @@ for i in range (1, len(pathologist_label)):
 csv_record_dict = defaultdict(list)
 run = 0
 filename = ["r1_", "r2_", "r3_", "r4_"] #, "r5_"]
-total_runs = 1
+total_runs = 4
 for run_time in range (0, total_runs):
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
@@ -619,7 +645,8 @@ for run_time in range (0, total_runs):
     ##############
     plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
+    plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400)
+    #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_3dim_tanh_h2048_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
@@ -644,10 +671,10 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
     lig_rec_dict = []
@@ -779,9 +806,10 @@ for run_time in range (0, total_runs):
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
     save_path = '/cluster/home/t116508uhn/64630/'
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    chart.save(save_path+args.data_name+'_altair_plot_98th_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    #chart.save(save_path+args.data_name+'_altair_plot_98th_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
+    chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
     #chart.save(save_path+'pdac_niches.html')
