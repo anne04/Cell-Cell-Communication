@@ -145,7 +145,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 10, 
+                           k = 20, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -170,18 +170,17 @@ niche <- RunPCA(niche)
 #p <- ElbowPlot(niche,ndims = 50)
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
-niche <- RunUMAP(niche,dims = 1:10)  
+niche <- RunUMAP(niche,dims = 1:6)  
 #p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
-
-mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
-GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
-p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
-ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+#mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
+#GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
+#p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
+#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_e.csv')
+write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_f.csv')
 
 temp_matrix = niche[['seurat_clusters.Joint_clusters']]
 write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
