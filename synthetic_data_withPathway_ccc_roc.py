@@ -296,7 +296,7 @@ gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_inactive_lrgenes = np.zeros((gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
 
-start_loc = 15
+start_loc = 20
 rec_gene = gene_count//2
 for i in range (0, 4): #gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
@@ -325,7 +325,7 @@ for i in range (4, gene_count//2): ##):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    gene_exp_list = np.random.normal(loc=15+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
@@ -337,14 +337,14 @@ for i in range (4, gene_count//2): ##):
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    gene_exp_list = np.random.normal(loc=15+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     
     rec_gene = rec_gene + 1 
 
-start_loc = 10
+start_loc = 15
 for i in range (rec_gene, gene_count + non_lr_genes):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
@@ -698,6 +698,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 ##############################
 # take quantile normalization.
+cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
@@ -738,7 +739,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -788,18 +789,20 @@ dist = []
 for i in range (0, len(lig_rec_dict_TP)):
     flag_debug = 0
     for j in range (0, len(lig_rec_dict_TP)):
-        flag_found = 0
-        if len(lig_rec_dict_TP[i][j])>0 and len(cells_ligand_vs_receptor[i][j])>0: 
+        for l in range (0, len(lig_rec_dict_TP[i][j])):	
+            flag_found = 0
             for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                for l in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
-                        dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                        count = count + 1
-                        if cells_ligand_vs_receptor[i][j][k][2]>max_score:
-                            max_score=cells_ligand_vs_receptor[i][j][k][2]
-                        if cells_ligand_vs_receptor[i][j][k][2]<min_score:
-                            min_score=cells_ligand_vs_receptor[i][j][k][2]                       
-
+                if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
+                    dist.append(cells_ligand_vs_receptor[i][j][k][2])
+                    count = count + 1
+                    if cells_ligand_vs_receptor[i][j][k][2]>max_score:
+                        max_score=cells_ligand_vs_receptor[i][j][k][2]
+                    if cells_ligand_vs_receptor[i][j][k][2]<min_score:
+                        min_score=cells_ligand_vs_receptor[i][j][k][2] 
+                    flag_found=1
+                    break
+            #if flag_found==1:
+                
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
 ################
@@ -1012,7 +1015,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc])
+                    edge_weight.append([dist_X[i,j], mean_ccc, cells_ligand_vs_receptor[i][j][k][3] ])
                     lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
                 if max_local < count_local:
                     max_local = count_local
@@ -1020,7 +1023,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
             else: #elif i in all_used and j in all_used:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
-                lig_rec.append(['', ''])
+                lig_rec.append(['', '']),
         	'''
                 
             ''' '''
@@ -1044,7 +1047,7 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_e'
+options = options + '_f'
 options = options + '_3dim'
 #options = options + '_scaled'
 
@@ -1075,14 +1078,14 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
     pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'quantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
     
 '''   
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene_notNormalized, fp)
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
 #    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
