@@ -370,9 +370,10 @@ for i in range (0, gene_count//2):
     rec_gene = rec_gene + 1 
    
 #################################################
+min_gene_count = np.min(gene_distribution_inactive)
 
-
-
+print('min_gene_count %d'%min_gene_count)
+min_gene_count = 0
 gene_ids = []
 for i in range (0, gene_count):
     gene_ids.append(i) 
@@ -570,13 +571,13 @@ for lr_type_index in range (1,2):
         # [0, 1, 2, 3,  8, 9, 10, 11]
         # a_cell has only 0, 2 active. b_cell has 8, 10, 1, 3 active. c_cell has 9, 11 active.  
         for gene in [1, 3, 8, 9, 10, 11]:
-            cell_vs_gene[a_cell, gene] = -10
+            cell_vs_gene[a_cell, gene] = min_gene_count #-10
             
         for gene in [0, 2, 9, 11]:
-            cell_vs_gene[b_cell, gene] = -10
+            cell_vs_gene[b_cell, gene] = min_gene_count #-10
             
         for gene in [0, 1, 2, 3, 8, 10]:
-            cell_vs_gene[c_cell, gene] = -10
+            cell_vs_gene[c_cell, gene] = min_gene_count #-10
 
 	
         ##########################################
@@ -598,7 +599,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = -10   
+                cell_vs_gene[cell, gene] = min_gene_count #-10   
                 
         for cell in cell_neighborhood[b_cell]:
             
@@ -609,7 +610,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = -10
+                cell_vs_gene[cell, gene] = min_gene_count #-10
                 
         for cell in cell_neighborhood[c_cell]:
             
@@ -620,7 +621,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = -10
+                cell_vs_gene[cell, gene] = min_gene_count #-10
             
 
         ''''''
@@ -686,15 +687,15 @@ print('P_class %d'%P_class)
 
 '''
 # to reduce number of conections
-cell_vs_gene[:,7] = -10
-cell_vs_gene[:,15] = -10
-#cell_vs_gene[:,6] = -10
-#cell_vs_gene[:,14] = -10
+cell_vs_gene[:,7] = min_gene_count #-10
+cell_vs_gene[:,15] = min_gene_count #-10
+#cell_vs_gene[:,6] = min_gene_count #-10
+#cell_vs_gene[:,14] = min_gene_count #-10
 ############
 for i in range (0, cell_vs_gene.shape[0]):
     if i in active_spot:        
         for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
-            cell_vs_gene[i,gene] = -10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+            cell_vs_gene[i,gene] = min_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
 
 ##############################
 # take quantile normalization.
@@ -1174,20 +1175,19 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
 data_list_pd = pd.DataFrame(temp_x)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_x.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', index=False, header=False)
 data_list_pd = pd.DataFrame(temp_y)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_y.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', index=False, header=False)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
     cell_vs_gene = pickle.load(fp)
-
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
-    max_value=np.max(cell_vs_gene[i])
-	min_value=np.min(cell_vs_gene[i])
+    #max_value=np.max(cell_vs_gene[i])
+    #min_value=np.min(cell_vs_gene[i])
     for j in range (0, cell_vs_gene.shape[1]):
-        data_list['a-'+str(i)].append((cell_vs_gene[i][j]-min_value)/(max_value-min_value)) #cell_vs_gene[i][j]
+        data_list['a-'+str(i)].append(cell_vs_gene[i][j]) #(cell_vs_gene[i][j]-min_value)/(max_value-min_value)
         
         
 data_list_pd = pd.DataFrame(data_list)    
@@ -1197,7 +1197,7 @@ for i in range (0, cell_vs_gene.shape[1]):
     
 data_list_pd[' ']=gene_name   
 data_list_pd = data_list_pd.set_index(' ')    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell.csv')
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv')
 
 data_list=dict()
 data_list['ligand']=[]
@@ -1207,13 +1207,13 @@ for i in range (0, len(lr_database)):
     data_list['receptor'].append('g'+str(lr_database[i][1]))
     
 data_list_pd = pd.DataFrame(data_list)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_type6_f.csv', index=False)
 	
 	
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
-    cell_vs_gene = pickle.load(fp)
+    cell_vs_gene = pickle.load(fp
 '''
 ###########################################################
 
@@ -1319,6 +1319,11 @@ for index in range (0, len(row_col)):
         attention_scores[i][j].append(edge_weight[index][1]*edge_weight[index][0])
         distribution.append(edge_weight[index][1]*edge_weight[index][0])
 ###########
+plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'distribution_type6_f_input.svg', dpi=400)
+plt.clf()
+
 '''
 for i in range (0, datapoint_size):  
     for j in range (0, datapoint_size):	
@@ -1401,7 +1406,7 @@ filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 5
 for run_time in range (0,total_runs):
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_e_tanh_3d_'+filename[run]+'_attention_l1.npy' 
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_swappedLRid_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 	#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1446,7 +1451,7 @@ for run_time in range (0,total_runs):
     #######################
     plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'distribution_type6_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
@@ -1533,7 +1538,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
 save_path = '/cluster/home/t116508uhn/64630/'
 #chart.save(save_path+'plot_e_tanh.html')
 #chart.save(save_path+'plot_e_gatconv.html')
-chart.save(save_path+'plot_type6_e_3d_tanh.html')
+chart.save(save_path+'plot_type6_f_3d_tanh.html')
 #chart.save(save_path+'plot_e_relu.html')
 
 
@@ -1698,7 +1703,7 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i][j] = []
 
 #df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_e.csv')
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_f.csv')
 #df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 distribution = []
 for col in range (1, len(df_pair_vs_cells.columns)):
