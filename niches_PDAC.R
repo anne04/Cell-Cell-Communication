@@ -104,18 +104,18 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 ##########################################################################################
-df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_e_x.csv', header = FALSE)
+df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
   cell_x[[i]] <- df[ , i]    
 }
-df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_e_y.csv', header = FALSE)
+df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
 cell_y=list()  
 for(i in 1:ncol(df)) {      
   cell_y[[i]] <- df[ , i]    
 }
 
-countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_type6_e_gene_vs_cell.csv',row.names = 1)
+countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
 temp <- SCTransform(pdac_sample, verbose = FALSE)
 #DefaultAssay(temp) <- "integrated"
@@ -137,7 +137,7 @@ temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
 
-lr_db <- read.csv("/cluster/home/t116508uhn/synthetic_lr_type6_e.csv")
+lr_db <- read.csv("/cluster/home/t116508uhn/synthetic_lr_type6_f.csv")
 NICHES_output <- RunNICHES(object = temp,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
@@ -145,7 +145,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 20, 
+                           k = 10, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
