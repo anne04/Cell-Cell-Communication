@@ -1531,7 +1531,7 @@ for run_time in range (0,total_runs):
 
 data_list_pd = pd.DataFrame(plot_dict)    
 chart = alt.Chart(data_list_pd).mark_line().encode(
-    x='FPR:T',
+    x='FPR:Q',
     y='TPR:Q',
     color='Type:N',
 )	
