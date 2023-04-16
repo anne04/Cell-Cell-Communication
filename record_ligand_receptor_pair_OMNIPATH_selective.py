@@ -597,9 +597,8 @@ for i in range (1, len(pathologist_label)):
         
 #####
 csv_record_dict = defaultdict(list)
-run = 0
-filename = ["r1_", "r2_", "r3_", "r4_"] #, "r5_"]
-total_runs = 4
+filename = ["r1_", "r2_", "r3_", "r4_", "r5_"]
+total_runs = 5
 for run_time in range (0, total_runs):
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
@@ -935,7 +934,49 @@ for key_value in csv_record_dict.keys():
 
 df = pd.DataFrame(csv_record)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-       
+
+data_list=dict()
+data_list['pathology_label']=[]
+data_list['component_label']=[]
+data_list['X']=[]
+data_list['Y']=[]   
+exist_spot = []
+for record_idx in range (1, len(csv_record)):
+    record = csv_record[record_idx]
+    i = record[6]
+    if barcode_type[barcode_info[i][0]] == 'zero':
+        continue
+    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+    data_list['component_label'].append(record[5])
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
+    exist_spot.append(i)
+
+for i in range (0, len(barcode_info)):
+    if i in exist_spot or barcode_type[barcode_info[i][0]] == 'zero':
+        continue
+    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+    data_list['component_label'].append(0)
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
+
+
+id_label= len(list(set(data_list['component_label'])))
+data_list_pd = pd.DataFrame(data_list)
+set1 = altairThemes.get_colour_scheme("Set1", id_label)
+set1[0] = '#000000'
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    shape = "pathology_label",
+    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+    tooltip=['component_label']
+)#.configure_legend(labelFontSize=6, symbolLimit=50)
+
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'altair_plot_bothAbove98_3dim_combined_'+str(total_runs)+'runs.html')  
+
+
 ##########################
 
 #set1[0] = '#000000'
