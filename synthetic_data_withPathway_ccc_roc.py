@@ -1286,9 +1286,14 @@ for i in range (0, datapoint_size):
         if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
             for k in range (0, len(lig_rec_dict_TP[i][j])):
                total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
-               
+count = 0
+for index in range (0, len(row_col)):
+    i = row_col[index][0]
+    j = row_col[index][1]
+    if i!=j:
+	count = count +1               
 positive_class = np.sum(total_type)
-negative_class = len(row_col) - positive_class           
+negative_class = count - positive_class           
 ############# draw the points which are participating in positive classes  ######################
 ccc_index_dict = dict()     
 for i in lig_rec_dict_TP:
