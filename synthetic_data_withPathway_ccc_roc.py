@@ -1281,6 +1281,8 @@ datapoint_size = temp_x.shape[0]
 total_type = np.zeros((len(lr_database)))
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
+        if i==j: 
+            continue
         if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
             for k in range (0, len(lig_rec_dict_TP[i][j])):
                total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
@@ -1403,10 +1405,11 @@ while percentage_value > 0:
 
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 10
 for run_time in range (0,total_runs):
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' 
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_swappedLRid_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
 	#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1538,8 +1541,9 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
 save_path = '/cluster/home/t116508uhn/64630/'
 #chart.save(save_path+'plot_e_tanh.html')
 #chart.save(save_path+'plot_e_gatconv.html')
-chart.save(save_path+'plot_type6_f_3d_tanh.html')
+#chart.save(save_path+'plot_type6_f_3d_tanh.html')
 #chart.save(save_path+'plot_e_relu.html')
+chart.save(save_path+'plot_type6_f_3d.html')
 
 
 graph = csr_matrix(connecting_edges)
