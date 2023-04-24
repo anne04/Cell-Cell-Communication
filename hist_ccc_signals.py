@@ -45,7 +45,7 @@ def writeStats(stats, feature, outStatsPath):
 def plot(df):
 
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-
+  set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
@@ -77,7 +77,7 @@ def main():
   #inFile = '/cluster/home/t116508uhn/64630/ccc_th98_records' + data_options + '.csv'
   #inFile = '/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv' #sys.argv[1]
   #inFile = '/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv' #sys.argv[1]
-  inFile = '/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th_97th_intersection.csv' #sys.argv[1]
+  inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
   df = readCsv(inFile)
   df = preprocessDf(df)
   outPathRoot = inFile.split('.')[0]
