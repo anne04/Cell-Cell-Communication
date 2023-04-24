@@ -1291,7 +1291,7 @@ for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
     if i!=j:
-	count = count +1               
+	    count = count +1               
 positive_class = np.sum(total_type)
 negative_class = count - positive_class           
 ############# draw the points which are participating in positive classes  ######################
@@ -1402,8 +1402,8 @@ while percentage_value > 0:
                         #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
 
     print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
-    FPR_value = (confusion_matrix[1][0]/negative_class)*100
-    TPR_value = (confusion_matrix[0][0]/positive_class)*100
+    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
     plot_dict['Type'].append('naive_model')
@@ -1416,7 +1416,7 @@ for run_time in range (0,total_runs):
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_swappedLRid_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-	#X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_gatconv_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1459,11 +1459,12 @@ for run_time in range (0,total_runs):
     #######################
     plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
-    #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
     plt.clf()
     
     percentage_value = 100
@@ -1523,8 +1524,8 @@ for run_time in range (0,total_runs):
                             #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
 
         print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))
-        FPR_value = (confusion_matrix[1][0]/negative_class)*100
-        TPR_value = (confusion_matrix[0][0]/positive_class)*100
+        FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+        TPR_value = (confusion_matrix[0][0]/positive_class)#*100
         plot_dict['FPR'].append(FPR_value)
         plot_dict['TPR'].append(TPR_value)
         plot_dict['Type'].append('run_'+str(run+1))
@@ -1544,7 +1545,8 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
     color='Type:N',
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
-#chart.save(save_path+'plot_e_tanh.html')
+#chart.save(save_path+'plot_type4_e_leakyrelu.html')
+#chart.save(save_path+'plot_type4_e_3d_tanh.html')
 #chart.save(save_path+'plot_e_gatconv.html')
 #chart.save(save_path+'plot_type6_f_3d_tanh.html')
 #chart.save(save_path+'plot_e_relu.html')
