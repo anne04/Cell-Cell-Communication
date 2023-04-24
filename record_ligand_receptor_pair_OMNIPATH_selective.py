@@ -598,15 +598,15 @@ for i in range (1, len(pathologist_label)):
 #####
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_"]
-total_runs = 1
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -671,10 +671,10 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
     lig_rec_dict = []
@@ -713,7 +713,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 99.8)
+    threshold_down =  np.percentile(sorted(distribution), 98)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -907,6 +907,7 @@ for run_time in range (0, total_runs):
 
 # intersection 
 #total_runs = 2
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
@@ -918,21 +919,61 @@ for key_value in csv_record_dict.keys():
         ligand = item[2]
         receptor = item[3]        
         ###
-        '''
+        
         score = 0
         for k in range (0, len(csv_record_dict[key_value])):
             score = score + csv_record_dict[key_value][k][0]
-        '''
+        score = score/k # take the average score
+        ''''''
         ###        
         label = csv_record_dict[key_value][total_runs-1][1]
-        score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
+        #score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
         if ligand+'-'+receptor not in csv_record_intersect_dict or label not in csv_record_intersect_dict[ligand+'-'+receptor]:
             csv_record_intersect_dict[ligand+'-'+receptor][label] = []
         
         csv_record_intersect_dict[ligand+'-'+receptor][label].append(score)
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
+        connecting_edges[i][j]=1
         
-print('common LR count %d'%len(csv_records))
+print('common LR count %d'%len(csv_record))
+df = pd.DataFrame(csv_record)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+
+
+graph = csr_matrix(connecting_edges)
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+print('number of component %d'%n_components)
+
+count_points_component = np.zeros((n_components))
+for i in range (0, len(labels)):
+     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+
+print(count_points_component)
+
+id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
+index_dict = dict()
+for i in range (0, count_points_component.shape[0]):
+    if count_points_component[i]>1:
+        index_dict[i] = id_label
+        id_label = id_label+1
+
+print(id_label)
+
+for i in range (0, len(barcode_info)):
+#    if barcode_info[i][0] in barcode_label:
+    if count_points_component[labels[i]] > 1:
+        barcode_info[i][3] = index_dict[labels[i]] #2
+    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+        barcode_info[i][3] = 1
+    else:
+        barcode_info[i][3] = 0
+
+# update the label based on new component numbers
+for record in range (1, len(csv_record)):
+    i = csv_record[record][6]
+    label = barcode_info[i][3]
+    csv_record[record][5] = label
+    
 df = pd.DataFrame(csv_record)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 
@@ -975,7 +1016,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_bothAbove98_3dim_combined_'+str(total_runs)+'runs.html')  
+chart.save(save_path+'altair_plot_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 
 
 ##########################
