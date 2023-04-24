@@ -597,16 +597,16 @@ for i in range (1, len(pathologist_label)):
         
 #####
 
-filename = ["r1_", "r2_", "r3_", "r4_", "r5_"]
-total_runs = 5
+filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_"]
+total_runs = 7
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     run = run_time
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -671,10 +671,10 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
     lig_rec_dict = []
@@ -713,7 +713,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 98)
+    threshold_down =  np.percentile(sorted(distribution), 99.5)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -912,7 +912,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])==total_runs:
+    if len(csv_record_dict[key_value])==5: #total_runs:
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -926,7 +926,7 @@ for key_value in csv_record_dict.keys():
         score = score/k # take the average score
         ''''''
         ###        
-        label = csv_record_dict[key_value][total_runs-1][1]
+        label = -1 #csv_record_dict[key_value][total_runs-1][1]
         #score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
         if ligand+'-'+receptor not in csv_record_intersect_dict or label not in csv_record_intersect_dict[ligand+'-'+receptor]:
             csv_record_intersect_dict[ligand+'-'+receptor][label] = []
@@ -991,7 +991,7 @@ for record_idx in range (1, len(csv_record)):
     data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
     data_list['component_label'].append(record[5])
     data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])
+    data_list['Y'].append(barcode_info[i][2])
     exist_spot.append(i)
 
 for i in range (0, len(barcode_info)):
@@ -1000,7 +1000,7 @@ for i in range (0, len(barcode_info)):
     data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
     data_list['component_label'].append(0)
     data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])
+    data_list['Y'].append(barcode_info[i][2])
 
 
 id_label= len(list(set(data_list['component_label'])))
@@ -1016,7 +1016,8 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+#chart.save(save_path+'altair_plot_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 
 
 ##########################
