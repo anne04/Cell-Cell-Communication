@@ -129,20 +129,16 @@ def train_DGI(args, data_loader, in_channels):
 
             for data in data_loader:
                 data = data.to(device)
-                '''x_old, attention_score = DGI_model(data=data)
-                print('model output')
-                print(x_old)
-                pos_z = x_old[0]
-                neg_z = x_old[1]
-                summary = x_old[2]'''
-
                 pos_z, neg_z, summary = DGI_model(data=data)
                 #print('epoch %d '%epoch)
                 #print(DGI_model.encoder.attention_scores_mine)
                 DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
-                DGI_loss.backward()
                 DGI_all_loss.append(DGI_loss.item())
-                DGI_optimizer.step()
+            
+            print(DGI_all_loss)
+            DGI_loss = np.sum(DGI_all_loss)
+            DGI_loss.backward()            
+            DGI_optimizer.step()
 
             if ((epoch)%500) == 0:
                 print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
