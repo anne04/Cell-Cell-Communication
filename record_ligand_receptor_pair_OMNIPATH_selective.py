@@ -613,6 +613,7 @@ filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_"]
 total_runs = 7
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
+    gc.collect()
     run = run_time
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     
@@ -725,7 +726,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 99.5)
+    threshold_down =  np.percentile(sorted(distribution), 98)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -786,7 +787,7 @@ for run_time in range (0, total_runs):
         else:
             barcode_type[pathologist_label[i][0]] = 'zero' #0
     '''
-    
+    '''
     data_list=dict()
     data_list['pathology_label']=[]
     data_list['component_label']=[]
@@ -828,7 +829,7 @@ for run_time in range (0, total_runs):
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-    ''''''
+    '''
     ##############
     '''
     for j in range (0, id_label):
@@ -948,9 +949,8 @@ for key_value in csv_record_dict.keys():
         connecting_edges[i][j]=1
         
 print('common LR count %d'%len(csv_record))
-df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-
+#df = pd.DataFrame(csv_record)
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
@@ -987,6 +987,7 @@ for record in range (1, len(csv_record)):
     csv_record[record][5] = label
     
 df = pd.DataFrame(csv_record)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'.csv', index=False, header=False)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 
 data_list=dict()
