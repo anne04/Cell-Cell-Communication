@@ -96,6 +96,8 @@ def corruption(data):
     return my_data(x, data.edge_index, data.edge_attr)
 
 def train_DGI(args, data_loader, in_channels):
+    loss_curve = np.zeros((args.num_epoch//500+1))
+    loss_curve_counter = 0
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     DGI_model = DeepGraphInfomax(
         hidden_channels=args.hidden,
@@ -144,6 +146,8 @@ def train_DGI(args, data_loader, in_channels):
 
             if ((epoch)%500) == 0:
                 print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
+                loss_curve[loss_curve_counter] = np.mean(DGI_all_loss)
+                loss_curve_counter = loss_curve_counter + 1
                 if np.mean(DGI_all_loss)<min_loss:
                     min_loss=np.mean(DGI_all_loss)
                     torch.save(DGI_model.state_dict(), DGI_filename)
@@ -152,7 +156,7 @@ def train_DGI(args, data_loader, in_channels):
                     saved_attention_unnormalized = DGI_model.encoder.attention_scores_mine_unnormalized
                     saved_attention_l1 = DGI_model.encoder.attention_scores_mine_l1
                     saved_attention_unnormalized_l1 = DGI_model.encoder.attention_scores_mine_unnormalized_l1
-
+                    
                     #print(DGI_model.encoder.attention_scores_mine_l1[0][0:10])
                     #print(DGI_model.encoder.attention_scores_mine_l1[1][0:10])
                     #print(saved_attention_unnormalized_l1.shape)
@@ -175,7 +179,9 @@ def train_DGI(args, data_loader, in_channels):
         DGI_model.encoder.attention_scores_mine_unnormalized = saved_attention_unnormalized
         DGI_model.encoder.attention_scores_mine_l1 = saved_attention_l1
         DGI_model.encoder.attention_scores_mine_unnormalized_l1 = saved_attention_unnormalized_l1
-
+        logfile=open(args.model_path+'DGI'+ args.model_name+'_loss_curve.csv', 'wb')
+        np.savetxt(logfile,loss_curve, delimiter=',')
+        logfile.close() 
     return DGI_model
 
 
