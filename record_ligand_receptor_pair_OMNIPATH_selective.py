@@ -925,7 +925,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])==5: #total_runs:
+    if len(csv_record_dict[key_value])==total_runs:
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -987,7 +987,7 @@ for record in range (1, len(csv_record)):
     csv_record[record][5] = label
     
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'.csv', index=False, header=False)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 
 data_list=dict()
@@ -1030,7 +1030,8 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 
 save_path = '/cluster/home/t116508uhn/64630/'
 #chart.save(save_path+'altair_plot_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
-chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
+#chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
+chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 
 
 ##########################
