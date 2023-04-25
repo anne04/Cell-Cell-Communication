@@ -25,12 +25,23 @@ import altair as alt
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/' , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='The name of dataset')
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
+
+'''
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
+parser.add_argument( '--model_name', type=str, default='gat_3attr', help='model name')
+parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+args = parser.parse_args()
+'''
 '''
 import argparse
 parser = argparse.ArgumentParser()
@@ -80,15 +91,15 @@ adata_X = np.transpose(temp)
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
 #
-'''
+
 gene_vs_cell = np.transpose(cell_vs_gene)  
-np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed", gene_vs_cell)
+np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed_"+args.data_name, gene_vs_cell)
 df = pd.DataFrame(gene_ids)
-df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/gene_ids.csv', index=False, header=False)
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/gene_ids_'+args.data_name+'.csv', index=False, header=False)
 df = pd.DataFrame(cell_barcode)
-df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cell_barcode.csv', index=False, header=False)
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cell_barcode_'+args.data_name+'.csv', index=False, header=False)
       
-'''
+
 #cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 ####################
 '''
@@ -254,7 +265,7 @@ for gene in gene_info.keys():
 
 lr_gene_index = sorted(lr_gene_index)
 cell_vs_lrgene = cell_vs_gene[:, lr_gene_index]
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_lrgene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_lrgene_quantile_transformed_'+args.data_name, 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_lrgene, fp)
 ######################################
 
@@ -372,7 +383,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_co
     pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 ############################################################
 	
-    
+'''    
 coordinates = np.load('/cluster/projects/schwartzgroup/fatema/CCST/generated_data_new/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/'+'coordinates.npy')	
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -398,6 +409,7 @@ while slice < 544:
         for j in range (0, len(cells_ligand_vs_receptor)):
             if len(cells_ligand_vs_receptor_temp[i][j])>0:
                 cells_ligand_vs_receptor[i][j].extend(cells_ligand_vs_receptor_temp[i][j]) 
+'''
 ###############################
 
 ################################################################################
