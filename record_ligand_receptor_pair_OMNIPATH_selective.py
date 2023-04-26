@@ -567,11 +567,11 @@ with open(pathologist_label_file) as file:
 barcode_type=dict()
 for i in range (1, len(pathologist_label)):
     if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 'tumor'
+        barcode_type[pathologist_label[i][0]] = 1 #'tumor'
     elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 'stroma_deserted'
+        barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
     elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 'acinar_reactive'
+        barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
 '''
@@ -610,16 +610,16 @@ for i in range (1, len(pathologist_label)):
 #####
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_"]
-total_runs = 7
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -684,10 +684,10 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
     #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp: 
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
     lig_rec_dict = []
@@ -925,7 +925,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])==total_runs:
+    if len(csv_record_dict[key_value])>=4: #==total_runs:
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -981,20 +981,24 @@ for i in range (0, len(barcode_info)):
         barcode_info[i][3] = 0
 
 # update the label based on new component numbers
+#max opacity
+
 for record in range (1, len(csv_record)):
     i = csv_record[record][6]
     label = barcode_info[i][3]
     csv_record[record][5] = label
-    
+
+       
 df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'.csv', index=False, header=False)
-df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 
 data_list=dict()
 data_list['pathology_label']=[]
 data_list['component_label']=[]
 data_list['X']=[]
 data_list['Y']=[]   
+data_list['opacity']=[] 
 exist_spot = []
 for record_idx in range (1, len(csv_record)):
     record = csv_record[record_idx]
@@ -1004,16 +1008,25 @@ for record_idx in range (1, len(csv_record)):
     data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
     data_list['component_label'].append(record[5])
     data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(barcode_info[i][2])
+    data_list['Y'].append(-barcode_info[i][2])
+    data_list['opacity'].append(record[4])
     exist_spot.append(i)
 
+min_opacity = np.min(data_list['opacity'])
+max_opacity = np.max(data_list['opacity'])
+min_opacity = min_opacity - 5
+for i in range (0, len(data_list['opacity'])):
+    data_list['opacity'][i] = (data_list['opacity'][i]-min_opacity)/(max_opacity-min_opacity)
+    
+    
 for i in range (0, len(barcode_info)):
     if i in exist_spot or barcode_type[barcode_info[i][0]] == 'zero':
         continue
     data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
     data_list['component_label'].append(0)
     data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(barcode_info[i][2])
+    data_list['Y'].append(-barcode_info[i][2])
+    data_list['opacity'].append(0.1)
 
 
 id_label= len(list(set(data_list['component_label'])))
@@ -1023,15 +1036,17 @@ set1[0] = '#000000'
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = "pathology_label",
+    shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+    opacity="opacity",
     tooltip=['component_label']
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-#chart.save(save_path+'altair_plot_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+chart.save(save_path+'altair_plot_opacity_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_4.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
-chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+#chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
 
 
 ##########################
