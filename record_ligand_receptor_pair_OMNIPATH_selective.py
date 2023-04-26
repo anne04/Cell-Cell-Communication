@@ -23,6 +23,42 @@ import copy
 import altairThemes
 import altair as alt
 
+spot_diameter = 89.43 #pixels
+
+##########################################################
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/' , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='LUAD_GSM5702473_TD1', help='The name of dataset')
+parser.add_argument( '--model_name', type=str, default='gat_r1_3attr', help='model name')
+#parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+args = parser.parse_args()
+# read the mtx file
+temp = sc.read_10x_mtx(args.data_path)
+print(temp)
+sc.pp.filter_genes(temp, min_cells=1)
+print(temp)
+gene_ids = list(temp.var_names) 
+cell_barcode = np.array(temp.obs.index)
+# now read the tissue position file. It has the format: 
+df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/spatial/tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
+tissue_position = df.values
+barcode_vs_xy = dict() # record the x and y coord for each spot
+for i in range (0, tissue_position.shape[0]):
+    barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format, the x and y are swapped
+
+coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
+for i in range (0, cell_barcode.shape[0]):
+    coordinates[i,0] = barcode_vs_xy[cell_barcode[i]][0]
+    coordinates[i,1] = barcode_vs_xy[cell_barcode[i]][1]
+    
+temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  
+adata_X = np.transpose(temp)  
+#adata_X = sc.pp.scale(adata_X)
+cell_vs_gene = adata_X
+#############################################################    
+'''
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/' , help='The path to dataset') 
@@ -31,14 +67,14 @@ parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spati
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-
+'''
 '''
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
-parser.add_argument( '--model_name', type=str, default='gat_3attr', help='model name')
+parser.add_argument( '--model_name', type=str, default='gat_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 '''
@@ -52,14 +88,6 @@ parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The n
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 '''
-
-
-spot_diameter = 89.43 #pixels
-############
-
-############
-
- 
 ####### get the gene expressions ######
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -73,25 +101,24 @@ gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 cell_barcode = np.array(adata_h5.obs.index)
 #barcode_info.append("")
+temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
+adata_X = np.transpose(temp)  
+#adata_X = sc.pp.scale(adata_X)
+cell_vs_gene = copy.deepcopy(adata_X)
+########################################################
 
 i=0
 barcode_serial = dict()
 for cell_code in cell_barcode:
     barcode_serial[cell_code]=i
     i=i+1
-
+    
 i=0
 barcode_info=[]
 for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
     i=i+1
 #################### 
-temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
-adata_X = np.transpose(temp)  
-#adata_X = sc.pp.scale(adata_X)
-cell_vs_gene = copy.deepcopy(adata_X)
-#
-
 gene_vs_cell = np.transpose(cell_vs_gene)  
 np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed_"+args.data_name, gene_vs_cell)
 df = pd.DataFrame(gene_ids)
@@ -271,6 +298,19 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_lrg
 
 ligand_list = list(ligand_dict_dataset.keys())  
 print('len ligand_list %d'%len(ligand_list))
+total_relation = 0
+l_r_pair = dict()
+count = 0
+lr_id = 0
+for gene in list(ligand_dict_dataset.keys()): 
+    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
+    l_r_pair[gene] = dict()
+    for receptor_gene in ligand_dict_dataset[gene]:
+        l_r_pair[gene][receptor_gene] = lr_id 
+        lr_id  = lr_id  + 1
+        
+print('total type of l-r pairs found: %d'%lr_id )
+
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -292,19 +332,6 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 
 ########
 ######################################
-total_relation = 0
-l_r_pair = dict()
-count = 0
-lr_id = 0
-for gene in list(ligand_dict_dataset.keys()): 
-    ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
-    l_r_pair[gene] = dict()
-    for receptor_gene in ligand_dict_dataset[gene]:
-        l_r_pair[gene][receptor_gene] = lr_id 
-        lr_id  = lr_id  + 1
-##################################################################
-print(lr_id )
-
 ##############################################################################
 count_total_edges = 0
 activated_cell_index = dict()
@@ -369,7 +396,7 @@ for g in range(start_index, end_index):
     
     print(g)
     
-print(count_total_edges)
+print('total number of edges in the input graph %d '%count_total_edges)
 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
@@ -460,7 +487,7 @@ print('count local %d'%max_local)
 
 ##########
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
