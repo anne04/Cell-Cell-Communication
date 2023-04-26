@@ -19,7 +19,9 @@ from torch_geometric.data import Data, DataLoader
 
 
 def get_graph(X, training_data_name):
-
+    
+    print('X shape ')
+    print(X.shape)
     f = gzip.open(training_data_name , 'rb')
 #    f = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + training_data_name , 'rb')
 #    row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP, dummy = pickle.load(f)
@@ -31,16 +33,78 @@ def get_graph(X, training_data_name):
     print("row_col %d"%len(row_col))
     #print(edge_weight)
     ###########
-
+    dict_cell_edge = defaultdict(list) # incoming edges
+    dict_cell_neighbors = defaultdict(list) # incoming edges
+    for i in range(0, len(row_col)):
+        dict_cell_edge[row_col[i][1]].append([row_col[i], edge_weight[i]])
+        dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+    
+    
+    set1_nodes = []
+    set1_edges = []
+    node_limit_set1 = X.shape[0]//2
+    print('set 1 has nodes upto: %d'%node_limit_set1)
+    for i in range (0, node_limit_set1):
+        set1_nodes.append(i)
+        # add it's edges - first hop
+        for edge in dict_cell_edge[i]:
+            set1_edges.append(edge) # has both row_col and edge_weight
+        # add it's neighbor's edges - second hop
+        for neighbor in dict_cell_neighbors[i]:
+            for edge in dict_cell_edge[neighbor]:
+                set1_edges.append(edge) # has both row_col and edge_weight
+                
+    print('amount of edges in set 1 is: %d'%len(set1_edges))
+    
+    set2_nodes = []
+    set2_edges = []
+    print('set 1 has nodes upto: %d'%node_limit_set1)
+    for i in range (node_limit_set1, X.shape[0]):
+        set2_nodes.append(i)
+        # add it's edges - first hop
+        for edge in dict_cell_edge[i]:
+            set2_edges.append(edge) # has both row_col and edge_weight
+        # add it's neighbor's edges - second hop
+        for neighbor in dict_cell_neighbors[i]:
+            for edge in dict_cell_edge[neighbor]:
+                set2_edges.append(edge) # has both row_col and edge_weight            
+        
+    print('amount of edges in set 2 is: %d'%len(set2_edges))
+    ###########
+    graph_bags = []
+    
+    row_col = []
+    edge_weight = []
+    for i in range (0, len(set1_edges)):
+        row_col.append(set1_edges[i][0])
+        edge_weight.append(set1_edges[i][1])
+        
+    edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
+    edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)   
+    graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
+    graph_bags.append(graph)
+    
+    row_col = []
+    edge_weight = []
+    for i in range (0, len(set2_edges)):
+        row_col.append(set2_edges[i][0])
+        edge_weight.append(set2_edges[i][1])
+        
+    edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
+    edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)   
+    graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
+    graph_bags.append(graph)    
+    
+    '''
     edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
     print('X shape ')
     print(X.shape)
     graph_bags = []
     graph = Data(x=torch.tensor(X, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
-
-
     graph_bags.append(graph)
+    print('get graph done')
+    '''
     print('get graph done')
     return graph_bags
 
@@ -126,19 +190,21 @@ def train_DGI(args, data_loader, in_channels):
             DGI_model.train()
             DGI_optimizer.zero_grad()
             DGI_all_loss = []
-
+            DGI_loss_list = []
             for data in data_loader:
                 data = data.to(device)
                 pos_z, neg_z, summary = DGI_model(data=data)
                 #print('epoch %d '%epoch)
                 #print(DGI_model.encoder.attention_scores_mine)
                 DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
+                DGI_loss_list.append(DGI_loss)
                 DGI_all_loss.append(DGI_loss.item())
+                
+            for DGI_loss in DGI_loss_list:    
+                DGI_loss.backward()            
+                DGI_optimizer.step()
             
-            print(DGI_all_loss)
-            DGI_loss = np.sum(DGI_all_loss)
-            DGI_loss.backward()            
-            DGI_optimizer.step()
+            
 
             if ((epoch)%500) == 0:
                 print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
