@@ -22,9 +22,71 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
-
 spot_diameter = 89.43 #pixels
+##########################################################
+# written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
+import scipy.stats
 
+#sys.path.append("/home/gw/code/utility/altairThemes/")
+#if True:  # In order to bypass isort when saving
+#    import altairThemes
+
+def readCsv(x):
+  """Parse file."""
+  #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
+  df = pd.read_csv(x, sep=",")
+
+  return df
+
+def preprocessDf(df):
+  """Transform ligand and receptor columns."""
+  df["ligand-receptor"] = df["ligand"] + '-' + df["receptor"]
+  df["component"] = df["component"].astype(str).str.zfill(2)
+
+  return df
+
+def statOrNan(xs, ys):
+  if len(xs) == 0 or len(ys) == 0:
+    return None
+  else:
+    return scipy.stats.mannwhitneyu(xs, ys)
+
+def summarizeStats(df, feature):
+  meanRes = df.groupby(["benchmark", "method"])[feature].mean()
+  statRes = df.groupby("benchmark").apply(lambda x: post.posthoc_ttest(x, val_col = feature, group_col = "method", p_adjust = "fdr_bh"))
+
+  return (meanRes, statRes)
+
+def writeStats(stats, feature, outStatsPath):
+  stats[0].to_csv(outStatsPath + "_feature_" + feature + "_mean.csv")
+  stats[1].to_csv(outStatsPath + "_feature_" + feature + "_test.csv")
+
+  return
+
+def plot(df):
+
+  set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
+  set1[0] = '#000000'
+  base = alt.Chart(df).mark_bar().encode(
+            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y=alt.Y("count()"),
+            color=alt.Color("component:N", scale = alt.Scale(range=set1)),
+            order=alt.Order("component", sort="ascending"),
+            tooltip=["component"]
+        )
+  p = base
+
+  return p
+
+def totalPlot(df, features, outPath):
+
+  p = alt.hconcat(*map(lambda x: plot(df, x), features))
+
+  outPath = outPath + "_boxplot.html"
+
+  p.save(outPath)
+
+  return
 ##########################################################
 import argparse
 parser = argparse.ArgumentParser()
@@ -929,9 +991,19 @@ for run_time in range (0, total_runs):
                     else:
                         csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
 
-    #df = pd.DataFrame(csv_record)
-    #df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-
+    df = pd.DataFrame(csv_record)
+    df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+    ############
+    alt.themes.register("publishTheme", altairThemes.publishTheme)
+    # enable the newly registered theme
+    alt.themes.enable("publishTheme")
+    inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+    df = readCsv(inFile)
+    df = preprocessDf(df)
+    outPathRoot = inFile.split('.')[0]
+    p = plot(df)
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th98.html' #outPathRoot + "_histogram.html"
+    p.save(outPath)	
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
@@ -1017,8 +1089,48 @@ for record in range (1, len(csv_record)):
 
        
 df = pd.DataFrame(csv_record)
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'.csv', index=False, header=False)
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'_combined.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+############
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+df = readCsv(inFile)
+df = preprocessDf(df)
+outPathRoot = inFile.split('.')[0]
+p = plot(df)
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_combined_th98.html' #outPathRoot + "_histogram.html"
+p.save(outPath)	
+###########	
+
+exist_spot = defaultdict(list)
+for record_idx in range (1, len(csv_record)):
+    record = csv_record[record_idx]
+    i = record[6]
+    if barcode_type[barcode_info[i][0]] == 'zero':
+        continue
+    pathology_label = barcode_type[barcode_info[i][0]]
+    component_label = record[5]
+    X = barcode_info[i][1]
+    Y = -barcode_info[i][2]
+    opacity = record[4]
+    exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
+
+opacity_list = []
+for i in exist_spot:
+    sum_opacity = 0
+    for edges in exist_spot[i]:
+        sum_opacity = sum_opacity + edges[4]
+        
+    avg_opacity = sum_opacity/len(exist_spot[i])
+    opacity_list.append(avg_opacity)
+    
+    exist_spot[i]=[exist_spot[i][0][0], exist_spot[i][0][1], exist_spot[i][0][2], exist_spot[i][0][3], avg_opacity]
+
+min_opacity = np.min(opacity_list)
+max_opacity = np.max(opacity_list)
+min_opacity = min_opacity - 5
 
 data_list=dict()
 data_list['pathology_label']=[]
@@ -1026,34 +1138,24 @@ data_list['component_label']=[]
 data_list['X']=[]
 data_list['Y']=[]   
 data_list['opacity']=[] 
-exist_spot = []
-for record_idx in range (1, len(csv_record)):
-    record = csv_record[record_idx]
-    i = record[6]
+
+for i in range (0, len(barcode_info)):
     if barcode_type[barcode_info[i][0]] == 'zero':
         continue
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['component_label'].append(record[5])
-    data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])
-    data_list['opacity'].append(record[4])
-    exist_spot.append(i)
-
-min_opacity = np.min(data_list['opacity'])
-max_opacity = np.max(data_list['opacity'])
-min_opacity = min_opacity - 5
-for i in range (0, len(data_list['opacity'])):
-    data_list['opacity'][i] = (data_list['opacity'][i]-min_opacity)/(max_opacity-min_opacity)
-    
-    
-for i in range (0, len(barcode_info)):
-    if i in exist_spot or barcode_type[barcode_info[i][0]] == 'zero':
-        continue
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['component_label'].append(0)
-    data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(-barcode_info[i][2])
-    data_list['opacity'].append(0.1)
+        
+    if i in exist_spot:
+        data_list['pathology_label'].append(exist_spot[i][0][0])
+        data_list['component_label'].append(exist_spot[i][0][1])
+        data_list['X'].append(exist_spot[i][0][2])
+        data_list['Y'].append(exist_spot[i][0][3])
+        data_list['opacity'].append((exist_spot[i][0][4]-min_opacity)/(max_opacity-min_opacity))
+        
+    else:
+        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+        data_list['component_label'].append(0)
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(-barcode_info[i][2])
+        data_list['opacity'].append(0.1)
 
 
 id_label= len(list(set(data_list['component_label'])))
@@ -1070,7 +1172,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_opacity_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_4.html')  
+chart.save(save_path+'altair_plot_opacity_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
