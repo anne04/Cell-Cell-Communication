@@ -66,7 +66,7 @@ def writeStats(stats, feature, outStatsPath):
 def plot(df):
 
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  set1[0] = '#000000'
+  #set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
@@ -747,9 +747,9 @@ for run_time in range (0, total_runs):
     ##############
     plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
-    #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400)
+    #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
     #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_bothAbove98th_3dim_tanh_h2048_'+filename[run_time]+'attention_score.svg', dpi=400)
+    plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
@@ -876,7 +876,7 @@ for run_time in range (0, total_runs):
         else:
             barcode_type[pathologist_label[i][0]] = 'zero' #0
     '''
-    '''
+    
     data_list=dict()
     data_list['pathology_label']=[]
     data_list['component_label']=[]
@@ -902,14 +902,14 @@ for run_time in range (0, total_runs):
     chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
         alt.X('X', scale=alt.Scale(zero=False)),
         alt.Y('Y', scale=alt.Scale(zero=False)),
-        shape = "pathology_label",
+        shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
         color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
         tooltip=['component_label']
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
-
-    #save_path = '/cluster/home/t116508uhn/64630/'
+    # output 2
+    save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    #chart.save(save_path+args.data_name+'_altair_plot_98th_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -918,7 +918,7 @@ for run_time in range (0, total_runs):
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-    '''
+    
     ##############
     '''
     for j in range (0, id_label):
@@ -1003,7 +1003,7 @@ for run_time in range (0, total_runs):
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
     outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th98.html' #outPathRoot + "_histogram.html"
-    p.save(outPath)	
+    p.save(outPath)	# output 3
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
@@ -1024,7 +1024,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=4: #==total_runs:
+    if len(csv_record_dict[key_value])>=4: #total_runs:
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1035,7 +1035,7 @@ for key_value in csv_record_dict.keys():
         score = 0
         for k in range (0, len(csv_record_dict[key_value])):
             score = score + csv_record_dict[key_value][k][0]
-        score = score/k # take the average score
+        score = score/len(csv_record_dict[key_value]) # take the average score
         ''''''
         ###        
         label = -1 #csv_record_dict[key_value][total_runs-1][1]
@@ -1088,8 +1088,8 @@ for record in range (1, len(csv_record)):
     csv_record[record][5] = label
 
        
-df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'_combined.csv', index=False, header=False)
+df = pd.DataFrame(csv_record) # output 4
+df.to_csv('/cluster/home/t116508uhn/64630/input_test'+args.data_name+'_edges'+str(len(csv_record))+'_combined_th98_4.csv', index=False, header=False)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 ############
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -1100,8 +1100,8 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_combined_th98.html' #outPathRoot + "_histogram.html"
-p.save(outPath)	
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_combined_th98_4.html' #outPathRoot + "_histogram.html"
+p.save(outPath)	# output 5
 ###########	
 
 exist_spot = defaultdict(list)
@@ -1119,11 +1119,11 @@ for record_idx in range (1, len(csv_record)):
 
 opacity_list = []
 for i in exist_spot:
-    sum_opacity = 0
+    sum_opacity = []
     for edges in exist_spot[i]:
-        sum_opacity = sum_opacity + edges[4]
+        sum_opacity.append(edges[4])
         
-    avg_opacity = sum_opacity/len(exist_spot[i])
+    avg_opacity = np.max(sum_opacity) #np.mean(sum_opacity)
     opacity_list.append(avg_opacity)
     
     exist_spot[i]=[exist_spot[i][0][0], exist_spot[i][0][1], exist_spot[i][0][2], exist_spot[i][0][3], avg_opacity]
@@ -1144,11 +1144,11 @@ for i in range (0, len(barcode_info)):
         continue
         
     if i in exist_spot:
-        data_list['pathology_label'].append(exist_spot[i][0][0])
-        data_list['component_label'].append(exist_spot[i][0][1])
-        data_list['X'].append(exist_spot[i][0][2])
-        data_list['Y'].append(exist_spot[i][0][3])
-        data_list['opacity'].append((exist_spot[i][0][4]-min_opacity)/(max_opacity-min_opacity))
+        data_list['pathology_label'].append(exist_spot[i][0])
+        data_list['component_label'].append(exist_spot[i][1])
+        data_list['X'].append(exist_spot[i][2])
+        data_list['Y'].append(exist_spot[i][3])
+        data_list['opacity'].append((exist_spot[i][4]-min_opacity)/(max_opacity-min_opacity))
         
     else:
         data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
@@ -1167,12 +1167,13 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.Y('Y', scale=alt.Scale(zero=False)),
     shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    opacity="opacity",
-    tooltip=['component_label']
+    opacity=alt.Opacity('opacity:N'), #"opacity",
+    tooltip=['component_label','opacity']
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
+# output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_opacity_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th98_3dim_tanh_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_4.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
@@ -1416,7 +1417,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th99p8_tanh.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_3d_tanh_th98_combined_4.dot")
 
 #write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th98_leakyRelu.dot")
 #
