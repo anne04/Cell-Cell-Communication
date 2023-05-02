@@ -1331,6 +1331,81 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'distribution_type6_f_input.svg', dpi=400)
 plt.clf()
 
+###########
+# split it into two set of edges
+
+###########
+dict_cell_edge = defaultdict(list) # incoming edges
+dict_cell_neighbors = defaultdict(list) # incoming edges
+for i in range(0, len(row_col)):
+    dict_cell_edge[row_col[i][1]].append(i) # index
+    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+
+for i in range (0, datapoint_size):
+	neighbor_list = dict_cell_neighbors[i]
+	neighbor_list = list(set(neighbor_list))
+	dict_cell_neighbors[i] = neighbor_list
+
+set1_nodes = []
+set1_edges_index = []
+node_limit_set1 = datapoint_size//2
+set1_direct_edges = []
+print('set 1 has nodes upto: %d'%node_limit_set1)
+for i in range (0, node_limit_set1):
+    set1_nodes.append(i)
+    # add it's edges - first hop
+    for edge_index in dict_cell_edge[i]:
+		set1_edges_index.append(edge_index) # has both row_col and edge_weight
+		set1_direct_edges.append(edge_index)
+    # add it's neighbor's edges - second hop
+    for neighbor in dict_cell_neighbors[i]:
+        if i == neighbor:
+            continue
+        for edge_index in dict_cell_edge[neighbor]:
+            set1_edges_index.append(edge_index) # has both row_col and edge_weight
+			
+set1_edges_index = list(set(set1_edges_index))
+print('amount of edges in set 1 is: %d'%len(set1_edges_index))
+
+set2_nodes = []
+set2_edges_index = []
+set2_direct_edges = []
+print('set 2 has nodes upto: %d'%datapoint_size)
+for i in range (node_limit_set1, datapoint_size):
+    set2_nodes.append(i)
+    # add it's edges - first hop
+    for edge_index in dict_cell_edge[i]:
+    	set2_edges_index.append(edge_index) # has both row_col and edge_weight
+		set2_direct_edges.append(edge_index)
+    # add it's neighbor's edges - second hop
+    for neighbor in dict_cell_neighbors[i]:
+        if i == neighbor:
+            continue
+        for edge_index in dict_cell_edge[neighbor]:
+            set2_edges_index.append(edge_index) # has both row_col and edge_weight
+			
+set2_edges_index = list(set(set2_edges_index))
+print('amount of edges in set 1 is: %d'%len(set2_edges_index))
+
+
+set2_nodes = []
+set2_edges = []
+print('set 1 has nodes upto: %d'%node_limit_set1)
+for i in range (node_limit_set1, datapoint_size):
+    set2_nodes.append(i)
+    # add it's edges - first hop
+    for edge in dict_cell_edge[i]:
+        set2_edges.append(edge) # has both row_col and edge_weight
+    # add it's neighbor's edges - second hop
+    for neighbor in dict_cell_neighbors[i]:
+        if i == neighbor:
+            continue
+        for edge in dict_cell_edge[neighbor]:
+            set2_edges.append(edge) # has both row_col and edge_weight
+
+print('amount of edges in set 2 is: %d'%len(set2_edges))
+
+
 '''
 for i in range (0, datapoint_size):  
     for j in range (0, datapoint_size):	
