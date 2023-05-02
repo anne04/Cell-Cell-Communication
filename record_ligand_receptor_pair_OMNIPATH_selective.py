@@ -99,8 +99,15 @@ args = parser.parse_args()
 # read the mtx file
 temp = sc.read_10x_mtx(args.data_path)
 print(temp)
+sc.pp.log1p(temp)
 sc.pp.filter_genes(temp, min_cells=1)
 print(temp)
+sc.pp.highly_variable_genes(temp) #3952
+temp = temp[:, temp.var['highly_variable']]
+print(temp)
+
+
+
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
 # now read the tissue position file. It has the format: 
@@ -108,13 +115,14 @@ df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visiu
 tissue_position = df.values
 barcode_vs_xy = dict() # record the x and y coord for each spot
 for i in range (0, tissue_position.shape[0]):
-    barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format, the x and y are swapped
+    barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] #for some weird reason, in the .h5 format, the x and y are swapped
 
 coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
 for i in range (0, cell_barcode.shape[0]):
     coordinates[i,0] = barcode_vs_xy[cell_barcode[i]][0]
     coordinates[i,1] = barcode_vs_xy[cell_barcode[i]][1]
-    
+
+	
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
@@ -155,10 +163,13 @@ data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
-sc.pp.filter_genes(adata_h5, min_cells=1)
 #sc.pp.log1p(adata_h5)
-#sc.pp.highly_variable_genes(adata_h5) #3952
+sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
+sc.pp.highly_variable_genes(adata_h5) #3952
+adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
+print(adata_h5)
+
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 cell_barcode = np.array(adata_h5.obs.index)
@@ -167,6 +178,8 @@ temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
+print('min value %g'%np.min(cell_vs_gene))
+
 ########################################################
 
 i=0
@@ -181,13 +194,14 @@ for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
     i=i+1
 #################### 
+'''
 gene_vs_cell = np.transpose(cell_vs_gene)  
 np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed_"+args.data_name, gene_vs_cell)
 df = pd.DataFrame(gene_ids)
 df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/gene_ids_'+args.data_name+'.csv', index=False, header=False)
 df = pd.DataFrame(cell_barcode)
 df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cell_barcode_'+args.data_name+'.csv', index=False, header=False)
-      
+'''   
 
 #cell_vs_gene_scaled = sc.pp.scale(adata_X) # rows = cells, columns = genes
 ####################
@@ -551,10 +565,10 @@ print('count local %d'%max_local)
 
 ##########
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d_filtered', 'wb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed_filtered', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_gene, fp)
 
 ##########
