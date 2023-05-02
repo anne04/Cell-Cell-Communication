@@ -704,7 +704,7 @@ for i in range (0, len(barcode_info)):
 #####
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_"]
-total_runs = 1
+total_runs = 2
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
@@ -724,7 +724,7 @@ for run_time in range (0, total_runs):
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-    l = 3
+    l = 2 # 3 = layer 1, 2 = layer 2
     attention_scores = []
     datapoint_size = len(barcode_info)
     for i in range (0, datapoint_size):
@@ -754,7 +754,7 @@ for run_time in range (0, total_runs):
     save_path = '/cluster/home/t116508uhn/64630/'
     #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
     #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
-    plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_'+filename[run_time]+'attention_score.svg', dpi=400)
+    plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
@@ -820,7 +820,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 99.5)
+    threshold_down =  np.percentile(sorted(distribution), 99)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -914,7 +914,7 @@ for run_time in range (0, total_runs):
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p5_3dim_tanh_h512_'+filename[run_time]+'.html')
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1007,7 +1007,7 @@ for run_time in range (0, total_runs):
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p5_h512_'+str(len(csv_record))+'edges.html' #outPathRoot + "_histogram.html"
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99_h512_l2attention_'+str(len(csv_record))+'edges.html' #outPathRoot + "_histogram.html"
     p.save(outPath)	# output 3
     ###########	
     #run = 1
@@ -1092,7 +1092,7 @@ for record in range (1, len(csv_record)):
 
        
 df = pd.DataFrame(csv_record) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_edges'+str(len(csv_record))+'_combined_th99p5_5.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th99.csv', index=False, header=False)
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 ############
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -1103,7 +1103,7 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_combined_th99p5_6.html' #outPathRoot + "_histogram.html"
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th99.html' #outPathRoot + "_histogram.html"
 p.save(outPath)	# output 5
 ###########	
 
@@ -1170,13 +1170,13 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.Y('Y', scale=alt.Scale(zero=False)),
     shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    opacity=alt.Opacity('opacity:N'), #"opacity",
+    #opacity=alt.Opacity('opacity:N'), #"opacity",
     tooltip=['component_label','opacity']
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th99p5_3dim_tanh_h512_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th99_3dim_tanh_h512_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
