@@ -109,12 +109,13 @@ print(temp)
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
 # now read the tissue position file. It has the format: 
-#df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/spatial/tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
-df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/GSM5702473_TD1_tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
+df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/spatial/tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
+#df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/GSM5702473_TD1_tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
 tissue_position = df.values
 barcode_vs_xy = dict() # record the x and y coord for each spot
 for i in range (0, tissue_position.shape[0]):
-    barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format, the x and y are swapped
+    #barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format, the x and y are swapped
+    barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] 
 
 coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
 for i in range (0, cell_barcode.shape[0]):
@@ -163,15 +164,15 @@ print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 
-#sc.pp.log1p(adata_h5)
+sc.pp.log1p(adata_h5)
 
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
-'''
+
 sc.pp.highly_variable_genes(adata_h5) #3952
 adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
 print(adata_h5)
-'''
+
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
 cell_barcode = np.array(adata_h5.obs.index)
@@ -664,6 +665,23 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 
 ########################################################### Visualization starts ##################
 '''
+pathologist_label_file='/cluster/home/t116508uhn/human_lymphnode_Spatial10X_manual_annotations.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if pathologist_label[i][1] == 'GC': 
+        barcode_type[pathologist_label[i][0]] = 1 
+    #elif pathologist_label[i][1] =='':
+    #    barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
+    else:
+        barcode_type[pathologist_label[i][0]] = 0
+'''
+'''
 pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
@@ -720,16 +738,16 @@ for i in range (0, len(barcode_info)):
 #####
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 4
+total_runs = 1
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -837,7 +855,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 90)
+    threshold_down =  np.percentile(sorted(distribution), 92)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -931,7 +949,7 @@ for run_time in range (0, total_runs):
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th98_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'.html') #
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th92_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'.svg') #
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1023,9 +1041,9 @@ for run_time in range (0, total_runs):
     df = readCsv(inFile)
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
-    #p = plot(df)
-    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th98_h512_filteredl2attention__'+str(len(csv_record))+'edges.html' #l2attention_
-    #p.save(outPath)	# output 3
+    p = plot(df)
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th92_h512_filteredl2attention__'+str(len(csv_record))+'edges.html' #l2attention_
+    p.save(outPath)	# output 3
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
@@ -1110,7 +1128,7 @@ for record in range (1, len(csv_record)):
        
 df = pd.DataFrame(csv_record) # output 4
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th92_60percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th88_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 ############
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -1121,8 +1139,8 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th92_60percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l1attention_combined_th88_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
 p.save(outPath)	# output 5
 ###########	
 
@@ -1195,7 +1213,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th92_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_60percent.html')  #l2attention_
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th88_3dim_tanh_h512_filtered_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th90_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
