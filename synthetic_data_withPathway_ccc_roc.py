@@ -1387,11 +1387,11 @@ plt.clf()
     print('amount of edges in set 1 is: %d'%len(set2_edges_index))
 
     set1_edges = []
-    for i in range (0, len(set1_edges_index)):
+    for i in range (0, len(set1_direct_edges)): #len(set1_edges_index)
         set1_edges.append([row_col[i], edge_weight[i]])
 
     set2_edges = []
-    for i in range (0, len(set2_edges_index)):
+    for i in range (0, len(set2_direct_edges)): #set2_edges_index
         set2_edges.append([row_col[i], edge_weight[i]])
 ##################################################
 '''
