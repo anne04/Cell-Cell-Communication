@@ -1476,7 +1476,7 @@ filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 for run_time in range (0,total_runs):
     run = run_time
-    if run == 0 or run==5:
+    if run in [1, 2, 4, 7, 8]:
         continue
 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
