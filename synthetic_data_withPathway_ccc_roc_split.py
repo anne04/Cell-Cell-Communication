@@ -1494,17 +1494,11 @@ while percentage_value > 0:
 
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 10
+total_runs = 5
 for run_time in range (0,total_runs):
     run = run_time
-    if run in [1, 2, 4, 7, 8]:
-        continue
-
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_1layer_'+filename[run]+'_attention_l1.npy' #split_
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    l=3 #2 ## 
+    #if run in [1, 2, 4, 7, 8]:
+    #    continue
     distribution = []
     attention_scores = []
     datapoint_size = temp_x.shape[0]
@@ -1512,19 +1506,41 @@ for run_time in range (0,total_runs):
         attention_scores.append([])   
         for j in range (0, datapoint_size):	
             attention_scores[i].append([])   
-            attention_scores[i][j] = []
-
+            attention_scores[i][j] = []  
+    l=3 #2 ## 
+    #Set 1
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_1.npy' #split_
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+    
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index] 
-        if set1_exist[i][j]!=-1:
+        if set1_exist_dict[i][j]!=-1:
         ###################################
             attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
             distribution.append(X_attention_bundle[l][index][0])
     #######################
+    #Set 2
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_2.npy' #split_
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+    
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index] 
+        if set2_exist_dict[i][j]!=-1:
+        ###################################
+            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+            distribution.append(X_attention_bundle[l][index][0])
+    #######################    
+
+    
     plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
-    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    plt.savefig(save_path+'distribution_type6_f_3d_tanh_split_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
