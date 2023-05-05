@@ -164,14 +164,14 @@ print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 
-sc.pp.log1p(adata_h5)
+#sc.pp.log1p(adata_h5)
 
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 
-sc.pp.highly_variable_genes(adata_h5) #3952
-adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
-print(adata_h5)
+#sc.pp.highly_variable_genes(adata_h5) #3952
+#adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
+#print(adata_h5)
 
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
@@ -737,6 +737,7 @@ for i in range (0, len(barcode_info)):
         
 #####
 
+datapoint_size = len(barcode_info)
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
 total_runs = 1
 csv_record_dict = defaultdict(list)
@@ -760,7 +761,6 @@ for run_time in range (0, total_runs):
 
     l = 2 # 3 = layer 1, 2 = layer 2
     attention_scores = []
-    datapoint_size = len(barcode_info)
     for i in range (0, datapoint_size):
         attention_scores.append([])   
         for j in range (0, datapoint_size):	
@@ -847,15 +847,15 @@ for run_time in range (0, total_runs):
         i = row_col[index][0]
         j = row_col[index][1]
         if edge_weight[index][1]>0:
-            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0] * edge_weight[index][2])
-            distribution.append(edge_weight[index][1] * edge_weight[index][0] * edge_weight[index][2])
+            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
+            distribution.append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
             ccc_index_dict[i] = ''
             ccc_index_dict[j] = ''   
     '''
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 92)
+    threshold_down =  np.percentile(sorted(distribution), 90)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -949,6 +949,7 @@ for run_time in range (0, total_runs):
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
     chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th92_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'.svg') #
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
