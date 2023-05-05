@@ -1397,11 +1397,11 @@ plt.clf()
     print('amount of edges in set 1 is: %d'%len(set2_edges_index))
 
     set1_edges = []
-    for i in range (0, len(set1_direct_edges)): #len(set1_edges_index)
+    for i in set1_direct_edges:
         set1_edges.append([row_col[i], edge_weight[i]])
        
     set2_edges = []
-    for i in range (0, len(set2_direct_edges)): #set2_edges_index
+    for i in set2_direct_edges: #set2_edges_index
         set2_edges.append([row_col[i], edge_weight[i]])
         
     for index in range (0, len(set1_edges)):
@@ -1517,7 +1517,7 @@ for run_time in range (0,total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index] 
-        if set1_exist_dict[i][j]!=-1:
+        if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
         ###################################
             attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
             distribution.append(X_attention_bundle[l][index][0])
@@ -1531,7 +1531,7 @@ for run_time in range (0,total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index] 
-        if set2_exist_dict[i][j]!=-1:
+        if i in set2_exist_dict and j in set2_exist_dict[i] and set2_exist_dict[i][j]==1:
         ###################################
             attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
             distribution.append(X_attention_bundle[l][index][0])
