@@ -184,7 +184,7 @@ cell_vs_gene = copy.deepcopy(adata_X)
 print('min value %g'%np.min(cell_vs_gene))
 
 ########################################################
-
+ 
 i=0
 barcode_serial = dict()
 for cell_code in cell_barcode:
