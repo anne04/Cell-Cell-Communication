@@ -196,6 +196,19 @@ barcode_info=[]
 for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1],0])
     i=i+1
+	
+i=0
+node_id_sorted_xy=[]
+for cell_code in cell_barcode:
+    node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
+    i=i+1
+	
+node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(node_id_sorted_xy, fp)
+
+
 #################### 
 '''
 gene_vs_cell = np.transpose(cell_vs_gene)  
