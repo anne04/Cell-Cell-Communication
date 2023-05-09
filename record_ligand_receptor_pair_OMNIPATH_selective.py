@@ -841,9 +841,10 @@ for run_time in range (0, total_runs):
 
     total_type = np.zeros((2))        
     for index in range (0, len(row_col)):
-        i = row_col[index][0]
-        j = row_col[index][1]
-        lig_rec_dict[i][j].append(lig_rec[index])  
+        #if lig_rec[index][0]=='CCL19':
+            i = row_col[index][0]
+            j = row_col[index][1]
+            lig_rec_dict[i][j].append(lig_rec[index])  
 
     '''
     attention_scores = []
@@ -859,6 +860,7 @@ for run_time in range (0, total_runs):
     for index in range (0, len(row_col)):
         i = row_col[index][0]
         j = row_col[index][1]
+        #if lig_rec[index][0]=='CCL19':
         if edge_weight[index][1]>0:
             attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
             distribution.append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
@@ -868,7 +870,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 90)
+    threshold_down =  np.percentile(sorted(distribution), 0)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
