@@ -405,6 +405,9 @@ for gene in list(ligand_dict_dataset.keys()):
         
 print('total type of l-r pairs found: %d'%lr_id )
 
+id_list = []
+for receptor_gene in l_r_pair['CCL19']:
+    id_list.append(l_r_pair['CCL19'][receptor_gene])
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -752,13 +755,13 @@ for i in range (0, len(barcode_info)):
 
 datapoint_size = len(barcode_info)
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 1
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
@@ -829,7 +832,7 @@ for run_time in range (0, total_runs):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d_filtered', 'rb') as fp: 
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
         row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
     lig_rec_dict = []
@@ -845,7 +848,30 @@ for run_time in range (0, total_runs):
             i = row_col[index][0]
             j = row_col[index][1]
             lig_rec_dict[i][j].append(lig_rec[index])  
-
+    hold_attention_score = copy.deepcopy(attention_scores)  
+    attention_scores = copy.deepcopy(hold_attention_score)  
+    ####################################################################################
+    
+    
+    attention_scores_temp = []
+    for i in range (0, datapoint_size):
+        attention_scores_temp.append([])   
+        for j in range (0, datapoint_size):	
+            attention_scores_temp[i].append([])   
+            attention_scores_temp[i][j] = []
+    distribution = []        
+    for j in range (0, len(barcode_info)):
+        for i in range (0, len(barcode_info)):           
+            if i==j:
+                if len(lig_rec_dict[i][j])==0:
+                    continue           
+            atn_score_list = attention_scores[i][j]
+            for k in range (0, len(atn_score_list)):
+                if lig_rec_dict[i][j][k][0] == 'CCL21' and lig_rec_dict[i][j][k][1] == 'CCR7':
+                    attention_scores_temp[i][j].append(attention_scores[i][j][k])
+                    distribution.append(attention_scores[i][j][k])    
+    attention_scores = attention_scores_temp
+    ####################################################################################
     '''
     attention_scores = []
     datapoint_size = len(barcode_info)
@@ -870,7 +896,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 0)
+    threshold_down =  np.percentile(sorted(distribution), 95)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -964,8 +990,9 @@ for run_time in range (0, total_runs):
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th92_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'.svg') #
+    #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
+    chart.save(save_path+args.data_name+'_CCL21_CCR7_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th85_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1058,7 +1085,7 @@ for run_time in range (0, total_runs):
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th92_h512_filteredl2attention__'+str(len(csv_record))+'edges.html' #l2attention_
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th85_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
     p.save(outPath)	# output 3
     ###########	
     #run = 1
