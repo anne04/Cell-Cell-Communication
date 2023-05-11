@@ -867,7 +867,7 @@ for run_time in range (0, total_runs):
                     continue           
             atn_score_list = attention_scores[i][j]
             for k in range (0, len(atn_score_list)):
-                if lig_rec_dict[i][j][k][0] == 'CCL21' and lig_rec_dict[i][j][k][1] == 'CCR7':
+                if lig_rec_dict[i][j][k][0] == 'CCL19': # and lig_rec_dict[i][j][k][1] == 'CCR7':
                     attention_scores_temp[i][j].append(attention_scores[i][j][k])
                     distribution.append(attention_scores[i][j][k])    
     attention_scores = attention_scores_temp
@@ -991,8 +991,8 @@ for run_time in range (0, total_runs):
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
-    chart.save(save_path+args.data_name+'_CCL21_CCR7_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th85_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
+    chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th85_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1085,7 +1085,7 @@ for run_time in range (0, total_runs):
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th85_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
     p.save(outPath)	# output 3
     ###########	
     #run = 1
