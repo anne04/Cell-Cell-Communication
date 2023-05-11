@@ -66,7 +66,7 @@ def writeStats(stats, feature, outStatsPath):
 def plot(df):
 
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  #set1[0] = '#000000'
+  set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
@@ -99,12 +99,12 @@ args = parser.parse_args()
 # read the mtx file
 temp = sc.read_10x_mtx(args.data_path)
 print(temp)
-sc.pp.log1p(temp)
+#sc.pp.log1p(temp)
 sc.pp.filter_genes(temp, min_cells=1)
 print(temp)
-sc.pp.highly_variable_genes(temp) #3952
-temp = temp[:, temp.var['highly_variable']]
-print(temp)
+#sc.pp.highly_variable_genes(temp) #3952
+#temp = temp[:, temp.var['highly_variable']]
+#print(temp)
 
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
@@ -495,7 +495,7 @@ for g in range(start_index, end_index):
     
 print('total number of edges in the input graph %d '%count_total_edges)
 
-
+'''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_bothAboveDensity', 'wb') as fp: #b, b_1, a
@@ -505,6 +505,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_co
     pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_threshold_distance_eitherAboveCellKnee', 'wb') as fp: #b, b_1, a
     pickle.dump([cells_ligand_vs_receptor], fp) #a - [0:5]
+'''
 ############################################################
 	
 '''    
@@ -584,10 +585,10 @@ print('count local %d'%max_local)
 
 ##########
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d_filtered', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed_filtered', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
 	pickle.dump(cell_vs_gene, fp)
 
 ##########
@@ -714,7 +715,7 @@ for i in range (1, len(pathologist_label)):
     elif pathologist_label[i][1] =='acinar_reactive':
         barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
     else:
-        barcode_type[pathologist_label[i][0]] = 'zero' #0
+        barcode_type[pathologist_label[i][0]] = 0 #'zero' 
 '''
 spot_type = []
 pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
@@ -754,17 +755,61 @@ for i in range (0, len(barcode_info)):
 #####
 
 datapoint_size = len(barcode_info)
-filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+#    row_col, edge_weight = pickle.load(fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+    row_col, edge_weight, lig_rec = pickle.load(fp) # density_
+
+lig_rec_dict = []
+for i in range (0, datapoint_size):
+    lig_rec_dict.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
+
+total_type = np.zeros((2))        
+for index in range (0, len(row_col)):
+    #if lig_rec[index][0]=='CCL19':
+        i = row_col[index][0]
+        j = row_col[index][1]
+        lig_rec_dict[i][j].append(lig_rec[index])  
+
+'''
+    attention_scores = []
+    datapoint_size = len(barcode_info)
+    for i in range (0, datapoint_size):
+        attention_scores.append([])   
+        for j in range (0, datapoint_size):	
+            attention_scores[i].append([])   
+            attention_scores[i][j] = []
+
+    distribution = []
+    ccc_index_dict = dict()
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        #if lig_rec[index][0]=='CCL19':
+        if edge_weight[index][1]>0:
+            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
+            distribution.append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
+            ccc_index_dict[i] = ''
+            ccc_index_dict[j] = ''   
+'''            
+filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
 total_runs = 5
 csv_record_dict = defaultdict(list)
-for run_time in range (0, total_runs):
+for run_time in range (5, 5+total_runs):
     gc.collect()
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -775,7 +820,7 @@ for run_time in range (0, total_runs):
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-    l = 2 # 3 = layer 1, 2 = layer 2
+    l = 3 # 3 = layer 1, 2 = layer 2
     attention_scores = []
     for i in range (0, datapoint_size):
         attention_scores.append([])   
@@ -826,32 +871,11 @@ for run_time in range (0, total_runs):
     '''
 
     ##############
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-    #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
-        row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
-    lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        lig_rec_dict.append([])  
-        for j in range (0, datapoint_size):	
-            lig_rec_dict[i].append([])   
-            lig_rec_dict[i][j] = []
-
-    total_type = np.zeros((2))        
-    for index in range (0, len(row_col)):
-        #if lig_rec[index][0]=='CCL19':
-            i = row_col[index][0]
-            j = row_col[index][1]
-            lig_rec_dict[i][j].append(lig_rec[index])  
-    hold_attention_score = copy.deepcopy(attention_scores)  
-    attention_scores = copy.deepcopy(hold_attention_score)  
+    #hold_attention_score = copy.deepcopy(attention_scores)  
+    #attention_scores = copy.deepcopy(hold_attention_score)  
     ####################################################################################
-    
+    '''
     
     attention_scores_temp = []
     for i in range (0, datapoint_size):
@@ -871,28 +895,9 @@ for run_time in range (0, total_runs):
                     attention_scores_temp[i][j].append(attention_scores[i][j][k])
                     distribution.append(attention_scores[i][j][k])    
     attention_scores = attention_scores_temp
+    '''
     ####################################################################################
-    '''
-    attention_scores = []
-    datapoint_size = len(barcode_info)
-    for i in range (0, datapoint_size):
-        attention_scores.append([])   
-        for j in range (0, datapoint_size):	
-            attention_scores[i].append([])   
-            attention_scores[i][j] = []
-
-    distribution = []
-    ccc_index_dict = dict()
-    for index in range (0, len(row_col)):
-        i = row_col[index][0]
-        j = row_col[index][1]
-        #if lig_rec[index][0]=='CCL19':
-        if edge_weight[index][1]>0:
-            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
-            distribution.append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''   
-    '''
+    
     ###########################
     
     ccc_index_dict = dict()
@@ -965,8 +970,8 @@ for run_time in range (0, total_runs):
     data_list['Y']=[]
 
     for i in range (0, len(barcode_info)):
-        if barcode_type[barcode_info[i][0]] == 'zero':
-            continue
+        #if barcode_type[barcode_info[i][0]] == 'zero':
+        #    continue
         data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
         data_list['component_label'].append(barcode_info[i][3])
         data_list['X'].append(barcode_info[i][1])
@@ -991,8 +996,8 @@ for run_time in range (0, total_runs):
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
-    chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th85_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
+    #chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1003,49 +1008,7 @@ for run_time in range (0, total_runs):
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     
     ##############
-    '''
-    for j in range (0, id_label):
-        label_i = j
-        x_index=[]
-        y_index=[]
-        marker_size = []
-        fillstyles_type = []
-        for i in range (0, len(barcode_info)):
-            if barcode_type[barcode_info[i][0]]== 'zero':
-                continue
-            if barcode_info[i][3] == j:
-                x_index.append(barcode_info[i][1])
-                y_index.append(barcode_info[i][2])
-                #cell_count_cluster[j] = cell_count_cluster[j]+1
-                spot_color = colors[j]
-                if barcode_type[barcode_info[i][0]] == 'stroma_deserted':
-                    marker_size.append("o") 
-                    fillstyles_type.append('none') 
-                    #filltype='none'
-                elif barcode_type[barcode_info[i][0]] == 'tumor':
-                    marker_size.append("^")  
-                    fillstyles_type.append('full') 
-                    #filltype = 'full'
-                else:
-                    marker_size.append("*") 
-                    fillstyles_type.append('none') 
-                    #filltype = 'none'           
-                ###############
-        marker_type = []        
-        for i in range (0, len(x_index)):  
-            marker_type.append(matplotlib.markers.MarkerStyle(marker=marker_size[i]))   
-
-        for i in range (0, len(x_index)):  
-            plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=fillstyles_type[i]), s=15)   
-        #filltype = 'full'
-
-    plt.legend(fontsize=4,loc='upper right')
-
-    save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'matplotlib_plot_'+'95'+'th_'+filename[run_time]+'.svg', dpi=400)
-    plt.clf()
-    '''
-            
+    
     ###############
     csv_record = []
     csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
@@ -1085,7 +1048,9 @@ for run_time in range (0, total_runs):
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    
+    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
     p.save(outPath)	# output 3
     ###########	
     #run = 1
@@ -1131,7 +1096,6 @@ for key_value in csv_record_dict.keys():
         connecting_edges[i][j]=1
         
 print('common LR count %d'%len(csv_record))
-
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
@@ -1167,38 +1131,28 @@ for record in range (1, len(csv_record)):
     i = csv_record[record][6]
     label = barcode_info[i][3]
     csv_record[record][5] = label
+    
 
-       
-df = pd.DataFrame(csv_record) # output 4
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th88_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-############
-alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-alt.themes.enable("publishTheme")
-inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-df = readCsv(inFile)
-df = preprocessDf(df)
-outPathRoot = inFile.split('.')[0]
-p = plot(df)
-#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l1attention_combined_th88_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-p.save(outPath)	# output 5
 ###########	
 
 exist_spot = defaultdict(list)
 for record_idx in range (1, len(csv_record)):
     record = csv_record[record_idx]
     i = record[6]
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
     pathology_label = barcode_type[barcode_info[i][0]]
     component_label = record[5]
     X = barcode_info[i][1]
     Y = -barcode_info[i][2]
     opacity = record[4]
     exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
+    
+    j = record[7]
+    pathology_label = barcode_type[barcode_info[j][0]]
+    component_label = record[5]
+    X = barcode_info[j][1]
+    Y = -barcode_info[j][2]
+    opacity = record[4]   
+    exist_spot[j].append([pathology_label, component_label, X, Y, opacity])
 
 opacity_list = []
 for i in exist_spot:
@@ -1223,8 +1177,8 @@ data_list['Y']=[]
 data_list['opacity']=[] 
 
 for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
+    #if barcode_type[barcode_info[i][0]] == 'zero':
+    #    continue
         
     if i in exist_spot:
         data_list['pathology_label'].append(exist_spot[i][0])
@@ -1251,18 +1205,35 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
     #opacity=alt.Opacity('opacity:N'), #"opacity",
-    tooltip=['component_label','opacity']
+    tooltip=['component_label'] #,'opacity'
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th88_3dim_tanh_h512_filtered_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th95_3dim_tanh_h512_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th90_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
+########################################################################################################################
+csv_record.append([barcode_info[i][0], barcode_info[j][0], 'no_ligand', 'no_receptor', 0, 0, i, j])
 
-
+df = pd.DataFrame(csv_record) # output 4
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th95_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+############
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+df = readCsv(inFile)
+df = preprocessDf(df)
+outPathRoot = inFile.split('.')[0]
+p = plot(df)
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l1attention_combined_th95_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+p.save(outPath)	# output 5
 ##########################
 
 #set1[0] = '#000000'
@@ -1485,11 +1456,11 @@ for i in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            #if attention_scores[i][j][k] >= threshold_down:
+            if attention_scores[i][j][k] >= threshold_down:
             #    #print('hello')
             #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
-            if len(csv_record_dict[key_value])>=5: #total_runs:  #key_value_2 in lr_target: #and : 
+            if len(csv_record_dict[key_value])>=total_runs:  #key_value_2 in lr_target: #and : 
                 edge_score =  0 #min_attention_score + attention_scores[i][j][k]
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
@@ -1501,7 +1472,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_3d_tanh_th98_combined_4.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th95_3dim_tanh_h512_l1attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 
 #write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th98_leakyRelu.dot")
 #
