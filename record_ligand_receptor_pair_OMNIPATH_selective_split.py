@@ -750,31 +750,124 @@ for i in range (1, len(pathologist_label)):
 barcode_type=dict()
 for i in range (0, len(barcode_info)):
     barcode_type[barcode_info[i][0]] = 0 
-        
-#####
-
+    
+    
 datapoint_size = len(barcode_info)
+###################################################################################################################
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
+#    row_col, edge_weight = pickle.load(fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+    row_col, edge_weight, lig_rec = pickle.load(fp) # density_
+
+lig_rec_dict = []
+for i in range (0, datapoint_size):
+    lig_rec_dict.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict[i].append([])   
+        lig_rec_dict[i][j] = []
+
+total_type = np.zeros((2))        
+for index in range (0, len(row_col)):
+    #if lig_rec[index][0]=='CCL19':
+        i = row_col[index][0]
+        j = row_col[index][1]
+        lig_rec_dict[i][j].append(lig_rec[index])  
+###################################################################################################################
+
+# split it into two set of edges
+    ###########
+    set1_exist_dict = defaultdict(dict)
+    for i in range (0, datapoint_size):  
+        for j in range (0, datapoint_size):	
+            set1_exist_dict[i][j]=-1
+            
+    set2_exist_dict = defaultdict(dict)        
+    for i in range (0, datapoint_size):  
+        for j in range (0, datapoint_size):	
+            set2_exist_dict[i][j]=-1    
+    
+    dict_cell_edge = defaultdict(list) # incoming edges
+    dict_cell_neighbors = defaultdict(list) # incoming edges
+    for i in range(0, len(row_col)):
+        dict_cell_edge[row_col[i][1]].append(i) # index
+        dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+
+    for i in range (0, datapoint_size):
+        neighbor_list = dict_cell_neighbors[i]
+        neighbor_list = list(set(neighbor_list))
+        dict_cell_neighbors[i] = neighbor_list
+
+    set1_nodes = []
+    set1_edges_index = []
+    node_limit_set1 = datapoint_size//2
+    set1_direct_edges = []
+    print('set 1 has nodes upto: %d'%node_limit_set1)
+    for i in range (0, node_limit_set1):
+        set1_nodes.append(i)
+        # add it's edges - first hop
+        for edge_index in dict_cell_edge[i]:
+            set1_edges_index.append(edge_index) # has both row_col and edge_weight
+            set1_direct_edges.append(edge_index)
+        # add it's neighbor's edges - second hop
+        for neighbor in dict_cell_neighbors[i]:
+            if i == neighbor:
+                continue
+            for edge_index in dict_cell_edge[neighbor]:
+                set1_edges_index.append(edge_index) # has both row_col and edge_weight
+
+    set1_edges_index = list(set(set1_edges_index))
+    print('amount of edges in set 1 is: %d'%len(set1_edges_index))
+
+    set2_nodes = []
+    set2_edges_index = []
+    set2_direct_edges = []
+    print('set 2 has nodes upto: %d'%datapoint_size)
+    for i in range (node_limit_set1, datapoint_size):
+        set2_nodes.append(i)
+        # add it's edges - first hop
+        for edge_index in dict_cell_edge[i]:
+            set2_edges_index.append(edge_index) # has both row_col and edge_weight
+            set2_direct_edges.append(edge_index)
+        # add it's neighbor's edges - second hop
+        for neighbor in dict_cell_neighbors[i]:
+            if i == neighbor:
+                continue
+            for edge_index in dict_cell_edge[neighbor]:
+                set2_edges_index.append(edge_index) # has both row_col and edge_weight
+
+    set2_edges_index = list(set(set2_edges_index))
+    print('amount of edges in set 1 is: %d'%len(set2_edges_index))
+
+    set1_edges = []
+    for i in set1_direct_edges:
+        set1_edges.append([row_col[i], edge_weight[i]])
+       
+    set2_edges = []
+    for i in set2_direct_edges: #set2_edges_index
+        set2_edges.append([row_col[i], edge_weight[i]])
+        
+    for index in range (0, len(set1_edges)):
+        i = set1_edges[index][0][0]
+        j = set1_edges[index][0][1]
+        set1_exist_dict[i][j] = 1
+        
+    for index in range (0, len(set2_edges)):
+        i = set2_edges[index][0][0]
+        j = set2_edges[index][0][1]
+        set2_exist_dict[i][j] = 1
+        
+##################################################
+
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
 total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_eitherAbove_cell_knee_'+filename[run_time]+'attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_scaled_'+filename[run_time]+'attention_l1.npy' #a
-
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
-
     l = 2 # 3 = layer 1, 2 = layer 2
     attention_scores = []
     for i in range (0, datapoint_size):
@@ -785,15 +878,42 @@ for run_time in range (0, total_runs):
     min_attention_score = 1000
     #attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
     distribution = []
+    #Set 1
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_1.npy'
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+
+    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+    
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-        #distribution.append(attention_scores[i][j])
-        attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
-        if min_attention_score > X_attention_bundle[l][index][0]:
-            min_attention_score = X_attention_bundle[l][index][0]
-        distribution.append(X_attention_bundle[l][index][0])
+        j = X_attention_bundle[0][1][index] 
+        if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
+        ###################################
+            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+            distribution.append(X_attention_bundle[l][index][0])
+            if min_attention_score > X_attention_bundle[l][index][0]:
+                min_attention_score = X_attention_bundle[l][index][0]
+          
+    #######################
+    #Set 2
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split'+filename[run_time]+'attention_l1_2.npy'
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+    
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index] 
+        if i in set2_exist_dict and j in set2_exist_dict[i] and set2_exist_dict[i][j]==1:
+        ###################################
+            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+            distribution.append(X_attention_bundle[l][index][0])
+            if min_attention_score > X_attention_bundle[l][index][0]:
+                min_attention_score = X_attention_bundle[l][index][0]
+            
+    #######################    
+
     if min_attention_score<0:
         min_attention_score = -min_attention_score
     else: 
@@ -811,48 +931,12 @@ for run_time in range (0, total_runs):
     #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.clf()
     ##############
-    '''
-    attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-    ##############
-    adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        adjacency_matrix [i][j] = 1
-    '''
 
     ##############
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-    #    row_col, edge_weight = pickle.load(fp)
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
-        row_col, edge_weight, lig_rec = pickle.load(fp) # density_
-
-    lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        lig_rec_dict.append([])  
-        for j in range (0, datapoint_size):	
-            lig_rec_dict[i].append([])   
-            lig_rec_dict[i][j] = []
-
-    total_type = np.zeros((2))        
-    for index in range (0, len(row_col)):
-        #if lig_rec[index][0]=='CCL19':
-            i = row_col[index][0]
-            j = row_col[index][1]
-            lig_rec_dict[i][j].append(lig_rec[index])  
+    '''
     hold_attention_score = copy.deepcopy(attention_scores)  
     attention_scores = copy.deepcopy(hold_attention_score)  
     ####################################################################################
-    
-    
     attention_scores_temp = []
     for i in range (0, datapoint_size):
         attention_scores_temp.append([])   
@@ -871,6 +955,7 @@ for run_time in range (0, total_runs):
                     attention_scores_temp[i][j].append(attention_scores[i][j][k])
                     distribution.append(attention_scores[i][j][k])    
     attention_scores = attention_scores_temp
+    '''
     ####################################################################################
     '''
     attention_scores = []
