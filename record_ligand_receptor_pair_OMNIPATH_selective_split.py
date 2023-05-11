@@ -757,10 +757,10 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -776,8 +776,7 @@ for index in range (0, len(row_col)):
         i = row_col[index][0]
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
-###################################################################################################################
-
+##################################################################################################################
 # split it into two set of edges
     ###########
     set1_exist_dict = defaultdict(dict)
@@ -807,14 +806,14 @@ for index in range (0, len(row_col)):
     set1_direct_edges = []
     print('set 1 has nodes upto: %d'%node_limit_set1)
     for i in range (0, node_limit_set1):
-        set1_nodes.append(i)
+        set1_nodes.append(node_id_sorted_xy[i][0])
         # add it's edges - first hop
-        for edge_index in dict_cell_edge[i]:
+        for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
             set1_edges_index.append(edge_index) # has both row_col and edge_weight
             set1_direct_edges.append(edge_index)
         # add it's neighbor's edges - second hop
-        for neighbor in dict_cell_neighbors[i]:
-            if i == neighbor:
+        for neighbor in dict_cell_neighbors[node_id_sorted_xy[i][0]]:
+            if node_id_sorted_xy[i][0] == neighbor:
                 continue
             for edge_index in dict_cell_edge[neighbor]:
                 set1_edges_index.append(edge_index) # has both row_col and edge_weight
@@ -827,14 +826,14 @@ for index in range (0, len(row_col)):
     set2_direct_edges = []
     print('set 2 has nodes upto: %d'%datapoint_size)
     for i in range (node_limit_set1, datapoint_size):
-        set2_nodes.append(i)
+        set2_nodes.append(node_id_sorted_xy[i][0])
         # add it's edges - first hop
-        for edge_index in dict_cell_edge[i]:
+        for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
             set2_edges_index.append(edge_index) # has both row_col and edge_weight
             set2_direct_edges.append(edge_index)
         # add it's neighbor's edges - second hop
-        for neighbor in dict_cell_neighbors[i]:
-            if i == neighbor:
+        for neighbor in dict_cell_neighbors[node_id_sorted_xy[i][0]]:
+            if node_id_sorted_xy[i][0] == neighbor:
                 continue
             for edge_index in dict_cell_edge[neighbor]:
                 set2_edges_index.append(edge_index) # has both row_col and edge_weight
@@ -863,12 +862,12 @@ for index in range (0, len(row_col)):
 ##################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 5
+total_runs = 1
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
-    l = 2 # 3 = layer 1, 2 = layer 2
+    l = 3 # 3 = layer 1, 2 = layer 2
     attention_scores = []
     for i in range (0, datapoint_size):
         attention_scores.append([])   
@@ -880,8 +879,8 @@ for run_time in range (0, total_runs):
     distribution = []
     #Set 1
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_1.npy'
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_1.npy'
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     
@@ -898,8 +897,8 @@ for run_time in range (0, total_runs):
     #######################
     #Set 2
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split'+filename[run_time]+'attention_l1_2.npy'
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_2.npy'
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     
     for index in range (0, X_attention_bundle[0].shape[1]):
@@ -1076,8 +1075,8 @@ for run_time in range (0, total_runs):
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
-    chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th85_3dim_tanh_h512_'+filename[run_time]+'.html') #filtered_l2attention_
+    #chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_2split_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1170,7 +1169,8 @@ for run_time in range (0, total_runs):
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_2split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+#    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
     p.save(outPath)	# output 3
     ###########	
     #run = 1
