@@ -137,7 +137,7 @@ parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spati
 parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-'''
+''' 
 '''
 import argparse
 parser = argparse.ArgumentParser()
