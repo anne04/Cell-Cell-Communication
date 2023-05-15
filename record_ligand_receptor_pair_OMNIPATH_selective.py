@@ -791,12 +791,13 @@ ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    if lig_rec[index][0]=='CCL19' and lig_rec[index][1] == "CCR7":
-        if edge_weight[index][1]>0:
-            attention_scores[i][j].append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
-            distribution.append(edge_weight[index][1] * edge_weight[index][0]) # * edge_weight[index][2])
-            ccc_index_dict[i] = ''
-            ccc_index_dict[j] = ''   
+    if i in spot_interest_list and j in spot_interest_list:
+        if lig_rec[index][0]=='CCL19' and lig_rec[index][1] == "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
+            if edge_weight[index][1]>0:
+                attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
+                distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
+                ccc_index_dict[i] = ''
+                ccc_index_dict[j] = ''   
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
@@ -804,11 +805,12 @@ total_runs = 1
 csv_record_dict = defaultdict(list)
 for run_time in range (0, 0+total_runs):
     gc.collect()
+    run_time = 3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -844,16 +846,18 @@ for run_time in range (0, 0+total_runs):
         min_attention_score = 0
 	
     ##############
+    plt.clf()
     plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
     save_path = '/cluster/home/t116508uhn/64630/'
+    plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
     #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
     #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_'+filename[run_time]+'attention_score.svg', dpi=400)
+    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.clf()
+    plt.clf()
     ##############
     '''
     attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
@@ -870,7 +874,7 @@ for run_time in range (0, 0+total_runs):
     '''
 
     ##############
-
+    
     #hold_attention_score = copy.deepcopy(attention_scores)  
     #attention_scores = copy.deepcopy(hold_attention_score)  
     ####################################################################################
@@ -883,18 +887,20 @@ for run_time in range (0, 0+total_runs):
             attention_scores_temp[i].append([])   
             attention_scores_temp[i][j] = []
     distribution = []        
-    for j in range (0, len(barcode_info)):
-        for i in range (0, len(barcode_info)):              
+    for i in range (0, len(barcode_info)):
+        for j in range (0, len(barcode_info)):              
             if i==j:
                 if len(lig_rec_dict[i][j])==0:
                     continue 
-            if i not in spot_interest_list  and j not in spot_interest_list :
-                continue                
-            atn_score_list = attention_scores[i][j]
-            for k in range (0, len(atn_score_list)):
-                if lig_rec_dict[i][j][k][0] == 'CCL19': # and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
-                    attention_scores_temp[i][j].append(attention_scores[i][j][k])
-                    distribution.append(attention_scores[i][j][k])    
+            if i in spot_interest_list and j in spot_interest_list:
+                atn_score_list = attention_scores[i][j]
+                for k in range (0, len(atn_score_list)):
+                        
+                    if lig_rec_dict[i][j][k][0] == 'CCL19' and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
+                        attention_scores_temp[i][j].append(attention_scores[i][j][k])
+                        distribution.append(attention_scores[i][j][k])    
+                        print(lig_rec_dict[i][j][k])
+                        
     attention_scores = attention_scores_temp
     
     ####################################################################################
@@ -902,7 +908,7 @@ for run_time in range (0, 0+total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 0)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -996,26 +1002,30 @@ for run_time in range (0, 0+total_runs):
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
-    #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_input_graph.html') #
-    chart.save(save_path+args.data_name+'_CCL19_selective_th95_graph.html') #
+    #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
+    #chart.save(save_path+args.data_name+'_CCL19_selective_th95_graph.html') #
     #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th98_l2attention_'+filename[run_time]+'.html') #
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
+    #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
-    #chart.save(save_path+'pdac_niches.html')
+    chart.save(save_path+'region_of_interest_r1.html')
     #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
     
     ##############
-    region_list =[7, 9, 11, 18, 41, 16, 4, 6, 8]
+    '''
+    region_list =[2, 3, 9, 11, 4, 5, 7]
+    
     spot_interest_list = []
     for i in range (0, len(barcode_info)):
         if data_list['component_label'][i] in region_list:
+            
             spot_interest_list.append(i)
+    '''
     ###############
     csv_record = []
     csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
