@@ -1250,7 +1250,7 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_overlapped_lowscale'
 # 'dt-pattern_equally_spaced_lrc5_cp50_lrp1_randp0_all_same_differentLRs'
 # 'dt-pattern_equally_spaced_lrc4_cp50_lrp1_randp0_all_sameoverlapped_highertail'
-options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
+#options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
@@ -1331,6 +1331,7 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'distribution_type6_f_input.svg', dpi=400)
 plt.clf()
 
+'''
 ###########
 # split it into two set of edges
     ###########
@@ -1393,6 +1394,7 @@ plt.clf()
     set2_edges = []
     for i in range (0, len(set2_direct_edges)): #set2_edges_index
         set2_edges.append([row_col[i], edge_weight[i]])
+'''
 ##################################################
 '''
 for i in range (0, datapoint_size):  
@@ -1412,6 +1414,7 @@ for i in lig_rec_dict_TP:
         P_class = P_class + len(lig_rec_dict_TP[i][j])
 '''        
 ############
+
 plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
@@ -1476,12 +1479,12 @@ filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 for run_time in range (0,total_runs):
     run = run_time
-    if run in [1, 2, 4, 7, 8]:
-        continue
+    #if run in [1, 2, 4, 7, 8]:
+    #    continue
 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_1layer_'+filename[run]+'_attention_l1.npy' #split_
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_swappedLRid_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_1layer_'+filename[run]+'_attention_l1.npy' #split_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_gatconv_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1612,7 +1615,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
 #chart.save(save_path+'plot_type4_e_leakyrelu.html')
-#chart.save(save_path+'plot_type4_e_3d_tanh.html')
+chart.save(save_path+'plot_type4_e_3d_tanh_layer2attention.html')
 #chart.save(save_path+'plot_e_gatconv.html')
 #chart.save(save_path+'plot_type6_f_3d_tanh.html')
 #chart.save(save_path+'plot_e_relu.html')
