@@ -858,13 +858,16 @@ ccc_index_dict = dict()
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    if i in spot_interest_list and j in spot_interest_list:
-        if lig_rec[index][0]=='CCL19' and lig_rec[index][1] == "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
-            if edge_weight[index][1]>0:
-                attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
-                distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
-                ccc_index_dict[i] = ''
-                ccc_index_dict[j] = ''   
+    #if i==j:
+    #    if len(lig_rec_dict[i][j])==0:
+    #        continue 
+    #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
+    #    if lig_rec[index][0]=='CCL19' and lig_rec[index][1] == "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
+    if edge_weight[index][1]>0:
+        attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
+        distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
+        ccc_index_dict[i] = ''
+        ccc_index_dict[j] = ''   
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
@@ -1010,6 +1013,8 @@ chart = alt.Chart(source).transform_fold(
     alt.Y('count()', stack=None),
     alt.Color('Distribution Type:N')
 )
+
+
 '''
     ###########################
     
