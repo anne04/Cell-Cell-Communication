@@ -66,7 +66,7 @@ def writeStats(stats, feature, outStatsPath):
 def plot(df):
 
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  #set1[0] = '#000000'
+  set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
@@ -844,10 +844,10 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -895,7 +895,7 @@ start_index = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
-    #run_time = 0
+    run_time = 3
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
@@ -977,7 +977,7 @@ for run_time in range (start_index, start_index+total_runs):
             attention_scores_temp[i].append([])   
             attention_scores_temp[i][j] = []
             
-    distribution_all = []        
+    distribution = []        
     for i in range (0, len(barcode_info)):
         for j in range (0, len(barcode_info)):              
             if i==j:
@@ -990,7 +990,7 @@ for run_time in range (start_index, start_index+total_runs):
                         
                     #if lig_rec_dict[i][j][k][0] == 'CCL19' and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
                         attention_scores_temp[i][j].append(attention_scores[i][j][k])
-                        distribution_all.append(attention_scores[i][j][k])    
+                        distribution.append(attention_scores[i][j][k])    
                         #print(lig_rec_dict[i][j][k])
                         
     attention_scores = attention_scores_temp
@@ -1038,7 +1038,7 @@ chart = alt.Chart(source).transform_fold(
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 90)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1195,8 +1195,8 @@ chart = alt.Chart(source).transform_fold(
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
     p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p7_h512_l2attention_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_selective_only_Tcellzone_th90_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p7_h512_l2attention_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_selective_only_Tcellzone_th90_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
     p.save(outPath)	# output 3
     '''
     ###########	
@@ -1219,7 +1219,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1749,7 +1749,7 @@ write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+fi
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
-colors[0] = '#000000'
+#colors[0] = '#000000'
 ids = []
 x_index=[]
 y_index=[]
@@ -1802,7 +1802,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th99p9_"+str(len(csv_record))+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th90_"+str(len(csv_record))+"edges.dot")
 ##################################### LUAD ##########################################################################################################
 
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
