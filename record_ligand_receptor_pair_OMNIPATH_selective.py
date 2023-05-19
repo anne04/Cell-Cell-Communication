@@ -766,7 +766,7 @@ chart.save(save_path+'V1_humanLymphNode.html') #
 '''
 
 '''
-pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label_file='/cluster/projects/schwartzgroup/fatema/find_ccc/singleR_spot_annotation_Sabrina.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
     csv_file = csv.reader(file, delimiter=",")
@@ -783,6 +783,25 @@ for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
     else:
         barcode_type[pathologist_label[i][0]] = 0 #'zero' 
+	
+########## sabrina ###########################################	
+pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)	
+	
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
+    
+		
+	
+	
+	
+	
+	
 '''
 spot_type = []
 pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
