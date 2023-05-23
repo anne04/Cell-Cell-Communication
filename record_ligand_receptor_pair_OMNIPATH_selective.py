@@ -890,8 +890,8 @@ for index in range (0, len(row_col)):
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 5
-start_index = 5
+total_runs = 3
+start_index = 2
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
@@ -984,14 +984,14 @@ for run_time in range (start_index, start_index+total_runs):
                 if len(lig_rec_dict[i][j])==0:
                     continue 
              
-            if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
-                atn_score_list = attention_scores[i][j]
-                for k in range (0, len(atn_score_list)):
-                        
-                    #if lig_rec_dict[i][j][k][0] == 'CCL19' and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
-                        attention_scores_temp[i][j].append(attention_scores[i][j][k])
-                        distribution.append(attention_scores[i][j][k])    
-                        #print(lig_rec_dict[i][j][k])
+            #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
+            atn_score_list = attention_scores[i][j]
+            for k in range (0, len(atn_score_list)):
+
+                if lig_rec_dict[i][j][k][0] == 'CCL19' and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
+                    attention_scores_temp[i][j].append(attention_scores[i][j][k])
+                    distribution.append(attention_scores[i][j][k])    
+                    #print(lig_rec_dict[i][j][k])
                         
     attention_scores = attention_scores_temp
     
@@ -1133,7 +1133,7 @@ chart = alt.Chart(source).transform_fold(
     save_path = '/cluster/home/t116508uhn/64630/'
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
-    #chart.save(save_path+args.data_name+'_CCL19_selective_th95_graph.html') #
+    #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
     #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
     #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
@@ -1367,7 +1367,7 @@ csv_record.append([barcode_info[i][0], barcode_info[j][0], 'no_ligand', 'no_rece
 
 df = pd.DataFrame(csv_record) # output 4
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 ############
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -1378,7 +1378,7 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th98p5_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th95_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
 #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
 p.save(outPath)	# output 5
 ##########################
@@ -1749,7 +1749,7 @@ write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+fi
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
-#colors[0] = '#000000'
+colors[0] = '#000000'
 ids = []
 x_index=[]
 y_index=[]
@@ -1757,7 +1757,7 @@ colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
     x_index.append(barcode_info[i][1])
-    y_index.append(-barcode_info[i][2])    
+    y_index.append(barcode_info[i][2])    
     colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
@@ -1768,16 +1768,20 @@ import networkx as nx
 
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-    marker_size = 'circle'
+    
     label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
     if barcode_type[barcode_info[i][0]] == 0: 
         label_str = label_str + 'mixed'
+        marker_size = 'circle'
     elif barcode_type[barcode_info[i][0]] == 1:
         label_str = label_str + 'Tcell'
+        marker_size = 'box'
     elif barcode_type[barcode_info[i][0]] == 2:
         label_str = label_str + 'B'
+        marker_size = 'circle'
     else:
         label_str = label_str + 'GC'
+        marker_size = 'circle'
 
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
@@ -1792,7 +1796,7 @@ for i in range (0, datapoint_size):
             #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             if len(csv_record_dict[key_value])>=1: #total_runs:  #key_value_2 in lr_target: #and : 
-                edge_score =  0 #min_attention_score + attention_scores[i][j][k]
+                edge_score =  min_attention_score + attention_scores[i][j][k]
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
@@ -1802,7 +1806,8 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th90_"+str(len(csv_record))+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_fullOutput_"+str(len(csv_record))+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_allPairs_th90_"+str(len(csv_record))+"edges.dot")
 ##################################### LUAD ##########################################################################################################
 
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
@@ -1842,7 +1847,7 @@ for i in range (0, datapoint_size):
             #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             if len(csv_record_dict[key_value])>=1: #total_runs:  #key_value_2 in lr_target: #and : 
-                edge_score =  0 #min_attention_score + attention_scores[i][j][k]
+                edge_score =  min_attention_score + attention_scores[i][j][k]
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
@@ -1852,7 +1857,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th99p7_"+str(len(csv_record))+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th99p7_"+str(len(csv_record))+"edges_withScore.dot")
 ########################################### PDAC #############################################################################################
 
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
@@ -1892,7 +1897,7 @@ for i in range (0, datapoint_size):
             #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             if len(csv_record_dict[key_value])>=1: #total_runs:  #key_value_2 in lr_target: #and : 
-                edge_score =  0 #min_attention_score + attention_scores[i][j][k]
+                edge_score =  min_attention_score + attention_scores[i][j][k]
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
