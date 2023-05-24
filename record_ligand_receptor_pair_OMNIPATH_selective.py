@@ -377,7 +377,7 @@ for gene in gene_info.keys():
 print('number of affected genes %d '%count)
 affected_gene_count = count
 ######################################
-'''
+
 lr_gene_index = []
 for gene in gene_info.keys(): 
     if gene_info[gene] == 'included':
@@ -387,7 +387,8 @@ lr_gene_index = sorted(lr_gene_index)
 cell_vs_lrgene = cell_vs_gene[:, lr_gene_index]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_lrgene_quantile_transformed_'+args.data_name, 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(cell_vs_lrgene, fp)
-'''
+	
+''''''
 ######################################
 
 ligand_list = list(ligand_dict_dataset.keys())  
@@ -890,18 +891,18 @@ for index in range (0, len(row_col)):
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 3
-start_index = 2
+total_runs = 1
+start_index = 3
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     run_time = 3
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -1038,7 +1039,7 @@ chart = alt.Chart(source).transform_fold(
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 90)
+    threshold_down =  np.percentile(sorted(distribution), 80)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1131,7 +1132,7 @@ chart = alt.Chart(source).transform_fold(
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
     #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
     #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
@@ -1205,21 +1206,31 @@ chart = alt.Chart(source).transform_fold(
     print('records found %d'%len(csv_record))
     for i in range (1, len(csv_record)):
         key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
-        csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
+        csv_record_dict[key_value].append([csv_record[i][4], run])
         
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_99th', 'wb') as fp:  #b, a:[0:5]   
-#    pickle.dump(csv_record_dict, fp)
-	
 
+for key_value in csv_record_dict.keys():
+    run_dict = defaultdict(list)
+    for scores in csv_record_dict[key_value]:
+        run_dict[scores[1]].append(scores[0])
+    
+    for runs in run_dict.keys():
+        run_dict[runs] = np.mean(run_dict[runs])
+        
+        
+    csv_record_dict[key_value] = []
+    for runs in run_dict.keys():
+        csv_record_dict[key_value].append([run_dict[runs],runs])
+        
+	
 # intersection 
 #total_runs = 2
-connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1240,9 +1251,34 @@ for key_value in csv_record_dict.keys():
         
         csv_record_intersect_dict[ligand+'-'+receptor][label].append(score)
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
-        connecting_edges[i][j]=1
+        combined_score_distribution.append(score)
         
 print('common LR count %d'%len(csv_record))
+
+'''
+combined_score_distribution_ccl19_ccr7 = []
+for k in range (1, len(csv_record)):
+    i = csv_record[k][6]
+    j = csv_record[k][7]
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    if ligand =='CCL19' and receptor == 'CCR7':
+        combined_score_distribution_ccl19_ccr7.append(csv_record[k][4])
+'''
+
+
+
+threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,90)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))        
+for k in range (1, len(csv_record)):
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    if ligand =='CCL19' and receptor == 'CCR7':
+        if csv_record[k][4] >= threshold_value:        
+            i = csv_record[k][6]
+            j = csv_record[k][7]
+            connecting_edges[i][j]=1
+        
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
@@ -1357,7 +1393,11 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th99p7_3dim_tanh_h512_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
+chart.save(save_path+'altair_plot_test.html')
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th95_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
+#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th98_3dim_tanh_h512_l1l2attention_'+filename[run_time]+str(len(csv_record))+'edges.html')  #l2attention_
+
+#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th99p7_3dim_tanh_h512_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th90_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
@@ -1378,7 +1418,8 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th95_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
+outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th99p5_h512_l1l2attention_'+filename[run_time]+'_edges'+str(len(csv_record))+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th95_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
 #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
 p.save(outPath)	# output 5
 ##########################
@@ -1533,7 +1574,7 @@ plt.clf()
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
-#colors[0] = '#000000'
+colors[0] = '#000000'
 ids = []
 x_index=[]
 y_index=[]
@@ -1587,28 +1628,18 @@ for i in range (0, len(barcode_info)):
 #nx.draw(g, pos= nx.circular_layout(g)  ,with_labels = True, edge_color = 'b', arrowstyle='fancy')
 #g.toggle_physics(True)
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
-#nt.from_nx(g)
-#lr_target = dict()
-#lr_target['ITGB1-CD46'] =''
-#lr_target['MDK-SDC4'] =''
-#lr_target['MDK-SDC1'] =''
-#lr_target['MDK-NCL'] =''
-#lr_target['ITGB1-SDC1'] =''
-#lr_target['APP-TNFRSF21'] =''
-#lr_target['ANXA1-MET'] =''
-#lr_target['FN1-SDC1'] =''
 
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
         #print(len(atn_score_list))
         for k in range (0, min(len(atn_score_list),len(lig_rec_dict[i][j])) ):
-            if attention_scores[i][j][k] >= threshold_down:
+            #if attention_scores[i][j][k] >= threshold_down:
             #    #print('hello')
             #key_value_2 = lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             key_value = str(i) +'-'+ str(j) + '-' + lig_rec_dict[i][j][k][0] + '-' + lig_rec_dict[i][j][k][1]
             if len(csv_record_dict[key_value])>=total_runs:  #key_value_2 in lr_target: #and : 
-                edge_score =  0 #min_attention_score + attention_scores[i][j][k]
+                edge_score =  min_attention_score + attention_scores[i][j][k]
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
@@ -1619,6 +1650,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th89p5_3dim_tanh_h512_l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 
 #write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th98_leakyRelu.dot")
