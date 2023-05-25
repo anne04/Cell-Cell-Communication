@@ -845,10 +845,10 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -891,18 +891,18 @@ for index in range (0, len(row_col)):
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 1
-start_index = 3
+total_runs = 5
+start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
-    run_time = 3
+    #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -913,30 +913,41 @@ for run_time in range (start_index, start_index+total_runs):
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-    l = 2 # 3 = layer 1, 2 = layer 2
+    l = 3 # 3 = layer 1, 2 = layer 2
+    
+    distribution = []
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index]
+        distribution.append(X_attention_bundle[l][index][0])
+    
     attention_scores = []
     for i in range (0, datapoint_size):
         attention_scores.append([])   
         for j in range (0, datapoint_size):	
             attention_scores[i].append([])   
             attention_scores[i][j] = []
+            
     min_attention_score = 1000
-    #attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+    max_value = np.max(distribution)
+    min_value = np.min(distribution)
     distribution = []
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
-        #attention_scores[i][j] = X_attention_bundle[3][index][0] #X_attention_bundle[2][index][0]
-        #distribution.append(attention_scores[i][j])
-        attention_scores[i][j].append(X_attention_bundle[l][index][0]) #X_attention_bundle[2][index][0]
-        if min_attention_score > X_attention_bundle[l][index][0]:
-            min_attention_score = X_attention_bundle[l][index][0]
-        distribution.append(X_attention_bundle[l][index][0])
+        scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+        attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+        if min_attention_score > scaled_score:
+            min_attention_score = scaled_score
+        distribution.append(scaled_score)
+        
+        
     if min_attention_score<0:
         min_attention_score = -min_attention_score
     else: 
         min_attention_score = 0
-	
+    
+    print('min attention score %g'%min_attention_score)
     ##############
     #plt.clf()
     #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
@@ -1039,7 +1050,7 @@ chart = alt.Chart(source).transform_fold(
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 80)
+    threshold_down =  np.percentile(sorted(distribution), 90)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1262,22 +1273,22 @@ for k in range (1, len(csv_record)):
     j = csv_record[k][7]
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    if ligand =='CCL19' and receptor == 'CCR7':
+    if ligand =='TGFB1': # and receptor == 'CCR7':
         combined_score_distribution_ccl19_ccr7.append(csv_record[k][4])
 '''
 
 
 
-threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,90)
-connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))        
+threshold_value =  np.percentile(combined_score_distribution,50)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    if ligand =='CCL19' and receptor == 'CCR7':
-        if csv_record[k][4] >= threshold_value:        
-            i = csv_record[k][6]
-            j = csv_record[k][7]
-            connecting_edges[i][j]=1
+    #if ligand =='CCL19' and receptor == 'CCR7':
+    if csv_record[k][4] >= threshold_value:        
+        i = csv_record[k][6]
+        j = csv_record[k][7]
+        connecting_edges[i][j]=1
         
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
@@ -1378,7 +1389,7 @@ for i in range (0, len(barcode_info)):
         data_list['opacity'].append(0.1)
 
 
-id_label= len(list(set(data_list['component_label'])))
+#id_label= len(list(set(data_list['component_label'])))
 data_list_pd = pd.DataFrame(data_list)
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
@@ -1394,7 +1405,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'altair_plot_test.html')
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th95_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th98_3dim_tanh_h512_l1l2attention_'+filename[run_time]+str(len(csv_record))+'edges.html')  #l2attention_
 
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th99p7_3dim_tanh_h512_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
@@ -1403,9 +1414,17 @@ chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th95_90
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
 ########################################################################################################################
-csv_record.append([barcode_info[i][0], barcode_info[j][0], 'no_ligand', 'no_receptor', 0, 0, i, j])
-
-df = pd.DataFrame(csv_record) # output 4
+threshold_value =  np.percentile(combined_score_distribution,80)
+csv_record_temp = []
+csv_record_temp.append(csv_record[0])
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] >= threshold_value:    
+        csv_record_temp.append(csv_record[k])
+        
+i=0
+j=0
+csv_record_temp.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
+df = pd.DataFrame(csv_record_temp) # output 4
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
@@ -1418,7 +1437,9 @@ df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th99p5_h512_l1l2attention_'+filename[run_time]+'_edges'+str(len(csv_record))+'.html' #l2attention_
+outPath = '/cluster/home/t116508uhn/64630/test_hist_temp.html'
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th97_90_h512_l1l2attention_combined_5runs_edges'+str(len(csv_record))+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th90_70_67_h512_l1l2attention_'+filename[run_time]+'_edges'+str(len(csv_record))+'.html' #l2attention_
 #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th95_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
 #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
 p.save(outPath)	# output 5
@@ -1570,7 +1591,7 @@ plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
-
+##################################################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
@@ -1629,6 +1650,22 @@ for i in range (0, len(barcode_info)):
 #g.toggle_physics(True)
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
+threshold_value =  np.percentile(combined_score_distribution,80)
+count_edges = 0
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] < threshold_value:
+        continue
+    
+    i = csv_record[k][6]
+    j = csv_record[k][7]    
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    title_str =  "L:"+ligand+", R:"+receptor
+    edge_score = csv_record[k][4]
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
+    count_edges = count_edges + 1
+    
+
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1650,7 +1687,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_80_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th89p5_3dim_tanh_h512_l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 
 #write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th98_leakyRelu.dot")
@@ -1819,6 +1856,25 @@ for i in range (0, len(barcode_info)):
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
+threshold_value =  np.percentile(combined_score_distribution,67)
+count_edges = 0
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] < threshold_value:
+        continue
+    
+    i = csv_record[k][6]
+    j = csv_record[k][7]    
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    title_str =  "L:"+ligand+", R:"+receptor
+    edge_score = csv_record[k][4]
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
+    count_edges = count_edges + 1
+    
+ 
+        
+ 
+'''
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1832,12 +1888,15 @@ for i in range (0, datapoint_size):
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
+'''
 nt.from_nx(g)
 nt.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th90_70_67_"+count_edges+"edges.dot")
+
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_fullOutput_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_allPairs_th90_"+str(len(csv_record))+"edges.dot")
 ##################################### LUAD ##########################################################################################################
@@ -1853,7 +1912,7 @@ colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
     x_index.append(barcode_info[i][1])
-    y_index.append(-barcode_info[i][2])    
+    y_index.append(barcode_info[i][2])    
     colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
@@ -1869,7 +1928,23 @@ for i in range (0, len(barcode_info)):
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
-
+#################################
+threshold_value =  np.percentile(combined_score_distribution,90)
+count_edges = 0
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] < threshold_value:
+        continue
+    
+    i = csv_record[k][6]
+    j = csv_record[k][7]    
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    title_str =  "L:"+ligand+", R:"+receptor
+    edge_score = csv_record[k][4]
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
+    count_edges = count_edges + 1
+######################################################    
+ 
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1889,6 +1964,8 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th90_90_90_"+str(count_edges)+"edges.dot")
+
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_th99p7_"+str(len(csv_record))+"edges_withScore.dot")
 ########################################### PDAC #############################################################################################
 
