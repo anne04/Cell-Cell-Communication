@@ -1281,7 +1281,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     
 
 	
-	
+max_tp_distance = 0
 datapoint_size = temp_x.shape[0]              
 total_type = np.zeros((len(lr_database)))
 for i in range (0, datapoint_size):
@@ -1290,7 +1290,9 @@ for i in range (0, datapoint_size):
             continue
         if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
             for k in range (0, len(lig_rec_dict_TP[i][j])):
-               total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
+                total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
+                if max_tp_distance<distance_matrix[i,j]:
+                    max_tp_distance = distance_matrix[i,j]
 count = 0
 for index in range (0, len(row_col)):
     i = row_col[index][0]
