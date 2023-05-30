@@ -839,16 +839,58 @@ for index in range (0, len(row_col)):
                 set2_edges_index.append(edge_index) # has both row_col and edge_weight
 
     set2_edges_index = list(set(set2_edges_index))
-    print('amount of edges in set 1 is: %d'%len(set2_edges_index))
-
+    print('amount of edges in set 2 is: %d'%len(set2_edges_index))
+    
+    # make an index array, so that existing node ids are mapped to new ids
+    id_map_old_new = [] 
+    id_map_old_new.append(dict())
+    id_map_old_new.append(dict())
+    
+    id_map_new_old = []
+    id_map_new_old.append(dict())
+    id_map_new_old.append(dict())
+    ##################################
+    set_id = 0
+    new_id = 0
+    for k in set1_direct_edges:
+        i = row_col[k][0]
+        j = row_col[k][1]
+        if i not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][i] = new_id
+            id_map_new_old[set_id][new_id] = i 
+            new_id = new_id + 1
+            
+        if j not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][j] = new_id
+            id_map_new_old[set_id][new_id] = j 
+            new_id = new_id + 1
+    
+    set_id = 1
+    new_id = 0
+    for k in set2_direct_edges:
+        i = row_col[k][0]
+        j = row_col[k][1]
+        if i not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][i] = new_id
+            id_map_new_old[set_id][new_id] = i 
+            new_id = new_id + 1
+            
+        if j not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][j] = new_id
+            id_map_new_old[set_id][new_id] = j 
+            new_id = new_id + 1
+    ###################################################
     set1_edges = []
+    set_id = 0
     for i in set1_direct_edges:
-        set1_edges.append([row_col[i], edge_weight[i]])
+        set1_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
        
     set2_edges = []
+    set_id = 1
     for i in set2_direct_edges: #set2_edges_index
-        set2_edges.append([row_col[i], edge_weight[i]])
-        
+        set2_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
+        #set2_edges.append([row_col[i], edge_weight[i]])
+    #####################################################    
     for index in range (0, len(set1_edges)):
         i = set1_edges[index][0][0]
         j = set1_edges[index][0][1]
