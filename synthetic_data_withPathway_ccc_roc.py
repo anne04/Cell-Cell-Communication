@@ -1437,7 +1437,7 @@ while percentage_value > 0:
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []
 
-    
+     
     threshold_down =  np.percentile(sorted(distribution), percentage_value)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
