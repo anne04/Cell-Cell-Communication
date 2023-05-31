@@ -76,16 +76,38 @@ lr_db['type'] = types
 
 ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=12, heteromeric=True, pathway_sum=True)
 adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_type6_f_commot_adata.h5ad")
+adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_type6_f_commot_adata.h5ad")
+###########################################
+'''
+options = 'dt-path_equally_spaced_lrc8_cp100_noise0_random_overlap_threshold_dist_cellCount3000_e_3dim'
+gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_type4_e_gene_vs_cell.csv', index_col=0)  
+df_x=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_type4_e_x.csv',header=None)
+df_y=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_type4_e_y.csv',header=None)
+lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_type4_e.csv")
+cell_vs_gene = gene_vs_cell.transpose()
+coordinate_synthetic = np.zeros((cell_vs_gene.shape[0],2))
+for i in range (0, len(df_x)):
+    coordinate_synthetic[i][0] = df_x[0][i]
+    coordinate_synthetic[i][1] = df_y[0][i]
 
+spatial_dict = dict()
+spatial_dict['spatial'] = coordinate_synthetic
+adata_synthetic = anndata.AnnData(cell_vs_gene, obsm=spatial_dict)
 
-#options = 'dt-path_equally_spaced_lrc8_cp100_noise0_random_overlap_threshold_dist_cellCount3000_e_3dim'
-#gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_type4_e_gene_vs_cell.csv', index_col=0)  
-#df_x=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_type4_e_x.csv',header=None)
-#df_y=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_type4_e_y.csv',header=None)
-#lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_type4_e.csv")
-#ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=2, heteromeric=True, pathway_sum=True)
-#adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_type4_e_commot_adata.h5ad")
+adata_synthetic.var_names_make_unique()
+adata_synthetic.raw = adata_synthetic
+sc.pp.normalize_total(adata_synthetic, inplace=True)
+sc.pp.log1p(adata_synthetic)
 
+pathways = ['1','2','3','4','5','6','7','8']
+types = ['secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling']
+lr_db['pathways'] = pathways
+lr_db['type'] = types
+
+ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=10, heteromeric=True, pathway_sum=True)
+adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_type4_e_commot_adata.h5ad")
+'''
+#########################################################
 
 LR_pairs = ['g0-g8', 'g1-g9', 'g2-g10', 'g3-g11', 'g4-g12', 'g5-g13', 'g6-g14', 'g7-g15']
 
