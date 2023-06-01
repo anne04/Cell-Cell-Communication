@@ -715,6 +715,22 @@ for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
     else:
         barcode_type[pathologist_label[i][0]] = 'zero' #0
+        
+        
+pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+pathologist_label=[]
+with open(pathologist_label_file) as file:
+    csv_file = csv.reader(file, delimiter=",")
+    for line in csv_file:
+        pathologist_label.append(line)	
+	
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
+    
+        
+        
+        
 '''
 spot_type = []
 pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
@@ -777,35 +793,41 @@ for index in range (0, len(row_col)):
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
 ##################################################################################################################
-# split it into two set of edges
-    ###########
-    set1_exist_dict = defaultdict(dict)
-    for i in range (0, datapoint_size):  
-        for j in range (0, datapoint_size):	
-            set1_exist_dict[i][j]=-1
-            
-    set2_exist_dict = defaultdict(dict)        
-    for i in range (0, datapoint_size):  
-        for j in range (0, datapoint_size):	
-            set2_exist_dict[i][j]=-1    
+
+
+# split it into N set of edges
+dict_cell_edge = defaultdict(list) # incoming edges
+dict_cell_neighbors = defaultdict(list) # incoming edges
+for i in range(0, len(row_col)):
+    dict_cell_edge[row_col[i][1]].append(i) # index
+    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+
+for i in range (0, datapoint_size):
+    neighbor_list = dict_cell_neighbors[i]
+    neighbor_list = list(set(neighbor_list))
+    dict_cell_neighbors[i] = neighbor_list
+
+edge_list = []
+start_index = []
+id_map_old_new = [] # make an index array, so that existing node ids are mapped to new ids
+id_map_new_old = []
+
+total_subgraphs = 6
+for i in range (0, total_subgraphs+1):
+    start_index.append((datapoint_size//total_subgraphs)*i)
+    id_map_old_new.append(dict())
+    id_map_new_old.append(dict())
     
-    dict_cell_edge = defaultdict(list) # incoming edges
-    dict_cell_neighbors = defaultdict(list) # incoming edges
-    for i in range(0, len(row_col)):
-        dict_cell_edge[row_col[i][1]].append(i) # index
-        dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
-
-    for i in range (0, datapoint_size):
-        neighbor_list = dict_cell_neighbors[i]
-        neighbor_list = list(set(neighbor_list))
-        dict_cell_neighbors[i] = neighbor_list
-
+set_id=-1
+for indx in range (0, len(start_index)-1):
+    set_id = set_id + 1
+    print('start index is %d'%start_index[indx])
     set1_nodes = []
     set1_edges_index = []
-    node_limit_set1 = datapoint_size//2
+    node_limit_set1 = start_index[indx+1]
     set1_direct_edges = []
-    print('set 1 has nodes upto: %d'%node_limit_set1)
-    for i in range (0, node_limit_set1):
+    print('set has nodes upto: %d'%node_limit_set1)
+    for i in range (start_index[indx], node_limit_set1):
         set1_nodes.append(node_id_sorted_xy[i][0])
         # add it's edges - first hop
         for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
@@ -819,97 +841,77 @@ for index in range (0, len(row_col)):
                 set1_edges_index.append(edge_index) # has both row_col and edge_weight
 
     set1_edges_index = list(set(set1_edges_index))
-    print('amount of edges in set 1 is: %d'%len(set1_edges_index))
+    print('amount of edges in set is: %d'%len(set1_edges_index))
 
-    set2_nodes = []
-    set2_edges_index = []
-    set2_direct_edges = []
-    print('set 2 has nodes upto: %d'%datapoint_size)
-    for i in range (node_limit_set1, datapoint_size):
-        set2_nodes.append(node_id_sorted_xy[i][0])
-        # add it's edges - first hop
-        for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
-            set2_edges_index.append(edge_index) # has both row_col and edge_weight
-            set2_direct_edges.append(edge_index)
-        # add it's neighbor's edges - second hop
-        for neighbor in dict_cell_neighbors[node_id_sorted_xy[i][0]]:
-            if node_id_sorted_xy[i][0] == neighbor:
-                continue
-            for edge_index in dict_cell_edge[neighbor]:
-                set2_edges_index.append(edge_index) # has both row_col and edge_weight
-
-    set2_edges_index = list(set(set2_edges_index))
-    print('amount of edges in set 2 is: %d'%len(set2_edges_index))
-    
+    # old to new mapping of the nodes
     # make an index array, so that existing node ids are mapped to new ids
-    id_map_old_new = [] 
-    id_map_old_new.append(dict())
-    id_map_old_new.append(dict())
-    
-    id_map_new_old = []
-    id_map_new_old.append(dict())
-    id_map_new_old.append(dict())
-    ##################################
-    set_id = 0
     new_id = 0
-    for k in set1_direct_edges:
+    spot_list = []
+    for k in set1_edges_index:
         i = row_col[k][0]
         j = row_col[k][1]
         if i not in id_map_old_new[set_id]:
             id_map_old_new[set_id][i] = new_id
-            id_map_new_old[set_id][new_id] = i 
+            id_map_new_old[set_id][new_id] = i
+            spot_list.append(new_id)
             new_id = new_id + 1
-            
+
         if j not in id_map_old_new[set_id]:
             id_map_old_new[set_id][j] = new_id
-            id_map_new_old[set_id][new_id] = j 
+            id_map_new_old[set_id][new_id] = j
+            spot_list.append(new_id)
             new_id = new_id + 1
-    
-    set_id = 1
-    new_id = 0
-    for k in set2_direct_edges:
-        i = row_col[k][0]
-        j = row_col[k][1]
-        if i not in id_map_old_new[set_id]:
-            id_map_old_new[set_id][i] = new_id
-            id_map_new_old[set_id][new_id] = i 
-            new_id = new_id + 1
-            
-        if j not in id_map_old_new[set_id]:
-            id_map_old_new[set_id][j] = new_id
-            id_map_new_old[set_id][new_id] = j 
-            new_id = new_id + 1
-    ###################################################
+
+
+    print('new id: %d'%new_id)
     set1_edges = []
-    set_id = 0
-    for i in set1_direct_edges:
+    for i in set1_direct_edges:  #set1_edges_index:
         set1_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
-       
-    set2_edges = []
-    set_id = 1
-    for i in set2_direct_edges: #set2_edges_index
-        set2_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
-        #set2_edges.append([row_col[i], edge_weight[i]])
-    #####################################################    
-    for index in range (0, len(set1_edges)):
-        i = set1_edges[index][0][0]
-        j = set1_edges[index][0][1]
-        set1_exist_dict[i][j] = 1
+        #set1_edges.append([row_col[i], edge_weight[i]])
         
-    for index in range (0, len(set2_edges)):
-        i = set2_edges[index][0][0]
-        j = set2_edges[index][0][1]
-        set2_exist_dict[i][j] = 1
-        
+    edge_list.append(set1_edges)
+    '''
+    # create new X matrix
+    num_cell = new_id
+    X_data = np.zeros((num_cell, datapoint_size))
+    spot_id = 0
+    for spot in spot_list:
+        X_data[spot_id] = X[spot,:]
+        spot_id = spot_id + 1    
+    
+    row_col_temp = []
+    edge_weight_temp = []
+    for i in range (0, len(set1_edges)):
+        row_col_temp.append(set1_edges[i][0])
+        edge_weight_temp.append(set1_edges[i][1])
+
+    edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+    edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+    edge_list.append([X_data, edge_index, edge_attr])
+    gc.collect()
+    '''
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 1
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
     run = run_time
-    l = 3 # 3 = layer 1, 2 = layer 2
+    l = 2 # 3 = layer 1, 2 = layer 2
     attention_scores = []
     for i in range (0, datapoint_size):
         attention_scores.append([])   
@@ -919,50 +921,52 @@ for run_time in range (0, total_runs):
     min_attention_score = 1000
     #attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
     distribution = []
-    #Set 1
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_1.npy'
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
+    #######################################################################
+    for set_id in range(0, len(edge_list)):
+        print('subgraph %d'%set_id)
+        ##############
+        set1_exist_dict = defaultdict(dict)
+        for i in range (0, datapoint_size):  
+            for j in range (0, datapoint_size):	
+                set1_exist_dict[i][j]=-1
 
-    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index] 
-        if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
-        ###################################
-            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-            distribution.append(X_attention_bundle[l][index][0])
-            if min_attention_score > X_attention_bundle[l][index][0]:
-                min_attention_score = X_attention_bundle[l][index][0]
-          
-    #######################
-    #Set 2
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_2.npy'
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
-    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index] 
-        if i in set2_exist_dict and j in set2_exist_dict[i] and set2_exist_dict[i][j]==1:
-        ###################################
-            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-            distribution.append(X_attention_bundle[l][index][0])
-            if min_attention_score > X_attention_bundle[l][index][0]:
-                min_attention_score = X_attention_bundle[l][index][0]
-            
+        for edge in edge_list[set_id]:
+            row_col = edge[0]
+            new_i = row_col[0]
+            new_j = row_col[1]
+            i = id_map_new_old[set_id][new_i] 
+            j = id_map_new_old[set_id][new_j] 
+            set1_exist_dict[i][j] = 1
+        
+        ############
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
+        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
+
+        for index in range (0, X_attention_bundle[0].shape[1]):
+            new_i = X_attention_bundle[0][0][index]
+            new_j = X_attention_bundle[0][1][index] 
+            # these returned i and j are new
+            i = id_map_new_old[set_id][new_i] 
+            j = id_map_new_old[set_id][new_j]           
+                        
+            if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
+            ###################################
+                attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+                distribution.append(X_attention_bundle[l][index][0])
+                if min_attention_score > X_attention_bundle[l][index][0]:
+                    min_attention_score = X_attention_bundle[l][index][0]
+
     #######################    
-
+    print('All subgraph load done')
+    
     if min_attention_score<0:
         min_attention_score = -min_attention_score
     else: 
         min_attention_score = 0
 	
     ##############
-    plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
-    save_path = '/cluster/home/t116508uhn/64630/'
+    #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
+    #save_path = '/cluster/home/t116508uhn/64630/'
     #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
     #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
     #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_'+filename[run_time]+'attention_score.svg', dpi=400)
@@ -1022,7 +1026,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 90)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1118,7 +1122,7 @@ for run_time in range (0, total_runs):
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
     #chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_2split_'+filename[run_time]+'.html') #filtered_l2attention_
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_2split_'+filename[run_time]+'.html') #filtered_l2attention_
     #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
     #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
@@ -1210,22 +1214,18 @@ for run_time in range (0, total_runs):
     df = readCsv(inFile)
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
-    p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_2split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+#    p = plot(df)
+#    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_2split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
 #    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-    p.save(outPath)	# output 3
+#    p.save(outPath)	# output 3
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
     print('records found %d'%len(csv_record))
     for i in range (1, len(csv_record)):
         key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
-        csv_record_dict[key_value].append([csv_record[i][4], str( csv_record[i][5]), run])
+        csv_record_dict[key_value].append([csv_record[i][4], run])
         
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'eitherAbove_cellknee' + '_unionCCC_95th', 'wb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'bothAbove_cell98th_scaled' + '_unionCCC_99th', 'wb') as fp:  #b, a:[0:5]   
-#    pickle.dump(csv_record_dict, fp)
-	
 
 # intersection 
 #total_runs = 2
@@ -1298,7 +1298,7 @@ for record in range (1, len(csv_record)):
        
 df = pd.DataFrame(csv_record) # output 4
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th88_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th88_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
 ############
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -1310,7 +1310,8 @@ df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
 p = plot(df)
 #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l1attention_combined_th88_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+outPath = '/cluster/home/t116508uhn/64630/test_hist_split.html'
 p.save(outPath)	# output 5
 ###########	
 
@@ -1350,8 +1351,8 @@ data_list['Y']=[]
 data_list['opacity']=[] 
 
 for i in range (0, len(barcode_info)):
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
+    #if barcode_type[barcode_info[i][0]] == 'zero':
+    #    continue
         
     if i in exist_spot:
         data_list['pathology_label'].append(exist_spot[i][0])
@@ -1383,7 +1384,9 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th88_3dim_tanh_h512_filtered_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
+chart.save(save_path+'altair_plot_split.html')
+           
+#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th88_3dim_tanh_h512_filtered_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th90_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
