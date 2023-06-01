@@ -1250,7 +1250,7 @@ count local 2
 # 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_overlapped_lowscale'
 # 'dt-pattern_equally_spaced_lrc5_cp50_lrp1_randp0_all_same_differentLRs'
 # 'dt-pattern_equally_spaced_lrc4_cp50_lrp1_randp0_all_sameoverlapped_highertail'
-options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
+#options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
@@ -1332,8 +1332,113 @@ plt.savefig(save_path+'distribution_type6_f_input.svg', dpi=400)
 plt.clf()
 
 ###########
+# split it into N set of edges
+i=0
+node_id_sorted_xy=[]
+for num_spots in range (0, datapoint_size):
+    node_id_sorted_xy.append([i, -1, -1])
+    i=i+1
+
+dict_cell_edge = defaultdict(list) # incoming edges
+dict_cell_neighbors = defaultdict(list) # incoming edges
+for i in range(0, len(row_col)):
+    dict_cell_edge[row_col[i][1]].append(i) # index
+    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+
+for i in range (0, datapoint_size):
+    neighbor_list = dict_cell_neighbors[i]
+    neighbor_list = list(set(neighbor_list))
+    dict_cell_neighbors[i] = neighbor_list
+
+edge_list = []
+start_index = []
+id_map_old_new = [] # make an index array, so that existing node ids are mapped to new ids
+id_map_new_old = []
+
+total_subgraphs = 6
+for i in range (0, total_subgraphs+1):
+    start_index.append((datapoint_size//total_subgraphs)*i)
+    id_map_old_new.append(dict())
+    id_map_new_old.append(dict())
+    
+set_id=-1
+for indx in range (0, len(start_index)-1):
+    set_id = set_id + 1
+    print('start index is %d'%start_index[indx])
+    set1_nodes = []
+    set1_edges_index = []
+    node_limit_set1 = start_index[indx+1]
+    set1_direct_edges = []
+    print('set has nodes upto: %d'%node_limit_set1)
+    for i in range (start_index[indx], node_limit_set1):
+        set1_nodes.append(node_id_sorted_xy[i][0])
+        # add it's edges - first hop
+        for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
+            set1_edges_index.append(edge_index) # has both row_col and edge_weight
+            set1_direct_edges.append(edge_index)
+        # add it's neighbor's edges - second hop
+        for neighbor in dict_cell_neighbors[node_id_sorted_xy[i][0]]:
+            if node_id_sorted_xy[i][0] == neighbor:
+                continue
+            for edge_index in dict_cell_edge[neighbor]:
+                set1_edges_index.append(edge_index) # has both row_col and edge_weight
+
+    set1_edges_index = list(set(set1_edges_index))
+    print('amount of edges in set is: %d'%len(set1_edges_index))
+
+    # old to new mapping of the nodes
+    # make an index array, so that existing node ids are mapped to new ids
+    new_id = 0
+    spot_list = []
+    for k in set1_edges_index:
+        i = row_col[k][0]
+        j = row_col[k][1]
+        if i not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][i] = new_id
+            id_map_new_old[set_id][new_id] = i
+            spot_list.append(new_id)
+            new_id = new_id + 1
+
+        if j not in id_map_old_new[set_id]:
+            id_map_old_new[set_id][j] = new_id
+            id_map_new_old[set_id][new_id] = j
+            spot_list.append(new_id)
+            new_id = new_id + 1
+
+
+    print('new id: %d'%new_id)
+    set1_edges = []
+    for i in set1_direct_edges:  #set1_edges_index:
+        set1_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
+        #set1_edges.append([row_col[i], edge_weight[i]])
+        
+    edge_list.append(set1_edges)
+    '''
+    # create new X matrix
+    num_cell = new_id
+    X_data = np.zeros((num_cell, datapoint_size))
+    spot_id = 0
+    for spot in spot_list:
+        X_data[spot_id] = X[spot,:]
+        spot_id = spot_id + 1    
+    
+    row_col_temp = []
+    edge_weight_temp = []
+    for i in range (0, len(set1_edges)):
+        row_col_temp.append(set1_edges[i][0])
+        edge_weight_temp.append(set1_edges[i][1])
+
+    edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+    edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+    edge_list.append([X_data, edge_index, edge_attr])
+    gc.collect()
+    '''
+
+
+
+####################	
+'''	
 # split it into two set of edges
-    ###########
     set1_exist_dict = defaultdict(dict)
     for i in range (0, datapoint_size):  
         for j in range (0, datapoint_size):	
@@ -1403,7 +1508,7 @@ plt.clf()
     set2_edges = []
     for i in set2_direct_edges: #set2_edges_index
         set2_edges.append([row_col[i], edge_weight[i]])
-        
+    #############################################    
     for index in range (0, len(set1_edges)):
         i = set1_edges[index][0][0]
         j = set1_edges[index][0][1]
@@ -1412,7 +1517,9 @@ plt.clf()
     for index in range (0, len(set2_edges)):
         i = set2_edges[index][0][0]
         j = set2_edges[index][0][1]
-        set2_exist_dict[i][j] = 1
+        set2_exist_dict[i][j] = 1        
+'''
+##################################################    
         
 ##################################################
 '''
@@ -1494,7 +1601,7 @@ while percentage_value > 0:
 
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 1
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
@@ -1507,21 +1614,39 @@ for run_time in range (0,total_runs):
         for j in range (0, datapoint_size):	
             attention_scores[i].append([])   
             attention_scores[i][j] = []  
+            
     l=3 #2 ## 
-    #Set 1
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_1.npy' #split_
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index] 
-        if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
-        ###################################
-            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-            distribution.append(X_attention_bundle[l][index][0])
+    for set_id in range(0, len(edge_list)):
+        print('subgraph %d'%set_id)
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_'+str(set_id+1)+'.npy' #split_
+        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+        # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+        ##############
+        set1_exist_dict = defaultdict(dict)
+        for i in range (0, datapoint_size):  
+            for j in range (0, datapoint_size):	
+                set1_exist_dict[i][j]=-1
+
+        for edge in edge_list[set_id]:
+            row_col = edge[0]
+            new_i = row_col[0]
+            new_j = row_col[1]
+            i = id_map_new_old[set_id][new_i] 
+            j = id_map_new_old[set_id][new_j] 
+            set1_exist_dict[i][j] = 1
+        
+        #############
+        for index in range (0, X_attention_bundle[0].shape[1]):
+            i = X_attention_bundle[0][0][index]
+            j = X_attention_bundle[0][1][index] 
+            if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
+            ###################################
+                attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+                distribution.append(X_attention_bundle[l][index][0])
     #######################
+    print('All subgraph load done')
+    
+    '''
     #Set 2
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_2.npy' #split_
@@ -1536,17 +1661,18 @@ for run_time in range (0,total_runs):
             attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
             distribution.append(X_attention_bundle[l][index][0])
     #######################    
+    '''
 
     
-    plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
-    save_path = '/cluster/home/t116508uhn/64630/'
-    plt.savefig(save_path+'distribution_type6_f_3d_tanh_split_'+filename[run]+'.svg', dpi=400)
+    #plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
+    #save_path = '/cluster/home/t116508uhn/64630/'
+    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_split_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
     #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
-    plt.clf()
+    #plt.clf()
     
     percentage_value = 100
     while percentage_value > 0:
