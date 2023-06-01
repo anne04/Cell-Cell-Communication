@@ -1279,7 +1279,7 @@ for k in range (1, len(csv_record)):
 
 
 
-threshold_value =  np.percentile(combined_score_distribution,99)
+threshold_value =  np.percentile(combined_score_distribution,50)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
@@ -1414,7 +1414,7 @@ chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
 ########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,80)
+threshold_value =  np.percentile(combined_score_distribution,50)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
@@ -1687,6 +1687,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_all_3dim_tanh_h512_l1l2attention_split_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_80_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th89p5_3dim_tanh_h512_l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 
