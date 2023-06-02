@@ -1026,7 +1026,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 90)
+    threshold_down =  np.percentile(sorted(distribution), 95)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1119,7 +1119,7 @@ for run_time in range (0, total_runs):
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_'+filename[run_time]+'.html')
+    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_l2attention_split_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
     #chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_2split_'+filename[run_time]+'.html') #filtered_l2attention_
@@ -1214,10 +1214,10 @@ for run_time in range (0, total_runs):
     df = readCsv(inFile)
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
-#    p = plot(df)
-#    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_2split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+    p = plot(df)
+    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
 #    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-#    p.save(outPath)	# output 3
+    p.save(outPath)	# output 3
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
