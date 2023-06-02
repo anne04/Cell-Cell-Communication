@@ -1665,7 +1665,7 @@ for k in range (1, len(csv_record)):
     g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
     count_edges = count_edges + 1
      
-
+'''
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1680,6 +1680,7 @@ for i in range (0, datapoint_size):
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
+'''
 #nt.show('mygraph.html')
 nt.from_nx(g)
 nt.show('mygraph.html')
