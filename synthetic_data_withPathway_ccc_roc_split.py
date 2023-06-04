@@ -1601,7 +1601,7 @@ while percentage_value > 0:
 
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 1
+total_runs = 10
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
@@ -1637,14 +1637,17 @@ for run_time in range (0,total_runs):
         
         #############
         for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index] 
+            new_i = X_attention_bundle[0][0][index]
+            new_j = X_attention_bundle[0][1][index] 
+            i = id_map_new_old[set_id][new_i] 
+            j = id_map_new_old[set_id][new_j]        
             if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
             ###################################
                 attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
                 distribution.append(X_attention_bundle[l][index][0])
     #######################
-    print('All subgraph load done')
+    print('All subgraph load done. total edges: %d'%len(distribution))
+        
     
     '''
     #Set 2
@@ -1752,6 +1755,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
     color='Type:N',
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'plot_type6_f_3d_layer1attention_split.html')
 #chart.save(save_path+'plot_type4_e_leakyrelu.html')
 #chart.save(save_path+'plot_type4_e_3d_tanh.html')
 #chart.save(save_path+'plot_e_gatconv.html')
