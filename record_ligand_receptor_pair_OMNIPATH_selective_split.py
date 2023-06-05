@@ -66,7 +66,7 @@ def writeStats(stats, feature, outStatsPath):
 def plot(df):
 
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  #set1[0] = '#000000'
+  set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
@@ -906,7 +906,7 @@ for indx in range (0, len(start_index)-1):
 ##################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 3
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
@@ -939,8 +939,8 @@ for run_time in range (0, total_runs):
             set1_exist_dict[i][j] = 1
         
         ############
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy' #_h1024
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy' #_h1024
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
 
         for index in range (0, X_attention_bundle[0].shape[1]):
