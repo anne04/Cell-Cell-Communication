@@ -1219,7 +1219,7 @@ for run_time in range (0, total_runs):
                         csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
                     else:
                         csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
-
+ 
     df = pd.DataFrame(csv_record)
     df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
     ############
