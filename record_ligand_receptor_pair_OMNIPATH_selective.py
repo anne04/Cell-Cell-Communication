@@ -1241,7 +1241,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=2: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
