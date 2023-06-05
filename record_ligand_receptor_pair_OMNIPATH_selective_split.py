@@ -773,10 +773,10 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -906,7 +906,7 @@ for indx in range (0, len(start_index)-1):
 ##################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_","r7_", "r8_","r9_"]
-total_runs = 5
+total_runs = 3
 csv_record_dict = defaultdict(list)
 for run_time in range (0, total_runs):
     gc.collect()
@@ -939,7 +939,8 @@ for run_time in range (0, total_runs):
             set1_exist_dict[i][j] = 1
         
         ############
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy' #_h1024
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
 
         for index in range (0, X_attention_bundle[0].shape[1]):
@@ -953,12 +954,27 @@ for run_time in range (0, total_runs):
             ###################################
                 attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
                 distribution.append(X_attention_bundle[l][index][0])
-                if min_attention_score > X_attention_bundle[l][index][0]:
-                    min_attention_score = X_attention_bundle[l][index][0]
+
 
     #######################    
     print('All subgraph load done')
+    ##################################
+    min_attention_score = 1000
+    max_value = np.max(distribution)
+    min_value = np.min(distribution)
+    distribution = []    
+    for i in range (0, datapoint_size):  
+        for j in range (0, datapoint_size):    
+            if len(attention_scores[i][j])>0:
+                for k in range (0, len(attention_scores[i][j])):
+                    scaled_score = (attention_scores[i][j][k]-min_value)/(max_value-min_value)
+                    attention_scores[i][j][k] = scaled_score 
+                    distribution.append(attention_scores[i][j][k])
+                    if min_attention_score > scaled_score:
+                        min_attention_score = scaled_score                    
+                    
     
+    ##################################
     if min_attention_score<0:
         min_attention_score = -min_attention_score
     else: 
@@ -1026,7 +1042,7 @@ for run_time in range (0, total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 95)
+    threshold_down =  np.percentile(sorted(distribution), 90)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1119,7 +1135,7 @@ for run_time in range (0, total_runs):
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
     # output 2
     save_path = '/cluster/home/t116508uhn/64630/'
-    chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_l2attention_split_'+filename[run_time]+'.html')
+    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_l2attention_split_'+filename[run_time]+'.html')
     #chart.save(save_path+args.data_name+'_filtered_input_graph.html') #
     #chart.save(save_path+args.data_name+'_CCL19_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
     #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th95_3dim_tanh_h512_2split_'+filename[run_time]+'.html') #filtered_l2attention_
@@ -1214,10 +1230,10 @@ for run_time in range (0, total_runs):
     df = readCsv(inFile)
     df = preprocessDf(df)
     outPathRoot = inFile.split('.')[0]
-    p = plot(df)
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+#    p = plot(df)
+#    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th95_h512_split_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
 #    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_only_CCL19_th95_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-    p.save(outPath)	# output 3
+#    p.save(outPath)	# output 3
     ###########	
     #run = 1
     #csv_record_dict = defaultdict(list)
