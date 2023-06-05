@@ -1615,7 +1615,7 @@ for run_time in range (0,total_runs):
             attention_scores[i].append([])   
             attention_scores[i][j] = []  
             
-    l=3 #2 ## 
+    l=2 #2 ## 
     for set_id in range(0, len(edge_list)):
         print('subgraph %d'%set_id)
         X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_split_'+filename[run]+'_attention_l1_'+str(set_id+1)+'.npy' #split_
@@ -1755,7 +1755,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
     color='Type:N',
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'plot_type6_f_3d_layer1attention_split.html')
+chart.save(save_path+'plot_type6_f_3d_layer2attention_split.html')
 #chart.save(save_path+'plot_type4_e_leakyrelu.html')
 #chart.save(save_path+'plot_type4_e_3d_tanh.html')
 #chart.save(save_path+'plot_e_gatconv.html')
