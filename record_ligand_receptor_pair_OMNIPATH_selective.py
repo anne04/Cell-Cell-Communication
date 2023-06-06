@@ -891,7 +891,7 @@ for index in range (0, len(row_col)):
 
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 5
+total_runs = 1
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
@@ -899,7 +899,7 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h512_wf_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
@@ -1241,7 +1241,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=4: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1279,7 +1279,7 @@ for k in range (1, len(csv_record)):
 
 
 
-threshold_value =  np.percentile(combined_score_distribution,0)
+threshold_value =  np.percentile(combined_score_distribution,95)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
@@ -1415,7 +1415,7 @@ chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
 ########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,95)
+threshold_value =  np.percentile(combined_score_distribution,98)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
