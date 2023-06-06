@@ -796,11 +796,11 @@ for index in range (0, len(row_col)):
 
 
 # split it into N set of edges
-dict_cell_edge = defaultdict(list) # incoming edges
-dict_cell_neighbors = defaultdict(list) # incoming edges
-for i in range(0, len(row_col)):
-    dict_cell_edge[row_col[i][1]].append(i) # index
-    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
+dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
+dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
+for i in range(0, len(row_col)): 
+    dict_cell_edge[row_col[i][1]].append(i) # index of the edges
+    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0]) # neighbor id
 
 for i in range (0, datapoint_size):
     neighbor_list = dict_cell_neighbors[i]
@@ -817,7 +817,8 @@ for i in range (0, total_subgraphs+1):
     start_index.append((datapoint_size//total_subgraphs)*i)
     id_map_old_new.append(dict())
     id_map_new_old.append(dict())
-    
+#start_index.append(datapoint_size)
+
 set_id=-1
 for indx in range (0, len(start_index)-1):
     set_id = set_id + 1
@@ -1245,12 +1246,28 @@ for run_time in range (0, total_runs):
 
 # intersection 
 #total_runs = 2
-connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+for key_value in csv_record_dict.keys():
+    run_dict = defaultdict(list)
+    for scores in csv_record_dict[key_value]:
+        run_dict[scores[1]].append(scores[0])
+    
+    for runs in run_dict.keys():
+        run_dict[runs] = np.mean(run_dict[runs])
+        
+        
+    csv_record_dict[key_value] = []
+    for runs in run_dict.keys():
+        csv_record_dict[key_value].append([run_dict[runs],runs])
+        
+	
+# intersection 
+#total_runs = 2
+combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=((total_runs*100)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1271,10 +1288,21 @@ for key_value in csv_record_dict.keys():
         
         csv_record_intersect_dict[ligand+'-'+receptor][label].append(score)
         csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
-        connecting_edges[i][j]=1
+        combined_score_distribution.append(score)
         
 print('common LR count %d'%len(csv_record))
 
+threshold_value =  np.percentile(combined_score_distribution,0)
+connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
+for k in range (1, len(csv_record)):
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    #if ligand =='CCL19' and receptor == 'CCR7':
+    if csv_record[k][4] >= threshold_value:        
+        i = csv_record[k][6]
+        j = csv_record[k][7]
+        connecting_edges[i][j]=1
+        
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
@@ -1310,40 +1338,30 @@ for record in range (1, len(csv_record)):
     i = csv_record[record][6]
     label = barcode_info[i][3]
     csv_record[record][5] = label
+    
 
-       
-df = pd.DataFrame(csv_record) # output 4
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l1attention_edges'+str(len(csv_record))+'_combined_th88_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-############
-alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-alt.themes.enable("publishTheme")
-inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-df = readCsv(inFile)
-df = preprocessDf(df)
-outPathRoot = inFile.split('.')[0]
-p = plot(df)
-#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l1attention_combined_th88_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
-outPath = '/cluster/home/t116508uhn/64630/test_hist_split.html'
-p.save(outPath)	# output 5
 ###########	
 
 exist_spot = defaultdict(list)
 for record_idx in range (1, len(csv_record)):
     record = csv_record[record_idx]
     i = record[6]
-    if barcode_type[barcode_info[i][0]] == 'zero':
-        continue
     pathology_label = barcode_type[barcode_info[i][0]]
     component_label = record[5]
     X = barcode_info[i][1]
     Y = -barcode_info[i][2]
     opacity = record[4]
     exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
-
+    '''
+    j = record[7]
+    pathology_label = barcode_type[barcode_info[j][0]]
+    component_label = record[5]
+    X = barcode_info[j][1]
+    Y = -barcode_info[j][2]
+    opacity = record[4]   
+    exist_spot[j].append([pathology_label, component_label, X, Y, opacity])
+    '''
+    
 opacity_list = []
 for i in exist_spot:
     sum_opacity = []
@@ -1385,7 +1403,7 @@ for i in range (0, len(barcode_info)):
         data_list['opacity'].append(0.1)
 
 
-id_label= len(list(set(data_list['component_label'])))
+#id_label= len(list(set(data_list['component_label'])))
 data_list_pd = pd.DataFrame(data_list)
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
@@ -1395,65 +1413,46 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
     #opacity=alt.Opacity('opacity:N'), #"opacity",
-    tooltip=['component_label','opacity']
+    tooltip=['component_label'] #,'opacity'
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_split.html')
-           
-#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th88_3dim_tanh_h512_filtered_l1attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
-#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th90_3dim_tanh_h512_filtered_l2attention_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_100percent.html')  #l2attention_
-#chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges_5.html')  
-#chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
-#chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
-
+chart.save(save_path+'altair_plot_test.html')
+chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
+#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th98_3dim_tanh_h512_l1l2attention_'+filename[run_time]+str(len(csv_record))+'edges.html')  #l2attention_
+######################################################################################################
+threshold_value =  np.percentile(combined_score_distribution,0)
+csv_record_temp = []
+csv_record_temp.append(csv_record[0])
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] >= threshold_value:    
+        csv_record_temp.append(csv_record[k])
+        
+i=0
+j=0
+csv_record_temp.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
+df = pd.DataFrame(csv_record_temp) # output 4
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
+df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+############
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+df = readCsv(inFile)
+df = preprocessDf(df)
+outPathRoot = inFile.split('.')[0]
+p = plot(df)
+outPath = '/cluster/home/t116508uhn/64630/test_hist_temp.html'
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th97_90_h512_l1l2attention_combined_5runs_edges'+str(len(csv_record))+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_th90_70_67_h512_l1l2attention_'+filename[run_time]+'_edges'+str(len(csv_record))+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_l2attention_combined_th95_100percent_totalruns_'+str(total_runs)+'_edges'+str(len(csv_record))+'.html' #l2attention_
+#outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_h512_filtered_l2attention_combined_th90_100percent_totalruns_'+str(total_runs)+'.html' #l2attention_
+p.save(outPath)	# output 5
 
 ##########################
-
-#set1[0] = '#000000'
-data_list=dict()
-data_list['ligand-receptor']=[]
-data_list['component_label']=[]
-data_list['score']=[]
-for lr in csv_record_intersect_dict:
-    for component in csv_record_intersect_dict[lr]:
-        score = len(csv_record_intersect_dict[lr][component]) #np.sum(csv_record_intersect_dict[lr][component]) #len(csv_record_intersect_dict[lr][component])*np.sum(csv_record_intersect_dict[lr][component]) #/len(csv_record_intersect_dict[lr][component])
-        data_list['ligand-receptor'].append(lr)
-        data_list['component_label'].append(component)
-        data_list['score'].append(score)
-    
-source = pd.DataFrame(data_list)
-set1 = altairThemes.get_colour_scheme("Set1", len(set(data_list['component_label'])))
-chart = alt.Chart(source).mark_bar().encode(
-    x=alt.X("ligand-receptor:N", sort='-y', axis=alt.Axis(labelAngle=45)), 
-    y='score',
-    color=alt.Color("component_label:N", scale = alt.Scale(range=set1)),
-    order=alt.Order("component_label", sort="ascending"),
-    tooltip=["component_label"]
-)        
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'test.html')
-       
-        
-###
-
-df = pd.DataFrame(csv_record)
-df.to_csv('/cluster/home/t116508uhn/64630/test_intersection.csv', index=False, header=False)
-#df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_records_bothAbove98th_withlrFeature_intersection.csv', index=False, header=False)
-
-############
-
-
-################
-
-df = pd.DataFrame(csv_record)
-#df.to_csv('/cluster/home/t116508uhn/64630/input_edge_ccc_th95_records_woBlankEdges.csv', index=False, header=False)
-df.to_csv('/cluster/home/t116508uhn/64630/ccc_th97_records_woBlankEdges_bothAbove98th.csv', index=False, header=False)
-
-#df.to_csv('/cluster/home/t116508uhn/64630/ccc_th95_omnipath_records_withFeature_woBlankEdges.csv', index=False, header=False)
-############################
-
 
 #############
 '''
