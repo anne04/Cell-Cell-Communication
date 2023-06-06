@@ -64,7 +64,6 @@ def writeStats(stats, feature, outStatsPath):
   return
 
 def plot(df):
-
   set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
   set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
@@ -77,7 +76,27 @@ def plot(df):
   p = base
 
   return p
+'''
+def plot(df):
+  number = 20
+  cmap = plt.get_cmap('tab20')
+  colors = [cmap(i) for i in np.linspace(0, 1, number)]
+  for i in range (0, len(colors)): 
+    colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
+  
+  #set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
+  #set1[0] = '#000000'
+  base = alt.Chart(df).mark_bar().encode(
+            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y=alt.Y("count()"),
+            color=alt.Color("component:N", scale = alt.Scale(range=colors)),
+            order=alt.Order("component:N", sort="ascending"),
+            tooltip=["component"]
+        )
+  p = base
 
+  return p
+'''
 def totalPlot(df, features, outPath):
 
   p = alt.hconcat(*map(lambda x: plot(df, x), features))
@@ -798,11 +817,6 @@ for i in range (1, len(pathologist_label)):
     barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
     
 		
-	
-	
-	
-	
-	
 '''
 spot_type = []
 pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
@@ -834,7 +848,16 @@ for i in range (1, len(pathologist_label)):
     else:
         barcode_type[pathologist_label[i][0]] = 'others'
 
-        
+#############################################################################
+ccc_too_many_cells_LUAD = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCST/exp2_D1_ccc_toomanycells_cluster.csv')
+ccc_too_many_cells_LUAD_dict = dict()
+for i in range(0, len(ccc_too_many_cells_LUAD)):
+    ccc_too_many_cells_LUAD_dict[ccc_too_many_cells_LUAD['cell'][i]] = int(ccc_too_many_cells_LUAD['cluster'][i])
+
+for i in range(0, len(barcode_info)):
+    barcode_info[i][3] = ccc_too_many_cells_LUAD_dict[barcode_info[i][0]]
+	
+
 barcode_type=dict()
 for i in range (0, len(barcode_info)):
     barcode_type[barcode_info[i][0]] = 0 
@@ -899,7 +922,7 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h512_wf_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
@@ -1421,6 +1444,10 @@ csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
     if csv_record[k][4] >= threshold_value:    
         csv_record_temp.append(csv_record[k])
+   
+
+for k in range (1, len(csv_record_temp)):
+    csv_record_temp[k][5] = ccc_too_many_cells_LUAD_dict[csv_record_temp[k][0]]
         
 i=0
 j=0
