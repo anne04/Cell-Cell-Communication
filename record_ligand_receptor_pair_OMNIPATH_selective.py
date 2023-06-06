@@ -1241,7 +1241,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=4: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1279,7 +1279,7 @@ for k in range (1, len(csv_record)):
 
 
 
-threshold_value =  np.percentile(combined_score_distribution,95)
+threshold_value =  np.percentile(combined_score_distribution,0)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
@@ -1688,7 +1688,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_50_3dim_tanh_h512_l1l2attention_split_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th95_95_20_3dim_tanh_h512_l1l2attention_split_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_4of5.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_80_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th89p5_3dim_tanh_h512_l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
 
