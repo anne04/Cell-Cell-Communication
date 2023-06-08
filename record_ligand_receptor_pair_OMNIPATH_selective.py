@@ -905,16 +905,19 @@ for index in range (0, len(row_col)):
     #    if len(lig_rec_dict[i][j])==0:
     #        continue 
     #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
-    #    if lig_rec[index][0]=='CCL19' and lig_rec[index][1] == "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
+    if lig_rec[index][0]!='CCL19' or lig_rec[index][1] != "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
+        continue
     if edge_weight[index][1]>0:
         attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
         distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''   
-
+        #lig_rec_dict[i][j].append(lig_rec[index])  
+        
+        
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 1
+total_runs = 5
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
@@ -942,6 +945,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
+        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+        #    continue
         distribution.append(X_attention_bundle[l][index][0])
     
     attention_scores = []
@@ -958,6 +963,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
+        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+        #    continue
         scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
         attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
         if min_attention_score > scaled_score:
@@ -1068,12 +1075,12 @@ chart = alt.Chart(source).transform_fold(
     alt.Color('Distribution Type:N')
 )
 
-
+chart.save(save_path+'region_of_interest_combined_attention_distribution.html')
 '''
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 90)
+    threshold_down =  np.percentile(sorted(distribution), 80)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1264,7 +1271,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1289,16 +1296,18 @@ for key_value in csv_record_dict.keys():
         
 print('common LR count %d'%len(csv_record))
 
-'''
+
 combined_score_distribution_ccl19_ccr7 = []
 for k in range (1, len(csv_record)):
     i = csv_record[k][6]
     j = csv_record[k][7]
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    if ligand =='TGFB1': # and receptor == 'CCR7':
+    if ligand =='CCL19' and receptor == 'CCR7':
         combined_score_distribution_ccl19_ccr7.append(csv_record[k][4])
-'''
+        
+some_dict = dict(A=combined_score_distribution, B=combined_score_distribution_ccl19_ccr7)
+''''''
 
 
 
@@ -1438,7 +1447,7 @@ chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th98_3dim_combined_'+str(total_runs)+'runs_'+str(len(csv_record))+'edges.html')  
 #chart.save(save_path+'altair_plot_140694_bothAbove98_th99p5_3dim_combined_'+str(total_runs)+'runs'.html')  
 ########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,98)
+threshold_value =  np.percentile(combined_score_distribution,0)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
@@ -1446,8 +1455,8 @@ for k in range (1, len(csv_record)):
         csv_record_temp.append(csv_record[k])
    
 
-for k in range (1, len(csv_record_temp)):
-    csv_record_temp[k][5] = ccc_too_many_cells_LUAD_dict[csv_record_temp[k][0]]
+#for k in range (1, len(csv_record_temp)):
+#    csv_record_temp[k][5] = ccc_too_many_cells_LUAD_dict[csv_record_temp[k][0]]
         
 i=0
 j=0
@@ -1885,7 +1894,7 @@ for i in range (0, len(barcode_info)):
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
-threshold_value =  np.percentile(combined_score_distribution,67)
+threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,90)
 count_edges = 0
 for k in range (1, len(csv_record)):
     if csv_record[k][4] < threshold_value:
@@ -1895,11 +1904,16 @@ for k in range (1, len(csv_record)):
     j = csv_record[k][7]    
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
+    if ligand !='CCL19' or receptor != 'CCR7':
+        continue
+    
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record[k][4]
     g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
     count_edges = count_edges + 1
     
+nt.from_nx(g)
+nt.show('mygraph.html')
  
         
  
@@ -1924,7 +1938,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th90_70_67_"+count_edges+"edges.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th80_80_90_"+str(count_edges)+"edges_5runs.dot")
 
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_fullOutput_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_allPairs_th90_"+str(len(csv_record))+"edges.dot")
