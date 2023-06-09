@@ -118,12 +118,12 @@ args = parser.parse_args()
 # read the mtx file
 temp = sc.read_10x_mtx(args.data_path)
 print(temp)
-#sc.pp.log1p(temp)
+sc.pp.log1p(temp)
 sc.pp.filter_genes(temp, min_cells=1)
 print(temp)
-#sc.pp.highly_variable_genes(temp) #3952
-#temp = temp[:, temp.var['highly_variable']]
-#print(temp)
+sc.pp.highly_variable_genes(temp) #3952
+temp = temp[:, temp.var['highly_variable']]
+print(temp)
 
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
@@ -183,14 +183,14 @@ print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 
-#sc.pp.log1p(adata_h5)
+sc.pp.log1p(adata_h5)
 
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 
-#sc.pp.highly_variable_genes(adata_h5) #3952
-#adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
-#print(adata_h5)
+sc.pp.highly_variable_genes(adata_h5) #3952
+adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
+print(adata_h5)
 
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
@@ -883,11 +883,11 @@ for i in range (0, datapoint_size):
 
 total_type = np.zeros((2))        
 for index in range (0, len(row_col)):
-    #if lig_rec[index][0]=='CCL19':
         i = row_col[index][0]
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
 ############################################################################
+'''
 attention_scores = []
 datapoint_size = len(barcode_info)
 for i in range (0, datapoint_size):
@@ -914,7 +914,7 @@ for index in range (0, len(row_col)):
         ccc_index_dict[j] = ''   
         #lig_rec_dict[i][j].append(lig_rec[index])  
         
-        
+'''        
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
 total_runs = 5
@@ -925,7 +925,7 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filter_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
@@ -945,8 +945,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
-        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-        #    continue
+        if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+            continue
         distribution.append(X_attention_bundle[l][index][0])
     
     attention_scores = []
@@ -963,8 +963,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
-        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-        #    continue
+        if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+            continue
         scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
         attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
         if min_attention_score > scaled_score:
@@ -1011,76 +1011,11 @@ for run_time in range (start_index, start_index+total_runs):
     #hold_attention_score = copy.deepcopy(attention_scores)  
     #attention_scores = copy.deepcopy(hold_attention_score)  
     ####################################################################################
-    '''
-    attention_scores_temp = []
-    for i in range (0, datapoint_size):
-        attention_scores_temp.append([])   
-        for j in range (0, datapoint_size):	
-            attention_scores_temp[i].append([])   
-            attention_scores_temp[i][j] = []
-            
-    distribution = []        
-    for i in range (0, len(barcode_info)):
-        for j in range (0, len(barcode_info)):              
-            if i==j:
-                if len(lig_rec_dict[i][j])==0:
-                    continue 
-             
-            #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
-            atn_score_list = attention_scores[i][j]
-            for k in range (0, len(atn_score_list)):
-
-                if lig_rec_dict[i][j][k][0] == 'CCL19' and lig_rec_dict[i][j][k][1] == 'CCR7': #lig_rec_dict[i][j][k][0] == 'IL21' and lig_rec_dict[i][j][k][1] == 'IL21R': #
-                    attention_scores_temp[i][j].append(attention_scores[i][j][k])
-                    distribution.append(attention_scores[i][j][k])    
-                    #print(lig_rec_dict[i][j][k])
-                        
-    attention_scores = attention_scores_temp
-    
-    ####################################################################################
-    some_dict = dict(A=distribution_all, B=distribution)
-    
-    df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in some_dict.items()]))
-
-    df = df.rename(columns={'A': 'all_pairs', 'B': 'CCL19_CCR7'})
-
-    source = df
-
-    chart = alt.Chart(source).transform_fold(
-        ['all_pairs',
-         'CCL19_CCR7'],
-        as_ = ['distribution_type', 'value']
-    ).transform_density(
-        density = 'value',
-        bandwidth=0.3,
-        groupby=['distribution_type'],        
-        counts = True,
-        steps=100
-    ).mark_area(opacity=0.5).encode(
-        alt.X('value:Q'),
-        alt.Y('density:Q', stack='zero' ),
-        alt.Color('distribution_type:N')
-    )#.properties(width=400, height=100)
-
-
-chart = alt.Chart(source).transform_fold(
-    ['all_pairs', 'CCL19_CCR7'],
-    as_=['Distribution Type', 'Attention Score']
-).mark_bar(
-    opacity=0.5,
-    binSpacing=0
-).encode(
-    alt.X('Attention Score:Q', bin=alt.Bin(maxbins=100)),
-    alt.Y('count()', stack=None),
-    alt.Color('Distribution Type:N')
-)
-
-chart.save(save_path+'region_of_interest_combined_attention_distribution.html')
-'''
+   
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 80)
+    threshold_down =  np.percentile(sorted(distribution), 0)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1263,7 +1198,9 @@ for key_value in csv_record_dict.keys():
     for runs in run_dict.keys():
         csv_record_dict[key_value].append([run_dict[runs],runs])
         
-	
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs_filtered', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump(csv_record_dict, fp)
+		
 # intersection 
 #total_runs = 2
 combined_score_distribution = []
@@ -1307,20 +1244,58 @@ for k in range (1, len(csv_record)):
         combined_score_distribution_ccl19_ccr7.append(csv_record[k][4])
         
 some_dict = dict(A=combined_score_distribution, B=combined_score_distribution_ccl19_ccr7)
-''''''
+
+'''
+     
+    df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in some_dict.items()]))
+
+    df = df.rename(columns={'A': 'all_pairs', 'B': 'CCL19_CCR7'})
+
+    source = df
+
+    chart = alt.Chart(source).transform_fold(
+        ['all_pairs',
+         'CCL19_CCR7'],
+        as_ = ['distribution_type', 'value']
+    ).transform_density(
+        density = 'value',
+        bandwidth=0.3,
+        groupby=['distribution_type'],        
+        counts = True,
+        steps=100
+    ).mark_area(opacity=0.5).encode(
+        alt.X('value:Q'),
+        alt.Y('density:Q', stack='zero' ),
+        alt.Color('distribution_type:N')
+    )#.properties(width=400, height=100)
 
 
+chart = alt.Chart(source).transform_fold(
+    ['all_pairs', 'CCL19_CCR7'],
+    as_=['Distribution Type', 'Attention Score']
+).mark_bar(
+    opacity=0.5,
+    binSpacing=0
+).encode(
+    alt.X('Attention Score:Q', bin=alt.Bin(maxbins=100)),
+    alt.Y('count()', stack=None),
+    alt.Color('Distribution Type:N')
+)
 
-threshold_value =  np.percentile(combined_score_distribution,95)
+chart.save(save_path+'region_of_interest_filtered_combined_attention_distribution.html')
+'''
+
+
+threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,95)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    #if ligand =='CCL19' and receptor == 'CCR7':
-    if csv_record[k][4] >= threshold_value:        
-        i = csv_record[k][6]
-        j = csv_record[k][7]
-        connecting_edges[i][j]=1
+    if ligand =='CCL19' and receptor == 'CCR7':
+        if csv_record[k][4] >= threshold_value:        
+            i = csv_record[k][6]
+            j = csv_record[k][7]
+            connecting_edges[i][j]=1
         
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
