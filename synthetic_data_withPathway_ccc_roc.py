@@ -1486,6 +1486,7 @@ while percentage_value > 0:
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
+csv_record_dict = defaultdict(list)
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
