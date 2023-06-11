@@ -183,14 +183,14 @@ print(data_fold)
 adata_h5 = st.Read10X(path=data_fold, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
 print(adata_h5)
 
-sc.pp.log1p(adata_h5)
+#sc.pp.log1p(adata_h5)
 
 sc.pp.filter_genes(adata_h5, min_cells=1)
 print(adata_h5)
 
-sc.pp.highly_variable_genes(adata_h5) #3952
-adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
-print(adata_h5)
+#sc.pp.highly_variable_genes(adata_h5) #3952
+#adata_h5 = adata_h5[:, adata_h5.var['highly_variable']]
+#print(adata_h5)
 
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
@@ -871,7 +871,7 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d_filtered', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -925,7 +925,7 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
@@ -945,8 +945,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
-        if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-            continue
+        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+        #    continue
         distribution.append(X_attention_bundle[l][index][0])
     
     attention_scores = []
@@ -963,8 +963,8 @@ for run_time in range (start_index, start_index+total_runs):
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
         j = X_attention_bundle[0][1][index]
-        if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-            continue
+        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+        #    continue
         scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
         attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
         if min_attention_score > scaled_score:
@@ -1208,7 +1208,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1286,7 +1286,7 @@ chart.save(save_path+'region_of_interest_filtered_combined_attention_distributio
 '''
 
 
-threshold_value =  np.percentile(combined_score_distribution,0)
+threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,0)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
@@ -1917,7 +1917,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
-write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+"combined"+"_l1l2attention_allPairs_th80_80_0_"+str(count_edges)+"edges_5runs.dot")
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+"combined"+"_l1l2attention_allPairs_CCL19_CCR7_th80_80_0_"+str(count_edges)+"edges_5runs.dot")
 
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th80_80_90_"+str(count_edges)+"edges_5runs.dot")
 
