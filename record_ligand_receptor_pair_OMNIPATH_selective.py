@@ -118,12 +118,12 @@ args = parser.parse_args()
 # read the mtx file
 temp = sc.read_10x_mtx(args.data_path)
 print(temp)
-sc.pp.log1p(temp)
+#sc.pp.log1p(temp)
 sc.pp.filter_genes(temp, min_cells=1)
 print(temp)
-sc.pp.highly_variable_genes(temp) #3952
-temp = temp[:, temp.var['highly_variable']]
-print(temp)
+#sc.pp.highly_variable_genes(temp) #3952
+#temp = temp[:, temp.var['highly_variable']]
+#print(temp)
 
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
@@ -871,7 +871,7 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d_filtered', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -905,8 +905,8 @@ for index in range (0, len(row_col)):
     #    if len(lig_rec_dict[i][j])==0:
     #        continue 
     #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
-    if lig_rec[index][0]!='CCL19' or lig_rec[index][1] != "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
-        continue
+    #if lig_rec[index][0]!='CCL19' or lig_rec[index][1] != "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
+    #    continue
     if edge_weight[index][1]>0:
         attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
         distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
@@ -925,7 +925,7 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filter_'+filename[run_time]+'attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_filtered_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
@@ -1015,7 +1015,7 @@ for run_time in range (start_index, start_index+total_runs):
     ###########################
     
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 0)
+    threshold_down =  np.percentile(sorted(distribution), 80)
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
     for j in range (0, datapoint_size):
@@ -1208,7 +1208,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict)
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -1286,7 +1286,7 @@ chart.save(save_path+'region_of_interest_filtered_combined_attention_distributio
 '''
 
 
-threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,95)
+threshold_value =  np.percentile(combined_score_distribution,0)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
@@ -1839,8 +1839,12 @@ colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
     x_index.append(barcode_info[i][1])
-    y_index.append(barcode_info[i][2])    
-    colors_point.append(colors[barcode_info[i][3]]) 
+    y_index.append(barcode_info[i][2])  
+    if barcode_info[i][3]==0:
+        colors_point.append("#000000")
+    else:
+        colors_point.append("#377eb8")
+    #colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
 max_y = np.max(y_index)
@@ -1869,7 +1873,7 @@ for i in range (0, len(barcode_info)):
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
-threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,90)
+threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,0)
 count_edges = 0
 for k in range (1, len(csv_record)):
     if csv_record[k][4] < threshold_value:
@@ -1913,6 +1917,8 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+"combined"+"_l1l2attention_allPairs_th80_80_0_"+str(count_edges)+"edges_5runs.dot")
+
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_l1l2attention_allPairs_th80_80_90_"+str(count_edges)+"edges_5runs.dot")
 
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_"+filename[run_time]+"_fullOutput_"+str(len(csv_record))+"edges.dot")
