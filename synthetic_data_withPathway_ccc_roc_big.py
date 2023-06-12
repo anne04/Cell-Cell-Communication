@@ -47,17 +47,32 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 16000 # many of their expressions will be zero as well. So draw the expressions from normal distribution that goes accross zero point (left)
+gene_count = 15000 # many of their expressions will be zero as well. So draw the expressions from normal distribution that goes accross zero point (left)
 gene_id = []
 for i in range (0, gene_count):
     gene_id.append(i)
-    
+
+#########################
 ligand_set = np.random.shuffle(gene_id)
-rec_start = gene_count//2 # 5 
-non_lr_genes = gene_count*20
-noise_add = 0  #2 #1
-noise_percent = 0
-random_active_percent = 0
+ligand_set = ligand_set[0:600]
+#########################
+gene_id_temp = list(set(gene_id) - set(ligand_set) )
+receptor_set = np.random.shuffle(gene_id_temp)
+receptor_set = receptor_set[0:600]
+#########################
+gene_id_nonLR_pair =  list(set(gene_id_temp) - set(receptor_set))
+gene_id_nonLR_pair = np.sorted(gene_id_nonLR_pair)
+########################
+lr_database = []
+for i in range (0, len(ligand_set)):
+    lr_database.append([ligand_set[i], receptor_set[i])
+    
+ligand_dict_dataset = defaultdict(dict)
+for i in range (0, len(lr_database)):
+    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+
+
+#########################
 active_type = 'random_overlap' #'highrange_overlap' #
 
 
@@ -65,7 +80,7 @@ def get_data(datatype):
     if datatype == 'path_equally_spaced':
         x_max = 50 #50 
         x_min = 0
-        y_max = 60 #20 #30 
+        y_max = 50 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -89,55 +104,6 @@ def get_data(datatype):
         temp_x = np.array(temp_x)
         temp_y = np.array(temp_y)
         return temp_x, temp_y, 0
-    
-    elif datatype == 'pattern_high_density_grid':
-        
-        x_max = 100 #50 
-        x_min = 0
-        y_max = 80 #20
-        y_min = 0
-        temp_x = []
-        temp_y = []
-        i = x_min
-        while i < x_max:
-            j = y_min
-            while j < y_max:
-                temp_x.append(i)
-                temp_y.append(j)
-                j = j + 2
-            i = i + 2
-
-        #0, 2, 4, ...24, 26, 28 
-        # high density
-        region_list =  [[5, 30, 5, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 	
-        for region in region_list:
-            x_max = region[1]
-            x_min = region[0]
-            y_min = region[2]
-            y_max = region[3]
-            i = x_min
-            while i < x_max:
-                j = y_min
-                while j < y_max:
-                    temp_x.append(i)
-                    temp_y.append(j)
-                    j = j + 2
-                i = i + 2
-        
-        region_list.append([30, 65, 5, 15])       
-        ccc_regions = []        
-        for i in range (0, len(temp_x)):
-            for region in region_list:
-                x_max = region[1]
-                x_min = region[0]
-                y_min = region[2]
-                y_max = region[3]
-                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
-                    ccc_regions.append(i)
-                    
-        temp_x = np.array(temp_x)
-        temp_y = np.array(temp_y)
-        return temp_x, temp_y, ccc_regions
     
     elif datatype == 'path_mixture_of_distribution':
 	
@@ -397,17 +363,8 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
-#######################
-lr_database = []
 
-for i in range (0, rec_start):
-    lr_database.append([i,rec_start+i])
-    
-ligand_dict_dataset = defaultdict(dict)
-for i in range (0, len(lr_database)):
-    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
-
-ligand_list = list(ligand_dict_dataset.keys())   
+#ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
 cell_vs_gene = np.zeros((cell_count,gene_count + non_lr_genes))
