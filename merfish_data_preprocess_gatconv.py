@@ -29,7 +29,7 @@ parser.add_argument( '--embedding_data_path', type=str, default='/cluster/projec
 parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-spot_diameter = 0.2 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads 
+spot_diameter = 0.2 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads from org paper: https://www.science.org/doi/10.1126/science.aaa6090
 threshold_distance = 100 # 100 µm for the MERFISH hypothalamus dataset used in MESSI
 distance_measure = 'threshold_distance' #'knn' #
 k_nn = 10
