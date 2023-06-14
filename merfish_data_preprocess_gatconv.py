@@ -20,7 +20,7 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
-
+import pickle
 options = 'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
@@ -29,8 +29,8 @@ parser.add_argument( '--embedding_data_path', type=str, default='/cluster/projec
 parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
-spot_diameter = 0.2 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads from org paper: https://www.science.org/doi/10.1126/science.aaa6090
-threshold_distance = 100 # 100 µm for the MERFISH hypothalamus dataset used in MESSI
+spot_diameter = 100 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads from org paper: https://www.science.org/doi/10.1126/science.aaa6090
+threshold_distance = spot_diameter*3 # 100 µm for the MERFISH hypothalamus dataset used in MESSI
 distance_measure = 'threshold_distance' #'knn' #
 k_nn = 10
 ################
@@ -39,18 +39,6 @@ k_nn = 10
 ############
 with gzip.open(args.data_path + args.data_name, 'rb') as fp:    
     data_sets_gatconv, lr_pairs, cell_cell_contact= pickle.load(fp) 
-############
-# animal_id = 16
-bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
-bregma_id = 0
-animal_id = 24 #data_sets_gatconv[0][4][0][0]
-
-for index in range (0,len(data_sets_gatconv)):
-    if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
-        cell_barcodes = data_sets_gatconv[index][0]
-        coordinates = data_sets_gatconv[index][1]
-        cell_vs_gene = data_sets_gatconv[index][2]
-        break
 ##############################################
 gene_index = dict()
 gene_list = data_sets_gatconv[0][3].keys()
@@ -61,13 +49,58 @@ gene_ids = []
 gene_list = sorted(gene_index.keys())
 for index in gene_list:
     gene_ids.append(gene_index[index])
+    
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
 
 ############
-barcode_info=[]
-for i in range (0, len(cell_barcodes)):
-  barcode_info.append([cell_barcodes[0], coordinates[i,0],coordinates[i,1],0])
-  i=i+1
- 
+# animal_id = 16
+bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
+bregma_id = 0
+animal_id = 24 #data_sets_gatconv[0][4][0][0]
+z_index_yes = 1
+barcode_info = []
+cell_vs_gene_list = []
+total_cell = 0
+for index in range (0,len(data_sets_gatconv)):
+    if data_sets_gatconv[index][4][0][0] == animal_id: # and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+        cell_barcodes = data_sets_gatconv[index][0]
+        coordinates = data_sets_gatconv[index][1]
+        cell_vs_gene = data_sets_gatconv[index][2]
+        cell_vs_gene_list.append(cell_vs_gene)
+        total_cell = total_cell + cell_vs_gene.shape[0]
+        z_index = data_sets_gatconv[index][4][0][3]
+        
+        if z_index_yes == 1:
+            for i in range (0, len(cell_barcodes)):
+                barcode_info.append([cell_barcodes[0], coordinates[i,0], coordinates[i,1], z_index,0])
+                i=i+1
+        else:
+            for i in range (0, len(cell_barcodes)):
+                barcode_info.append([cell_barcodes[0], coordinates[i,0], coordinates[i,1], 0])
+                i=i+1       
+                
+            break
+
+############
+if z_index_yes == 1:
+    coordinates = np.zeros((total_cell, 3))
+else:
+    coordinates = np.zeros((total_cell, 2))
+    
+cell_vs_gene = np.zeros((total_cell, len(gene_ids)))
+start_row = 0
+for i in range (0, len(cell_vs_gene_list)):
+    cell_vs_gene[start_row : start_row+cell_vs_gene_list[i].shape[0], :] = cell_vs_gene_list[i]
+    start_row = start_row + cell_vs_gene_list[i].shape[0]
+    
+for i in range (0, len(barcode_info)): 
+    coordinates[i][0] = barcode_info[i][1]
+    coordinates[i][1] = barcode_info[i][2]
+    if z_index_yes == 1:
+        coordinates[i][2] = barcode_info[i][3]
+    
 #################### 
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
 cell_vs_gene = np.transpose(temp)  
@@ -81,17 +114,8 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn_value = y[kn.knee-1]
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 98), kn_value])
 #######################################################
-gene_info=dict()
-for gene in gene_ids:
-    gene_info[gene]=''
 
-gene_index=dict()    
-i = 0
-for gene in gene_ids: 
-    gene_index[gene] = i
-    i = i+1
 
-#
 ligand_dict_dataset = defaultdict(list)
 cell_cell_contact = dict()
 cell_chat_file = '/cluster/home/t116508uhn/Human-2020-Jin-LR-pairs_cellchat.csv'
@@ -228,7 +252,7 @@ for j in range(0, distance_matrix.shape[1]):
     #list_indx = list(np.argsort(dist_X[:,j]))
     #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
     for i in range(0, distance_matrix.shape[0]):
-        if distance_matrix[i,j] > spot_diameter*4: #i not in k_higher:
+        if distance_matrix[i,j] > threshold_distance: #spot_diameter*4: #i not in k_higher:
             dist_X[i,j] = 0 #-1
             
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
@@ -257,7 +281,7 @@ for g in range(start_index, end_index):
             continue
         
         for j in range (0, cell_vs_gene.shape[0]): # receptor
-            if distance_matrix[i,j] > spot_diameter*4:
+            if distance_matrix[i,j] > threshold_distance: #spot_diameter*4:
                 continue
 
             #if gene in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
@@ -313,7 +337,7 @@ max_local = 0
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
     for j in range (0, len(cells_ligand_vs_receptor)):
-        if distance_matrix[i][j] <= spot_diameter*4: 
+        if distance_matrix[i][j] <= threshold_distance: #spot_diameter*4: 
             count_local = 0
             if len(cells_ligand_vs_receptor[i][j])>0:
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
