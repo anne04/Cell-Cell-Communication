@@ -59,12 +59,12 @@ for gene in gene_ids:
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 bregma_id = 0
 animal_id = 24 #data_sets_gatconv[0][4][0][0]
-z_index_yes = 1
+z_index_yes = 0
 barcode_info = []
 cell_vs_gene_list = []
 total_cell = 0
 for index in range (0,len(data_sets_gatconv)):
-    if data_sets_gatconv[index][4][0][0] == animal_id: # and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+    if data_sets_gatconv[index][4][0][0] == animal_id  and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
         cell_barcodes = data_sets_gatconv[index][0]
         coordinates = data_sets_gatconv[index][1]
         cell_vs_gene = data_sets_gatconv[index][2]
