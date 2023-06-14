@@ -21,6 +21,7 @@ import gzip
 from kneed import KneeLocator
 import copy 
 import pickle
+import gc 
 options = 'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
@@ -40,38 +41,29 @@ k_nn = 10
 with gzip.open(args.data_path + args.data_name, 'rb') as fp:    
     data_sets_gatconv, lr_pairs, cell_cell_contact= pickle.load(fp) 
 ##############################################
-gene_index = dict()
-gene_list = data_sets_gatconv[0][3].keys()
-for gene in gene_list:
-    gene_index[data_sets_gatconv[0][3][gene]] = gene
-    
-gene_ids = []
-gene_list = sorted(gene_index.keys())
-for index in gene_list:
-    gene_ids.append(gene_index[index])
-    
-gene_info=dict()
-for gene in gene_ids:
-    gene_info[gene]=''
+
 
 ############
 # animal_id = 16
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 bregma_id = 0
 animal_id = 24 #data_sets_gatconv[0][4][0][0]
-z_index_yes = 0
+z_index_yes = 1
 barcode_info = []
 cell_vs_gene_list = []
 total_cell = 0
+sample_index = 0
 for index in range (0,len(data_sets_gatconv)):
-    if data_sets_gatconv[index][4][0][0] == animal_id  and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+    if data_sets_gatconv[index][4][0][0] == animal_id: # and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+	
+        sample_index = index
         cell_barcodes = data_sets_gatconv[index][0]
         coordinates = data_sets_gatconv[index][1]
         cell_vs_gene = data_sets_gatconv[index][2]
         cell_vs_gene_list.append(cell_vs_gene)
         total_cell = total_cell + cell_vs_gene.shape[0]
         z_index = data_sets_gatconv[index][4][0][3]
-        
+        print('index:%d, cell count: %d'%(index, cell_vs_gene.shape[0]))
         if z_index_yes == 1:
             for i in range (0, len(cell_barcodes)):
                 barcode_info.append([cell_barcodes[0], coordinates[i,0], coordinates[i,1], z_index,0])
@@ -84,6 +76,24 @@ for index in range (0,len(data_sets_gatconv)):
             break
 
 ############
+gene_index = dict()
+gene_list = data_sets_gatconv[sample_index][3].keys() # keys are the gene
+for gene in gene_list:
+    gene_index[data_sets_gatconv[sample_index][3][gene]] = gene # we know which index has which gene. So we record gene_ids in 0, 1, 2, ... oder
+    
+gene_ids = []
+gene_list = sorted(gene_index.keys()) # 0, 1, 2, ...
+for index in gene_list:
+    gene_ids.append(gene_index[index])
+
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
+
+
+gene_index = data_sets_gatconv[sample_index][3]
+
+
 if z_index_yes == 1:
     coordinates = np.zeros((total_cell, 3))
 else:
@@ -94,7 +104,10 @@ start_row = 0
 for i in range (0, len(cell_vs_gene_list)):
     cell_vs_gene[start_row : start_row+cell_vs_gene_list[i].shape[0], :] = cell_vs_gene_list[i]
     start_row = start_row + cell_vs_gene_list[i].shape[0]
-    
+
+cell_vs_gene_list = 0
+gc.collect()
+
 for i in range (0, len(barcode_info)): 
     coordinates[i][0] = barcode_info[i][1]
     coordinates[i][1] = barcode_info[i][2]
@@ -102,9 +115,11 @@ for i in range (0, len(barcode_info)):
         coordinates[i][2] = barcode_info[i][3]
     
 #################### 
+print('min cell_vs_gene %g, max: %g'%(np.min(cell_vs_gene),np.max(cell_vs_gene)))
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  
 cell_vs_gene = np.transpose(temp)  
-####################
+print('min cell_vs_gene %g, max: %g'%(np.min(cell_vs_gene),np.max(cell_vs_gene)))
+
 ####################
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -238,10 +253,10 @@ print('number of relations found %d'%count)
 
 ligand_list = list(ligand_dict_dataset.keys())  
 '''
-
+print('creating distance matrix')
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
-
+print('process distance matrix')
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 for j in range(0, distance_matrix.shape[1]):
     max_value=np.max(distance_matrix[:,j])
@@ -251,15 +266,18 @@ for j in range(0, distance_matrix.shape[1]):
         	
     #list_indx = list(np.argsort(dist_X[:,j]))
     #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+    '''
     for i in range(0, distance_matrix.shape[0]):
         if distance_matrix[i,j] > threshold_distance: #spot_diameter*4: #i not in k_higher:
             dist_X[i,j] = 0 #-1
-            
+    '''
 cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 
 ########
 ######################################
 ##############################################################################
+print('create cells_ligand_vs_receptor')
+
 count_total_edges = 0
 activated_cell_index = dict()
 
@@ -271,6 +289,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     for j in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
+        
 start_index = 0 #args.slice
 end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
 for g in range(start_index, end_index): 
@@ -296,15 +315,7 @@ for g in range(start_index, end_index):
                         print(gene)'''
 
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                    '''if gene=='L1CAM':
-                        count = count+1
-                    elif gene=='LAMC2':
-                        count2 = count2+1'''
-                    '''
-                    if l_r_pair[gene][gene_rec] == -1: 
-                        l_r_pair[gene][gene_rec] = pair_id
-                        pair_id = pair_id + 1 
-                    '''
+                    
                     relation_id = l_r_pair[gene][gene_rec]
                     #print("%s - %s "%(gene, gene_rec))
                     if communication_score<=0:
@@ -373,11 +384,17 @@ print('count local %d'%max_local)
 
 
 ##########
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell99th', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_cell_vs_gene_xyz_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
+	pickle.dump(cell_vs_gene, fp)
+
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
 	pickle.dump(cell_vs_gene, fp)
 
 
