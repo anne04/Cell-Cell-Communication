@@ -1486,7 +1486,140 @@ while percentage_value > 0:
 ###########################################   
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
+
+for run_time in range (0,total_runs):
+    run = run_time
+    #if run in [1, 2, 4, 7, 8]:
+    #    continue
+
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_dropout_'+filename[run]+'_attention_l1.npy' #split_
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_gatconv_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_3dim_dropout_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+    # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
+    l=2 #2 ## 
+    distribution = []
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index]
+        distribution.append(X_attention_bundle[l][index][0])
+
+
+    max_value = np.max(distribution)
+
+    #attention_scores = np.zeros((2000,2000))
+    tweak = 0
+    distribution = []
+    attention_scores = []
+    datapoint_size = temp_x.shape[0]
+    for i in range (0, datapoint_size):
+        attention_scores.append([])   
+        for j in range (0, datapoint_size):	
+            attention_scores[i].append([])   
+            attention_scores[i][j] = []
+
+    for index in range (0, X_attention_bundle[0].shape[1]):
+        i = X_attention_bundle[0][0][index]
+        j = X_attention_bundle[0][1][index] 
+        #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+        #    continue
+        ###################################
+
+        if tweak == 1:         
+            attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
+            distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
+        else:
+            attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+            distribution.append(X_attention_bundle[l][index][0])
+    #######################
+    plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
+    save_path = '/cluster/home/t116508uhn/64630/'
+    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+    #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
+    plt.clf()
+    
+    percentage_value = 100
+    while percentage_value > 0:
+        #distribution_partial = []
+        percentage_value = percentage_value - 10
+    #for percentage_value in [79, 85, 90, 93, 95, 97]:
+        existing_lig_rec_dict = []
+        datapoint_size = temp_x.shape[0]
+        count = 0
+        for i in range (0, datapoint_size):
+            existing_lig_rec_dict.append([])   
+            for j in range (0, datapoint_size):	
+                existing_lig_rec_dict[i].append([])   
+                existing_lig_rec_dict[i][j] = []
+
+        ccc_index_dict = dict()
+        threshold_down =  np.percentile(sorted(distribution), percentage_value)
+        threshold_up =  np.percentile(sorted(distribution), 100)
+        connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+        rec_dict = defaultdict(dict)
+        for i in range (0, datapoint_size):
+            for j in range (0, datapoint_size):
+                if i==j: 
+                    continue
+                atn_score_list = attention_scores[i][j]
+                #print(len(atn_score_list))
+                for k in range (0, len(atn_score_list)):
+                    if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                        connecting_edges[i][j] = 1
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                        count = count + 1
+                        #distribution_partial.append(attention_scores[i][j][k])
+
+        #############
+        #positive_class = 0  
+        #negative_class = 0
+        confusion_matrix = np.zeros((2,2))
+        for i in range (0, datapoint_size):
+            for j in range (0, datapoint_size):
+
+                if i==j: 
+                    continue
+
+                if len(existing_lig_rec_dict[i][j])>0:
+                    for k in existing_lig_rec_dict[i][j]:   
+                        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                            #positive_class = positive_class + 1                     
+                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                            #else:
+                            #    confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                        else:
+                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                            #else:
+                            #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+
+        print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))
+        FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+        TPR_value = (confusion_matrix[0][0]/positive_class)#*100
+        plot_dict['FPR'].append(FPR_value)
+        plot_dict['TPR'].append(TPR_value)
+        plot_dict['Type'].append('run_'+str(run+1))
+        
+        #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
+        #save_path = '/cluster/home/t116508uhn/64630/'
+        #plt.savefig(save_path+'distribution_e_3d_relu_partial_'+filename[run]+'_'+str(percentage_value)+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
+        #plt.clf()
+
+#############################################################################################################################################
+# ensemble 
 csv_record_dict = defaultdict(list)
+percentage_threshold = [90, 80, 70, 60, 50, 40, 30, ]
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
@@ -1617,6 +1750,9 @@ for run_time in range (0,total_runs):
         #plt.clf()
 
 
+
+
+############################################################################################################################################
 data_list_pd = pd.DataFrame(plot_dict)    
 chart = alt.Chart(data_list_pd).mark_line().encode(
     x='FPR:Q',
