@@ -1198,7 +1198,7 @@ for key_value in csv_record_dict.keys():
     for runs in run_dict.keys():
         csv_record_dict[key_value].append([run_dict[runs],runs])
         
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs_filtered', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(csv_record_dict, fp)
 		
 # intersection 
@@ -1838,8 +1838,14 @@ y_index=[]
 colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
-    x_index.append(barcode_info[i][1])
-    y_index.append(barcode_info[i][2])  
+    #x_index.append(barcode_info[i][1])
+    #y_index.append(barcode_info[i][2])  
+
+    x_index.append(barcode_info[i][1]*3)
+    y_index.append(barcode_info[i][2]*3)    
+
+
+
     if barcode_info[i][3]==0:
         colors_point.append("#000000")
     else:
@@ -1888,7 +1894,7 @@ for k in range (1, len(csv_record)):
     
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record[k][4]
-    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color="#377eb8") 
     count_edges = count_edges + 1
     
 nt.from_nx(g)
