@@ -1739,7 +1739,7 @@ plt.clf()
 
 ####################
 ids = []
-x_index=[]
+x_index=[] 
 y_index=[]
 colors_point = []
 for i in range (0, len(temp_x)):    
