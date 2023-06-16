@@ -1206,7 +1206,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_na
 combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-csv_record_intersect_dict = defaultdict(dict)
+csv_record_intersect_dict = defaultdict(dict) 
 for key_value in csv_record_dict.keys():
     if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
