@@ -917,15 +917,16 @@ for index in range (0, len(row_col)):
 '''        
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 5
+total_runs = 1
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
