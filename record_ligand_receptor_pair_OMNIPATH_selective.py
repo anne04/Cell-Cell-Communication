@@ -868,10 +868,10 @@ datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 lig_rec_dict = []
@@ -917,19 +917,19 @@ for index in range (0, len(row_col)):
 '''        
 ''''''            
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 1
-start_index = 0
+total_runs = 5
+start_index = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -940,251 +940,251 @@ for run_time in range (start_index, start_index+total_runs):
 
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
-    l = 3 # 3 = layer 1, 2 = layer 2
+    for l in [2, 3]: # = 3 # 3 = layer 1, 2 = layer 2
     
-    distribution = []
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-        #    continue
-        distribution.append(X_attention_bundle[l][index][0])
-    
-    attention_scores = []
-    for i in range (0, datapoint_size):
-        attention_scores.append([])   
-        for j in range (0, datapoint_size):	
-            attention_scores[i].append([])   
-            attention_scores[i][j] = []
-            
-    min_attention_score = 1000
-    max_value = np.max(distribution)
-    min_value = np.min(distribution)
-    distribution = []
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-        #    continue
-        scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
-        attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
-        if min_attention_score > scaled_score:
-            min_attention_score = scaled_score
-        distribution.append(scaled_score)
-        
-        
-    if min_attention_score<0:
-        min_attention_score = -min_attention_score
-    else: 
-        min_attention_score = 0
-    
-    print('min attention score %g'%min_attention_score)
-    ##############
-    #plt.clf()
-    #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
-    #save_path = '/cluster/home/t116508uhn/64630/'
-    #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
-    #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
-    #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
-    #plt.clf()
-    ##############
-    '''
-    attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-    ##############
-    adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
-    for index in range (0, X_attention_bundle[0].shape[1]):
-        i = X_attention_bundle[0][0][index]
-        j = X_attention_bundle[0][1][index]
-        adjacency_matrix [i][j] = 1
-    '''
-
-    ##############
-    
-    #hold_attention_score = copy.deepcopy(attention_scores)  
-    #attention_scores = copy.deepcopy(hold_attention_score)  
-    ####################################################################################
-   
-    ###########################
-    
-    ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), 80)
-    threshold_up =  np.percentile(sorted(distribution), 100)
-    connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-    for j in range (0, datapoint_size):
-        #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-        for i in range (0, datapoint_size):
-            atn_score_list = attention_scores[i][j]
-            #print(len(atn_score_list))
-            #s = min(0,len(atn_score_list)-1)
-            for k in range (0, len(atn_score_list)):
-                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                    connecting_edges[i][j] = 1
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-
-
-
-    graph = csr_matrix(connecting_edges)
-    n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-    print('number of component %d'%n_components)
-
-    count_points_component = np.zeros((n_components))
-    for i in range (0, len(labels)):
-         count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-
-    print(count_points_component)
-
-    id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
-    index_dict = dict()
-    for i in range (0, count_points_component.shape[0]):
-        if count_points_component[i]>1:
-            index_dict[i] = id_label
-            id_label = id_label+1
-
-    print(id_label)
-
-
-    for i in range (0, len(barcode_info)):
-    #    if barcode_info[i][0] in barcode_label:
-        if count_points_component[labels[i]] > 1:
-            barcode_info[i][3] = index_dict[labels[i]] #2
-        elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
-            barcode_info[i][3] = 1
-        else:
-            barcode_info[i][3] = 0
-
-    #######################
-
-
-    '''
-    barcode_type=dict()
-    for i in range (1, len(pathologist_label)):
-        if pathologist_label[i][1] == 'tumor': #'Tumour':
-            barcode_type[pathologist_label[i][0]] = '2_tumor'
-        elif pathologist_label[i][1] =='stroma_deserted':
-            barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
-        elif pathologist_label[i][1] =='acinar_reactive':
-            barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
-        else:
-            barcode_type[pathologist_label[i][0]] = 'zero' #0
-    '''
-    
-    data_list=dict()
-    data_list['pathology_label']=[]
-    data_list['component_label']=[]
-    data_list['X']=[]
-    data_list['Y']=[]
-
-    for i in range (0, len(barcode_info)):
-        #if barcode_type[barcode_info[i][0]] == 'zero':
-        #    continue
-        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-        data_list['component_label'].append(barcode_info[i][3])
-        data_list['X'].append(barcode_info[i][1])
-        data_list['Y'].append(barcode_info[i][2])
-
-
-    data_list_pd = pd.DataFrame(data_list)
-    #data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
-    #df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
-    #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
-    set1 = altairThemes.get_colour_scheme("Set1", id_label)
-    set1[0] = '#000000'
-
-    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
-        alt.X('X', scale=alt.Scale(zero=False)),
-        alt.Y('Y', scale=alt.Scale(zero=False)),
-        shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
-        color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-        tooltip=['component_label']
-    )#.configure_legend(labelFontSize=6, symbolLimit=50)
-    # output 2
-    save_path = '/cluster/home/t116508uhn/64630/'
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
-    #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
-    #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
-    #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-    #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
-    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
-    #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
-    #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
-    #chart.save(save_path+'region_of_interest_r1.html')
-    #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-    
-    ##############
-    '''
-    region_list =[2, 3, 9, 11, 4, 5, 7]
-    
-    spot_interest_list = []
-    for i in range (0, len(barcode_info)):
-        if data_list['component_label'][i] in region_list:
-            
-            spot_interest_list.append(i)
-    '''
-    ###############
-    csv_record = []
-    csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-    '''
-    for j in range (0, len(barcode_info)):
-        for i in range (0, len(barcode_info)):
-            for k in range (0, len(lig_rec_dict[i][j])):
-                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
-
-    '''
-    
-    for j in range (0, len(barcode_info)):
-        for i in range (0, len(barcode_info)):
-            
-            if i==j:
-                if len(lig_rec_dict[i][j])==0:
-                    continue
-            
-            atn_score_list = attention_scores[i][j]
-            for k in range (0, len(atn_score_list)):
-                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
-                    if barcode_info[i][3]==0:
-                        print('error')
-                    elif barcode_info[i][3]==1:
-                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
-                    else:
-                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
-    '''
-    df = pd.DataFrame(csv_record)
-    df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-    ############
-    alt.themes.register("publishTheme", altairThemes.publishTheme)
-    # enable the newly registered theme
-    alt.themes.enable("publishTheme")
-    inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-    df = readCsv(inFile)
-    df = preprocessDf(df)
-    outPathRoot = inFile.split('.')[0]
-    p = plot(df)
-    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p7_h512_l2attention_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_selective_only_Tcellzone_th90_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-    p.save(outPath)	# output 3
-    '''
-    ###########	
-    #run = 1
-    #csv_record_dict = defaultdict(list)
-    print('records found %d'%len(csv_record))
-    for i in range (1, len(csv_record)):
-        key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
-        csv_record_dict[key_value].append([csv_record[i][4], run])
-        
+	    distribution = []
+	    for index in range (0, X_attention_bundle[0].shape[1]):
+	        i = X_attention_bundle[0][0][index]
+	        j = X_attention_bundle[0][1][index]
+	        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+	        #    continue
+	        distribution.append(X_attention_bundle[l][index][0])
+	    
+	    attention_scores = []
+	    for i in range (0, datapoint_size):
+	        attention_scores.append([])   
+	        for j in range (0, datapoint_size):	
+	            attention_scores[i].append([])   
+	            attention_scores[i][j] = []
+	            
+	    min_attention_score = 1000
+	    max_value = np.max(distribution)
+	    min_value = np.min(distribution)
+	    distribution = []
+	    for index in range (0, X_attention_bundle[0].shape[1]):
+	        i = X_attention_bundle[0][0][index]
+	        j = X_attention_bundle[0][1][index]
+	        #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+	        #    continue
+	        scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+	        attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+	        if min_attention_score > scaled_score:
+	            min_attention_score = scaled_score
+	        distribution.append(scaled_score)
+	        
+	        
+	    if min_attention_score<0:
+	        min_attention_score = -min_attention_score
+	    else: 
+	        min_attention_score = 0
+	    
+	    print('min attention score %g'%min_attention_score)
+	    ##############
+	    #plt.clf()
+	    #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
+	    #save_path = '/cluster/home/t116508uhn/64630/'
+	    #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
+	    #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
+	    #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
+	    #plt.clf()
+	    ##############
+	    '''
+	    attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
+	    for index in range (0, X_attention_bundle[0].shape[1]):
+	        i = X_attention_bundle[0][0][index]
+	        j = X_attention_bundle[0][1][index]
+	        attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
+	    ##############
+	    adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
+	    for index in range (0, X_attention_bundle[0].shape[1]):
+	        i = X_attention_bundle[0][0][index]
+	        j = X_attention_bundle[0][1][index]
+	        adjacency_matrix [i][j] = 1
+	    '''
+	
+	    ##############
+	    
+	    #hold_attention_score = copy.deepcopy(attention_scores)  
+	    #attention_scores = copy.deepcopy(hold_attention_score)  
+	    ####################################################################################
+	   
+	    ###########################
+	    
+	    ccc_index_dict = dict()
+	    threshold_down =  np.percentile(sorted(distribution), 90)
+	    threshold_up =  np.percentile(sorted(distribution), 100)
+	    connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+	    for j in range (0, datapoint_size):
+	        #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+	        for i in range (0, datapoint_size):
+	            atn_score_list = attention_scores[i][j]
+	            #print(len(atn_score_list))
+	            #s = min(0,len(atn_score_list)-1)
+	            for k in range (0, len(atn_score_list)):
+	                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+	                    connecting_edges[i][j] = 1
+	                    ccc_index_dict[i] = ''
+	                    ccc_index_dict[j] = ''
+	
+	
+	
+	    graph = csr_matrix(connecting_edges)
+	    n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+	    print('number of component %d'%n_components)
+	
+	    count_points_component = np.zeros((n_components))
+	    for i in range (0, len(labels)):
+	         count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+	
+	    print(count_points_component)
+	
+	    id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
+	    index_dict = dict()
+	    for i in range (0, count_points_component.shape[0]):
+	        if count_points_component[i]>1:
+	            index_dict[i] = id_label
+	            id_label = id_label+1
+	
+	    print(id_label)
+	
+	
+	    for i in range (0, len(barcode_info)):
+	    #    if barcode_info[i][0] in barcode_label:
+	        if count_points_component[labels[i]] > 1:
+	            barcode_info[i][3] = index_dict[labels[i]] #2
+	        elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+	            barcode_info[i][3] = 1
+	        else:
+	            barcode_info[i][3] = 0
+	
+	    #######################
+	
+	
+	    '''
+	    barcode_type=dict()
+	    for i in range (1, len(pathologist_label)):
+	        if pathologist_label[i][1] == 'tumor': #'Tumour':
+	            barcode_type[pathologist_label[i][0]] = '2_tumor'
+	        elif pathologist_label[i][1] =='stroma_deserted':
+	            barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
+	        elif pathologist_label[i][1] =='acinar_reactive':
+	            barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
+	        else:
+	            barcode_type[pathologist_label[i][0]] = 'zero' #0
+	    '''
+	    
+	    data_list=dict()
+	    data_list['pathology_label']=[]
+	    data_list['component_label']=[]
+	    data_list['X']=[]
+	    data_list['Y']=[]
+	
+	    for i in range (0, len(barcode_info)):
+	        #if barcode_type[barcode_info[i][0]] == 'zero':
+	        #    continue
+	        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+	        data_list['component_label'].append(barcode_info[i][3])
+	        data_list['X'].append(barcode_info[i][1])
+	        data_list['Y'].append(barcode_info[i][2])
+	
+	
+	    data_list_pd = pd.DataFrame(data_list)
+	    #data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
+	    #df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
+	    #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
+	    set1 = altairThemes.get_colour_scheme("Set1", id_label)
+	    set1[0] = '#000000'
+	
+	    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+	        alt.X('X', scale=alt.Scale(zero=False)),
+	        alt.Y('Y', scale=alt.Scale(zero=False)),
+	        shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
+	        color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+	        tooltip=['component_label']
+	    )#.configure_legend(labelFontSize=6, symbolLimit=50)
+	    # output 2
+	    save_path = '/cluster/home/t116508uhn/64630/'
+	    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
+	    #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
+	    #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
+	    #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
+	    #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
+	    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
+	    #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
+	    #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
+	    #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
+	    #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
+	    #chart.save(save_path+'region_of_interest_r1.html')
+	    #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
+	    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
+	    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
+	    
+	    ##############
+	    '''
+	    region_list =[2, 3, 9, 11, 4, 5, 7]
+	    
+	    spot_interest_list = []
+	    for i in range (0, len(barcode_info)):
+	        if data_list['component_label'][i] in region_list:
+	            
+	            spot_interest_list.append(i)
+	    '''
+	    ###############
+	    csv_record = []
+	    csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+	    '''
+	    for j in range (0, len(barcode_info)):
+	        for i in range (0, len(barcode_info)):
+	            for k in range (0, len(lig_rec_dict[i][j])):
+	                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
+	
+	    '''
+	    
+	    for j in range (0, len(barcode_info)):
+	        for i in range (0, len(barcode_info)):
+	            
+	            if i==j:
+	                if len(lig_rec_dict[i][j])==0:
+	                    continue
+	            
+	            atn_score_list = attention_scores[i][j]
+	            for k in range (0, len(atn_score_list)):
+	                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
+	                    if barcode_info[i][3]==0:
+	                        print('error')
+	                    elif barcode_info[i][3]==1:
+	                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
+	                    else:
+	                        csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
+	    '''
+	    df = pd.DataFrame(csv_record)
+	    df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+	    ############
+	    alt.themes.register("publishTheme", altairThemes.publishTheme)
+	    # enable the newly registered theme
+	    alt.themes.enable("publishTheme")
+	    inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+	    df = readCsv(inFile)
+	    df = preprocessDf(df)
+	    outPathRoot = inFile.split('.')[0]
+	    p = plot(df)
+	    #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p7_h512_l2attention_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+	    outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_selective_only_Tcellzone_th90_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
+	    p.save(outPath)	# output 3
+	    '''
+	    ###########	
+	    #run = 1
+	    #csv_record_dict = defaultdict(list)
+	    print('records found %d'%len(csv_record))
+	    for i in range (1, len(csv_record)):
+	        key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
+	        csv_record_dict[key_value].append([csv_record[i][4], run])
+	        
 
 for key_value in csv_record_dict.keys():
     run_dict = defaultdict(list)
@@ -1287,16 +1287,16 @@ chart.save(save_path+'region_of_interest_filtered_combined_attention_distributio
 '''
 
 
-threshold_value =  np.percentile(combined_score_distribution_ccl19_ccr7,0)
+threshold_value =  np.percentile(combined_score_distribution,80) #_ccl19_ccr7
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    if ligand =='CCL19' and receptor == 'CCR7':
-        if csv_record[k][4] >= threshold_value:        
-            i = csv_record[k][6]
-            j = csv_record[k][7]
-            connecting_edges[i][j]=1
+    #if ligand =='CCL19' and receptor == 'CCR7':
+    if csv_record[k][4] >= threshold_value:        
+        i = csv_record[k][6]
+        j = csv_record[k][7]
+        connecting_edges[i][j]=1
         
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
@@ -1674,7 +1674,7 @@ for k in range (1, len(csv_record)):
     receptor = csv_record[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record[k][4]
-    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score) ) 
     count_edges = count_edges + 1
      
 '''
@@ -1700,6 +1700,7 @@ cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 
 
 from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th95_95_20_3dim_tanh_h512_l1l2attention_split_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_4of5.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th90_90_80_3dim_tanh_h512_l1l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges.dot")
 write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_bothAbove98_th89p5_3dim_tanh_h512_l2attention_combined_"+str(total_runs)+"runs_"+str(len(csv_record))+"edges_100percent.dot")
