@@ -47,7 +47,7 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 # animal_id = 16
 animal_id = 24 #data_sets_gatconv[0][4][0][0]
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
-for bregma_id in range (0, len(bregma)): #bregma:
+for bregma_id in range (0, 1): #len(bregma)): #bregma:
     print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
     z_index_yes = 0
     barcode_info = []
