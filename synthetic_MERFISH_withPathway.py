@@ -47,30 +47,30 @@ rec_start = lr_gene_count//2 # 25
 ligand_gene = np.arange(0, 25)
 receptor_gene = np.arange(25, 50)
 # which ligand to which receptor
-temp_list = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # 25*5 = 125 lr pairs
+gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # 25*5 = 125 lr pairs
 np.random.shuffle(ligand_gene) 
 np.random.shuffle(receptor_gene) 
 for i in range (0, 5):
-	temp_list.append([list(ligand_gene[i*5:(i+1)*5]),list(receptor_gene[i*5:(i+1)*5])])
+	gene_group.append([list(ligand_gene[i*5:(i+1)*5]),list(receptor_gene[i*5:(i+1)*5])])
 
 lr_database = []
 lr_database_index = defaultdict(dict) # [ligand][recptor] = index of that pair in the lr_database
-for i in range (0, len(temp_list)):
-    lr_group = temp_list[i]
+for i in range (0, len(gene_group)):
+    lr_group = gene_group[i]
     for j in lr_group[0]: # all of these ligands 
         for k in lr_group[1]: # match with all of these receptors
             lr_database.append([j, k])
             lr_database_index[j][k] = len(lr_database)-1 # indexing starts from 0
 
 
-pattern_list = [[0, 1], [2, 3], [5]] # e.g., first pattern: a --> b: group 0; b --> c: group 1.    
+pattern_list = [[0, 1], [2, 3], [4]] # e.g., first pattern: a --> b: group 0; b --> c: group 1.    
 
 non_lr_genes = total_gene - lr_gene_count
 
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
-active_type = 'random_overlap' #'highrange_overlap' #
+#active_type = 'random_overlap' #'highrange_overlap' #
 
 
 def get_data(datatype):
@@ -241,84 +241,55 @@ gene_distribution_inactive = np.zeros((total_gene, cell_count))
 gene_distribution_inactive_lrgenes = np.zeros((total_gene, cell_count))
 gene_distribution_noise = np.zeros((total_gene, cell_count))
 
+# innitialize gene expression for the lr genes 
 start_loc = 20
-rec_gene = lr_gene_count//2
-for i in range (0, 4): #lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+i = 0
+for gene_index in ligand_gene: 
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    rec_gene = rec_gene + 1 
-    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    '''
-    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+2, scale=.1, size=len(temp_x))   
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_active[i,:] = gene_exp_list  
-    print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
-    start_loc = np.max(gene_distribution_inactive[i,:])+2
-    '''
-################
-for i in range (4, lr_gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    
-    ###############
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    ################
-    
-    
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    ###################
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    
-    rec_gene = rec_gene + 1 
+    gene_distribution_inactive[gene_index,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(gene_index, np.min(gene_distribution_inactive[gene_index,:]),np.max(gene_distribution_inactive[gene_index,:]) ))
+    i = i+1
 
+for gene_index in receptor_gene: 
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[gene_index,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(gene_index, np.min(gene_distribution_inactive[gene_index,:]),np.max(gene_distribution_inactive[gene_index,:]) ))
+    i = i+1
+    
 start_loc = 15
-for i in range (rec_gene, lr_gene_count + non_lr_genes):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+non_lr_gene_start = lr_gene_count
+for i in range (non_lr_gene_start, total_gene):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-
-    
-    
-#################
+ 
+################# define active state of the ligand-receptor genes #############################
 start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = lr_gene_count//2
-scale_active_distribution = 1 #0.01
-for i in range (0, lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
+scale_active_distribution = 2 #0.01
+i = 0
+for gene_index in ligand_gene:
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_active[i,:] =  gene_exp_list
-    print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
+    gene_distribution_active[gene_index,:] =  gene_exp_list
+    print('%d: active: %g to %g'%(gene_index, np.min(gene_distribution_active[gene_index,:]),np.max(gene_distribution_active[gene_index,:]) ))
+    i = i+1
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
+for gene_index in receptor_gene:
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_active[rec_gene ,:] =  gene_exp_list
-    print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
-    rec_gene = rec_gene + 1 
-   
+    gene_distribution_active[gene_index,:] =  gene_exp_list
+    print('%d: active: %g to %g'%(gene_index, np.min(gene_distribution_active[gene_index,:]),np.max(gene_distribution_active[gene_index,:]) ))
+    i = i+1  
+    
 #################################################
-min_lr_gene_count = np.min(gene_distribution_inactive)
 
-print('min_lr_gene_count %d'%min_lr_gene_count)
-min_lr_gene_count = 0
+print('min lr_gene_exp %g'%np.min(gene_distribution_inactive))
+print('max lr_gene_exp %g'%np.max(gene_distribution_inactive))
+'''
 gene_ids = []
 for i in range (0, lr_gene_count):
     gene_ids.append(i) 
@@ -332,6 +303,7 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
+'''
 #######################
 '''
 lr_database = []
@@ -347,24 +319,23 @@ for i in range (0, len(lr_database)):
 ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
-cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
+cell_vs_gene = np.zeros((cell_count, total_gene))
 # initially all are in inactive state
-for i in range (0, lr_gene_count + non_lr_genes):
+for i in range (0, total_gene):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 
+'''
 noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
 if noise_add == 1:
     gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
     np.random.shuffle(gene_distribution_noise)	
-    
     print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
 elif noise_add == 2:
     gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
     np.random.shuffle(gene_distribution_noise)	
     
     print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-    
-
+'''    
 '''	
 for i in range (0, len(noise_cells)):
     cell = noise_cells[i]
@@ -372,20 +343,20 @@ for i in range (0, len(noise_cells)):
 '''
 # record true positive connections    
 lig_rec_dict_TP = []
-datapoint_size = temp_x.shape[0]
-
 for i in range (0, datapoint_size): 
     lig_rec_dict_TP.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict_TP[i].append([])   
         lig_rec_dict_TP[i][j] = []
-	
+        
 P_class = 0
-all_used = dict()
-all_used_0 = dict()
-all_used_1 = dict()
-all_used_2 = dict()
-all_used_3 = dict()
+########################################
+
+all_used = dict() # record the cells which follow any of the patterns / are turned active
+all_used_0 = dict() # record the cells which follow pattern 0
+all_used_1 = dict() # record the cells which follow pattern 1
+all_used_2 = dict() # record the cells which follow pattern 2
+# all_used_3 = dict()
 active_spot = dict()
 # Pick the regions for Ligands
 '''
@@ -398,201 +369,180 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 '''
-for lr_type_index in range (1,2): 
-	
-    ligand_cells = np.arange(cell_count)
+ligand_cells = np.arange(cell_count)
+np.random.shuffle(ligand_cells)
+ligand_cells_list = []
+for i in range (0, len(pattern_list)):
+    ligand_cells_list.append() = ligand_cells[0:(cell_count*cell_percent)//100]
+
+
+for pattern_type_index in [0, 1, 2]: 
+    ligand_cells = list(set(np.arange(cell_count)) - set(active_spot))
+    ligand_cells = ligand_cells[0: np.min(len(ligand_cells), cell_count//len(pattern_list))] # 1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
-    ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
-    print(ligand_cells[0:10])
-    #ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
-    set_ligand_cells = []
+    print("some ligand cells for this pattern is: "ligand_cells[0:10])
+
+    xy_ligand_cells = []
     for i in ligand_cells:
-        set_ligand_cells.append([temp_x[i], temp_y[i]]) 
+        xy_ligand_cells.append([temp_x[i], temp_y[i]]) 
         
-    #lr_selected_list_allcell = list(np.random.randint(lr_type_index-1, lr_type_index, size=len(ligand_cells)))
-    lr_selected_list_allcell = list(np.random.randint(0, lr_type_index, size=len(ligand_cells))) 
-    #lr_selected_list_allcell = list(np.random.randint(0, len(lr_database), size=len(ligand_cells)*lr_count_percell))
     k= -1
     for i in ligand_cells:
+        cell_of_interest = []
         # choose which L-R are working for this ligand i
         k = k + 1 
-        lr_selected_list = lr_selected_list_allcell[k] 
-
+        
         a_cell = i
-        b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]
-        
-        if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
-            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
-        else:
-            c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
-        
+        b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
+        cell_of_interest.append(a_cell)
+        cell_of_interest.append(c_cell)
+        if pattern_type_index == 2:        
+            if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
+                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
+            else:
+                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
+            cell_of_interest.append(c_cell)
+            
         edge_list = []
         
-        if a_cell in all_used or b_cell in all_used or c_cell in all_used:
-            continue
+        #if a_cell in all_used or b_cell in all_used or c_cell in all_used:
+        #    continue
         
-        if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot:
-            continue
+        #if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot:
+        #    continue
         ''''''
 	
-        if lr_selected_list == 0:
+        if pattern_type_index == 0:
             if a_cell in all_used_0 or b_cell in all_used_0 or c_cell in all_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
             #print('skip')
                 continue          
-            a = 0 # 10
-            b = 1 # 11
-        elif lr_selected_list == 1:
-            a = 2 # 12
-            b = 3 # 13
+        elif pattern_type_index == 1:
             if a_cell in all_used_1 or b_cell in all_used_1 or c_cell in all_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
             #print('skip')
                 continue        
-        elif lr_selected_list == 2:
-            a = 4
-            b = 5
-            if a_cell in all_used_2 or b_cell in all_used_2 or c_cell in all_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
+        elif pattern_type_index == 2:
+            if a_cell in all_used_2 or b_cell in all_used_2: # or c_cell in all_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
             #print('skip')
                 continue            
-        elif lr_selected_list == 3:
-            a = 6
-            b = 7
-            if a_cell in all_used_3 or b_cell in all_used_3 or c_cell in all_used_3: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in all_used:
-            #print('skip')
-                continue         
-        '''
-        elif lr_selected_list == 4:
-            a = 8
-            b = 9
-        '''
-        ##########################################    
-        lr_i = a
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
+ 
+                
+        a = pattern_list[pattern_type_index][0] # 0
+        b = pattern_list[pattern_type_index][1] # 1
+        ##########################################   
+        # turn on all the genes that are in pattern 'a'        
+        ligand_group_a_cell = gene_group[a][0]
         cell_id = a_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        for gene in ligand_group_a_cell:
+            cell_vs_gene[cell_id, gene] = gene_distribution_active[gene, cell_id]
+        
+        
         cell_id = b_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
-       
-        #########################################
+        receptor_group_b_cell = gene_group[a][1]
+        for gene in receptor_group_b_cell:
+            cell_vs_gene[cell_id, gene] = gene_distribution_active[gene, cell_id]
+
+        for ligand_gene in ligand_group_a_cell:
+            for receptor_gene in receptor_group_b_cell:
+                edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
+
         
-        lr_i = b
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
-        cell_id = b_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        cell_id = c_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        
-        ##########################################
-        ##########################################
-        
-        if lr_selected_list == 0:
-            a = 2 # 14
-            b = 3 # 15
-        elif lr_selected_list == 1:
-            a = 10 # 16
-            b = 11 # 17
-        ###########################################
-        if lr_selected_list == 0 or lr_selected_list == 1:
-            lr_i = a
-            ligand_gene = lr_database[lr_i][0]
-            receptor_gene = lr_database[lr_i][1]
-            cell_id = a_cell
-            cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-            cell_id = b_cell
-            cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-            edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
-            #########################################
-            lr_i = b
-            ligand_gene = lr_database[lr_i][0]
-            receptor_gene = lr_database[lr_i][1]
-            cell_id = b_cell
-            cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
+        if pattern_type_index!=2:
+            ligand_group_b_cell = gene_group[b][0]
+            for gene in ligand_group_b_cell:
+                cell_vs_gene[cell_id, gene] = gene_distribution_active[gene, cell_id]
+                
             cell_id = c_cell
-            cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-            edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-            ''''''
+            receptor_group_c_cell = gene_group[b][1]
+            for gene in receptor_group_c_cell:
+                cell_vs_gene[cell_id, gene] = gene_distribution_active[gene, cell_id]
+       
+            for ligand_gene in ligand_group_b_cell:
+                for receptor_gene in receptor_group_c_cell:
+                    edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
+
         #################
         # [0, 1, 2, 3,  8, 9, 10, 11]
         # a_cell has only 0, 2 active. b_cell has 8, 10, 1, 3 active. c_cell has 9, 11 active.  
-        for gene in [1, 3, 8, 9, 10, 11]:
-            cell_vs_gene[a_cell, gene] = min_lr_gene_count #-10
-            
-        for gene in [0, 2, 9, 11]:
-            cell_vs_gene[b_cell, gene] = min_lr_gene_count #-10
-            
-        for gene in [0, 1, 2, 3, 8, 10]:
-            cell_vs_gene[c_cell, gene] = min_lr_gene_count #-10
 
+        for cell in cell_of_interest:
+            active_spot[cell] = ''
+
+        ###############################################################
+        gene_off_list = receptor_group_b_cell + ligand_group_b_cell 
+        if pattern_type_index!=2:
+            gene_off_list = gene_off_list + receptor_group_c_cell
+        for gene in gene_off_list:
+            cell_vs_gene[a_cell, gene] = min_lr_gene_exp #-10
+            
+        for cell in cell_neighborhood[a_cell]:            
+            if cell in cell_of_interest:
+                continue
+            if cell in active_spot:
+                continue
+                
+            #all_used[cell]=''
+            for gene in gene_off_list:
+                cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
+            
+        
+        #################################################################
+        gene_off_list = ligand_group_a_cell 
+        if pattern_type_index!=2:
+            gene_off_list = gene_off_list + receptor_group_c_cell        
+        
+        for gene in gene_off_list:
+            cell_vs_gene[b_cell, gene] = min_lr_gene_exp #-10
+            
+        for cell in cell_neighborhood[b_cell]:            
+            if cell in cell_of_interest:
+                continue
+            if cell in active_spot:
+                continue
+                
+            #all_used[cell]=''
+            for gene in gene_off_list:
+                cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
+                   
+        #################################################################
+        if pattern_type_index!=2:
+            gene_off_list = ligand_group_a_cell  + receptor_group_b_cell + ligand_group_b_cell               
+            for gene in gene_off_list:
+                cell_vs_gene[c_cell, gene] = min_lr_gene_exp #-10
+                
+            for cell in cell_neighborhood[c_cell]:            
+                if cell in cell_of_interest:
+                    continue
+                if cell in active_spot:
+                    continue
+                    
+                #all_used[cell]=''
+                for gene in gene_off_list:
+                    cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
+                        
 	
         ##########################################
 
 
-        print('%d, %d, %d'%(a_cell, b_cell, c_cell))
+        #print('%d, %d, %d'%(a_cell, b_cell, c_cell))
         #all_used[a_cell] = ''
         #all_used[b_cell] = ''
         #all_used[c_cell] = ''
-        active_spot[a_cell] = ''
-        active_spot[b_cell] = ''
-        active_spot[c_cell] = ''
-        for cell in cell_neighborhood[a_cell]:
-            
-            if cell in [a_cell, b_cell, c_cell]:
-                continue
-            if cell in active_spot:
-                continue
-                
-            all_used[cell]=''
-            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_lr_gene_count #-10   
-                
-        for cell in cell_neighborhood[b_cell]:
-            
-            if cell in [a_cell, b_cell, c_cell]:
-                continue
-            if cell in active_spot:
-                continue
-                
-            all_used[cell]=''
-            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
-                
-        for cell in cell_neighborhood[c_cell]:
-            
-            if cell in [a_cell, b_cell, c_cell]:
-                continue
-            if cell in active_spot:
-                continue
-                
-            all_used[cell]=''
-            for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
-            
-
-        ''''''
         
         
-        if lr_selected_list == 0:
+        if pattern_type_index == 0:
             all_used_0[a_cell] = ''
             all_used_0[b_cell] = ''
             all_used_0[c_cell] = ''
 
-        if lr_selected_list == 1:
+        if pattern_type_index == 1:
             all_used_1[a_cell] = ''
             all_used_1[b_cell] = ''
             all_used_1[c_cell] = ''
 
-        if lr_selected_list == 2:
+        if pattern_type_index == 2:
             all_used_2[a_cell] = ''
             all_used_2[b_cell] = ''
-            all_used_2[c_cell] = ''
-
-        if lr_selected_list == 3:
-            all_used_3[a_cell] = ''
-            all_used_3[b_cell] = ''
-            all_used_3[c_cell] = ''    
+            #all_used_2[c_cell] = ''
 
 
         ##########################################
@@ -614,6 +564,8 @@ for lr_type_index in range (1,2):
             if communication_score > 0:
                 lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
+            else:
+                print('Error')
             #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
 print('P_class %d'%P_class)                
@@ -633,60 +585,37 @@ print('P_class %d'%P_class)
 7 - 15
 
 '''
+
+'''
 # to reduce number of conections
 cell_vs_gene[:,7] = min_lr_gene_count #-10
 cell_vs_gene[:,15] = min_lr_gene_count #-10
 #cell_vs_gene[:,6] = min_lr_gene_count #-10
 #cell_vs_gene[:,14] = min_lr_gene_count #-10
+
 ############
 for i in range (0, cell_vs_gene.shape[0]):
     if i in active_spot:        
         for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
             cell_vs_gene[i,gene] = min_lr_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
-
+'''
 ##############################
-# take quantile normalization.
-cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 
+cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
+# take quantile normalization.
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 
 
-'''
-for i in range (0, cell_vs_gene.shape[0]):
-    total_sum = np.sum(cell_vs_gene[i,:])
-    for j in range (0, cell_vs_gene.shape[1]):
-        cell_vs_gene[i,j] = cell_vs_gene[i,j] / total_sum
-'''
-'''
-for i in range (0, cell_vs_gene.shape[0]):
-    max_value = np.max(cell_vs_gene[i][:])
-    min_value = np.min(cell_vs_gene[i][:])
-    for j in range (0, cell_vs_gene.shape[1]):
-	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
-       
 
-for i in range (0, cell_vs_gene.shape[0]):
-    for j in range (0, cell_vs_gene.shape[0]):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                cells_ligand_vs_receptor[i][j][k][2] = cell_vs_gene[i,cells_ligand_vs_receptor[i][j][k][0]] * cell_vs_gene[j,cells_ligand_vs_receptor[i][j][k][1]] 
-'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
-    '''
-    y_1 = np.histogram(cell_vs_gene[i])[0] # density: 
-    x = range(0, len(y_1))
-    kn = KneeLocator(x, y_1, curve='convex', direction='decreasing')
-    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]    
-    '''
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
-    kn_value = y[kn.knee-1]
-    
+    kn_value = y[kn.knee-1]    
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
@@ -709,9 +638,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-        #if i in all_used or j in all_used:
-        #    continue
-                
+              
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
             for gene_rec in rec_list:   
@@ -754,189 +681,6 @@ for i in range (0, len(lig_rec_dict_TP)):
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
 ################
-'''
-old_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
-# update TP list
-# mark all the connection between true i and true j as TP if both of them exist in all_used
-for i in range (0, cell_vs_gene.shape[0]):
-    for j in range (0, cell_vs_gene.shape[0]):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            if i in all_used and j in all_used:
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                    ligand_gene = cells_ligand_vs_receptor[i][j][k][0]
-                    receptor_gene = cells_ligand_vs_receptor[i][j][k][1]
-                    lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
-
-###################                   
-min_score = 1000
-max_score = -1000
-count = 0
-dist = []
-for i in range (0, len(lig_rec_dict_TP)):
-    flag_debug = 0
-    for j in range (0, len(lig_rec_dict_TP)):
-        flag_found = 0
-        if len(lig_rec_dict_TP[i][j])>0 and len(cells_ligand_vs_receptor[i][j])>0: 
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                for l in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][l]==cells_ligand_vs_receptor[i][j][k][3]:
-                        dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                        count = count + 1
-                        if cells_ligand_vs_receptor[i][j][k][2]>max_score:
-                            max_score=cells_ligand_vs_receptor[i][j][k][2]
-                        if cells_ligand_vs_receptor[i][j][k][2]<min_score:
-                            min_score=cells_ligand_vs_receptor[i][j][k][2]                       
-
-print('Now total TP= %d, %g, %g, %g'%(count, min_score, max_score, np.std(dist)))
-'''             
-
-'''
-min_score_global = 1000
-max_score_global = -1000
-dist = []
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-
-                if cells_ligand_vs_receptor[i][j][k][2]>max_score_global:
-                    max_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                if cells_ligand_vs_receptor[i][j][k][2]<min_score_global:
-                    min_score_global=cells_ligand_vs_receptor[i][j][k][2]
-                dist.append(cells_ligand_vs_receptor[i][j][k][2])
-                
-print('%g, %g'%(min_score_global, max_score_global))
-'''
-#################
-                        
-'''
-min_score = 1000
-max_score = -1000
-dist = []
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            #print('%d, %d: '%(i,j))
-            #print(cells_ligand_vs_receptor[i][j])
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                if len(lig_rec_dict_TP[i][j])>0 and lig_rec_dict_TP[i][j][0]==cells_ligand_vs_receptor[i][j][k][3]:
-                    continue
-                if cells_ligand_vs_receptor[i][j][k][2]>max_score:
-                    max_score=cells_ligand_vs_receptor[i][j][k][2]
-                if cells_ligand_vs_receptor[i][j][k][2]<min_score:
-                    min_score=cells_ligand_vs_receptor[i][j][k][2]
-                dist.append(cells_ligand_vs_receptor[i][j][k][2])
-print('%g, %g, %g'%(min_score, max_score, np.std(dist)))
-
-                        
-available_edges = []
-for i in range (0, temp_x.shape[0]):
-    for j in range (0, temp_x.shape[0]):
-        if len(lig_rec_dict_TP[i][j])>0:
-            continue
-        if len(cells_ligand_vs_receptor[i][j]) > 0:
-            lig = cells_ligand_vs_receptor[i][j][0][0]
-            rec = lig = cells_ligand_vs_receptor[i][j][0][1]
-            if cells_ligand_vs_receptor[i][j][0][2] < np.mean(gene_distribution_inactive[lig,:])*np.mean(gene_distribution_inactive[rec,:]): #distance_matrix[i,j] > threshold_distance:
-                available_edges.append([i,j])  
-                       
-random_activation = []
-random_activation_index = list(np.random.randint(0, len(available_edges), size=int(len(available_edges)*(random_active_percent))//100))
-random_activation_lr = list(np.random.randint(0, len(lr_database), size= len(random_activation_index)*lr_count_percell)) #“discrete uniform” distribution
-k = 0
-p=0
-for index in random_activation_index:
-    i = available_edges[index][0]
-    j = available_edges[index][1]
-    
-    lr_i = random_activation_lr[p]
-    p = p + 1
-                
-    ligand_gene = lr_database[lr_i][0]
-    cell_vs_gene[i,ligand_gene] = cell_vs_gene[i,ligand_gene] + gene_distribution_noise[ligand_gene, i] 
-    
-    receptor_gene = lr_database[lr_i][1]
-    cell_vs_gene[j,receptor_gene] = cell_vs_gene[j,receptor_gene] + gene_distribution_noise[receptor_gene, j] 
-    
-    if cells_ligand_vs_receptor[i][j][lr_i][0] == ligand_gene and cells_ligand_vs_receptor[i][j][lr_i][1] == receptor_gene:
-        cells_ligand_vs_receptor[i][j][lr_i][2] = cell_vs_gene[i,ligand_gene]*cell_vs_gene[j,receptor_gene]
-        
-    
-    
-    random_activation.append([i,j])
-    
-        
-    #k = k + lr_count_percell
-'''
-'''  
-    
-edge_list = []
-for i in range (0, len(cells_ligand_vs_receptor)):
-    for j in range (0, len(cells_ligand_vs_receptor)):
-        if dist_X[i,j] > 0: 
-            if len(cells_ligand_vs_receptor[i][j])>0:
-                for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-	            # check if they are TP or no
-                    for l in range (0, len(lig_rec_dict_TP[i][j])):
-                        if cells_ligand_vs_receptor[i][j][k][3] == lig_rec_dict_TP[i][j][l]:
-                            continue
-                        else:
-                            edge_list.append([cells_ligand_vs_receptor[i][j][k][2]*dist_X[i,j], i, j, k])
-                            
-                            
-edge_list = sorted(edge_list, key = lambda x: x[0])
-
-
-###########################################
-edge_list = []
-true_edge = []
-
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    k = lig_rec[index]
-    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-        true_edge.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
-    else:
-        edge_list.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
-
-   
-    
-    
-edge_list = sorted(edge_list, key = lambda x: x[4], reverse=True) # small to large. We will remove small valued edges. 
-
-row_col = []
-edge_weight = []
-lig_rec = []
-for index in range (0, len(true_edge)):
-    row_col.append([true_edge[index][1], true_edge[index][2]])
-    edge_weight.append([true_edge[index][3], true_edge[index][4]])
-    lig_rec.append(true_edge[index][5])
-
-max_limit = len(edge_list)-55000
-for index in range (0, max_limit):
-    row_col.append([edge_list[index][1], edge_list[index][2]])
-    edge_weight.append([edge_list[index][3], edge_list[index][4]])
-    lig_rec.append(edge_list[index][5])
-
-# scaling
-max_value = -1000
-min_value = 10000
-for index in range (0, len(edge_weight)):
-    if edge_weight[index][1] > max_value:
-        max_value = edge_weight[index][1]
-    if edge_weight[index][1] < min_value:
-        min_value = edge_weight[index][1]
-        
-for index in range (0, len(edge_weight)):
-    edge_weight[index][1] = 0.1 + ((edge_weight[index][1] - min_value)/(max_value-min_value))*(1-0.1)
-
-options = options + '_filtered'
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-    
-'''
 
 
 ccc_index_dict = dict()
@@ -985,7 +729,7 @@ print('max local %d'%max_local)
 print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)#'_close'
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_noise'+str(noise_percent)#'_close'
 if noise_add == 1:
     options = options + '_lowNoise'
 if noise_add == 2:
@@ -993,9 +737,9 @@ if noise_add == 2:
 
 total_cells = len(temp_x)
 
-options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
+options = options+ '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_f'
+options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
 
@@ -1019,52 +763,21 @@ lig_rec_dict_TP = 0
 lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 #options = options+ '_' + 'wFeature'
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
-    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-    
-    
-'''   
-
-'''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
+    
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
     pickle.dump(cell_vs_gene_notNormalized, fp)
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
-#    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-    
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-
-
-edge_list = []
-lig_rec_list = []
-row_col_list = []
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    k = lig_rec[index]
-    if edge_weight[index][1] > 0:
-        edge_list.append([edge_weight[index][0], edge_weight[index][1], k])
-        lig_rec_list.append(k)
-        row_col_list.append([i,j])
-    
-edge_weight = edge_list
-row_col = row_col_list
-lig_rec = lig_rec_list
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options+'_3dim', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 random_activation = []
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
-        
+
+ccc_region = active_spot
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
@@ -1072,7 +785,6 @@ cell_vs_gene = cell_vs_gene[:,0:lr_gene_count]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
 
-''' 
 
 '''
 for index in range (0, len(row_col)):
@@ -1118,6 +830,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
+'''
+# to preprocess it for COMMOT and Niches
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
@@ -1144,7 +858,7 @@ for i in range (0, cell_vs_gene.shape[1]):
     
 data_list_pd[' ']=gene_name   
 data_list_pd = data_list_pd.set_index(' ')    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv')
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_g.csv')
 
 data_list=dict()
 data_list['ligand']=[]
@@ -1154,14 +868,9 @@ for i in range (0, len(lr_database)):
     data_list['receptor'].append('g'+str(lr_database[i][1]))
     
 data_list_pd = pd.DataFrame(data_list)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_type6_f.csv', index=False)
-	
-	
-###############
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_type6_g.csv', index=False)
 '''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
-    cell_vs_gene = pickle.load(fp
-'''
+
 ###########################################################
 
 '''
