@@ -786,6 +786,7 @@ chart.save(save_path+'V1_humanLymphNode.html') #
 '''
 
 '''
+########## sabrina ###########################################	
 pathologist_label_file='/cluster/projects/schwartzgroup/fatema/find_ccc/singleR_spot_annotation_Sabrina.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
@@ -804,7 +805,7 @@ for i in range (1, len(pathologist_label)):
     else:
         barcode_type[pathologist_label[i][0]] = 0 #'zero' 
 	
-########## sabrina ###########################################	
+#################################################################
 pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
 pathologist_label=[]
 with open(pathologist_label_file) as file:
@@ -1201,7 +1202,10 @@ for key_value in csv_record_dict.keys():
         
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(csv_record_dict, fp)
-		
+	
+fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs', 'rb')
+csv_record_dict = pickle.load(fp)
+
 # intersection 
 #total_runs = 2
 combined_score_distribution = []
@@ -1347,7 +1351,7 @@ for record_idx in range (1, len(csv_record)):
     Y = -barcode_info[i][2]
     opacity = record[4]
     exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
-    '''
+    
     j = record[7]
     pathology_label = barcode_type[barcode_info[j][0]]
     component_label = record[5]
@@ -1355,7 +1359,7 @@ for record_idx in range (1, len(csv_record)):
     Y = -barcode_info[j][2]
     opacity = record[4]   
     exist_spot[j].append([pathology_label, component_label, X, Y, opacity])
-    '''
+    ''''''
     
 opacity_list = []
 for i in exist_spot:
