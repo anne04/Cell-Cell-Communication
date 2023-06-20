@@ -22,9 +22,6 @@ from sklearn.metrics.pairwise import euclidean_distances
 from kneed import KneeLocator
 
 
-
-
-
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -43,10 +40,33 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 30 #8 #100 #20 #100 #20 #50 # and 25 pairs
-rec_start = gene_count//2 # 5 
 
-non_lr_genes = gene_count*20
+total_gene = 200
+lr_gene_count = 50 #8 #100 #20 #100 #20 #50 # and 25 pairs
+rec_start = lr_gene_count//2 # 25
+ligand_gene = np.arange(0, 25)
+receptor_gene = np.arange(25, 50)
+# which ligand to which receptor
+temp_list = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # 25*5 = 125 lr pairs
+np.random.shuffle(ligand_gene) 
+np.random.shuffle(receptor_gene) 
+for i in range (0, 5):
+	temp_list.append([list(ligand_gene[i*5:(i+1)*5]),list(receptor_gene[i*5:(i+1)*5])])
+
+lr_database = []
+lr_database_index = defaultdict(dict) # [ligand][recptor] = index of that pair in the lr_database
+for i in range (0, len(temp_list)):
+    lr_group = temp_list[i]
+    for j in lr_group[0]: # all of these ligands 
+        for k in lr_group[1]: # match with all of these receptors
+            lr_database.append([j, k])
+            lr_database_index[j][k] = len(lr_database)-1 # indexing starts from 0
+
+
+pattern_list = [[0, 1], [2, 3], [5]] # e.g., first pattern: a --> b: group 0; b --> c: group 1.    
+
+non_lr_genes = total_gene - lr_gene_count
+
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
@@ -282,7 +302,7 @@ for cell in range (0, len(cell_neighborhood)):
         cell_neighborhood[cell].append(items[0])
     #np.random.shuffle(cell_neighborhood[cell]) 
 ####################################################################################            
-# take gene_count normal distributions where each distribution has len(temp_x) datapoints.
+# take lr_gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 
 max_neighbor = 0
@@ -293,14 +313,14 @@ print('max neighborhood: %d'%max_neighbor)
 
 
 cell_count = len(temp_x)
-gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive_lrgenes = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
+gene_distribution_active = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+gene_distribution_inactive = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+gene_distribution_inactive_lrgenes = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 start_loc = 20
-rec_gene = gene_count//2
-for i in range (0, 4): #gene_count//2):
+rec_gene = lr_gene_count//2
+for i in range (0, 4): #lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -320,7 +340,7 @@ for i in range (0, 4): #gene_count//2):
     start_loc = np.max(gene_distribution_inactive[i,:])+2
     '''
 ################
-for i in range (4, gene_count//2): ##):
+for i in range (4, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -347,7 +367,7 @@ for i in range (4, gene_count//2): ##):
     rec_gene = rec_gene + 1 
 
 start_loc = 15
-for i in range (rec_gene, gene_count + non_lr_genes):
+for i in range (rec_gene, lr_gene_count + non_lr_genes):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -357,9 +377,9 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     
 #################
 start_loc = np.max(gene_distribution_inactive)+30
-rec_gene = gene_count//2
+rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
-for i in range (0, gene_count//2):
+for i in range (0, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
@@ -372,12 +392,12 @@ for i in range (0, gene_count//2):
     rec_gene = rec_gene + 1 
    
 #################################################
-min_gene_count = np.min(gene_distribution_inactive)
+min_lr_gene_count = np.min(gene_distribution_inactive)
 
-print('min_gene_count %d'%min_gene_count)
-min_gene_count = 0
+print('min_lr_gene_count %d'%min_lr_gene_count)
+min_lr_gene_count = 0
 gene_ids = []
-for i in range (0, gene_count):
+for i in range (0, lr_gene_count):
     gene_ids.append(i) 
 
 gene_info=dict()
@@ -390,11 +410,13 @@ for gene in gene_ids:
     gene_index[gene] = i
     i = i+1
 #######################
+'''
 lr_database = []
 
 for i in range (0, rec_start):
     lr_database.append([i,rec_start+i])
-    
+'''
+
 ligand_dict_dataset = defaultdict(dict)
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
@@ -402,9 +424,9 @@ for i in range (0, len(lr_database)):
 ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
-cell_vs_gene = np.zeros((cell_count,gene_count + non_lr_genes))
+cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 # initially all are in inactive state
-for i in range (0, gene_count + non_lr_genes):
+for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 
 noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
@@ -573,13 +595,13 @@ for lr_type_index in range (1,2):
         # [0, 1, 2, 3,  8, 9, 10, 11]
         # a_cell has only 0, 2 active. b_cell has 8, 10, 1, 3 active. c_cell has 9, 11 active.  
         for gene in [1, 3, 8, 9, 10, 11]:
-            cell_vs_gene[a_cell, gene] = min_gene_count #-10
+            cell_vs_gene[a_cell, gene] = min_lr_gene_count #-10
             
         for gene in [0, 2, 9, 11]:
-            cell_vs_gene[b_cell, gene] = min_gene_count #-10
+            cell_vs_gene[b_cell, gene] = min_lr_gene_count #-10
             
         for gene in [0, 1, 2, 3, 8, 10]:
-            cell_vs_gene[c_cell, gene] = min_gene_count #-10
+            cell_vs_gene[c_cell, gene] = min_lr_gene_count #-10
 
 	
         ##########################################
@@ -601,7 +623,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10   
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10   
                 
         for cell in cell_neighborhood[b_cell]:
             
@@ -612,7 +634,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
                 
         for cell in cell_neighborhood[c_cell]:
             
@@ -623,7 +645,7 @@ for lr_type_index in range (1,2):
                 
             all_used[cell]=''
             for gene in [0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
             
 
         ''''''
@@ -689,15 +711,15 @@ print('P_class %d'%P_class)
 
 '''
 # to reduce number of conections
-cell_vs_gene[:,7] = min_gene_count #-10
-cell_vs_gene[:,15] = min_gene_count #-10
-#cell_vs_gene[:,6] = min_gene_count #-10
-#cell_vs_gene[:,14] = min_gene_count #-10
+cell_vs_gene[:,7] = min_lr_gene_count #-10
+cell_vs_gene[:,15] = min_lr_gene_count #-10
+#cell_vs_gene[:,6] = min_lr_gene_count #-10
+#cell_vs_gene[:,14] = min_lr_gene_count #-10
 ############
 for i in range (0, cell_vs_gene.shape[0]):
     if i in active_spot:        
         for gene in [4, 5, 6, 7, 12, 13, 14, 15]:
-            cell_vs_gene[i,gene] = min_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
+            cell_vs_gene[i,gene] = min_lr_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
 
 ##############################
 # take quantile normalization.
@@ -1123,7 +1145,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
-cell_vs_gene = cell_vs_gene[:,0:gene_count]
+cell_vs_gene = cell_vs_gene[:,0:lr_gene_count]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
 
