@@ -44,14 +44,14 @@ cell_percent = 100 # choose at random N% ligand cells
 total_gene = 200
 lr_gene_count = 50 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = lr_gene_count//2 # 25
-ligand_gene = np.arange(0, 25)
-receptor_gene = np.arange(25, 50)
+ligand_gene_list = np.arange(0, 25)
+receptor_gene_list = np.arange(25, 50)
 # which ligand to which receptor
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # 25*5 = 125 lr pairs
-np.random.shuffle(ligand_gene) 
-np.random.shuffle(receptor_gene) 
+np.random.shuffle(ligand_gene_list) 
+np.random.shuffle(receptor_gene_list) 
 for i in range (0, 5):
-	gene_group.append([list(ligand_gene[i*5:(i+1)*5]),list(receptor_gene[i*5:(i+1)*5])])
+	gene_group.append([list(ligand_gene_list[i*5:(i+1)*5]),list(receptor_gene_list[i*5:(i+1)*5])])
 
 lr_database = []
 lr_database_index = defaultdict(dict) # [ligand][recptor] = index of that pair in the lr_database
@@ -163,6 +163,28 @@ def get_data(datatype):
 temp_x, temp_y, ccc_region = get_data(datatype)
 #############################################
 print("cell count %d"%len(temp_x))
+
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_noise'+str(noise_percent)#'_close'
+if noise_add == 1:
+    options = options + '_lowNoise'
+if noise_add == 2:
+    options = options + '_heavyNoise'
+
+
+datapoint_size = temp_x.shape[0]
+options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
+
+options = options + '_g'
+options = options + '_3dim'
+#options = options + '_scaled'
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
+
+
+
+
+
 #plt.gca().set_aspect(1)	
 #plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -176,7 +198,7 @@ for i in range (0, temp_x.shape[0]):
     get_cell[temp_x[i]][temp_y[i]] = i 
     available_cells.append(i)
     
-datapoint_size = temp_x.shape[0]
+
 coordinates = np.zeros((datapoint_size,2))
 for i in range (0, datapoint_size):
     coordinates[i][0] = temp_x[i]
@@ -238,20 +260,19 @@ print('max number of neighbors: %d'%max_neighbor)
 cell_count = datapoint_size
 gene_distribution_active = np.zeros((total_gene, cell_count))
 gene_distribution_inactive = np.zeros((total_gene, cell_count))
-gene_distribution_inactive_lrgenes = np.zeros((total_gene, cell_count))
 gene_distribution_noise = np.zeros((total_gene, cell_count))
 
 # innitialize gene expression for the lr genes 
 start_loc = 20
 i = 0
-for gene_index in ligand_gene: 
+for gene_index in ligand_gene_list: 
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[gene_index,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(gene_index, np.min(gene_distribution_inactive[gene_index,:]),np.max(gene_distribution_inactive[gene_index,:]) ))
     i = i+1
 
-for gene_index in receptor_gene: 
+for gene_index in receptor_gene_list: 
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[gene_index,:] =  gene_exp_list
@@ -271,14 +292,14 @@ start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = lr_gene_count//2
 scale_active_distribution = 2 #0.01
 i = 0
-for gene_index in ligand_gene:
+for gene_index in ligand_gene_list:
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[gene_index,:] =  gene_exp_list
     print('%d: active: %g to %g'%(gene_index, np.min(gene_distribution_active[gene_index,:]),np.max(gene_distribution_active[gene_index,:]) ))
     i = i+1
     
-for gene_index in receptor_gene:
+for gene_index in receptor_gene_list:
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[gene_index,:] =  gene_exp_list
@@ -289,10 +310,11 @@ for gene_index in receptor_gene:
 
 print('min lr_gene_exp %g'%np.min(gene_distribution_inactive))
 print('max lr_gene_exp %g'%np.max(gene_distribution_inactive))
-'''
+
 gene_ids = []
 for i in range (0, lr_gene_count):
     gene_ids.append(i) 
+    
 
 gene_info=dict()
 for gene in gene_ids:
@@ -303,7 +325,7 @@ i = 0
 for gene in gene_ids: 
     gene_index[gene] = i
     i = i+1
-'''
+
 #######################
 '''
 lr_database = []
@@ -369,18 +391,14 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 '''
-ligand_cells = np.arange(cell_count)
-np.random.shuffle(ligand_cells)
-ligand_cells_list = []
-for i in range (0, len(pattern_list)):
-    ligand_cells_list.append() = ligand_cells[0:(cell_count*cell_percent)//100]
-
-
+min_lr_gene_exp = np.min(gene_distribution_inactive)
 for pattern_type_index in [0, 1, 2]: 
-    ligand_cells = list(set(np.arange(cell_count)) - set(active_spot))
-    ligand_cells = ligand_cells[0: np.min(len(ligand_cells), cell_count//len(pattern_list))] # 1/N th of the all cells are following this pattern, where, N = total patterns
+    discard_cells = list(all_used.keys()) + list(active_spot.keys())    
+    ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
+    ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//15)] # 1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
-    print("some ligand cells for this pattern is: "ligand_cells[0:10])
+    print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
+    print(ligand_cells[0:10])
 
     xy_ligand_cells = []
     for i in ligand_cells:
@@ -395,8 +413,8 @@ for pattern_type_index in [0, 1, 2]:
         a_cell = i
         b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
         cell_of_interest.append(a_cell)
-        cell_of_interest.append(c_cell)
-        if pattern_type_index == 2:        
+        cell_of_interest.append(b_cell)
+        if pattern_type_index != 2:        
             if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
                 c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
             else:
@@ -427,7 +445,8 @@ for pattern_type_index in [0, 1, 2]:
  
                 
         a = pattern_list[pattern_type_index][0] # 0
-        b = pattern_list[pattern_type_index][1] # 1
+        if pattern_type_index != 2:    
+            b = pattern_list[pattern_type_index][1] # 1
         ##########################################   
         # turn on all the genes that are in pattern 'a'        
         ligand_group_a_cell = gene_group[a][0]
@@ -480,7 +499,7 @@ for pattern_type_index in [0, 1, 2]:
             if cell in active_spot:
                 continue
                 
-            #all_used[cell]=''
+            all_used[cell]=''
             for gene in gene_off_list:
                 cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
             
@@ -499,7 +518,7 @@ for pattern_type_index in [0, 1, 2]:
             if cell in active_spot:
                 continue
                 
-            #all_used[cell]=''
+            all_used[cell]=''
             for gene in gene_off_list:
                 cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                    
@@ -515,7 +534,7 @@ for pattern_type_index in [0, 1, 2]:
                 if cell in active_spot:
                     continue
                     
-                #all_used[cell]=''
+                all_used[cell]=''
                 for gene in gene_off_list:
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                         
@@ -600,14 +619,28 @@ for i in range (0, cell_vs_gene.shape[0]):
             cell_vs_gene[i,gene] = min_lr_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
 '''
 ##############################
+non_lr_cells = list(set(np.arange(cell_count)) -set(active_spot.keys()))
+np.random.shuffle(non_lr_cells)
+deactivate_count = (len(non_lr_cells)//6)*5
+for cell in non_lr_cells[0:deactivate_count]:
+    for gene in ligand_gene_list:
+        cell_vs_gene[cell,gene] = min_lr_gene_exp
+    for gene in receptor_gene_list:
+        cell_vs_gene[cell,gene] = min_lr_gene_exp
+    
+
+
+#############################
+print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
 
 cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 # take quantile normalization.
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
+print("min value of cell_vs_gene after normalizing is %g"%np.min(cell_vs_gene))
 
-
+#cell_vs_gene = copy.deepcopy(cell_vs_gene_notNormalized)
 
 
 cell_percentile = []
@@ -616,7 +649,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]    
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -678,7 +711,7 @@ for i in range (0, len(lig_rec_dict_TP)):
                     break
             #if flag_found==1:
                 
-print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
+print('P_class=%d, found=%d, min %g, max %g, std %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
 ################
 
@@ -729,19 +762,6 @@ print('max local %d'%max_local)
 print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_noise'+str(noise_percent)#'_close'
-if noise_add == 1:
-    options = options + '_lowNoise'
-if noise_add == 2:
-    options = options + '_heavyNoise'
-
-total_cells = len(temp_x)
-
-options = options+ '_' + distance_measure  + '_cellCount' + str(total_cells)
-
-options = options + '_g'
-options = options + '_3dim'
-#options = options + '_scaled'
 
 
 save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
