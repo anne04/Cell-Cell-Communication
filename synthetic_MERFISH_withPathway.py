@@ -74,86 +74,8 @@ active_type = 'random_overlap' #'highrange_overlap' #
 
 
 def get_data(datatype):
-    if datatype == 'path_equally_spaced':
-        x_max = 50 #50 
-        x_min = 0
-        y_max = 60 #20 #30 
-        y_min = 0
-        temp_x = []
-        temp_y = []
-        index_dict = defaultdict(dict)
-        i = x_min
-        # row major order, bottom up
-        k = 0
-        while i < x_max:
-          j = y_min
-          while j < y_max:
-              temp_x.append(i)
-              temp_y.append(j)
-              index_dict[i][j] = k
-              k = k+1
-
-              j = j + 1
-
-          i = i + 1
-        
-        #0, 2, 4, ...24, 26, 28   
-        temp_x = np.array(temp_x)
-        temp_y = np.array(temp_y)
-        return temp_x, temp_y, 0
-    
-    elif datatype == 'pattern_high_density_grid':
-        
-        x_max = 100 #50 
-        x_min = 0
-        y_max = 80 #20
-        y_min = 0
-        temp_x = []
-        temp_y = []
-        i = x_min
-        while i < x_max:
-            j = y_min
-            while j < y_max:
-                temp_x.append(i)
-                temp_y.append(j)
-                j = j + 2
-            i = i + 2
-
-        #0, 2, 4, ...24, 26, 28 
-        # high density
-        region_list =  [[5, 30, 5, 25]] #[[20, 40, 3, 7], [40, 60, 12, 18]] #[60, 80, 1, 7] 	
-        for region in region_list:
-            x_max = region[1]
-            x_min = region[0]
-            y_min = region[2]
-            y_max = region[3]
-            i = x_min
-            while i < x_max:
-                j = y_min
-                while j < y_max:
-                    temp_x.append(i)
-                    temp_y.append(j)
-                    j = j + 2
-                i = i + 2
-        
-        region_list.append([30, 65, 5, 15])       
-        ccc_regions = []        
-        for i in range (0, len(temp_x)):
-            for region in region_list:
-                x_max = region[1]
-                x_min = region[0]
-                y_min = region[2]
-                y_max = region[3]
-                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
-                    ccc_regions.append(i)
-                    
-        temp_x = np.array(temp_x)
-        temp_y = np.array(temp_y)
-        return temp_x, temp_y, ccc_regions
-    
-    elif datatype == 'path_mixture_of_distribution':
-	
-        datapoint_size = 3000
+    if datatype == 'path_mixture_of_distribution':	
+        datapoint_size = 6000
         x_max = 500
         x_min = 0
         y_max = 300
@@ -240,7 +162,7 @@ def get_data(datatype):
 ################################# 
 temp_x, temp_y, ccc_region = get_data(datatype)
 #############################################
-print(len(temp_x))
+print("cell count %d"%len(temp_x))
 #plt.gca().set_aspect(1)	
 #plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -248,21 +170,20 @@ print(len(temp_x))
 #plt.clf()
 
 
-get_cell = defaultdict(dict)  
+get_cell = defaultdict(dict)  #[x_index][y_index] = cell_id
 available_cells = []
 for i in range (0, temp_x.shape[0]):
-    get_cell[temp_x[i]][temp_y[i]] = i
+    get_cell[temp_x[i]][temp_y[i]] = i 
     available_cells.append(i)
     
 datapoint_size = temp_x.shape[0]
-coordinates = np.zeros((temp_x.shape[0],2))
+coordinates = np.zeros((datapoint_size,2))
 for i in range (0, datapoint_size):
     coordinates[i][0] = temp_x[i]
     coordinates[i][1] = temp_y[i]
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-     
 ########### weighted edge, based on neighborhood ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 cell_neighborhood = []
@@ -295,7 +216,8 @@ for j in range(0, distance_matrix.shape[1]):
 
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
-    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance
+    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) 
+	# sort based on distance: large to small because that is how it is weighted. Closer neighbor has higher weight
     
     cell_neighborhood[cell] = [] # to record the neighbor cells in that order
     for items in cell_neighborhood_temp:
@@ -309,14 +231,15 @@ max_neighbor = 0
 for i in range (0, len(cell_neighborhood)):
     if len(cell_neighborhood[i])>max_neighbor:
         max_neighbor = len(cell_neighborhood[i])
-print('max neighborhood: %d'%max_neighbor)
+        
+print('max number of neighbors: %d'%max_neighbor)
 
 
-cell_count = len(temp_x)
-gene_distribution_active = np.zeros((lr_gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive = np.zeros((lr_gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive_lrgenes = np.zeros((lr_gene_count + non_lr_genes, cell_count))
-gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+cell_count = datapoint_size
+gene_distribution_active = np.zeros((total_gene, cell_count))
+gene_distribution_inactive = np.zeros((total_gene, cell_count))
+gene_distribution_inactive_lrgenes = np.zeros((total_gene, cell_count))
+gene_distribution_noise = np.zeros((total_gene, cell_count))
 
 start_loc = 20
 rec_gene = lr_gene_count//2
