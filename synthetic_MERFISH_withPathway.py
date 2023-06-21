@@ -177,11 +177,12 @@ options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
 options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
-
+# options = 'dt-path_mixture_of_distribution_lrc125_noise0_knn_cellCount4627_g_3dim'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
-
+fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
+temp_x, temp_y, ccc_region = pickle.load(fp)
 
 
 
@@ -395,7 +396,7 @@ min_lr_gene_exp = np.min(gene_distribution_inactive)
 for pattern_type_index in [0, 1, 2]: 
     discard_cells = list(all_used.keys()) + list(active_spot.keys())    
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//15)] # 1/N th of the all cells are following this pattern, where, N = total patterns
+    ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//10)] # 1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
     print(ligand_cells[0:10])
@@ -619,17 +620,18 @@ for i in range (0, cell_vs_gene.shape[0]):
             cell_vs_gene[i,gene] = min_lr_gene_count #-10 #min(cell_vs_gene[i,:]) # so that it does not appear in the top quartile
 '''
 ##############################
+cell_vs_gene_hold = copy.deepcopy(cell_vs_gene)
+cell_vs_gene = copy.deepcopy(cell_vs_gene_hold)
+
 non_lr_cells = list(set(np.arange(cell_count)) -set(active_spot.keys()))
 np.random.shuffle(non_lr_cells)
-deactivate_count = (len(non_lr_cells)//6)*5
+deactivate_count = (len(non_lr_cells)//4)*3
 for cell in non_lr_cells[0:deactivate_count]:
     for gene in ligand_gene_list:
         cell_vs_gene[cell,gene] = min_lr_gene_exp
     for gene in receptor_gene_list:
         cell_vs_gene[cell,gene] = min_lr_gene_exp
     
-
-
 #############################
 print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
 
@@ -714,7 +716,24 @@ for i in range (0, len(lig_rec_dict_TP)):
 print('P_class=%d, found=%d, min %g, max %g, std %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
 ################
+save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
+#lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
 
+lig_rec_dict_TP_temp = defaultdict(dict)
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            lig_rec_dict_TP_temp[i][j] = []
+            
+for i in range (0, len(lig_rec_dict_TP)):
+    for j in range (0, len(lig_rec_dict_TP)):
+        if len(lig_rec_dict_TP[i][j]) > 0:
+            for k in range (0, len(lig_rec_dict_TP[i][j])):
+               lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
+
+lig_rec_dict_TP = 0            
+lig_rec_dict_TP = lig_rec_dict_TP_temp
+#################################################
 
 ccc_index_dict = dict()
 row_col = []
@@ -723,6 +742,7 @@ lig_rec = []
 count_edge = 0
 max_local = 0
 local_list = np.zeros((20))
+fp_count = 0
 for i in range (0, len(cells_ligand_vs_receptor)):
     for j in range (0, len(cells_ligand_vs_receptor)):
         if dist_X[i,j] > 0: #distance_matrix[i][j] <= threshold_distance: 
@@ -737,11 +757,23 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     #print(count_edge)  
                     mean_ccc = cells_ligand_vs_receptor[i][j][k][2] 
                     #mean_ccc = .1 + (cells_ligand_vs_receptor[i][j][k][2]-min_score_global)/(max_score_global-min_score_global)*(1-0.1)   # cells_ligand_vs_receptor[i][j][k][2] #cells_ligand_vs_receptor[i][j][k][2]  #*dist_X[i,j]
-                    row_col.append([i,j])
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc, cells_ligand_vs_receptor[i][j][k][3] ])
-                    lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
+                    lr_pair_type = cells_ligand_vs_receptor[i][j][k][3]
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and (lr_pair_type in lig_rec_dict_TP[i][j]):               
+                        row_col.append([i,j])
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        edge_weight.append([dist_X[i,j], mean_ccc, cells_ligand_vs_receptor[i][j][k][3] ])
+                        lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
+                    else: #if fp_count<=100000:
+                        row_col.append([i,j])
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        edge_weight.append([dist_X[i,j], mean_ccc, cells_ligand_vs_receptor[i][j][k][3] ])
+                        lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])    
+                        fp_count = fp_count + 1
+                
+
+                
                 if max_local < count_local:
                     max_local = count_local
             '''       
@@ -764,23 +796,6 @@ print('P_class %d'%P_class)
 
 
 
-save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
-#lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
-
-lig_rec_dict_TP_temp = defaultdict(dict)
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(lig_rec_dict_TP[i][j]) > 0:
-            lig_rec_dict_TP_temp[i][j] = []
-            
-for i in range (0, len(lig_rec_dict_TP)):
-    for j in range (0, len(lig_rec_dict_TP)):
-        if len(lig_rec_dict_TP[i][j]) > 0:
-            for k in range (0, len(lig_rec_dict_TP[i][j])):
-               lig_rec_dict_TP_temp[i][j].append(lig_rec_dict_TP[i][j][k]) 
-
-lig_rec_dict_TP = 0            
-lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 #options = options+ '_' + 'wFeature'
 
