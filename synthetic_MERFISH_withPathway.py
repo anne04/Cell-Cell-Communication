@@ -185,7 +185,7 @@ options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
 options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
-# options = 'dt-path_mixture_of_distribution_lrc60_noise0_knn_cellCount4661_g_3dim'
+# options = 'dt-path_mixture_of_distribution_lrc126_noise0_knn_cellCount4565_g_3dim'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
@@ -307,7 +307,7 @@ for attempt in range (0, 30):
         #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
      
     ################# define active state of the ligand-receptor genes #############################
-    start_loc = np.max(gene_distribution_inactive) + 20 # 28
+    start_loc = np.max(gene_distribution_inactive) + 10 # 28
     # does not matter in naive model performance since you are turning off all other genes in the active spots and also neighboring spots (within threshold distance)
     # bringing it closer to the exp of non active spot's exp will need higher threshold at the end to get all the TP edges in the input graph. As a result you will 
     # end up selecting too many edges where most of them lie in the lower end of the distribution. 
