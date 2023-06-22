@@ -22,6 +22,125 @@ from kneed import KneeLocator
 import copy 
 import pickle
 import gc 
+
+########
+import numpy as np
+import csv
+import pickle
+from scipy import sparse
+import scipy.io as sio
+import scanpy as sc
+import matplotlib
+matplotlib.use('Agg')
+#matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import stlearn as st
+import numpy as np
+from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
+from typing import List
+import qnorm
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components
+from collections import defaultdict
+import pandas as pd
+import gzip
+from kneed import KneeLocator
+import copy 
+import altairThemes
+import altair as alt
+spot_diameter = 89.43 #pixels
+##########################################################
+# written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
+import scipy.stats
+
+#sys.path.append("/home/gw/code/utility/altairThemes/")
+#if True:  # In order to bypass isort when saving
+#    import altairThemes
+
+def readCsv(x):
+  """Parse file."""
+  #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
+  df = pd.read_csv(x, sep=",")
+
+  return df
+
+def preprocessDf(df):
+  """Transform ligand and receptor columns."""
+  df["ligand-receptor"] = df["ligand"] + '-' + df["receptor"]
+  df["component"] = df["component"] #.astype(str).str.zfill(2)
+
+  return df
+
+def statOrNan(xs, ys):
+  if len(xs) == 0 or len(ys) == 0:
+    return None
+  else:
+    return scipy.stats.mannwhitneyu(xs, ys)
+
+def summarizeStats(df, feature):
+  meanRes = df.groupby(["benchmark", "method"])[feature].mean()
+  statRes = df.groupby("benchmark").apply(lambda x: post.posthoc_ttest(x, val_col = feature, group_col = "method", p_adjust = "fdr_bh"))
+
+  return (meanRes, statRes)
+
+def writeStats(stats, feature, outStatsPath):
+  stats[0].to_csv(outStatsPath + "_feature_" + feature + "_mean.csv")
+  stats[1].to_csv(outStatsPath + "_feature_" + feature + "_test.csv")
+
+  return
+
+def plot(df):
+  set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
+  set1[0] = '#000000'
+  base = alt.Chart(df).mark_bar().encode(
+            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y=alt.Y("count()"),
+            color=alt.Color("component:N", scale = alt.Scale(range=set1)),
+            order=alt.Order("component:N", sort="ascending"),
+            tooltip=["component"]
+        )
+  p = base
+
+  return p
+'''
+def plot(df):
+  number = 20
+  cmap = plt.get_cmap('tab20')
+  colors = [cmap(i) for i in np.linspace(0, 1, number)]
+  for i in range (0, len(colors)): 
+    colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
+  
+  #set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
+  #set1[0] = '#000000'
+  base = alt.Chart(df).mark_bar().encode(
+            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y=alt.Y("count()"),
+            color=alt.Color("component:N", scale = alt.Scale(range=colors)),
+            order=alt.Order("component:N", sort="ascending"),
+            tooltip=["component"]
+        )
+  p = base
+
+  return p
+'''
+def totalPlot(df, features, outPath):
+
+  p = alt.hconcat(*map(lambda x: plot(df, x), features))
+
+  outPath = outPath + "_boxplot.html"
+
+  p.save(outPath)
+
+  return
+
+
+
+
+
+
+
+
+##########
 options = 'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
@@ -47,6 +166,7 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 # animal_id = 16
 animal_id = 24 #data_sets_gatconv[0][4][0][0]
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
+bregma_id = 0
 for bregma_id in range (0, 1): #len(bregma)): #bregma:
     print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
     z_index_yes = 0
@@ -410,11 +530,17 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 
 
 ###########################################################Visualization starts ##################
-datapoint_size = len(barcode_info)    
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d_ThDistance500', 'rb') as fp:  #b, a:[0:5]  _filtered 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_3d', 'rb') as fp:  #b, a:[0:5]  _filtered 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d_ThDistance500', 'rb') as fp:  #b, a:[0:5]  _filtered 
     row_col, edge_weight, lig_rec = pickle.load(fp)
 
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
+    barcode_info = pickle.load(fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
+    coordinates = pickle.load(fp)
+datapoint_size = len(barcode_info)    
+      
 #####
 barcode_type=dict()
 for i in range (0, datapoint_size):
@@ -434,14 +560,14 @@ for index in range (0, len(row_col)):
         lig_rec_dict[i][j].append(lig_rec[index])  
         
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 1
+total_runs = 5
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_'+filename[run_time]+'_th500_attention_l1.npy'   
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
     #l = 3
@@ -501,7 +627,7 @@ for run_time in range (start_index, start_index+total_runs):
         ###########################
 
         ccc_index_dict = dict()
-        threshold_down =  np.percentile(sorted(distribution), 90)
+        threshold_down =  np.percentile(sorted(distribution), 80)
         threshold_up =  np.percentile(sorted(distribution), 100)
         connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
         for j in range (0, datapoint_size):
@@ -692,7 +818,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict) 
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=1: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -717,7 +843,7 @@ for key_value in csv_record_dict.keys():
         
 print('common LR count %d'%len(csv_record))
             
-threshold_value =  np.percentile(combined_score_distribution,50)
+threshold_value =  np.percentile(combined_score_distribution,80)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 count = 0
 for k in range (1, len(csv_record)):
@@ -780,7 +906,7 @@ for record_idx in range (1, len(csv_record)):
     Y = -barcode_info[i][2]
     opacity = record[4]
     exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
-    '''
+    
     j = record[7]
     pathology_label = barcode_type[barcode_info[j][0]]
     component_label = record[5]
@@ -788,7 +914,7 @@ for record_idx in range (1, len(csv_record)):
     Y = -barcode_info[j][2]
     opacity = record[4]   
     exist_spot[j].append([pathology_label, component_label, X, Y, opacity])
-    '''
+    
     
 opacity_list = []
 for i in exist_spot:
@@ -851,17 +977,13 @@ chart.save(save_path+'altair_plot_test.html')
 chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
 
 ########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,0)
+threshold_value =  np.percentile(combined_score_distribution,50)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
     if csv_record[k][4] >= threshold_value:    
         csv_record_temp.append(csv_record[k])
-   
-
-#for k in range (1, len(csv_record_temp)):
-#    csv_record_temp[k][5] = ccc_too_many_cells_LUAD_dict[csv_record_temp[k][0]]
-        
+         
 i=0
 j=0
 csv_record_temp.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
@@ -869,8 +991,68 @@ df = pd.DataFrame(csv_record_temp) # output 4
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 #df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
 df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+df = readCsv(inFile)
+df = preprocessDf(df)
+outPathRoot = inFile.split('.')[0]
+p = plot(df)
+outPath = '/cluster/home/t116508uhn/64630/test_hist_temp.html'
+p.save(outPath)	# output 5
+##########################            
             
-            
-            
+
+import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
+set1 = altairThemes.get_colour_scheme("Set1", len(set(data_list['component_label'])))
+colors = set1
+colors[0] = '#000000'
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(barcode_info)):    
+    ids.append(i)
+    x_index.append(barcode_info[i][1])
+    y_index.append(barcode_info[i][2])    
+    colors_point.append(colors[barcode_info[i][3]]) 
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
+
+from pyvis.network import Network
+import networkx as nx
+
+g = nx.MultiDiGraph(directed=True) #nx.Graph()
+for i in range (0, len(barcode_info)):
+    marker_size = 'circle'
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3])
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
+
+nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
+#################################
+threshold_value =  np.percentile(combined_score_distribution,98)
+count_edges = 0
+for k in range (1, len(csv_record)):
+    if csv_record[k][4] < threshold_value:
+        continue
+    
+    i = csv_record[k][6]
+    j = csv_record[k][7]    
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    title_str =  "L:"+ligand+", R:"+receptor
+    edge_score = csv_record[k][4]
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color=colors_point[i] ) 
+    count_edges = count_edges + 1
+
+nt.from_nx(g)
+nt.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
+from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
             
 
