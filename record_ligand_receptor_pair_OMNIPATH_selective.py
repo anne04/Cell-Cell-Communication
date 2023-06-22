@@ -1678,7 +1678,7 @@ for k in range (1, len(csv_record)):
     receptor = csv_record[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record[k][4]
-    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score) ) 
+    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color=colors_point[i] ) 
     count_edges = count_edges + 1
      
 '''
@@ -1711,62 +1711,6 @@ write_dot(g, "/cluster/home/t116508uhn/64630/interactive_"+args.data_name+"_both
 
 #write_dot(g, "/cluster/home/t116508uhn/64630/interactive_140694_bothAbove98_3d_th98_leakyRelu.dot")
 #
-#######################
-attention_scores = []
-lig_rec_dict = []
-datapoint_size = cell_vs_gene.shape[0]
-for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    lig_rec_dict.append([])   
-    for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
-
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
-#df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
-distribution = []
-for col in range (1, len(df_pair_vs_cells.columns)):
-    col_name = df_pair_vs_cells.columns[col]
-    l_c = df_pair_vs_cells.columns[col].split("—")[0]
-    r_c = df_pair_vs_cells.columns[col].split("—")[1]
-    i = int(barcode_serial[l_c])
-    j = int(barcode_serial[r_c])
-    
-    for index in range (0, len(df_pair_vs_cells.index)):
-        lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
-        attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
-        distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
-
-pair_list = []
-for cluster in range (0, 9):
-    df = pd.read_csv('/cluster/home/t116508uhn/niches_output_pairs_'+str(cluster)+'_brief.csv')
-    for i in range (0, len(df)):
-        pair_list.append(df['x'][i])
-    
-data_list=dict()
-data_list['X']=[]
-for i in range (0, len(pair_list)):
-    data_list['X'].append(pair_list[i])
-    
-df = pd.DataFrame(data_list)    
-df_temp = df.groupby(['X'])['X'].count()
-df_temp = df_temp.sort_values(ascending=False)
-
-data_list=dict()
-data_list['X']=[]
-data_list['Y']=[]
-for i in range (0, len(df_temp)):
-    data_list['X'].append(df_temp.index[i])
-    data_list['Y'].append(df_temp[i])
-
-df = pd.DataFrame(data_list)    
-barchart_lrPair = alt.Chart(df).mark_bar().encode(
-        x=alt.X("X:N", sort='-y', axis=alt.Axis(labelAngle=45), ), #
-        y=alt.Y("Y")
-    )
-barchart_lrPair.save('/cluster/home/t116508uhn/64630/niches_output_pairs.html')    
 
 
 ##################
@@ -1980,7 +1924,7 @@ for k in range (1, len(csv_record)):
     g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) 
     count_edges = count_edges + 1
 ######################################################    
- 
+'''
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         atn_score_list = attention_scores[i][j]
@@ -1994,6 +1938,7 @@ for i in range (0, datapoint_size):
                 title_str =  "L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]#+", "+str(edge_score) #"L:"+lig_rec_dict[i][j][k][0]+", R:"+lig_rec_dict[i][j][k][1]+", "+str(attention_scores[i][j][k])
                 g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score)) #,width=, arrowsize=int(20),  arrowstyle='fancy'
 				# label = title =
+'''
 nt.from_nx(g)
 nt.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
