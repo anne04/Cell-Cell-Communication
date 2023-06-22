@@ -41,7 +41,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
 
-total_gene = 200
+total_gene = 300
 lr_gene_count = 42*2 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
@@ -186,8 +186,8 @@ options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
 # options = 'dt-path_mixture_of_distribution_lrc126_noise0_knn_cellCount4565_g_3dim'
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+#    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
 temp_x, temp_y, ccc_region = pickle.load(fp)
@@ -264,7 +264,7 @@ for i in range (0, len(cell_neighborhood)):
         
 print('max number of neighbors: %d'%max_neighbor)
 
-for attempt in range (0, 30):
+for attempt in range (0, 1):
     print("attempt %d"%attempt)
     cell_count = datapoint_size
     gene_distribution_active = np.zeros((total_gene, cell_count))
@@ -424,7 +424,7 @@ for attempt in range (0, 30):
     for pattern_type_index in range (0, pattern_count): 
         discard_cells = list(pattern_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*7))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*10))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
         print(ligand_cells[0:10])
@@ -645,16 +645,15 @@ for attempt in range (0, 30):
     
     non_lr_cells = list(set(np.arange(cell_count)) -set(active_spot.keys()))
     np.random.shuffle(non_lr_cells)
-    deactivate_count = (len(non_lr_cells)//4)*3
-    for cell in non_lr_cells[0:deactivate_count]:
+    deactivate_count = (len(non_lr_cells)//3)*2
+    #max_gene_exp = np.max(cell_vs_gene) 
+    for cell in non_lr_cells: #[0:deactivate_count]:
         for lig_gene in ligand_dict_dataset:
             for rec_gene in ligand_dict_dataset[lig_gene]:
-                if cell_vs_gene[cell,lig_gene]*cell_vs_gene[rec_gene,gene]<np.percentile(p_dist,95):
+                if cell_vs_gene[cell,lig_gene]*cell_vs_gene[rec_gene,gene]<np.percentile(p_dist,50): # turn off so that only edges with high ccc exist in the input
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
 
-        
- 
     for cell in pattern_used.keys(): #non_lr_cells[0:deactivate_count]:
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
