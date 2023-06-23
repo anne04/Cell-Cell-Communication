@@ -33,7 +33,7 @@ args = parser.parse_args()
 threshold_distance = 2 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'knn'  #'threshold_dist' # <-----------
-datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
+datatype = 'path_uniform_distribution' #'path_equally_spaced' #
 
 cell_percent = 100 # choose at random N% ligand cells
 #neighbor_percent = 70
@@ -82,27 +82,27 @@ random_active_percent = 0
 
 
 def get_data(datatype):
-    if datatype == 'path_mixture_of_distribution':	
-        datapoint_size = 6000
-        x_max = 500
+    if datatype == 'path_uniform_distribution':	
+        datapoint_size = 5000
+        x_max = 600
         x_min = 0
-        y_max = 300
+        y_max = 600
         y_min = 0
 	
         a = x_min
         b = x_max
         #coord_x = np.random.randint(a, b, size=(datapoint_size))
-        coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+        coord_x = (b - a) * np.random.random_sample(size=datapoint_size) + a
 
         a = y_min
         b = y_max
-        coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+        coord_y = (b - a) * np.random.random_sample(size=datapoint_size) + a
         #coord_y = np.random.randint(a, b, size=(datapoint_size))
 
         temp_x = coord_x
         temp_y = coord_y
         region_list = [] 
-        
+        '''
         coord_x_t = np.random.normal(loc=200, scale=5, size=datapoint_size//8)
         coord_y_t = np.random.normal(loc=150, scale=5, size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
@@ -128,7 +128,7 @@ def get_data(datatype):
         region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
         
         region_list.append([200, 350, 200, 300])
-        
+        '''
         discard_points = dict()
         for i in range (0, temp_x.shape[0]):
             if i not in discard_points:
@@ -186,8 +186,8 @@ options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
 # options = 'dt-path_mixture_of_distribution_lrc126_noise0_knn_cellCount4565_g_3dim'
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
-#    pickle.dump([temp_x, temp_y, ccc_region], fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
 temp_x, temp_y, ccc_region = pickle.load(fp)
@@ -307,13 +307,13 @@ for attempt in range (0, 1):
         #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
      
     ################# define active state of the ligand-receptor genes #############################
-    start_loc = np.max(gene_distribution_inactive) + 10 # 28
+    start_loc = np.max(gene_distribution_inactive) + 30 # 28
     # does not matter in naive model performance since you are turning off all other genes in the active spots and also neighboring spots (within threshold distance)
     # bringing it closer to the exp of non active spot's exp will need higher threshold at the end to get all the TP edges in the input graph. As a result you will 
     # end up selecting too many edges where most of them lie in the lower end of the distribution. 
     
     rec_gene = lr_gene_count//2
-    scale_active_distribution = 2 #0.01
+    scale_active_distribution = 1 #0.01
     i = 0
     for gene_index in ligand_gene_list:
         gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
@@ -647,20 +647,21 @@ for attempt in range (0, 1):
     np.random.shuffle(non_lr_cells)
     deactivate_count = (len(non_lr_cells)//3)*2
     #max_gene_exp = np.max(cell_vs_gene) 
+    '''
     for cell in non_lr_cells: #[0:deactivate_count]:
         for lig_gene in ligand_dict_dataset:
             for rec_gene in ligand_dict_dataset[lig_gene]:
                 if cell_vs_gene[cell,lig_gene]*cell_vs_gene[rec_gene,gene]<np.percentile(p_dist,50): # turn off so that only edges with high ccc exist in the input
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
-
+    '''
     for cell in pattern_used.keys(): #non_lr_cells[0:deactivate_count]:
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
     
-    ''''''   
+      
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
     
@@ -680,7 +681,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 91), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 96), np.percentile(y, 99) , kn_value])
     
     ###############
     
