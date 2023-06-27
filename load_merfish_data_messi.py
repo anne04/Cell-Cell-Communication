@@ -25,11 +25,11 @@ input_path = 'input/'
 output_path = 'output/'
 data_type = 'merfish'
 sex = 'Female'
-behavior = 'Virgin_Parenting' #'Parenting'
+behavior = 'Parenting' #'Virgin_Parenting' #
 behavior_no_space = behavior.replace(" ", "_")
 current_cell_type = 'Excitatory'
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
-data_options = sex + '_' + behavior + '' + current_cell_type
+data_options = sex + '_' + behavior + '_' + current_cell_type
 
 
 grid_search = True #False #
