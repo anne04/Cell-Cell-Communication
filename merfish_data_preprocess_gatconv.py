@@ -141,7 +141,7 @@ def totalPlot(df, features, outPath):
 
 
 ##########
-options = 'Female_Virgin_ParentingExcitatory'
+options = 'Female_Parenting_Excitatory' # 'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
@@ -530,6 +530,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 
 
 ###########################################################Visualization starts ##################
+animal_id = 19
+bregma_id = 0
+bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_3d', 'rb') as fp:  #b, a:[0:5]  _filtered 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d_ThDistance500', 'rb') as fp:  #b, a:[0:5]  _filtered 
     row_col, edge_weight, lig_rec = pickle.load(fp)
@@ -567,7 +571,7 @@ for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
     #l = 3
@@ -843,7 +847,7 @@ for key_value in csv_record_dict.keys():
         
 print('common LR count %d'%len(csv_record))
             
-threshold_value =  np.percentile(combined_score_distribution,80)
+threshold_value =  np.percentile(combined_score_distribution,50)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 count = 0
 for k in range (1, len(csv_record)):
@@ -974,7 +978,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'altair_plot_test.html')
-chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
+#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
 
 ########################################################################################################################
 threshold_value =  np.percentile(combined_score_distribution,50)
