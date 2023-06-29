@@ -1037,7 +1037,7 @@ for i in range (0, len(barcode_info)):
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 #################################
-threshold_value =  np.percentile(combined_score_distribution,98)
+threshold_value =  np.percentile(combined_score_distribution,50)
 count_edges = 0
 for k in range (1, len(csv_record)):
     if csv_record[k][4] < threshold_value:
