@@ -185,9 +185,8 @@ options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
 options = options + '_g'
 options = options + '_3dim'
 #options = options + '_scaled'
-# options = 'dt-path_mixture_of_distribution_lrc126_noise0_knn_cellCount4565_g_3dim'
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+#    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
 temp_x, temp_y, ccc_region = pickle.load(fp)
@@ -365,6 +364,8 @@ for attempt in range (0, 1):
         
     #########################      	
     cell_vs_gene = np.zeros((cell_count, total_gene))
+    min_lr_gene_exp = np.min(gene_distribution_inactive)
+    
     # initially all are in inactive state
     for i in range (0, total_gene):
         cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
@@ -419,9 +420,9 @@ for attempt in range (0, 1):
             cells_ligand_vs_receptor[i].append([])
             cells_ligand_vs_receptor[i][j] = []
     '''
-    min_lr_gene_exp = np.min(gene_distribution_inactive)
+    
     p_dist = []
-    for pattern_type_index in range (0, pattern_count): 
+    for pattern_type_index in range (0, pattern_count//2): 
         discard_cells = list(pattern_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
         ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*10))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
@@ -655,7 +656,8 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    for cell in pattern_used.keys(): #non_lr_cells[0:deactivate_count]:
+    for cell in pattern_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
+        #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
