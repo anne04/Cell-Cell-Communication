@@ -271,7 +271,7 @@ for attempt in range (0, 1):
     gene_distribution_noise = np.zeros((total_gene, cell_count))
     
     # innitialize gene expression for the lr genes 
-    start_loc = 15 # making it higher than non-lr gene will give more FP to confuse the naive model
+    start_loc = 20 # making it higher than non-lr gene will give more FP to confuse the naive model
     i = 0
     for gene_index in ligand_gene_list: 
         gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count)
@@ -293,7 +293,7 @@ for attempt in range (0, 1):
         #print('%d: inactive: %g to %g'%(gene_index, np.min(gene_distribution_inactive[gene_index,:]),np.max(gene_distribution_inactive[gene_index,:]) ))
         i = i+1
         
-    start_loc = 10
+    start_loc = 15
     non_lr_gene_start = lr_gene_count
     for i in range (non_lr_gene_start, total_gene):
         gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=cell_count)
@@ -422,7 +422,7 @@ for attempt in range (0, 1):
     '''
     
     p_dist = []
-    for pattern_type_index in range (0, pattern_count//2): 
+    for pattern_type_index in range (0, pattern_count): 
         discard_cells = list(pattern_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
         ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*10))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
@@ -442,15 +442,15 @@ for attempt in range (0, 1):
             
             a_cell = i
             b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
-            cell_of_interest.append(a_cell)
-            cell_of_interest.append(b_cell)
+
             
             #if pattern_type_index != 2:        
             if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
                 c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
             else:
                 c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
-            cell_of_interest.append(c_cell)
+                
+
             
             edge_list = []
             if a_cell in pattern_used_list[pattern_type_index] or b_cell in pattern_used_list[pattern_type_index] or c_cell in pattern_used_list[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
@@ -458,7 +458,12 @@ for attempt in range (0, 1):
                 continue   
             if a_cell in pattern_used or b_cell in pattern_used or c_cell in pattern_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
             #print('skip')
-                continue             
+                continue    
+
+            cell_of_interest.append(a_cell)
+            cell_of_interest.append(b_cell)              
+            cell_of_interest.append(c_cell)
+            
             '''
             if pattern_type_index == 0:
                 if a_cell in pattern_used_0 or b_cell in pattern_used_0 or c_cell in pattern_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
@@ -605,13 +610,16 @@ for attempt in range (0, 1):
                         if cell_vs_gene[c][g] != 0: ## CHECK ##
                             cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
             '''
+            temp_cell_gene_list = defaultdict(list)
             for edge in edge_list:
-                c1 = edge[0]
-                c2 = edge[1]
+                c1 = edge[0] # cell 1 - ligand
+                c2 = edge[1] # cell 2 - receptor
                 ligand_gene = edge[2]
                 receptor_gene = edge[3]
                 #########
                 communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
+                temp_cell_gene_list[c1].append(ligand_gene)
+                temp_cell_gene_list[c2].append(receptor_gene)
                 #communication_score = max(communication_score, 0)
                 if communication_score > 0:
                     lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
@@ -621,6 +629,16 @@ for attempt in range (0, 1):
                     print('Error')
                 #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
                 #########
+            for cell in temp_cell_gene_list: # turning of all other ligand receptor genes in the active spot to form pattern
+                for gene in ligand_gene_list:
+                    if gene not in temp_cell_gene_list[cell]:
+                        cell_vs_gene[cell,gene] = min_lr_gene_exp
+                for gene in receptor_gene_list:
+                    if gene not in temp_cell_gene_list[cell]:
+                        cell_vs_gene[cell,gene] = min_lr_gene_exp
+
+    
+                        
     print('P_class %d'%P_class)                
     
     
@@ -683,7 +701,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 96), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 94), np.percentile(y, 99) , kn_value])
     
     ###############
     
