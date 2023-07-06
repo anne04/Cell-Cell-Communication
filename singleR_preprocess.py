@@ -38,8 +38,9 @@ print(adata_h5)
 #np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_quantile_transformed_"+args.data_name, gene_vs_cell)
 ####################################################
 sc.pp.normalize_total(adata_h5, target_sum=1e6) # if target_sum=1e6, this is CPM normalization
-print(adata_h5)
+#print(adata_h5)
 sc.pp.log1p(adata_h5)
+#print(adata_h5)
 gene_vs_cell = sparse.csr_matrix.toarray(adata_h5.X)
 print('max gene expression value %g'%np.max(gene_vs_cell))
 print('min gene expression value %g'%np.min(gene_vs_cell))
