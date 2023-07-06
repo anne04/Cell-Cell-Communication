@@ -39,11 +39,11 @@ print(adata_h5)
 ####################################################
 sc.pp.normalize_total(adata_h5, target_sum=1e6) # if target_sum=1e6, this is CPM normalization
 print(adata_h5)
-# scanpy.pp.log1p(adata_h5)
+sc.pp.log1p(adata_h5)
 gene_vs_cell = sparse.csr_matrix.toarray(adata_h5.X)
 print('max gene expression value %g'%np.max(gene_vs_cell))
 print('min gene expression value %g'%np.min(gene_vs_cell))
-np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_CPM_"+args.data_name, gene_vs_cell)
+np.save("/cluster/projects/schwartzgroup/fatema/find_ccc/gene_vs_cell_logCPM_"+args.data_name, gene_vs_cell)
 ###################################
 gene_ids = list(adata_h5.var_names)
 coordinates = adata_h5.obsm['spatial']
