@@ -1639,9 +1639,9 @@ filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 
-plot_dict = []
+plot_dict_list = []
 for run_time in range (0,total_runs):
-    plot_dict.append(defaultdict(list))
+    plot_dict_list.append(defaultdict(list))
     run = run_time
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_
@@ -1781,7 +1781,7 @@ for run_time in range (0,total_runs):
                     for k in existing_lig_rec_dict[i][j]:   
                         
                         if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                            print(k)
+                            #print(k)
                             #positive_class = positive_class + 1                     
                             confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                             #else:
@@ -1794,9 +1794,9 @@ for run_time in range (0,total_runs):
         print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))
         FPR_value = (confusion_matrix[1][0]/negative_class)#*100
         TPR_value = (confusion_matrix[0][0]/positive_class)#*100
-        plot_dict[run]['FPR'].append(FPR_value)
-        plot_dict[run]['TPR'].append(TPR_value)
-        plot_dict[run]['Type'].append('run_'+str(run+1))
+        plot_dict_list[run]['FPR'].append(FPR_value)
+        plot_dict_list[run]['TPR'].append(TPR_value)
+        plot_dict_list[run]['Type'].append('run_'+str(run+1))
 
 
 ####################
@@ -1805,15 +1805,15 @@ TPR_list = []
 for i in range (0, len(percentage_threshold)):
     FPR = []
     for run in range (0,total_runs):
-        FPR.append(plot_dict[run]['FPR'][i])  
+        FPR.append(plot_dict_list[run]['FPR'][i])  
     FPR = np.mean(FPR)
     FPR_list.append(FPR)
     
     TPR = []
     for run in range (0,total_runs):
-        TPR.append(plot_dict[run]['TPR'][i])  
+        TPR.append(plot_dict_list[run]['TPR'][i])  
     TPR = np.mean(TPR)
-    TPR_list.append(FPR)
+    TPR_list.append(TPR)
 
 plot_dict = defaultdict(list)
 for i in range (0, len(percentage_threshold)):
