@@ -1829,6 +1829,10 @@ plot_dict = defaultdict(list)
 ###
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
+
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
 for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
     plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
@@ -1836,6 +1840,10 @@ for i in range (0, len(plot_dict_temp['Type'])):
 ###
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
+	
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
 for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
     plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
@@ -1843,6 +1851,9 @@ for i in range (0, len(plot_dict_temp['Type'])):
 ###
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
 for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
     plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
@@ -1851,23 +1862,33 @@ for i in range (0, len(plot_dict_temp['Type'])):
 ###
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_70percent', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
 for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
     plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
            
 ######
-niches_FPR = [.10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-niches_TPR = [.199627, .203358, .205224, .410448, .410448, .410448, .410448, .410448, .410448, .410448]
-for i in range (0, len(percentage_threshold)):
+niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
+niches_TPR = [0, .199627, .203358, .205224, .410448, .410448, .410448, .410448, .410448, .410448, .410448]
+for i in range (0, 11):
     plot_dict['FPR'].append(niches_FPR[i])
     plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches')
+    plot_dict['Type'].append('Niches with 10 nearest neighbour')
+    
+niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
+niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
+for i in range (0, 11):
+    plot_dict['FPR'].append(niches_FPR[i])
+    plot_dict['TPR'].append(niches_TPR[i])
+    plot_dict['Type'].append('Niches with 20 nearest neighbour')
     
 ######
-COMMOT_FPR = [.10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-COMMOT_TPR = [.50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
-for i in range (0, len(percentage_threshold)):
+COMMOT_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
+COMMOT_TPR = [0, .50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
+for i in range (0, 11):
     plot_dict['FPR'].append(COMMOT_FPR[i])
     plot_dict['TPR'].append(COMMOT_TPR[i])
     plot_dict['Type'].append('COMMOT')        
