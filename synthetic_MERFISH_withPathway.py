@@ -182,7 +182,7 @@ if noise_add == 2:
 datapoint_size = temp_x.shape[0]
 options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
 
-options = options + '_g'
+options = options + '_g' #f
 options = options + '_3dim'
 #options = options + '_scaled'
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
@@ -191,13 +191,11 @@ options = options + '_3dim'
 fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
 temp_x, temp_y, ccc_region = pickle.load(fp)
 
-
-
-#plt.gca().set_aspect(1)	
-#plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
-#save_path = '/cluster/home/t116508uhn/64630/'
-#plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
-#plt.clf()
+plt.gca().set_aspect(1)	
+plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
+plt.clf()
 
 get_cell = defaultdict(dict)  #[x_index][y_index] = cell_id
 available_cells = []
@@ -296,7 +294,7 @@ for attempt in range (0, 1):
     start_loc = 15
     non_lr_gene_start = lr_gene_count
     for i in range (non_lr_gene_start, total_gene):
-        gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=cell_count)
+        gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=cell_count) #scale=3 in 'f'
         for cell_index in range (0, gene_exp_list.shape[0]): # make the min exp = 0
             if gene_exp_list[cell_index]<0:
                 gene_exp_list[cell_index] = 0
@@ -312,7 +310,7 @@ for attempt in range (0, 1):
     # end up selecting too many edges where most of them lie in the lower end of the distribution. 
     
     rec_gene = lr_gene_count//2
-    scale_active_distribution = 1 #0.01
+    scale_active_distribution = 2 #0.01 #scale=1 in 'f'
     i = 0
     for gene_index in ligand_gene_list:
         gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=cell_count) #
@@ -398,16 +396,16 @@ for attempt in range (0, 1):
     P_class = 0
     ########################################
     
-    pattern_used = dict() # record the cells which follow any of the patterns / are turned active
+    neighborhood_used = dict() # record the cells which follow any of the patterns / are turned active
     
-    pattern_used_list = []
+    neighborhood_used_per_pattern = []
     for i in range (0, pattern_count):
-        pattern_used_list.append(dict())
+        neighborhood_used_per_pattern.append(dict())
     
-    #pattern_used_0 = dict() # record the cells which follow pattern 0
-    #pattern_used_1 = dict() # record the cells which follow pattern 1
-    #pattern_used_2 = dict() # record the cells which follow pattern 2
-    # pattern_used_3 = dict()
+    #neighborhood_used_0 = dict() # record the cells which follow pattern 0
+    #neighborhood_used_1 = dict() # record the cells which follow pattern 1
+    #neighborhood_used_2 = dict() # record the cells which follow pattern 2
+    # neighborhood_used_3 = dict()
     active_spot = dict()
     # Pick the regions for Ligands
     '''
@@ -423,7 +421,7 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(pattern_used.keys()) + list(active_spot.keys())    
+        discard_cells = list(neighborhood_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
         ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*10))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
@@ -453,10 +451,15 @@ for attempt in range (0, 1):
 
             
             edge_list = []
-            if a_cell in pattern_used_list[pattern_type_index] or b_cell in pattern_used_list[pattern_type_index] or c_cell in pattern_used_list[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
+            if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
-                continue   
-            if a_cell in pattern_used or b_cell in pattern_used or c_cell in pattern_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
+                continue 	
+            '''
+            if a_cell in neighborhood_used_per_pattern[pattern_type_index] or b_cell in neighborhood_used_per_pattern[pattern_type_index] or c_cell in neighborhood_used_per_pattern[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
+            #print('skip')
+                continue
+            '''
+            if a_cell in neighborhood_used or b_cell in neighborhood_used or c_cell in neighborhood_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue    
 
@@ -466,15 +469,15 @@ for attempt in range (0, 1):
             
             '''
             if pattern_type_index == 0:
-                if a_cell in pattern_used_0 or b_cell in pattern_used_0 or c_cell in pattern_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
+                if a_cell in neighborhood_used_0 or b_cell in neighborhood_used_0 or c_cell in neighborhood_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
                 #print('skip')
                     continue          
             elif pattern_type_index == 1:
-                if a_cell in pattern_used_1 or b_cell in pattern_used_1 or c_cell in pattern_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
+                if a_cell in neighborhood_used_1 or b_cell in neighborhood_used_1 or c_cell in neighborhood_used_1: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
                 #print('skip')
                     continue        
             elif pattern_type_index == 2:
-                if a_cell in pattern_used_2 or b_cell in pattern_used_2: # or c_cell in pattern_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in pattern_used:
+                if a_cell in neighborhood_used_2 or b_cell in neighborhood_used_2: # or c_cell in neighborhood_used_2: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
                 #print('skip')
                     continue            
             '''
@@ -525,6 +528,7 @@ for attempt in range (0, 1):
             gene_off_list = receptor_group_b_cell + ligand_group_b_cell 
             if pattern_type_index!=2:
                 gene_off_list = gene_off_list + receptor_group_c_cell
+		    
             for gene in gene_off_list:
                 cell_vs_gene[a_cell, gene] = min_lr_gene_exp #-10
                 
@@ -534,7 +538,7 @@ for attempt in range (0, 1):
                 if cell in active_spot:
                     continue
                     
-                pattern_used[cell]=''
+                neighborhood_used[cell]=''
                 for gene in gene_off_list:
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                 
@@ -553,7 +557,7 @@ for attempt in range (0, 1):
                 if cell in active_spot:
                     continue
                     
-                pattern_used[cell]=''
+                neighborhood_used[cell]=''
                 for gene in gene_off_list:
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                        
@@ -569,7 +573,7 @@ for attempt in range (0, 1):
                 if cell in active_spot:
                     continue
                     
-                pattern_used[cell]=''
+                neighborhood_used[cell]=''
                 for gene in gene_off_list:
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                         
@@ -578,28 +582,28 @@ for attempt in range (0, 1):
     
     
             #print('%d, %d, %d'%(a_cell, b_cell, c_cell))
-            #pattern_used[a_cell] = ''
-            #pattern_used[b_cell] = ''
-            #pattern_used[c_cell] = ''
+            #neighborhood_used[a_cell] = ''
+            #neighborhood_used[b_cell] = ''
+            #neighborhood_used[c_cell] = ''
             
-            pattern_used_list[pattern_type_index][a_cell] = ''
-            pattern_used_list[pattern_type_index][b_cell] = ''
-            pattern_used_list[pattern_type_index][c_cell] = ''
+            neighborhood_used_per_pattern[pattern_type_index][a_cell] = ''
+            neighborhood_used_per_pattern[pattern_type_index][b_cell] = ''
+            neighborhood_used_per_pattern[pattern_type_index][c_cell] = ''
             '''
             if pattern_type_index == 0:
-                pattern_used_0[a_cell] = ''
-                pattern_used_0[b_cell] = ''
-                pattern_used_0[c_cell] = ''
+                neighborhood_used_0[a_cell] = ''
+                neighborhood_used_0[b_cell] = ''
+                neighborhood_used_0[c_cell] = ''
     
             if pattern_type_index == 1:
-                pattern_used_1[a_cell] = ''
-                pattern_used_1[b_cell] = ''
-                pattern_used_1[c_cell] = ''
+                neighborhood_used_1[a_cell] = ''
+                neighborhood_used_1[b_cell] = ''
+                neighborhood_used_1[c_cell] = ''
     
             if pattern_type_index == 2:
-                pattern_used_2[a_cell] = ''
-                pattern_used_2[b_cell] = ''
-                #pattern_used_2[c_cell] = ''
+                neighborhood_used_2[a_cell] = ''
+                neighborhood_used_2[b_cell] = ''
+                #neighborhood_used_2[c_cell] = ''
             '''
     
             ##########################################
@@ -674,7 +678,7 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    for cell in pattern_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
+    for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
@@ -701,7 +705,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 94), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
     
     ###############
     
@@ -833,7 +837,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 if max_local < count_local:
                     max_local = count_local
             '''       
-            else: #elif i in pattern_used and j in pattern_used:
+            else: #elif i in neighborhood_used and j in neighborhood_used:
                 row_col.append([i,j])
                 edge_weight.append([dist_X[i,j], 0])
                 lig_rec.append(['', '']),
