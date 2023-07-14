@@ -1638,7 +1638,6 @@ chart.save(save_path+'plot_type4_e_3d_1layer.html')
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
-
 plot_dict_list = []
 for run_time in range (0,total_runs):
     plot_dict_list.append(defaultdict(list))
