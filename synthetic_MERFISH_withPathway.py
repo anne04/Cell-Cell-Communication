@@ -30,9 +30,9 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 2 #2 = path equally spaced
+threshold_distance = 4 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'knn'  #'threshold_dist' # <-----------
+distance_measure = 'knn'  #'threshold_dist' #'threshold_dist' # <-----------
 datatype = 'path_uniform_distribution' #'path_equally_spaced' #
 
 cell_percent = 100 # choose at random N% ligand cells
@@ -50,9 +50,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//2
+gene_group_count = len(ligand_gene_list)//4
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*2:(i+1)*2]),list(receptor_gene_list[i*2:(i+1)*2])])
+    gene_group.append([list(ligand_gene_list[i*4:(i+1)*4]),list(receptor_gene_list[i*4:(i+1)*4])])
 
     
 lr_database = []
@@ -93,9 +93,9 @@ random_active_percent = 0
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
         datapoint_size = 10000
-        x_max = 600
+        x_max = 1000
         x_min = 0
-        y_max = 600
+        y_max = 1000
         y_min = 0
 	
         a = x_min
@@ -138,7 +138,7 @@ def get_data(datatype):
         
         region_list.append([200, 350, 200, 300])
         '''
-	
+        '''
         discard_points = dict()
         for i in range (0, temp_x.shape[0]):
             if i not in discard_points:
@@ -147,11 +147,11 @@ def get_data(datatype):
                         if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
                             print('i: %d and j: %d'%(i,j))
                             discard_points[j]=''
-
+        '''
         coord_x = []
         coord_y = []
         for i in range (0, temp_x.shape[0]):
-            if i not in discard_points:
+            #if i not in discard_points:
                 coord_x.append(temp_x[i])
                 coord_y.append(temp_y[i])
 
@@ -191,7 +191,7 @@ if noise_add == 2:
 
 
 datapoint_size = temp_x.shape[0]
-options = options+ '_' + distance_measure  + '_cellCount' + str(datapoint_size)
+options = options+ '_' + distance_measure  +str(threshold_distance)+ '_cellCount' + str(datapoint_size)
 
 options = options + '_f' #f
 options = options + '_3dim'
@@ -199,8 +199,9 @@ options = options + '_3dim'
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
 #    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
-fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
-temp_x, temp_y, ccc_region = pickle.load(fp)
+#fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
+#temp_x, temp_y, ccc_region = pickle.load(fp)
+#datapoint_size = temp_x.shape[0]
 
 plt.gca().set_aspect(1)	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
@@ -248,7 +249,7 @@ for j in range(0, distance_matrix.shape[1]):
             if distance_matrix[i,j] > threshold_distance: #i not in k_higher:
                 dist_X[i,j] = 0 #-1
             else:
-                cell_neighborhood[i].append([j, dist_X[i,j]])
+                cell_neighborhood[i].append([j, dist_X[i,j]]) # recording outgoing connections: i to j. So that, at the end, j will have k_nn=10 incoming connections.
 		
 	
 
@@ -447,8 +448,13 @@ for attempt in range (0, 1):
             k = k + 1 
             
             a_cell = i
-            b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
+            if (len(cell_neighborhood[a_cell])<=1):
+                continue
 
+            
+            b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
+            if (len(cell_neighborhood[b_cell])<=1):
+                continue
             
             #if pattern_type_index != 2:        
             if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
@@ -672,14 +678,14 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    '''
+    
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    '''
+    ''''''
          
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
@@ -700,7 +706,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
     
     ###############
     
@@ -771,7 +777,7 @@ for attempt in range (0, 1):
         break
     
 ################
-save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
+#save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
 #lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
 
 lig_rec_dict_TP_temp = defaultdict(dict)
@@ -788,6 +794,7 @@ for i in range (0, len(lig_rec_dict_TP)):
 
 lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
+gc.collect()
 #################################################
 
 ccc_index_dict = dict()
