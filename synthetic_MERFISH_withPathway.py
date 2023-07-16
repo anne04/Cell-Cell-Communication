@@ -92,7 +92,7 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
-        datapoint_size = 5000
+        datapoint_size = 10000
         x_max = 600
         x_min = 0
         y_max = 600
@@ -138,6 +138,7 @@ def get_data(datatype):
         
         region_list.append([200, 350, 200, 300])
         '''
+	
         discard_points = dict()
         for i in range (0, temp_x.shape[0]):
             if i not in discard_points:
@@ -1126,6 +1127,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ###########################################   
+plot_dict = defaultdict(list)
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 csv_record_dict = defaultdict(list)
