@@ -50,9 +50,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//4
+gene_group_count = len(ligand_gene_list)//2
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*4:(i+1)*4]),list(receptor_gene_list[i*4:(i+1)*4])])
+    gene_group.append([list(ligand_gene_list[i*2:(i+1)*2]),list(receptor_gene_list[i*2:(i+1)*2])])
 
     
 lr_database = []
@@ -157,7 +157,8 @@ def get_data(datatype):
         temp_x = coord_x
         temp_y = coord_y
         
-        ccc_regions = []        
+        ccc_regions = []  
+        '''
         for i in range (0, len(temp_x)):
             for region in region_list:
                 x_max = region[1]
@@ -166,7 +167,7 @@ def get_data(datatype):
                 y_max = region[3]
                 if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
                     ccc_regions.append(i)
-                    
+        '''        
         temp_x = np.array(temp_x)
         temp_y = np.array(temp_y)
               
@@ -670,14 +671,15 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
+    '''
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    
-      
+    '''
+         
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
     
@@ -697,7 +699,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
     
     ###############
     
