@@ -30,8 +30,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 3 #2 = path equally spaced
-k_nn = 10 # #5 = h
+threshold_distance = 2 #2 = path equally spaced
 distance_measure = 'threshold_dist' #'knn'  #'threshold_dist' # <-----------
 datatype = 'path_equally_spaced' #'path_uniform_distribution' #
 
@@ -50,9 +49,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//4
+gene_group_count = len(ligand_gene_list)//20
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*4:(i+1)*4]),list(receptor_gene_list[i*4:(i+1)*4])])
+    gene_group.append([list(ligand_gene_list[i*20:(i+1)*20]),list(receptor_gene_list[i*20:(i+1)*20])])
 
     
 lr_database = []
@@ -92,9 +91,9 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_equally_spaced':
-        x_max = 50 #50 
+        x_max = 50 #100 #50 
         x_min = 0
-        y_max = 60 #20 #30 
+        y_max = 100 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -142,9 +141,9 @@ options = options + '_3dim'
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
 #    pickle.dump([temp_x, temp_y, ccc_region], fp)
 
-fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
-temp_x, temp_y, ccc_region = pickle.load(fp)
-datapoint_size = temp_x.shape[0]
+#fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
+#temp_x, temp_y, ccc_region = pickle.load(fp)
+#datapoint_size = temp_x.shape[0]
 
 plt.gca().set_aspect(1)	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
@@ -375,7 +374,7 @@ for attempt in range (0, 1):
     for pattern_type_index in range (0, pattern_count): 
         discard_cells = list(neighborhood_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*3))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
         print(ligand_cells[0:10])
@@ -649,7 +648,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99.5), np.percentile(y, 99) , kn_value])
     
     ###############
     
@@ -926,6 +925,8 @@ len row col 177016
 count local 2
 '''
 ###############################################Visualization starts###################################################################################################
+import gc
+gc.collect()
 
 # options = 'dt-path_uniform_distribution_lrc100_noise0_knn_cellCount4893_f_3dim'
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
@@ -1016,6 +1017,7 @@ plt.clf()
 plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
+    gc.collect()
     percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
     existing_lig_rec_dict = []
@@ -1072,6 +1074,7 @@ while percentage_value > 0:
     plot_dict['TPR'].append(TPR_value)
     plot_dict['Type'].append('naive_model')
 
+    
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
 
