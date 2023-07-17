@@ -30,9 +30,9 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 4 #2 = path equally spaced
+threshold_distance = 3 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'knn'  #'threshold_dist' #'threshold_dist' # <-----------
+distance_measure = 'threshold_dist' #'knn'  #'threshold_dist' # <-----------
 datatype = 'path_uniform_distribution' #'path_equally_spaced' #
 
 cell_percent = 100 # choose at random N% ligand cells
@@ -41,7 +41,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
 
-total_gene = 350
+total_gene = 500
 lr_gene_count = 100*2 # 100 L, 100 R = 100 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
@@ -93,9 +93,9 @@ random_active_percent = 0
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
         datapoint_size = 10000
-        x_max = 1000
+        x_max = 800
         x_min = 0
-        y_max = 1000
+        y_max = 800
         y_min = 0
 	
         a = x_min
@@ -202,13 +202,13 @@ options = options + '_3dim'
 #fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb')
 #temp_x, temp_y, ccc_region = pickle.load(fp)
 #datapoint_size = temp_x.shape[0]
-
+'''
 plt.gca().set_aspect(1)	
 plt.scatter(x=np.array(temp_x), y=np.array(temp_y), s=1)
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
 plt.clf()
-
+'''
 get_cell = defaultdict(dict)  #[x_index][y_index] = cell_id
 available_cells = []
 for i in range (0, temp_x.shape[0]):
@@ -432,9 +432,9 @@ for attempt in range (0, 1):
     for pattern_type_index in range (0, pattern_count): 
         discard_cells = list(neighborhood_used.keys()) + list(active_spot.keys())    
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count*3))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
-        print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
+        print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count ))
         print(ligand_cells[0:10])
     
         xy_ligand_cells = []
@@ -443,26 +443,32 @@ for attempt in range (0, 1):
             
         k= -1
         for i in ligand_cells:
+            if k > max_ligand_count:
+                break
             cell_of_interest = []
             # choose which L-R are working for this ligand i
-            k = k + 1 
+            
             
             a_cell = i
-            if (len(cell_neighborhood[a_cell])<=1):
-                continue
+            temp_neighborhood = []
+            for neighbor_cell in cell_neighborhood[a_cell]:
+                if neighbor_cell != a_cell:
+                    temp_neighborhood.append(neighbor_cell)
 
             
-            b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
-            if (len(cell_neighborhood[b_cell])<=1):
+            if (len(temp_neighborhood)<1):
                 continue
-            
-            #if pattern_type_index != 2:        
-            if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
-                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
-            else:
-                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
                 
+            b_cell = temp_neighborhood[len(temp_neighborhood)-1]  # take the last one to make the pattern complex
+            temp_neighborhood = []
+            for neighbor_cell in cell_neighborhood[b_cell]:
+                if neighbor_cell != a_cell and neighbor_cell != b_cell:
+                    temp_neighborhood.append(neighbor_cell)
+                    
+            if len(temp_neighborhood)<1:
+                continue
 
+            c_cell = temp_neighborhood[len(temp_neighborhood)-1]  # take the last one to make the pattern complex
             
             edge_list = []
             if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
@@ -480,7 +486,7 @@ for attempt in range (0, 1):
             cell_of_interest.append(a_cell)
             cell_of_interest.append(b_cell)              
             cell_of_interest.append(c_cell)
-            
+            k = k + 1 
             '''
             if pattern_type_index == 0:
                 if a_cell in neighborhood_used_0 or b_cell in neighborhood_used_0 or c_cell in neighborhood_used_0: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
@@ -616,7 +622,7 @@ for attempt in range (0, 1):
             ##########################################
             temp_cell_gene_list = defaultdict(list)
             for edge in edge_list:
-                c1 = edge[0] # cell 1 - ligand
+                c1 = edge[0] # cell 1 - ligand 
                 c2 = edge[1] # cell 2 - receptor
                 ligand_gene = edge[2]
                 receptor_gene = edge[3]
@@ -641,7 +647,7 @@ for attempt in range (0, 1):
                     if gene not in temp_cell_gene_list[cell]:
                         cell_vs_gene[cell,gene] = min_lr_gene_exp
 
-    
+        print('pattern %d occurance %d times'%(pattern_type_index, k))
                         
     print('P_class %d'%P_class)                
     
@@ -706,7 +712,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
     
     ###############
     
