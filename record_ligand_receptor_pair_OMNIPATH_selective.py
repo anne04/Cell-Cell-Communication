@@ -463,6 +463,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i][j] = []
 start_index = 0 #args.slice
 end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
+included_LR = defaultdict(dict)
 for g in range(start_index, end_index): 
     gene = ligand_list[g]
     for i in range (0, cell_vs_gene.shape[0]): # ligand
@@ -501,6 +502,7 @@ for g in range(start_index, end_index):
                         print('zero valued ccc score found')
                         continue	
                     cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                    included_LR[gene][gene_rec] = ''
                     count_rec = count_rec + 1
                     count_total_edges = count_total_edges + 1
                     activated_cell_index[i] = ''
@@ -514,6 +516,12 @@ for g in range(start_index, end_index):
     print(g)
     
 print('total number of edges in the input graph %d '%count_total_edges)
+
+count = 0
+for gene in included_LR:
+    for gene_rec in included_LR[gene]:
+        
+
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
