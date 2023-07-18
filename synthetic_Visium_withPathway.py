@@ -49,9 +49,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//20
+gene_group_count = len(ligand_gene_list)//40
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*20:(i+1)*20]),list(receptor_gene_list[i*20:(i+1)*20])])
+    gene_group.append([list(ligand_gene_list[i*40:(i+1)*40]),list(receptor_gene_list[i*40:(i+1)*40])])
 
     
 lr_database = []
@@ -372,9 +372,9 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(neighborhood_used.keys()) + list(active_spot.keys())    
+        discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        ligand_cells = ligand_cells[0: min(len(ligand_cells), cell_count//(pattern_count))] # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
         print(ligand_cells[0:10])
@@ -385,25 +385,33 @@ for attempt in range (0, 1):
             
         k= -1
         for i in ligand_cells:
+            if k > max_ligand_count:
+                break
+                
             cell_of_interest = []
             # choose which L-R are working for this ligand i
-            k = k + 1 
+            
             
             a_cell = i
-            if (len(cell_neighborhood[a_cell])<=1):
-                continue
+            temp_neighborhood = []
+            for neighbor_cell in cell_neighborhood[a_cell]:
+                if neighbor_cell != a_cell:
+                    temp_neighborhood.append(neighbor_cell)
 
             
-            b_cell = cell_neighborhood[a_cell][len(cell_neighborhood[a_cell])-1]  
-            if (len(cell_neighborhood[b_cell])<=1):
+            if (len(temp_neighborhood)<1):
                 continue
-            
-            #if pattern_type_index != 2:        
-            if cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]!=a_cell:
-                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-1]
-            else:
-                c_cell = cell_neighborhood[b_cell][len(cell_neighborhood[b_cell])-2]
                 
+            b_cell = temp_neighborhood[len(temp_neighborhood)-1]  # take the last one to make the pattern complex
+            temp_neighborhood = []
+            for neighbor_cell in cell_neighborhood[b_cell]:
+                if neighbor_cell != a_cell and neighbor_cell != b_cell:
+                    temp_neighborhood.append(neighbor_cell)
+                    
+            if len(temp_neighborhood)<1:
+                continue
+
+            c_cell = temp_neighborhood[len(temp_neighborhood)-1]  # take the last one to make the pattern complex
 
             
             edge_list = []
@@ -437,7 +445,7 @@ for attempt in range (0, 1):
                 #print('skip')
                     continue            
             '''
-                    
+            k = k + 1         
             a = pattern_list[pattern_type_index][0] # 0
             #if pattern_type_index != 2:    
             b = pattern_list[pattern_type_index][1] # 1
@@ -584,7 +592,7 @@ for attempt in range (0, 1):
                         cell_vs_gene[cell,gene] = min_lr_gene_exp
 
     
-                        
+        print('found %d'%k)                 
     print('P_class %d'%P_class)                
     
     
@@ -1088,7 +1096,7 @@ for run_time in range (0,total_runs):
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 	# synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_r1
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_equidistant_2_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=3 #2 ## 
