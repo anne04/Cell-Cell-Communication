@@ -30,7 +30,7 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 3 #2 = path equally spaced
+threshold_distance = 2 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'threshold_dist' #'knn'  #'threshold_dist' # <-----------
 datatype = 'path_uniform_distribution' #'path_equally_spaced' #
@@ -430,9 +430,9 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(neighborhood_used.keys()) + list(active_spot.keys())    
+        discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*30) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count ))
         print(ligand_cells[0:10])
@@ -482,7 +482,7 @@ for attempt in range (0, 1):
             if a_cell in neighborhood_used or b_cell in neighborhood_used or c_cell in neighborhood_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue    
-
+            
             cell_of_interest.append(a_cell)
             cell_of_interest.append(b_cell)              
             cell_of_interest.append(c_cell)
