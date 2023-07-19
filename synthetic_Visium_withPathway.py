@@ -41,7 +41,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #receptor_connections = 'all_same' #'all_not_same'
 
 total_gene = 10000
-lr_gene_count = 1000*2 # 100 L, 100 R = 100 pairs
+lr_gene_count = 500*2 # 100 L, 100 R = 100 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
 receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
@@ -91,9 +91,9 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_equally_spaced':
-        x_max = 100 #100 #50 
+        x_max = 50 #100 #50 
         x_min = 0
-        y_max = 100 #20 #30 
+        y_max = 60 #20 #30 
         y_min = 0
         temp_x = []
         temp_y = []
@@ -628,14 +628,14 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    
+    '''
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    ''''''
+    '''
          
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
@@ -690,7 +690,7 @@ for attempt in range (0, 1):
                         cell_vs_gene[j][gene_index[gene_rec]]  = cell_vs_gene[j][gene_index[gene_rec]]  + gene_distribution_noise[j]
                     '''  
                     
-                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
+                    if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][3] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][3]:
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
                         communication_score = max(communication_score, 0)
                         if communication_score>0:
