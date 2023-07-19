@@ -50,9 +50,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//4
+gene_group_count = len(ligand_gene_list)//20
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*4:(i+1)*4]),list(receptor_gene_list[i*4:(i+1)*4])])
+    gene_group.append([list(ligand_gene_list[i*20:(i+1)*20]),list(receptor_gene_list[i*20:(i+1)*20])])
 
     
 lr_database = []
@@ -93,9 +93,9 @@ random_active_percent = 0
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
         datapoint_size = 10000
-        x_max = 800
+        x_max = 500
         x_min = 0
-        y_max = 800
+        y_max = 500
         y_min = 0
 	
         a = x_min
@@ -430,9 +430,9 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
+        discard_cells = list(active_spot.keys()) # + list(neighborhood_used.keys())  
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        max_ligand_count = cell_count//(pattern_count*30) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count ))
         print(ligand_cells[0:10])
@@ -474,7 +474,7 @@ for attempt in range (0, 1):
             if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue 	
-            '''
+            
             if a_cell in neighborhood_used_per_pattern[pattern_type_index] or b_cell in neighborhood_used_per_pattern[pattern_type_index] or c_cell in neighborhood_used_per_pattern[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue
@@ -482,7 +482,7 @@ for attempt in range (0, 1):
             if a_cell in neighborhood_used or b_cell in neighborhood_used or c_cell in neighborhood_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue    
-            
+            '''
             cell_of_interest.append(a_cell)
             cell_of_interest.append(b_cell)              
             cell_of_interest.append(c_cell)
@@ -684,14 +684,14 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    
+    '''
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    ''''''
+    '''
          
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
@@ -712,7 +712,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
     
     ###############
     
