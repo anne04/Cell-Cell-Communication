@@ -42,7 +42,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #receptor_connections = 'all_same' #'all_not_same'
 
 total_gene = 500
-lr_gene_count = 100*2 # 100 L, 100 R = 100 pairs
+lr_gene_count = 10*2 # 100 L, 100 R = 100 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
 receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
@@ -50,9 +50,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//20
+gene_group_count = len(ligand_gene_list)//2
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*20:(i+1)*20]),list(receptor_gene_list[i*20:(i+1)*20])])
+    gene_group.append([list(ligand_gene_list[i*2:(i+1)*2]),list(receptor_gene_list[i*2:(i+1)*2])])
 
     
 lr_database = []
@@ -1149,7 +1149,7 @@ for run_time in range (0,total_runs):
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 	# synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_r1
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist3_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=3 #2 ## 
