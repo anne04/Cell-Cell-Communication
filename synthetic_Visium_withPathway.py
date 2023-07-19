@@ -49,9 +49,9 @@ receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
 np.random.shuffle(ligand_gene_list) 
 np.random.shuffle(receptor_gene_list) 
 gene_group = [] #[[[],[]], [[],[]] ,[[],[]] ,[[],[]] ,[[],[]]] # [3*3]*15 = 120 lr pairs
-gene_group_count = len(ligand_gene_list)//40
+gene_group_count = len(ligand_gene_list)//50
 for i in range (0, gene_group_count):
-    gene_group.append([list(ligand_gene_list[i*40:(i+1)*40]),list(receptor_gene_list[i*40:(i+1)*40])])
+    gene_group.append([list(ligand_gene_list[i*50:(i+1)*50]),list(receptor_gene_list[i*50:(i+1)*50])])
 
     
 lr_database = []
@@ -91,7 +91,7 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_equally_spaced':
-        x_max = 50 #100 #50 
+        x_max = 100 #100 #50 
         x_min = 0
         y_max = 100 #20 #30 
         y_min = 0
@@ -372,11 +372,11 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
+        discard_cells = list(active_spot.keys()) # + list(neighborhood_used.keys())  
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*5) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
-        print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, len(ligand_cells)))
+        print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count))
         print(ligand_cells[0:10])
     
         xy_ligand_cells = []
@@ -418,7 +418,7 @@ for attempt in range (0, 1):
             if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue 	
-            '''
+            
             if a_cell in neighborhood_used_per_pattern[pattern_type_index] or b_cell in neighborhood_used_per_pattern[pattern_type_index] or c_cell in neighborhood_used_per_pattern[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue
@@ -426,7 +426,7 @@ for attempt in range (0, 1):
             if a_cell in neighborhood_used or b_cell in neighborhood_used or c_cell in neighborhood_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue    
-
+		    '''
             cell_of_interest.append(a_cell)
             cell_of_interest.append(b_cell)              
             cell_of_interest.append(c_cell)
