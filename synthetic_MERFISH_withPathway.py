@@ -41,8 +41,8 @@ cell_percent = 100 # choose at random N% ligand cells
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
 
-total_gene = 500
-lr_gene_count = 10*2 # 100 L, 100 R = 100 pairs
+total_gene = 200
+lr_gene_count = 12*2 # 100 L, 100 R = 100 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
 receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
@@ -92,10 +92,10 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
-        datapoint_size = 10000
-        x_max = 500
+        datapoint_size = 5000
+        x_max = 50 # make it more compact to increase FP
         x_min = 0
-        y_max = 500
+        y_max = 50
         y_min = 0
 	
         a = x_min
@@ -712,7 +712,7 @@ for attempt in range (0, 1):
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]    
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
     
     ###############
     
@@ -1149,7 +1149,7 @@ for run_time in range (0,total_runs):
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 	# synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_r1
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist3_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist2_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=3 #2 ## 
