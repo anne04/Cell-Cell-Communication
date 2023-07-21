@@ -93,9 +93,9 @@ random_active_percent = 0
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
         datapoint_size = 5000
-        x_max = 50 # make it more compact to increase FP
+        x_max = 60 # make it more compact to increase FP
         x_min = 0
-        y_max = 50
+        y_max = 60
         y_min = 0
 	
         a = x_min
@@ -430,9 +430,9 @@ for attempt in range (0, 1):
     
     p_dist = []
     for pattern_type_index in range (0, pattern_count): 
-        discard_cells = list(active_spot.keys()) # + list(neighborhood_used.keys())  
+        discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
         ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+        max_ligand_count = cell_count//(pattern_count*30) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
         np.random.shuffle(ligand_cells)
         print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count ))
         print(ligand_cells[0:10])
@@ -684,14 +684,14 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    
+    '''
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    ''''''
+    '''
          
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
