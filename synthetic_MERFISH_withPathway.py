@@ -474,7 +474,7 @@ for attempt in range (0, 1):
             if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue 	
-            
+            '''
             if a_cell in neighborhood_used_per_pattern[pattern_type_index] or b_cell in neighborhood_used_per_pattern[pattern_type_index] or c_cell in neighborhood_used_per_pattern[pattern_type_index]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue
@@ -482,7 +482,7 @@ for attempt in range (0, 1):
             if a_cell in neighborhood_used or b_cell in neighborhood_used or c_cell in neighborhood_used: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighborhood_used:
             #print('skip')
                 continue    
-            '''
+            
             cell_of_interest.append(a_cell)
             cell_of_interest.append(b_cell)              
             cell_of_interest.append(c_cell)
@@ -684,14 +684,14 @@ for attempt in range (0, 1):
                     cell_vs_gene[cell,lig_gene] = min_lr_gene_exp
                     cell_vs_gene[cell,rec_gene] = min_lr_gene_exp
     '''
-    '''
+    
     for cell in neighborhood_used.keys(): # non-active neighboring cells are completely turned off so that they cannot destroy the patterns in active spots
         #cell_vs_gene[cell,:] = min_lr_gene_exp
         for gene in ligand_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
         for gene in receptor_gene_list:
             cell_vs_gene[cell,gene] = min_lr_gene_exp
-    '''
+    ''''''
          
     #############################
     print("min value of cell_vs_gene before normalizing is %g"%np.min(cell_vs_gene))
@@ -1142,14 +1142,14 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 ###########################################   
 plot_dict = defaultdict(list)
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 10
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 	# synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_r1
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist2_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist2_5kcell_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=3 #2 ## 
@@ -1197,7 +1197,7 @@ for run_time in range (0,total_runs):
     #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
     plt.clf()
     
-    percentage_value = 70
+    percentage_value = 100
     while percentage_value > 0:
         #distribution_partial = []
         percentage_value = percentage_value - 10
