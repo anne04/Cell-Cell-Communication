@@ -91,7 +91,7 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_equally_spaced':
-        x_max = 50 #100 #50 
+        x_max = 60 #100 #50 
         x_min = 0
         y_max = 60 #20 #30 
         y_min = 0
@@ -1089,14 +1089,14 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 ###########################################   
 plot_dict = defaultdict(list)
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 10
+total_runs = 5
 csv_record_dict = defaultdict(list)
 for run_time in range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 	# synthetic_data_ccc_roc_control_model_6_path_uniform_knn10_f_tanh_3d_r1
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_equidistant_2_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_equidistant_2_f_tanh_3d_big_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=3 #2 ## 
