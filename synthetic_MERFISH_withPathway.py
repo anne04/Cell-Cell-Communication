@@ -42,7 +42,7 @@ cell_percent = 100 # choose at random N% ligand cells
 #receptor_connections = 'all_same' #'all_not_same'
 
 total_gene = 200
-lr_gene_count = 12*2 # 100 L, 100 R = 100 pairs
+lr_gene_count = 4*2 # 100 L, 100 R = 100 pairs
 rec_start = lr_gene_count//2 # 25
 ligand_gene_list = np.arange(0, lr_gene_count//2)
 receptor_gene_list = np.arange(lr_gene_count//2, lr_gene_count)
@@ -92,7 +92,7 @@ random_active_percent = 0
 
 def get_data(datatype):
     if datatype == 'path_uniform_distribution':	
-        datapoint_size = 5000
+        datapoint_size = 3000
         x_max = 60 # make it more compact to increase FP
         x_min = 0
         y_max = 60
@@ -1152,7 +1152,7 @@ for run_time in range (0,total_runs):
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_uniform_dist2_5kcell_f_tanh_3d_'+filename[run]+'_attention_l1.npy'
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    l=3 #2 ## 
+    l=2 #2 = layer 2, 3 = layer 1 ## 
     distribution = []
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
