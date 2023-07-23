@@ -136,7 +136,7 @@ def get_data(datatype):
     
     elif datatype == 'path_mixture_of_distribution':
 	
-        datapoint_size = 3000
+        datapoint_size = 5000
         x_max = 500
         x_min = 0
         y_max = 300
@@ -183,6 +183,7 @@ def get_data(datatype):
         region_list.append([200, 350, 200, 300])
         
         discard_points = dict()
+        '''
         for i in range (0, temp_x.shape[0]):
             if i not in discard_points:
                 for j in range (i+1, temp_x.shape[0]):
@@ -190,7 +191,7 @@ def get_data(datatype):
                         if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
                             print('i: %d and j: %d'%(i,j))
                             discard_points[j]=''
-
+        '''
         coord_x = []
         coord_y = []
         for i in range (0, temp_x.shape[0]):
@@ -1496,7 +1497,8 @@ for run_time in range (0,total_runs):
     #    continue
 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_dropout_'+filename[run]+'_attention_l1.npy' #split_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_cell2501_f_tanh_3d_l1_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1504,7 +1506,7 @@ for run_time in range (0,total_runs):
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_3dim_dropout_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-    l=2 #2 ## 
+    l=3 #2 ## 
     distribution = []
     for index in range (0, X_attention_bundle[0].shape[1]):
         i = X_attention_bundle[0][0][index]
