@@ -32,7 +32,7 @@ args = parser.parse_args()
 
 threshold_distance = 2 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'threshold_dist' #'knn'  #'threshold_dist' # <-----------
+distance_measure = 'knn'  #'threshold_dist' #'threshold_dist' # <-----------
 datatype = 'path_uniform_distribution' #'path_equally_spaced' #
 
 cell_percent = 100 # choose at random N% ligand cells
@@ -111,7 +111,7 @@ def get_data(datatype):
         temp_x = coord_x
         temp_y = coord_y
         region_list = [] 
-        '''
+        
         coord_x_t = np.random.normal(loc=200, scale=5, size=datapoint_size//8)
         coord_y_t = np.random.normal(loc=150, scale=5, size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
@@ -137,7 +137,7 @@ def get_data(datatype):
         region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
         
         region_list.append([200, 350, 200, 300])
-        '''
+        ''''''
         '''
         discard_points = dict()
         for i in range (0, temp_x.shape[0]):
@@ -411,10 +411,7 @@ for attempt in range (0, 1):
     for i in range (0, pattern_count):
         neighborhood_used_per_pattern.append(dict())
     
-    #neighborhood_used_0 = dict() # record the cells which follow pattern 0
-    #neighborhood_used_1 = dict() # record the cells which follow pattern 1
-    #neighborhood_used_2 = dict() # record the cells which follow pattern 2
-    # neighborhood_used_3 = dict()
+
     active_spot = dict()
     # Pick the regions for Ligands
     '''
