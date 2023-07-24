@@ -50,6 +50,32 @@ cell_percent = 100 # choose at random N% ligand cells
 gene_count = 16 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 5 
 non_lr_genes = gene_count*20
+
+gene_ids = []
+for i in range (0, gene_count):
+    gene_ids.append(i) 
+
+gene_info=dict()
+for gene in gene_ids:
+    gene_info[gene]=''
+
+gene_index=dict()    
+i = 0
+for gene in gene_ids: 
+    gene_index[gene] = i
+    i = i+1
+#######################
+lr_database = []
+
+for i in range (0, rec_start):
+    lr_database.append([i,rec_start+i])
+    
+ligand_dict_dataset = defaultdict(dict)
+for i in range (0, len(lr_database)):
+    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+
+ligand_list = list(ligand_dict_dataset.keys())   
+
 noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
@@ -380,37 +406,13 @@ min_gene_count = np.min(gene_distribution_inactive)
 
 print('min_gene_count %d'%min_gene_count)
 min_gene_count = 0
-gene_ids = []
-for i in range (0, gene_count):
-    gene_ids.append(i) 
-
-gene_info=dict()
-for gene in gene_ids:
-    gene_info[gene]=''
-
-gene_index=dict()    
-i = 0
-for gene in gene_ids: 
-    gene_index[gene] = i
-    i = i+1
-#######################
-lr_database = []
-
-for i in range (0, rec_start):
-    lr_database.append([i,rec_start+i])
-    
-ligand_dict_dataset = defaultdict(dict)
-for i in range (0, len(lr_database)):
-    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
-
-ligand_list = list(ligand_dict_dataset.keys())   
     
 #########################      	
 cell_vs_gene = np.zeros((cell_count,gene_count + non_lr_genes))
 # initially all are in inactive state
 for i in range (0, gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
-
+###############################################################
 noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
 if noise_add == 1:
     gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
@@ -423,7 +425,7 @@ elif noise_add == 2:
     
     print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
     
-
+#####################################################################
 '''	
 for i in range (0, len(noise_cells)):
     cell = noise_cells[i]
@@ -432,7 +434,6 @@ for i in range (0, len(noise_cells)):
 # record true positive connections    
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
-
 for i in range (0, datapoint_size): 
     lig_rec_dict_TP.append([])  
     for j in range (0, datapoint_size):	
@@ -590,9 +591,7 @@ for lr_type_index in range (1,2):
 
 
         print('%d, %d, %d'%(a_cell, b_cell, c_cell))
-        #all_used[a_cell] = ''
-        #all_used[b_cell] = ''
-        #all_used[c_cell] = ''
+
         active_spot[a_cell] = ''
         active_spot[b_cell] = ''
         active_spot[c_cell] = ''
