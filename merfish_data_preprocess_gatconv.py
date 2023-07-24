@@ -881,7 +881,6 @@ for i in range (0, count_points_component.shape[0]):
 print(id_label)
 
 for i in range (0, len(barcode_info)):
-#    if barcode_info[i][0] in barcode_label:
     if count_points_component[labels[i]] > 1:
         barcode_info[i][3] = index_dict[labels[i]] #2
     elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
@@ -897,7 +896,16 @@ for record in range (1, len(csv_record)):
     label = barcode_info[i][3]
     csv_record[record][5] = label
     
-
+#####color only OXT ligands ######
+for record in range (1, len(csv_record)):
+    i = csv_record[record][6]
+    if csv_record[record][2] == 'OXT':
+        label = 1
+    else: 
+        label = 0
+        
+    csv_record[record][5] = label
+        
 ###########	
 
 exist_spot = defaultdict(list)
