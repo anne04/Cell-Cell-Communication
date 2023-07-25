@@ -21,8 +21,18 @@ for i in range (0, len(df.index)):
     
 
 protein_name = []
-for i in range (2, len(df.columns)):
+for i in range (2, len(df.columns)-2):
     protein_name.append(df.columns[i])
+
+file_name = []
+for j in range (0, len(cell_name)):
+    cell = cell_name[j]
+    file_name.append(df['TIFFfilename'][cell])
+
+status_list = []
+for j in range (0, len(cell_name)):
+    cell = cell_name[j]
+    status_list.append(df['Status'][cell])
 
 gene_vs_cell = np.zeros((len(protein_name),len(cell_name)))
 for i in range (0, len(protein_name)):
@@ -38,6 +48,12 @@ df.to_csv('mnt/data1/fatema/protein_marker_mgDF.csv', index=False, header=False)
 
 df = pd.DataFrame(cell_name)
 df.to_csv('mnt/data1/fatema/cell_id_mgDF.csv', index=False, header=False)
+
+df = pd.DataFrame(file_name)
+df.to_csv('mnt/data1/fatema/file_name_mgDF.csv', index=False, header=False)
+
+df = pd.DataFrame(status_list)
+df.to_csv('mnt/data1/fatema/status_list_mgDF.csv', index=False, header=False)
 
 df = pd.DataFrame(x_coord)
 df.to_csv('mnt/data1/fatema/x_coord_mgDF.csv', index=False, header=False)
