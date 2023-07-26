@@ -568,7 +568,7 @@ for attempt in range (0, 1):
                     continue
                     
                 neighborhood_used[cell]=''
-                for gene in gene_off_list:
+                for gene in gene_off_list: ## CHECK ##
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                 
             
@@ -587,7 +587,7 @@ for attempt in range (0, 1):
                     continue
                     
                 neighborhood_used[cell]=''
-                for gene in gene_off_list:
+                for gene in gene_off_list: ## CHECK ##
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                        
             #################################################################
@@ -603,7 +603,7 @@ for attempt in range (0, 1):
                     continue
                     
                 neighborhood_used[cell]=''
-                for gene in gene_off_list:
+                for gene in gene_off_list:  ## CHECK ##
                     cell_vs_gene[cell, gene] = min_lr_gene_exp #-10   
                         
     
