@@ -346,13 +346,7 @@ for i in range (0, 4): #gene_count//2):
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     rec_gene = rec_gene + 1 
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-    '''
-    gene_exp_list = np.random.normal(loc=np.max(gene_distribution_inactive[i,:])+2, scale=.1, size=len(temp_x))   
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_active[i,:] = gene_exp_list  
-    print('active: %g to %g'%(np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
-    start_loc = np.max(gene_distribution_inactive[i,:])+2
-    '''
+
 ################
 for i in range (4, gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
