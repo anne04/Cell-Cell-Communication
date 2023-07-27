@@ -514,31 +514,23 @@ for lr_type_index in range (1,2):
             if a_cell in active_spot_in_pattern[0] or b_cell in active_spot_in_pattern[0] or c_cell in active_spot_in_pattern[0]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
             #print('skip')
                 continue          
-            a = 0 # 10
-            b = 1 # 11
+            a1 = 0 
+            b1 = 1
+            
+            a2 = 2
+            b2 = 3
+
+            gene_group = [[a1, b1], [a2, b2]]
+
+	    
         elif pattern_type == 1:
             a = 2 # 12
             b = 3 # 13
+		
             if a_cell in active_spot_in_pattern[1] or b_cell in active_spot_in_pattern[1] or c_cell in active_spot_in_pattern[1]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
             #print('skip')
                 continue        
-        elif pattern_type == 2:
-            a = 4
-            b = 5
-            if a_cell in active_spot_in_pattern[2] or b_cell in active_spot_in_pattern[2] or c_cell in active_spot_in_pattern[2]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
-            #print('skip')
-                continue            
-        elif pattern_type == 3:
-            a = 6
-            b = 7
-            if a_cell in active_spot_in_pattern[3] or b_cell in active_spot_in_pattern[3] or c_cell in active_spot_in_pattern[3]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
-            #print('skip')
-                continue         
-        '''
-        elif pattern_type == 4:
-            a = 8
-            b = 9
-        '''
+
         k = k + 1 
         ##########################################  
         a_cell_active_genes = []
@@ -546,43 +538,10 @@ for lr_type_index in range (1,2):
         c_cell_active_genes = []
 
         ###########################################
-        lr_i = a
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
-        cell_id = a_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        a_cell_active_genes.append(ligand_gene)
+        for gene_pair in gene_group:
+            a = gene_pair[0]
+            b = gene_pair[1]
         
-        cell_id = b_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        b_cell_active_genes.append(receptor_gene)
-        edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
-
-        
-        #########################################
-        
-        lr_i = b
-        ligand_gene = lr_database[lr_i][0]
-        receptor_gene = lr_database[lr_i][1]
-        cell_id = b_cell
-        cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
-        b_cell_active_genes.append(ligand_gene)
-        
-        cell_id = c_cell
-        cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-        edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
-        c_cell_active_genes.append(receptor_gene)
-        ##########################################
-
-        
-        if pattern_type == 0:
-            a = 2 # 12
-            b = 3 # 13
-        elif pattern_type == 1:
-            a = 10 # 16
-            b = 11 # 17
-        ###########################################
-        if pattern_type == 0 or pattern_type == 1:
             lr_i = a
             ligand_gene = lr_database[lr_i][0]
             receptor_gene = lr_database[lr_i][1]
@@ -592,20 +551,23 @@ for lr_type_index in range (1,2):
             
             cell_id = b_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
-            edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
             b_cell_active_genes.append(receptor_gene)
+            edge_list.append([a_cell, b_cell, ligand_gene, receptor_gene])
+    
             #########################################
+            
             lr_i = b
             ligand_gene = lr_database[lr_i][0]
             receptor_gene = lr_database[lr_i][1]
             cell_id = b_cell
             cell_vs_gene[cell_id, ligand_gene] = gene_distribution_active[ligand_gene, cell_id]
             b_cell_active_genes.append(ligand_gene)
+            
             cell_id = c_cell
             cell_vs_gene[cell_id, receptor_gene] = gene_distribution_active[receptor_gene, cell_id]
             edge_list.append([b_cell, c_cell, ligand_gene, receptor_gene])
             c_cell_active_genes.append(receptor_gene)
-            ''''''
+
         #################
         # [0, 1, 2, 3, 8, 9, 10, 11]
         # lr_database[0] = [0, 8],
@@ -613,17 +575,7 @@ for lr_type_index in range (1,2):
         # lr_database[2] = [2, 10],
         # lr_database[3] = [3, 11]
         
-        # a_cell has only 0, 2 active. b_cell has 8, 10, 1, 3 active. c_cell has 9, 11 active.    
-        '''
-        for gene in [1, 3, 8, 9, 10, 11]:
-            cell_vs_gene[a_cell, gene] = min_gene_count #-10
-            
-        for gene in [0, 2, 9, 11]:
-            cell_vs_gene[b_cell, gene] = min_gene_count #-10
-            
-        for gene in [0, 1, 2, 3, 8, 10]:
-            cell_vs_gene[c_cell, gene] = min_gene_count #-10
-        '''
+
         ligand_receptor_genes = ligand_gene_list + receptor_gene_list
         for gene in ligand_receptor_genes:
             if gene not in a_cell_active_genes:
@@ -682,39 +634,12 @@ for lr_type_index in range (1,2):
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = min_gene_count #-10
             
-
-        ''''''
-        
-        
-        if pattern_type == 0:
-            active_spot_in_pattern[0][a_cell] = ''
-            active_spot_in_pattern[0][b_cell] = ''
-            active_spot_in_pattern[0][c_cell] = ''
-
-        if pattern_type == 1:
-            active_spot_in_pattern[1][a_cell] = ''
-            active_spot_in_pattern[1][b_cell] = ''
-            active_spot_in_pattern[1][c_cell] = ''
-
-        if pattern_type == 2:
-            active_spot_in_pattern[2][a_cell] = ''
-            active_spot_in_pattern[2][b_cell] = ''
-            active_spot_in_pattern[2][c_cell] = ''
-
-        if pattern_type == 3:
-            active_spot_in_pattern[3][a_cell] = ''
-            active_spot_in_pattern[3][b_cell] = ''
-            active_spot_in_pattern[3][c_cell] = ''    
-
+        active_spot_in_pattern[pattern_type][a_cell] = ''
+        active_spot_in_pattern[pattern_type][b_cell] = ''
+        active_spot_in_pattern[pattern_type][c_cell] = ''
 
         ##########################################
-        '''
-        for c in [i, cell_neighborhood[i][0], cell_neighborhood[cell_neighborhood[i][0]][0]]:
-            if c in noise_cells:
-                for g in range (0, cell_vs_gene.shape[1]):
-                    if cell_vs_gene[c][g] != 0: ## CHECK ##
-                        cell_vs_gene[c, g] = cell_vs_gene[c, g] + gene_distribution_noise[c]
-        '''
+
         for edge in edge_list:
             c1 = edge[0]
             c2 = edge[1]
