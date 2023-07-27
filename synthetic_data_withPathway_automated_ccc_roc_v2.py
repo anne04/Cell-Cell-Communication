@@ -78,6 +78,15 @@ for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
 ligand_list = list(ligand_dict_dataset.keys())   
 
+# [0, 1, 2, 3, 8, 9, 10, 11]
+# lr_database[0] = [0, 8],
+# lr_database[1] = [1, 9],
+# lr_database[2] = [2, 10],
+# lr_database[3] = [3, 11]
+
+pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
+
+
 ###########################################
 
 noise_add = 0  #2 #1
@@ -457,24 +466,24 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 '''
-for lr_type_index in range (1,2): 
-	
-    ligand_cells = np.arange(cell_count)
+pattern_count = len(pattern_list)
+for pattern_type in range (0, pattern_count):	
+    discard_cells = list(active_spot.keys()) + list(neighborhood_used.keys())  
+    ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
+    max_ligand_count = cell_count//(pattern_count*30) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
-    ligand_cells = ligand_cells[0:(cell_count*cell_percent)//100]
+    print("pattern_type_index %d, ligand_cell count %d"%(pattern_type_index, max_ligand_count ))
     print(ligand_cells[0:10])
-    #ligand_cells = list(np.random.randint(0, cell_count, size=(cell_count*cell_percent)//100)) #“discrete uniform” distribution #ccc_region #
+    
     set_ligand_cells = []
     for i in ligand_cells:
         set_ligand_cells.append([temp_x[i], temp_y[i]]) 
-        
     
-    pattern_type_allcell = list(np.random.randint(0, lr_type_index, size=len(ligand_cells))) 
     k= -1
     for i in ligand_cells:
         # choose which L-R are working for this ligand i        
-        pattern_type = pattern_type_allcell[k] # 
-        
+        if k > max_ligand_count:
+            break        
         a_cell = i
         temp_neighborhood = []
         for neighbor_cell in cell_neighborhood[a_cell]:
@@ -504,33 +513,18 @@ for lr_type_index in range (1,2):
             continue
 
 	
-        if pattern_type == 0:
-            if a_cell in active_spot_in_pattern[0] or b_cell in active_spot_in_pattern[0] or c_cell in active_spot_in_pattern[0]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
-            #print('skip')
-                continue          
-            a1 = 0 
-            b1 = 1
+   
+        if a_cell in active_spot_in_pattern[pattern_type] or b_cell in active_spot_in_pattern[pattern_type] or c_cell in active_spot_in_pattern[pattern_type]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
+            continue        
             
-            a2 = 2
-            b2 = 3
-
-            gene_group = [[a1, b1], [a2, b2]]
-
-	    
-        elif pattern_type == 1:
-            a = 2 # 12
-            b = 3 # 13
-		
-            if a_cell in active_spot_in_pattern[1] or b_cell in active_spot_in_pattern[1] or c_cell in active_spot_in_pattern[1]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
-            #print('skip')
-                continue        
+        gene_group = pattern_list[pattern_type]    
+      
 
         k = k + 1 
         ##########################################  
         a_cell_active_genes = []
         b_cell_active_genes = []
         c_cell_active_genes = []
-
         ###########################################
         for gene_pair in gene_group:
             a = gene_pair[0]
@@ -563,12 +557,7 @@ for lr_type_index in range (1,2):
             c_cell_active_genes.append(receptor_gene)
 
         #################
-        # [0, 1, 2, 3, 8, 9, 10, 11]
-        # lr_database[0] = [0, 8],
-        # lr_database[1] = [1, 9],
-        # lr_database[2] = [2, 10],
-        # lr_database[3] = [3, 11]
-        
+
 
         ligand_receptor_genes = ligand_gene_list + receptor_gene_list
         for gene in ligand_receptor_genes:
@@ -647,7 +636,7 @@ for lr_type_index in range (1,2):
                 P_class = P_class+1
             #cells_ligand_vs_receptor[c1][c2].append([ligand_gene, receptor_gene, communication_score, ligand_dict_dataset[ligand_gene][receptor_gene]])              
             #########
-    print('pattern formed %d times'%k)
+    print('pattern %d is formed %d times'%(pattern_type, k))
 
 print('P_class %d'%P_class)                
 
