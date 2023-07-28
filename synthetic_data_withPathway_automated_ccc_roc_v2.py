@@ -84,7 +84,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 # lr_database[2] = [2, 10],
 # lr_database[3] = [3, 11]
 
-pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
+pattern_list = [[[0, 1],[2, 3], [4, 5], [6, 7]]]
 
 
 ###########################################
@@ -482,7 +482,7 @@ pattern_count = len(pattern_list)
 for pattern_type in range (0, pattern_count):	
     discard_cells = list(active_spot.keys()) + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -920,7 +920,10 @@ true_edge = []
 
 for index in range (0, len(row_col)):
     i = row_col[index][0]
-    j = row_col[index][1]
+    j = row_col[index][1]pattern 0 is formed 239 times
+P_class 1920
+total edges 2937
+
     k = lig_rec[index]
     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
         true_edge.append([edge_weight[index][1]*edge_weight[index][0], i, j, edge_weight[index][0], edge_weight[index][1], k])
