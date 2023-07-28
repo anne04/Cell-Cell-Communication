@@ -47,10 +47,10 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
-gene_count = 16 #8 #100 #20 #100 #20 #50 # and 25 pairs
+gene_count = 20 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 
-ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7]
-receptor_gene_list = [8, 9, 10, 11, 12, 13, 14, 15]
+ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+receptor_gene_list = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
 non_lr_genes = 320 #gene_count*20
 
@@ -77,13 +77,20 @@ ligand_dict_dataset = defaultdict(dict)
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
 ligand_list = list(ligand_dict_dataset.keys())   
-
-# [0, 1, 2, 3, 8, 9, 10, 11]
-# lr_database[0] = [0, 8],
-# lr_database[1] = [1, 9],
-# lr_database[2] = [2, 10],
-# lr_database[3] = [3, 11]
-
+'''
+In [19]: lr_database
+Out[19]: 
+[[0, 10],
+ [1, 11],
+ [2, 12],
+ [3, 13],
+ [4, 14],
+ [5, 15],
+ [6, 16],
+ [7, 17],
+ [8, 18],
+ [9, 19]]
+'''
 pattern_list = [[[0, 1],[2, 3], [4, 5], [6, 7]]]
 
 
@@ -1490,7 +1497,7 @@ for run_time in range (0,total_runs):
     #    continue
 
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_cell5000_f_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
