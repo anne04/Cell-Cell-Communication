@@ -47,10 +47,17 @@ cell_percent = 100 # choose at random N% ligand cells
 # lr_percent = 20 #40 #10
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
+'''
 gene_count = 20 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = gene_count//2 # 
 ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 receptor_gene_list = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+'''
+gene_count = 24 #8 #100 #20 #100 #20 #50 # and 25 pairs
+rec_start = gene_count//2 # 
+ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+receptor_gene_list = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
 
 non_lr_genes = 320 #gene_count*20
 
@@ -472,6 +479,11 @@ active_spot_in_pattern.append(dict())
 active_spot_in_pattern.append(dict())
 active_spot_in_pattern.append(dict())
 active_spot_in_pattern.append(dict())
+
+neighbour_of_actives_in_pattern = []
+neighbour_of_actives_in_pattern.append(dict())
+neighbour_of_actives_in_pattern.append(dict())
+
 active_spot = dict()
 # Pick the regions for Ligands
 '''
@@ -487,9 +499,9 @@ for i in range (0, cell_vs_gene.shape[0]):
 flag_stop = 0
 pattern_count = len(pattern_list)
 for pattern_type in range (0, pattern_count):	
-    discard_cells = list(active_spot.keys()) + list(neighbour_of_actives.keys())  
+    discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -514,6 +526,8 @@ for pattern_type in range (0, pattern_count):
             
         b_cell = temp_neighborhood[len(temp_neighborhood)-1]  # take the last one to make the pattern complex
         temp_neighborhood = []
+	    
+
         for neighbor_cell in cell_neighborhood[b_cell]:
             if neighbor_cell != a_cell and neighbor_cell != b_cell:
                 temp_neighborhood.append(neighbor_cell)
@@ -525,16 +539,20 @@ for pattern_type in range (0, pattern_count):
                 
         
         
-        if a_cell in neighbour_of_actives or b_cell in neighbour_of_actives or c_cell in neighbour_of_actives:
-            continue
+        #if a_cell in neighbour_of_actives or b_cell in neighbour_of_actives or c_cell in neighbour_of_actives:
+        #    continue
         
         if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot:
             continue
 
-	
+
+        if a_cell in neighbour_of_actives_in_pattern[pattern_type] or b_cell in neighbour_of_actives_in_pattern[pattern_type] or c_cell in neighbour_of_actives_in_pattern[pattern_type]:
+            continue
+            
+	    
    
-        if a_cell in active_spot_in_pattern[pattern_type] or b_cell in active_spot_in_pattern[pattern_type] or c_cell in active_spot_in_pattern[pattern_type]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
-            continue        
+        #if a_cell in active_spot_in_pattern[pattern_type] or b_cell in active_spot_in_pattern[pattern_type] or c_cell in active_spot_in_pattern[pattern_type]: # or  cell_neighborhood[cell_neighborhood[cell_neighborhood[i][0]][0]][0] in neighbour_of_actives:
+        #    continue        
             
         gene_group = pattern_list[pattern_type]    
       
@@ -613,6 +631,7 @@ for pattern_type in range (0, pattern_count):
                 continue
                 
             neighbour_of_actives[cell]=''
+            neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = min_gene_count #-10   
 
@@ -625,6 +644,7 @@ for pattern_type in range (0, pattern_count):
                 continue
                 
             neighbour_of_actives[cell]=''
+            neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = min_gene_count #-10
 
@@ -637,6 +657,7 @@ for pattern_type in range (0, pattern_count):
                 continue
                 
             neighbour_of_actives[cell]=''
+            neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
                 cell_vs_gene[cell, gene] = min_gene_count #-10
             
@@ -720,7 +741,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1053,6 +1074,8 @@ for i in range (0, len(lig_rec_dict_TP)):
 
 lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
+
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
@@ -2009,7 +2032,13 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
  
-
+datapoint_label = []
+for i in range (0, temp_x.shape[0]):
+    if i in ccc_index_dict:
+        datapoint_label.append(2)
+    else:
+        datapoint_label.append(0)
+        
 ####################
 ids = []
 x_index=[] 
