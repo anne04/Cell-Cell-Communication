@@ -190,14 +190,15 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
             cell_vs_gene_list.append(cell_vs_gene)
             total_cell = total_cell + cell_vs_gene.shape[0]
             z_index = data_sets_gatconv[index][4][0][3]
+	        neuron_type = data_sets_gatconv[index][5]
             print('index:%d, cell count: %d'%(index, cell_vs_gene.shape[0]))
             if z_index_yes == 1:
                 for i in range (0, len(cell_barcodes)):
-                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], z_index,0])
+                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], z_index,0, neuron_type[i][0]])
                     i=i+1
             else:
                 for i in range (0, len(cell_barcodes)):
-                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], 0])
+                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], 0, neuron_type[i][0]])
                     i=i+1       
 
                 break
@@ -871,9 +872,10 @@ count = 0
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
-    if csv_record[k][4] >= threshold_value:        
-        i = csv_record[k][6]
-        j = csv_record[k][7]
+    i = csv_record[k][6]
+    j = csv_record[k][7]    
+    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
+        print("%s - %s, %s - %s"%(ligand, receptor, barcode_info[i][4], barcode_info[j][4]))
         connecting_edges[i][j]=1
         count = count+1
         
@@ -915,6 +917,7 @@ for record in range (1, len(csv_record)):
     csv_record[record][5] = label
     
 #####color only OXT ligands ######
+'''
 for record in range (1, len(csv_record)):
     i = csv_record[record][6]
     if csv_record[record][2] == 'OXT':
@@ -923,7 +926,7 @@ for record in range (1, len(csv_record)):
         label = 0
         
     csv_record[record][5] = label
-        
+'''       
 ###########	
 
 exist_spot = defaultdict(list)
@@ -1011,7 +1014,10 @@ threshold_value =  np.percentile(combined_score_distribution,50)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
-    if csv_record[k][4] >= threshold_value:    
+    i = csv_record[k][6]
+    j = csv_record[k][7] 
+    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):   
+        print(barcode_info[i])
         csv_record_temp.append(csv_record[k])
          
 i=0
@@ -1036,7 +1042,7 @@ p.save(outPath)	# output 5
             
 
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
-set1 = altairThemes.get_colour_scheme("Set1", len(set(data_list['component_label'])))
+set1 = altairThemes.get_colour_scheme("Set1", id_label) #len(set(data_list['component_label'])))
 colors = set1
 colors[0] = '#000000'
 ids = []
@@ -1075,8 +1081,9 @@ for k in range (1, len(csv_record)):
     receptor = csv_record[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record[k][4]
-    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color=colors_point[i] ) 
-    count_edges = count_edges + 1
+    if ((barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
+        g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color=colors_point[i] ) 
+        count_edges = count_edges + 1
 
 nt.from_nx(g)
 nt.show('mygraph.html')
