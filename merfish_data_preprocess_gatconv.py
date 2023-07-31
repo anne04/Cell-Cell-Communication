@@ -133,10 +133,17 @@ def totalPlot(df, features, outPath):
 
   return
 
-
-
-
-
+###################
+meta_file = '/cluster/projects/schwartzgroup/fatema/MESSI/input/merfish_meta_Virgin_Parenting_Female.csv'
+df = pd.read_csv(meta_file)
+microglia_cell_id = []
+for i in range (0, df["Cell_ID"].shape[0]):
+    if df["Cell_class"][i] == 'Microglia':
+        microglia_cell_id.append(df["Cell_ID"][i])
+        
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microglia", 'wb') as fp:  #b, a:[0:5]  _filtered 
+    pickle.dump(microglia_cell_id, fp)
+ 
 
 
 
@@ -186,11 +193,11 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
             print('index:%d, cell count: %d'%(index, cell_vs_gene.shape[0]))
             if z_index_yes == 1:
                 for i in range (0, len(cell_barcodes)):
-                    barcode_info.append([cell_barcodes[0], coordinates[i,0], coordinates[i,1], z_index,0])
+                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], z_index,0])
                     i=i+1
             else:
                 for i in range (0, len(cell_barcodes)):
-                    barcode_info.append([cell_barcodes[0], coordinates[i,0], coordinates[i,1], 0])
+                    barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], 0])
                     i=i+1       
 
                 break
@@ -516,6 +523,7 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
 
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_barcode_info', 'wb') as fp:  #b, a:[0:5]   _filtered
         pickle.dump(barcode_info, fp)
+        
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_coordinates', 'wb') as fp:  #b, a:[0:5]   _filtered
         pickle.dump(coordinates, fp)
         
@@ -541,6 +549,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
     barcode_info = pickle.load(fp)
+    
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
     coordinates = pickle.load(fp)
 datapoint_size = len(barcode_info)    
@@ -563,6 +572,15 @@ for index in range (0, len(row_col)):
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
         
+
+###########
+
+cell_kept = []
+for cell_id in microglia_cell_id:
+    if cell_id in barcode_type:
+        cell_kept.append(cell_id)
+        
+###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 5
 start_index = 0
