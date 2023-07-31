@@ -91,7 +91,7 @@ Out[19]:
  [8, 18],
  [9, 19]]
 '''
-pattern_list = [[[0, 1],[2, 3], [4, 5], [6, 7]]]
+pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
 
 
 ###########################################
@@ -489,7 +489,7 @@ pattern_count = len(pattern_list)
 for pattern_type in range (0, pattern_count):	
     discard_cells = list(active_spot.keys()) + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = cell_count//(pattern_count*20) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -720,7 +720,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1053,6 +1053,27 @@ for i in range (0, len(lig_rec_dict_TP)):
 
 lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
+    pickle.dump(cell_vs_gene, fp)
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene_notNormalized, fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+
+random_activation = []
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+    pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
+
+ccc_region = active_spot
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+    pickle.dump([temp_x, temp_y, ccc_region], fp)
+
+cell_vs_lrgene = cell_vs_gene[:,0:lr_gene_count]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
+    pickle.dump(cell_vs_lrgene, fp)
+
 
 #options = options+ '_' + 'wFeature'
 '''
@@ -1214,26 +1235,6 @@ len row col 177016
 count local 2
 '''
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
-    
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene_notNormalized, fp)
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-
-random_activation = []
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
-
-ccc_region = active_spot
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
-
-cell_vs_lrgene = cell_vs_gene[:,0:lr_gene_count]
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
-    pickle.dump(cell_vs_lrgene, fp)
 
 ###############################################Visualization starts###################################################################################################
 # 'dt-mixture_of_distribution_lrc5_cp10_np70_lrp40_all_same'
