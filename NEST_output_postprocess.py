@@ -440,7 +440,7 @@ for index in range (0, len(row_col)):
 ############# load output graph #################################################
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
 total_runs = 5
-start_index = 5
+start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
@@ -824,16 +824,6 @@ for k in range (1, len(csv_record)):
         csv_record_final.append(csv_record[k])
 
 
-##### save the file for downstream analysis ########
-######################################################################################################################## 
-## 
-i=0
-j=0
-csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
-df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_output_'+args.data_name+'.csv', index=False, header=False)
-
-###############################################################################################
 
 
 for k in range (1, len(csv_record_final)):
@@ -876,11 +866,25 @@ for record in range (1, len(csv_record_final)):
     label = barcode_info[i][3]
     csv_record_final[record][5] = label
     
+##### save the file for downstream analysis ########
+######################################################################################################################## 
+## 
+i=0
+j=0
+csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
+df = pd.DataFrame(csv_record_final) # output 4
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_output_'+args.data_name+'.csv', index=False, header=False)
 
 ###########	list those spots who are participating in CCC ##################
+filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
+inFile = '/cluster/home/t116508uhn/64630/'+filename_str #'/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+df = pd.read_csv(inFile, sep=",")
+csv_record_final = df.values.tolist()
+df_column_names = list(df.columns)
+csv_record_final = [df_column_names] + csv_record_final
 
 active_spot = defaultdict(list)
-for record_idx in range (1, len(csv_record_final)):
+for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     record = csv_record_final[record_idx]
     i = record[6]
     pathology_label = barcode_type[barcode_info[i][0]]
