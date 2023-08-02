@@ -20,6 +20,9 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
+#sys.path.append("/home/gw/code/utility/altairThemes/")
+#if True:  # In order to bypass isort when saving
+#    import altairThemes
 import altairThemes
 import altair as alt
 import argparse
@@ -28,9 +31,7 @@ spot_diameter = 89.43 #pixels
 ##########################################################
 # readCsv, preprocessDf, plot: these three functions are taken from GW's repository                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
-#sys.path.append("/home/gw/code/utility/altairThemes/")
-#if True:  # In order to bypass isort when saving
-#    import altairThemes
+
 
 def readCsv(x):
   """Parse file."""
@@ -92,8 +93,8 @@ elif data_name == 'PDAC_64630':
     parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
     parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
     parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
-    parser.add_argument( '--model_name', type=str, default='gat_2attr', help='model name')
-    parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+    #parser.add_argument( '--model_name', type=str, default='gat_2attr', help='model name')
+    #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
     args = parser.parse_args()
 
 
@@ -348,16 +349,18 @@ csv_record_final = df.values.tolist()
 df_column_names = list(df.columns)
 csv_record_final = [df_column_names] + csv_record_final
 
-# columns are: from_cell, to_cell, ligand_gene, receptor_gene, attention_score, component, from_id,	to_id
+# columns are: from_cell, to_cell, ligand_gene, receptor_gene, attention_score, component, from_id, to_id
 
 ################################################################################
 
 ## change the csv_record_final here if you want histogram for specific components/regions only    ##
 '''
+region_of_interest = [...]
 # if you want to plot only stroma region
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
-    if barcode_type[csv_record_final[record_idx][0]] != 'tumor':
+    if !((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor')):
         csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram
+	
 '''
 
 ###########	dictionary of those spots who are participating in CCC ##################
@@ -395,7 +398,8 @@ for i in active_spot:
 min_opacity = np.min(opacity_list)
 max_opacity = np.max(opacity_list)
 min_opacity = min_opacity - 5
-#######################################################################################
+
+################## altair plot #####################################################################
 data_list=dict()
 data_list['pathology_label']=[]
 data_list['component_label']=[]
@@ -435,12 +439,15 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 # output 6
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'altair_plot_test.html')
-####################################################################################################################
+###################################  Histogram plotting #################################################################################
 filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
 alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 inFile = '/cluster/home/t116508uhn/64630/'+filename_str #'/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+
+
+
 df = readCsv(inFile)
 df = preprocessDf(df)
 outPathRoot = inFile.split('.')[0]
@@ -452,7 +459,7 @@ p.save(outPath)	# output 5
 
 
 
-##################################################
+############################  Network Plot ######################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 colors = set1
@@ -521,7 +528,6 @@ for k in range (1, len(csv_record_final)):
 nt.from_nx(g)
 nt.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
-
 
 from networkx.drawing.nx_agraph import write_dot
 write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
