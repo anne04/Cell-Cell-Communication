@@ -4,7 +4,7 @@ import pickle
 from scipy import sparse
 import scanpy as sc
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg') 
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import stlearn as st
