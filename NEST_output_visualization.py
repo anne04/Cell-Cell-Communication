@@ -2,7 +2,6 @@ import numpy as np
 import csv
 import pickle
 from scipy import sparse
-import scipy.io as sio
 import scanpy as sc
 import matplotlib
 matplotlib.use('Agg')
@@ -11,15 +10,14 @@ import matplotlib.pyplot as plt
 import stlearn as st
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
-from typing import List
+#from typing import List
 import qnorm
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
+#from scipy.sparse.csgraph import connected_components
 from collections import defaultdict
 import pandas as pd
 import gzip
-from kneed import KneeLocator
-import copy 
+#import copy 
 import argparse
 import os
 
@@ -154,8 +152,7 @@ else:
 ######################### get the cell vs gene matrix ##################
 '''
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp)))  
-adata_X = np.transpose(temp)  
-cell_vs_gene = copy.deepcopy(adata_X)
+cell_vs_gene = np.transpose(temp)  
 '''
 ##################### make cell metadata: barcode_info ###################################
  
