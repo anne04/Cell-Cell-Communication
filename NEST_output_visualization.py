@@ -20,14 +20,22 @@ import pandas as pd
 import gzip
 from kneed import KneeLocator
 import copy 
+import argparse
+import os
+
 #sys.path.append("/home/gw/code/utility/altairThemes/")
 #if True:  # In order to bypass isort when saving
 #    import altairThemes
 import altairThemes
 import altair as alt
-import argparse
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
 
 spot_diameter = 89.43 #pixels
+current_directory = '/cluster/home/t116508uhn/64630/'
+
 ##########################################################
 # readCsv, preprocessDf, plot: these three functions are taken from GW's repository                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
@@ -359,7 +367,7 @@ region_of_interest = [...]
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     # if both of ligand and receptors are tumors, or both of them are non-tumors, then remove it. Because we want to see what ccc is happening between tumor and non-tumor. 
     if ((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
-        csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram
+        csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram. 0 also means black color.
 	
 '''
 
@@ -417,13 +425,13 @@ for i in range (0, len(barcode_info)):
         
     else:
         data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-        data_list['component_label'].append(0)
+        data_list['component_label'].append(0) # make it zero so it is black
         data_list['X'].append(barcode_info[i][1])
         data_list['Y'].append(-barcode_info[i][2])
         data_list['opacity'].append(0.1)
 
 
-#id_label= len(list(set(data_list['component_label'])))
+id_label= len(data_list_pd["component_label"].unique())
 data_list_pd = pd.DataFrame(data_list)
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
@@ -440,20 +448,21 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'altair_plot_test.html')
 ###################################  Histogram plotting #################################################################################
+'''
 filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
-alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-alt.themes.enable("publishTheme")
-inFile = '/cluster/home/t116508uhn/64630/'+filename_str #'/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-
-
-
+inFile = '/cluster/home/t116508uhn/64630/'+filename_str 
 df = readCsv(inFile)
+'''
+
+df = pd.DataFrame(csv_record_final)
+df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
+df = readCsv(current_directory+'temp_csv.csv')
+os.remove(current_directory+'temp_csv.csv') # delete the intermediate file
 df = preprocessDf(df)
-outPathRoot = inFile.split('.')[0]
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_temp.html'
+outPath = '/cluster/home/t116508uhn/64630/histogram_test.html'
 p.save(outPath)	# output 5
+
 #####################################################################################################################
 
 
