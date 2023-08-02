@@ -217,7 +217,7 @@ elif data_name == 'V1_Human_Lymph_Node_spatial':
         else:
             barcode_type[pathologist_label[i][0]] = 0
     '''
-    pathologist_label_file='/cluster/home/t116508uhn/64630/spot_vs_type_dataframe_V1_HumanLympNode.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label_file=current_directory + '/spot_vs_type_dataframe_V1_HumanLympNode.csv' #IX_annotation_artifacts.csv' #
     pathologist_label=[]
     with open(pathologist_label_file) as file:
         csv_file = csv.reader(file, delimiter=",")
@@ -351,7 +351,7 @@ elif data_name == 'PDAC_140694':
 
 
 filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
-inFile = '/cluster/home/t116508uhn/64630/'+filename_str #'/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
+inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record_final = df.values.tolist()
 df_column_names = list(df.columns)
@@ -444,13 +444,11 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     tooltip=['component_label'] #,'opacity'
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
-# output 6
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_test.html')
+chart.save(current_directory +'altair_plot_test.html')
 ###################################  Histogram plotting #################################################################################
 '''
 filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
-inFile = '/cluster/home/t116508uhn/64630/'+filename_str 
+inFile = current_directory +filename_str 
 df = readCsv(inFile)
 '''
 
@@ -460,8 +458,8 @@ df = readCsv(current_directory+'temp_csv.csv')
 os.remove(current_directory+'temp_csv.csv') # delete the intermediate file
 df = preprocessDf(df)
 p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/histogram_test.html'
-p.save(outPath)	# output 5
+outPath = current_directory+'histogram_test.html'
+p.save(outPath)	
 
 #####################################################################################################################
 
