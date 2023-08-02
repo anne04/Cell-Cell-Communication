@@ -48,21 +48,31 @@ cell_percent = 100 # choose at random N% ligand cells
 #lr_count_percell = 1
 #receptor_connections = 'all_same' #'all_not_same'
 '''
-gene_count = 20 #8 #100 #20 #100 #20 #50 # and 25 pairs
-rec_start = gene_count//2 # 
+lr_gene_count = 20 #8 #100 #20 #100 #20 #50 # and 25 pairs
+rec_start = lr_gene_count//2 # 
 ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 receptor_gene_list = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 '''
-gene_count = 24 #8 #100 #20 #100 #20 #50 # and 25 pairs
-rec_start = gene_count//2 # 
-ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-receptor_gene_list = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+lr_gene_count = 200 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
+rec_start = lr_gene_count//2 # 
+
+# ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+# receptor_gene_list = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+ligand_gene_list = []
+for i in range (0, rec_start):
+    ligand_gene_list.append(i)
+
+receptor_gene_list = []
+for i in range (rec_start, lr_gene_count):
+    receptor_gene_list.append(i)
 
 
-non_lr_genes = 350 - gene_count
+
+non_lr_genes = 350 - lr_gene_count
 
 gene_ids = []
-for i in range (0, gene_count):
+for i in range (0, lr_gene_count):
     gene_ids.append(i) 
 
 gene_info=dict()
@@ -83,7 +93,12 @@ for i in range (0, len(ligand_gene_list)):
 ligand_dict_dataset = defaultdict(dict)
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
-ligand_list = list(ligand_dict_dataset.keys())   
+ligand_list = list(ligand_dict_dataset.keys())  
+
+
+# just print the lr_database
+for i in range (0, len(lr_database)):
+    print('%d: %d - %d'%(i, lr_database[i][0], lr_database[i][1]))
 '''
 In [19]: lr_database
 Out[19]: 
@@ -98,8 +113,29 @@ Out[19]:
  [8, 18],
  [9, 19]]
 '''
-pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
+#pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
 
+max_lr_pair_id = 80 #len(lr_database)//2
+connection_count_max = 6 # for each pair of cells
+pattern_list = []
+i = 0
+stop_flag = 0
+while i < (len(lr_database)-connection_count_max*2):
+    pattern = []
+    j = i
+    connection_count = 0
+    while connection_count < connection_count_max:
+        pattern.append([j, j+1])
+        j = j + 2
+        connection_count = connection_count + 1
+        if j == max_lr_pair_id or j+1 == max_lr_pair_id:
+            stop_flag = 1
+            break
+            
+    i = j
+    if stop_flag==1:
+        continue
+    pattern_list.append(pattern)
 
 ###########################################
 
@@ -290,7 +326,7 @@ for cell in range (0, len(cell_neighborhood)):
         cell_neighborhood[cell].append(items[0])
     #np.random.shuffle(cell_neighborhood[cell]) 
 ####################################################################################            
-# take gene_count normal distributions where each distribution has len(temp_x) datapoints.
+# take lr_gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
 i_am_whose = []
 for i in range (0, datapoint_size):
@@ -312,14 +348,14 @@ print('max neighborhood: %d'%max_neighbor)
 
 
 cell_count = len(temp_x)
-gene_distribution_active = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_inactive_lrgenes = np.zeros((gene_count + non_lr_genes, cell_count))
-gene_distribution_noise = np.zeros((gene_count + non_lr_genes, cell_count))
+gene_distribution_active = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+gene_distribution_inactive = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+#gene_distribution_inactive_lrgenes = np.zeros((lr_gene_count + non_lr_genes, cell_count))
+gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 start_loc = 20
-rec_gene = gene_count//2
-for i in range (0, 4): #gene_count//2):
+rec_gene = lr_gene_count//2
+for i in range (0, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -333,13 +369,15 @@ for i in range (0, 4): #gene_count//2):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-for i in range (4, gene_count//2): ##):
+'''
+for i in range (4, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
+    
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
@@ -352,15 +390,18 @@ for i in range (4, gene_count//2): ##):
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
+    
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     
     rec_gene = rec_gene + 1 
+'''
+
 
 start_loc = 15
-for i in range (rec_gene, gene_count + non_lr_genes):
+for i in range (rec_gene, lr_gene_count + non_lr_genes):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -370,9 +411,9 @@ for i in range (rec_gene, gene_count + non_lr_genes):
     
 #################
 start_loc = np.max(gene_distribution_inactive)+30
-rec_gene = gene_count//2
+rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
-for i in range (0, gene_count//2):
+for i in range (0, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
@@ -385,15 +426,15 @@ for i in range (0, gene_count//2):
     rec_gene = rec_gene + 1 
    
 #################################################
-min_gene_count = np.min(gene_distribution_inactive)
+min_lr_gene_count = np.min(gene_distribution_inactive)
 
-print('min_gene_count %d'%min_gene_count)
-min_gene_count = 0
+print('min_lr_gene_count %d'%min_lr_gene_count)
+min_lr_gene_count = 0
     
 #########################      	
-cell_vs_gene = np.zeros((cell_count,gene_count + non_lr_genes))
+cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 # initially all are in inactive state
-for i in range (0, gene_count + non_lr_genes):
+for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 ###############################################################
 noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
@@ -424,18 +465,16 @@ for i in range (0, datapoint_size):
         lig_rec_dict_TP[i][j] = []
 	
 P_class = 0
-neighbour_of_actives = dict()
-active_spot_in_pattern = []
-active_spot_in_pattern.append(dict())
-active_spot_in_pattern.append(dict())
-active_spot_in_pattern.append(dict())
-active_spot_in_pattern.append(dict())
 
+active_spot_in_pattern = []
 neighbour_of_actives_in_pattern = []
-neighbour_of_actives_in_pattern.append(dict())
-neighbour_of_actives_in_pattern.append(dict())
+for i in range (0, len(pattern_list)):
+    active_spot_in_pattern.append(dict())
+    neighbour_of_actives_in_pattern.append(dict())
 
 active_spot = dict()
+neighbour_of_actives = dict()
+
 # Pick the regions for Ligands
 '''
 cells_ligand_vs_receptor = []
@@ -452,7 +491,7 @@ pattern_count = len(pattern_list)
 for pattern_type in range (0, pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = cell_count//(pattern_count*10) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -551,22 +590,22 @@ for pattern_type in range (0, pattern_count):
         ligand_receptor_genes = ligand_gene_list + receptor_gene_list
         for gene in ligand_receptor_genes:
             if gene not in a_cell_active_genes:
-                cell_vs_gene[a_cell, gene] = min_gene_count #-10
+                cell_vs_gene[a_cell, gene] = min_lr_gene_count #-10
                 
         for gene in ligand_receptor_genes:
             if gene not in b_cell_active_genes:
-                cell_vs_gene[b_cell, gene] = min_gene_count #-10
+                cell_vs_gene[b_cell, gene] = min_lr_gene_count #-10
                 
         for gene in ligand_receptor_genes:
             if gene not in c_cell_active_genes:
-                cell_vs_gene[c_cell, gene] = min_gene_count #-10
+                cell_vs_gene[c_cell, gene] = min_lr_gene_count #-10
 
 
 
         ##########################################
 
 
-        print('%d, %d, %d'%(a_cell, b_cell, c_cell))
+        #print('%d, %d, %d'%(a_cell, b_cell, c_cell))
         gene_off_list = a_cell_active_genes + b_cell_active_genes + c_cell_active_genes # all the ligand, receptor genes involve in this pattern
         gene_off_list = list(set(gene_off_list )) # to remove duplicate entries
 
@@ -584,7 +623,7 @@ for pattern_type in range (0, pattern_count):
             neighbour_of_actives[cell]=''
             neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10   
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10   
 
         turn_off_cell_list = list(set(cell_neighborhood[b_cell] + i_am_whose[b_cell]))
         for cell in turn_off_cell_list:
@@ -597,7 +636,7 @@ for pattern_type in range (0, pattern_count):
             neighbour_of_actives[cell]=''
             neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
 
         turn_off_cell_list = list(set(cell_neighborhood[c_cell] + i_am_whose[c_cell]))
         for cell in turn_off_cell_list:
@@ -610,7 +649,7 @@ for pattern_type in range (0, pattern_count):
             neighbour_of_actives[cell]=''
             neighbour_of_actives_in_pattern[pattern_type][cell] = ''
             for gene in gene_off_list: #[0, 1, 2, 3,  8, 9, 10, 11]:
-                cell_vs_gene[cell, gene] = min_gene_count #-10
+                cell_vs_gene[cell, gene] = min_lr_gene_count #-10
             
         active_spot_in_pattern[pattern_type][a_cell] = ''
         active_spot_in_pattern[pattern_type][b_cell] = ''
@@ -645,10 +684,10 @@ print('P_class %d'%P_class)
 ############################
 
 # to reduce number of conections
-#cell_vs_gene[:,7] = min_gene_count #-10
-#cell_vs_gene[:,15] = min_gene_count #-10
-#cell_vs_gene[:,6] = min_gene_count #-10
-#cell_vs_gene[:,14] = min_gene_count #-10
+#cell_vs_gene[:,7] = min_lr_gene_count #-10
+#cell_vs_gene[:,15] = min_lr_gene_count #-10
+#cell_vs_gene[:,6] = min_lr_gene_count #-10
+#cell_vs_gene[:,14] = min_lr_gene_count #-10
 
 ##############################
 # take quantile normalization.
@@ -658,26 +697,7 @@ adata_X = np.transpose(temp)
 cell_vs_gene = adata_X
 
 
-'''
-for i in range (0, cell_vs_gene.shape[0]):
-    total_sum = np.sum(cell_vs_gene[i,:])
-    for j in range (0, cell_vs_gene.shape[1]):
-        cell_vs_gene[i,j] = cell_vs_gene[i,j] / total_sum
-'''
-'''
-for i in range (0, cell_vs_gene.shape[0]):
-    max_value = np.max(cell_vs_gene[i][:])
-    min_value = np.min(cell_vs_gene[i][:])
-    for j in range (0, cell_vs_gene.shape[1]):
-	    cell_vs_gene[i][j] = (cell_vs_gene[i][j]-min_value)/(max_value-min_value)
-       
 
-for i in range (0, cell_vs_gene.shape[0]):
-    for j in range (0, cell_vs_gene.shape[0]):
-        if len(cells_ligand_vs_receptor[i][j])>0:
-            for k in range (0, len(cells_ligand_vs_receptor[i][j])):
-                cells_ligand_vs_receptor[i][j][k][2] = cell_vs_gene[i,cells_ligand_vs_receptor[i][j][k][0]] * cell_vs_gene[j,cells_ligand_vs_receptor[i][j][k][1]] 
-'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -692,7 +712,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 95), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -913,7 +933,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
-cell_vs_gene = cell_vs_gene[:,0:gene_count]
+cell_vs_gene = cell_vs_gene[:,0:lr_gene_count]
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
 
@@ -1285,14 +1305,7 @@ for run_time in range (0,total_runs):
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_gatconv_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_3dim_dropout_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc12_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=2 #2 ## 
