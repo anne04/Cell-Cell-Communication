@@ -353,12 +353,12 @@ csv_record_final = [df_column_names] + csv_record_final
 
 ################################################################################
 
-## change the csv_record_final here if you want histogram for specific components/regions only    ##
+## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
 '''
-region_of_interest = [...]
-# if you want to plot only stroma region
+region_of_interest = [...] 
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
-    if !((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor')):
+    # if both of ligand and receptors are tumors, or both of them are non-tumors, then remove it. Because we want to see what ccc is happening between tumor and non-tumor. 
+    if ((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
         csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram
 	
 '''
