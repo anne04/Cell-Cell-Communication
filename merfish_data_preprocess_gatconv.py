@@ -148,7 +148,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microgli
 
 
 ##########
-options = 'Female_Parenting_Excitatory' # 'Female_Virgin_ParentingExcitatory'
+options = 'Female_Naive_Excitatory' #'Female_Virgin_ParentingExcitatory' #'Female_Parenting_Excitatory' # 
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
@@ -170,19 +170,22 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 
 
 ############
-# animal_id = 16
-animal_id = 24 #data_sets_gatconv[0][4][0][0]
-bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
-bregma_id = 0
-for bregma_id in range (0, 1): #len(bregma)): #bregma:
-    print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
-    z_index_yes = 0
+#animal_id = 16
+#animal_id = 24 #data_sets_gatconv[0][4][0][0]
+#bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
+#bregma_id = 0
+#bregma_interest = [-0.09, 0.21]
+#for bregma_id in range (0, 1): #len(bregma)): #bregma:
+for animal_id in [19]:   
+    print('animal id:%d'%(animal_id))
+    #print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
+    z_index_yes = 1
     barcode_info = []
     cell_vs_gene_list = []
     total_cell = 0
     sample_index = 0
     for index in range (0,len(data_sets_gatconv)):
-        if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+        if data_sets_gatconv[index][4][0][0] == animal_id: #and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
             sample_index = index
             cell_barcodes = data_sets_gatconv[index][0]
             coordinates = data_sets_gatconv[index][1]
@@ -190,7 +193,8 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
             cell_vs_gene_list.append(cell_vs_gene)
             total_cell = total_cell + cell_vs_gene.shape[0]
             z_index = data_sets_gatconv[index][4][0][3]
-	        neuron_type = data_sets_gatconv[index][5]
+            neuron_type = data_sets_gatconv[index][5]
+            print('animal id:%d, bregma: %g'%(animal_id, z_index))
             print('index:%d, cell count: %d'%(index, cell_vs_gene.shape[0]))
             if z_index_yes == 1:
                 for i in range (0, len(cell_barcodes)):
@@ -201,10 +205,59 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
                     barcode_info.append([cell_barcodes[i], coordinates[i,0], coordinates[i,1], 0, neuron_type[i][0]])
                     i=i+1       
 
-                break
+                #break
 
 
-    ########
+    ##################################################################
+    if z_index_yes == 1:
+        coordinates = np.zeros((total_cell, 3))
+    else:
+        coordinates = np.zeros((total_cell, 2))
+
+    
+    temp_x = defaultdict(list)
+    temp_y = defaultdict(list)
+    for i in range (0, len(barcode_info)): 
+        coordinates[i][0] = barcode_info[i][1]
+        coordinates[i][1] = barcode_info[i][2]
+
+        if z_index_yes == 1:
+            coordinates[i][2] = barcode_info[i][3]
+            temp_x[coordinates[i][2]].append(coordinates[i][0])
+            temp_y[coordinates[i][2]].append(coordinates[i][1])
+
+
+    color_list = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#29aecf', '#8c014b']
+
+    data_list=dict()
+    data_list['label']=[]
+    data_list['X']=[]
+    data_list['Y']=[]   
+
+    j = 0
+    for bregma in temp_x.keys():
+        for i in range (0, len(temp_x[bregma])):
+            data_list['X'].append(temp_x[bregma][i])
+            data_list['Y'].append(temp_y[bregma][i])
+            data_list['label'].append(bregma)     
+            
+        j = j+1
+
+    
+    data_list_pd = pd.DataFrame(data_list)
+    set1 = color_list 
+    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        color=alt.Color('label:N', scale=alt.Scale(range=set1)),
+        tooltip=['label'] #,'opacity'
+    )#.configure_legend(labelFontSize=6, symbolLimit=50)
+
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+'merfish_temp_animalID'+str(animal_id)+'.html')
+
+
+    ####################################################################
     gene_index = dict()
     gene_list = data_sets_gatconv[sample_index][3].keys() # keys are the gene
     for gene in gene_list:
@@ -223,16 +276,6 @@ for bregma_id in range (0, 1): #len(bregma)): #bregma:
     gene_index = data_sets_gatconv[sample_index][3]
 
     #############################
-    if z_index_yes == 1:
-        coordinates = np.zeros((total_cell, 3))
-    else:
-        coordinates = np.zeros((total_cell, 2))
-
-    for i in range (0, len(barcode_info)): 
-        coordinates[i][0] = barcode_info[i][1]
-        coordinates[i][1] = barcode_info[i][2]
-        if z_index_yes == 1:
-            coordinates[i][2] = barcode_info[i][3]
 
 
     ##################################    
