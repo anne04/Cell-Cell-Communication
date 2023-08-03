@@ -53,7 +53,7 @@ rec_start = lr_gene_count//2 #
 ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 receptor_gene_list = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 '''
-lr_gene_count = 9800 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
+lr_gene_count = 4000 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = lr_gene_count//2 # 
 #ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 #receptor_gene_list = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -88,10 +88,10 @@ lr_database = []
 for i in range (0, len(ligand_gene_list)//2):
     lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
 
-for i in range (len(ligand_gene_list)//2, len(ligand_gene_list)):
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i-1]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i-2]])
+for i in range (len(ligand_gene_list)//2, len(ligand_gene_list)-20):
+    for j in range (i, i+20):
+        lr_database.append([ligand_gene_list[i],receptor_gene_list[j]])
+
 
 
 ligand_dict_dataset = defaultdict(dict)
@@ -355,12 +355,12 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 start_loc = 20
 rec_gene = lr_gene_count//2
 for i in range (0, lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -702,7 +702,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
 
 ###############
 
