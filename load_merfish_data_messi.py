@@ -24,10 +24,10 @@ from messi.gridSearch import gridSearch
 input_path = 'input/'
 output_path = 'output/'
 data_type = 'merfish'
-sex = 'Female'
+sex = 'Male' #'Female'
 behavior = 'Parenting' #'Virgin_Parenting' #
 behavior_no_space = behavior.replace(" ", "_")
-current_cell_type = 'Microglia' #'general' #'Excitatory'
+current_cell_type = 'Excitatory' #'Microglia' #'general' #
 current_cell_type_no_space = current_cell_type.replace(" ", "_")
 data_options = sex + '_' + behavior + '_' + current_cell_type
 
