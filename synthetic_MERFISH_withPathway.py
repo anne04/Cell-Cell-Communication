@@ -356,12 +356,12 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 start_loc = 20
 rec_gene = lr_gene_count//2
 for i in range (0, lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)) #10
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)) #10
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -491,7 +491,7 @@ pattern_count = len(pattern_list)
 for pattern_type in range (0, pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = 300 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -1305,7 +1305,7 @@ for run_time in range (0,total_runs):
     #if run in [1, 2, 4, 7, 8]:
     #    continue
 
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc12_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc100_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=2 #2 ## 
