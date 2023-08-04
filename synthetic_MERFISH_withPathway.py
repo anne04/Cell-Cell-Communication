@@ -355,6 +355,7 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 start_loc = 20
 rec_gene = lr_gene_count//2
+'''
 for i in range (0, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)) #10
     np.random.shuffle(gene_exp_list) 
@@ -367,9 +368,25 @@ for i in range (0, lr_gene_count//2):
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     rec_gene = rec_gene + 1 
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
+'''
+################
+
+start_loc = 20
+rec_gene = lr_gene_count//2
+for i in range (0, 4): #lr_gene_count//2):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
+    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    rec_gene = rec_gene + 1 
+    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-'''
 for i in range (4, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
@@ -377,7 +394,6 @@ for i in range (4, lr_gene_count//2): ##):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
@@ -390,14 +406,15 @@ for i in range (4, lr_gene_count//2): ##):
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     
     rec_gene = rec_gene + 1 
-'''
+
+###################################################
+
 
 
 start_loc = 15
@@ -1300,7 +1317,7 @@ plot_dict = defaultdict(list)
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 5
 #csv_record_dict = defaultdict(list)
-for run_time in range (0,total_runs):
+for run_time in [3, 4]: #range (0,total_runs):
     run = run_time
     #if run in [1, 2, 4, 7, 8]:
     #    continue
