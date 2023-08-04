@@ -1,29 +1,3 @@
-import numpy as np 
-import csv
-import pickle
-from scipy import sparse
-import scipy.io as sio
-import scanpy as sc
-import matplotlib
-matplotlib.use('Agg')
-#matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import stlearn as st
-import numpy as np
-from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
-from typing import List
-import qnorm
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
-from collections import defaultdict
-import pandas as pd
-import gzip
-from kneed import KneeLocator
-import copy 
-import pickle
-import gc 
-
-########
 import numpy as np
 import csv
 import pickle
@@ -48,7 +22,8 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
-spot_diameter = 89.43 #pixels
+import gc
+
 ##########################################################
 # written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
@@ -174,9 +149,9 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 #animal_id = 24 #data_sets_gatconv[0][4][0][0]
 #bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 #bregma_id = 0
-#bregma_interest = [-0.09, 0.21]
+bregma_interest = [-0.09, 0.21]
 #for bregma_id in range (0, 1): #len(bregma)): #bregma:
-for animal_id in [19]:   
+for animal_id in [1]:   
     print('animal id:%d'%(animal_id))
     #print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
     z_index_yes = 1
@@ -185,7 +160,7 @@ for animal_id in [19]:
     total_cell = 0
     sample_index = 0
     for index in range (0,len(data_sets_gatconv)):
-        if data_sets_gatconv[index][4][0][0] == animal_id: #and data_sets_gatconv[index][4][0][3] == bregma[bregma_id]:
+        if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] in bregma_interest: #== bregma[bregma_id]:
             sample_index = index
             cell_barcodes = data_sets_gatconv[index][0]
             coordinates = data_sets_gatconv[index][1]
@@ -214,7 +189,7 @@ for animal_id in [19]:
     else:
         coordinates = np.zeros((total_cell, 2))
 
-    
+
     temp_x = defaultdict(list)
     temp_y = defaultdict(list)
     for i in range (0, len(barcode_info)): 
@@ -226,9 +201,9 @@ for animal_id in [19]:
             temp_x[coordinates[i][2]].append(coordinates[i][0])
             temp_y[coordinates[i][2]].append(coordinates[i][1])
 
-
+    '''
+    # color plotting of the bregma slides #
     color_list = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#29aecf', '#8c014b']
-
     data_list=dict()
     data_list['label']=[]
     data_list['X']=[]
@@ -252,11 +227,10 @@ for animal_id in [19]:
         color=alt.Color('label:N', scale=alt.Scale(range=set1)),
         tooltip=['label'] #,'opacity'
     )#.configure_legend(labelFontSize=6, symbolLimit=50)
-
     save_path = '/cluster/home/t116508uhn/64630/'
     chart.save(save_path+'merfish_temp_animalID'+str(animal_id)+'.html')
-
-
+    '''
+	
     ####################################################################
     gene_index = dict()
     gene_list = data_sets_gatconv[sample_index][3].keys() # keys are the gene
@@ -298,14 +272,6 @@ for animal_id in [19]:
     print('min cell_vs_gene %g, max: %g'%(np.min(cell_vs_gene),np.max(cell_vs_gene)))
 
     ####################
-    cell_percentile = []
-    for i in range (0, cell_vs_gene.shape[0]):
-        y = sorted(cell_vs_gene[i])
-        x = range(1, len(y)+1)
-        kn = KneeLocator(x, y, curve='convex', direction='increasing')
-        kn_value = y[kn.knee-1]
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 95), kn_value])
-    #######################################################
 
 
     ligand_dict_dataset = defaultdict(list)
@@ -453,6 +419,17 @@ for animal_id in [19]:
     ########
     ######################################
     ##############################################################################
+    cell_percentile = []
+    for i in range (0, cell_vs_gene.shape[0]):
+        y = sorted(cell_vs_gene[i])
+        x = range(1, len(y)+1)
+        kn = KneeLocator(x, y, curve='convex', direction='increasing')
+        kn_value = y[kn.knee-1]
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 95), kn_value]) 
+       
+    #######################################################
+
+    
     print('create cells_ligand_vs_receptor')
 
     count_total_edges = 0
@@ -485,7 +462,7 @@ for animal_id in [19]:
 
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j][3]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
-                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter:
+                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > spot_diameter//3: #because I set spot_diameter very big! And I don't know the actual size. but visually, it looks like spot_dia//3
                             continue
 
                         '''if gene_rec in cell_cell_contact and distance_matrix[i,j] < spot_diameter:
@@ -573,13 +550,74 @@ for animal_id in [19]:
         
 
 ##########
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d_ThDistance500', 'wb') as fp:  #b, a:[0:5]  _filtered 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_xyz_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_cell_vs_gene_xyz_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
 	pickle.dump(cell_vs_gene, fp)
 
+########### 3D ###################################################################################
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_xyz_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
+    pickle.dump([row_col, edge_weight, lig_rec], fp)
+             
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_cell_vs_gene_xyz_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
+	pickle.dump(cell_vs_gene, fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_barcode_info', 'wb') as fp:  #b, a:[0:5]   _filtered
+    pickle.dump(barcode_info, fp)
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_coordinates', 'wb') as fp:  #b, a:[0:5]   _filtered
+    pickle.dump(coordinates, fp)
+
+
+
+
+
+##################################################################################################
+'''
+In [42]: min_list = []
+    ...: for i in range (0, 6185):
+    ...:     min_list.append(np.min(distance_matrix[5,6185:]))
+    ...: 
+
+In [43]: np.min(min_list)
+Out[43]: 11.537299079717359
+
+In [44]: sorted(min_list)[0:20]
+Out[44]: 
+[11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359,
+ 11.537299079717359]
+
+
+In [49]: min_list = []
+    ...: for i in range (1, distance_matrix.shape[0]-1):
+    ...:     min_list.append(np.min(distance_matrix[i,:i])) # before 
+    ...:     min_list.append(np.min(distance_matrix[i,i+1:])) # after
+    ...: 
+    ...: 
+
+In [50]: np.min(min_list)
+Out[50]: 0.4149979245610792
+'''
 
 ###########################################################Visualization starts ##################
 animal_id = 19
