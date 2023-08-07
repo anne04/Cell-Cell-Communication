@@ -189,24 +189,24 @@ write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_cluster_vs_cells.
 data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
 list.files(data_dir)
 seurat_object <- Load10X_Spatial(data.dir = data_dir)
-pancreas <- SCTransform(seurat_object, assay = "Spatial", verbose = FALSE)
-pancreas <- RunPCA(pancreas, assay = "SCT", verbose = FALSE)
-pancreas <- FindNeighbors(pancreas, reduction = "pca", dims = 1:30)
-pancreas <- FindClusters(pancreas, verbose = FALSE)
-pancreas <- RunUMAP(pancreas, reduction = "pca", dims = 1:30)
-p1 <- DimPlot(pancreas, reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
-p2 <- SpatialDimPlot(pancreas, label = TRUE,group.by = 'seurat_clusters', label.size = 3)
+lymph <- SCTransform(seurat_object, assay = "Spatial", verbose = FALSE)
+lymph <- RunPCA(lymph, assay = "SCT", verbose = FALSE)
+lymph <- FindNeighbors(lymph, reduction = "pca", dims = 1:30)
+lymph <- FindClusters(lymph, verbose = FALSE)
+lymph <- RunUMAP(lymph, reduction = "pca", dims = 1:30)
+p1 <- DimPlot(lymph, reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
+p2 <- SpatialDimPlot(lymph, label = TRUE,group.by = 'seurat_clusters', label.size = 3)
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = (p1+p2))
 
-pancreas@meta.data$x <- pancreas@images$slice1@coordinates$row
-pancreas@meta.data$y <- pancreas@images$slice1@coordinates$col
+lymph@meta.data$x <- lymph@images$slice1@coordinates$row
+lymph@meta.data$y <- lymph@images$slice1@coordinates$col
 
-DefaultAssay(pancreas) <- "Spatial"
-pancreas <- NormalizeData(pancreas)
+DefaultAssay(lymph) <- "Spatial"
+lymph <- NormalizeData(lymph)
 
-pancreas <- SeuratWrappers::RunALRA(pancreas)
+lymph <- SeuratWrappers::RunALRA(lymph)
 lr_db <- read.csv("/cluster/home/t116508uhn/64630/lr_cellchat_nichenet.csv")
-NICHES_output <- RunNICHES(object = pancreas,
+NICHES_output <- RunNICHES(object = lymph,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
                            species = "human",
