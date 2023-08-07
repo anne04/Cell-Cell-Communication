@@ -128,7 +128,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') 
-parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='merfish_data_'+options, help='The name of dataset') #messi_
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 spot_diameter = 100 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads from org paper: https://www.science.org/doi/10.1126/science.aaa6090
@@ -571,6 +571,17 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
     pickle.dump(coordinates, fp)
 
 
+#### read ########
+animal_id = 1
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_xyz_3d', 'rb') as fp:  #b, a:[0:5]  _filtered 
+    row_col, edge_weight, lig_rec = pickle.load(fp)
+             
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
+    barcode_info = pickle.load(fp)
+    
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
+    coordinates = pickle.load(fp)
 
 
 
@@ -634,9 +645,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
     
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
     coordinates = pickle.load(fp)
-datapoint_size = len(barcode_info)    
+
       
-#####
+###############################################
+datapoint_size = len(barcode_info)    
 barcode_type=dict()
 for i in range (0, datapoint_size):
     barcode_type[barcode_info[i][0]] = 0 
@@ -664,14 +676,16 @@ for cell_id in microglia_cell_id:
         
 ###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 4
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
+    
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
     #l = 3
@@ -922,7 +936,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict) 
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=4: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -947,7 +961,7 @@ for key_value in csv_record_dict.keys():
         
 print('common LR count %d'%len(csv_record))
             
-threshold_value =  np.percentile(combined_score_distribution,50)
+threshold_value =  np.percentile(combined_score_distribution,0) #50)
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
 count = 0
 for k in range (1, len(csv_record)):
@@ -955,8 +969,8 @@ for k in range (1, len(csv_record)):
     receptor = csv_record[k][3]
     i = csv_record[k][6]
     j = csv_record[k][7]    
-    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
-        print("%s - %s, %s - %s"%(ligand, receptor, barcode_info[i][4], barcode_info[j][4]))
+    if csv_record[k][4] >= threshold_value: # and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
+        #print("%s - %s, %s - %s"%(ligand, receptor, barcode_info[i][4], barcode_info[j][4]))
         connecting_edges[i][j]=1
         count = count+1
         
@@ -1091,14 +1105,14 @@ chart.save(save_path+'altair_plot_test.html')
 #chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
 
 ########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,50)
+threshold_value =  np.percentile(combined_score_distribution,0) #50)
 csv_record_temp = []
 csv_record_temp.append(csv_record[0])
 for k in range (1, len(csv_record)):
     i = csv_record[k][6]
     j = csv_record[k][7] 
-    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):   
-        print(barcode_info[i])
+    if csv_record[k][4] >= threshold_value: # and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):   
+        #print(barcode_info[i])
         csv_record_temp.append(csv_record[k])
          
 i=0
