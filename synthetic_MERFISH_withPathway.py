@@ -1323,7 +1323,7 @@ for run_time in range (0,total_runs):
     #    continue
 
     X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc100_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #4patterns_
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     l=2 #2 ## 
     distribution = []
@@ -1735,7 +1735,7 @@ for percentage_value in percentage_threshold:
             run = run_time
             #if run in [1, 2, 4, 7, 8]:
             #    continue
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc100_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc12_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
             distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
