@@ -354,6 +354,19 @@ csv_record_final = df.values.tolist()
 df_column_names = list(df.columns)
 csv_record_final = [df_column_names] + csv_record_final
 
+component_list = dict()
+for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
+    record = csv_record_final[record_idx]
+    i = record[6]
+    j = record[7]
+    component_label = record[5]
+    barcode_info[i][3] = component_label 
+    barcode_info[j][3] = component_label
+    component_list[component_label] = ''
+
+component_list[0] = ''
+unique_component_count = len(component_list.keys())
+
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, attention_score, component, from_id, to_id
 
 ################################################################################
@@ -367,8 +380,8 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
         csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram. 0 also means black color.
 	
 '''
-
-###########	dictionary of those spots who are participating in CCC ##################
+##################################### Altair Plot ##################################################################
+## dictionary of those spots who are participating in CCC ##
 active_spot = defaultdict(list)
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     record = csv_record_final[record_idx]
@@ -402,9 +415,9 @@ for i in active_spot:
 
 min_opacity = np.min(opacity_list)
 max_opacity = np.max(opacity_list)
-min_opacity = min_opacity - 5
+#min_opacity = min_opacity - 5
 
-################## altair plot #####################################################################
+#### making dictionary for converting to pandas dataframe to draw altair plot ###########
 data_list=dict()
 data_list['pathology_label']=[]
 data_list['component_label']=[]
@@ -428,8 +441,11 @@ for i in range (0, len(barcode_info)):
         data_list['opacity'].append(0.1)
 
 
-id_label= len(data_list_pd["component_label"].unique())
+
+# converting to pandas dataframe
+
 data_list_pd = pd.DataFrame(data_list)
+id_label= unique_component_count
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
@@ -465,7 +481,7 @@ p.save(outPath)
 
 ############################  Network Plot ######################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
-set1 = altairThemes.get_colour_scheme("Set1", id_label)
+set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
 colors = set1
 colors[0] = '#000000'
 ids = []
@@ -531,8 +547,18 @@ for k in range (1, len(csv_record_final)):
      
 nt.from_nx(g)
 nt.show('mygraph.html')
-cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+os.system('cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html')
 
+# convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
 from networkx.drawing.nx_agraph import write_dot
 write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
 
+'''
+#These commands are to be executed in the linux terminal to convert the .dot file to pdf/svg:
+
+cat test_interactive.dot.dot  | sed 's/ellipse/triangle/g'   | sed 's/tumor",/tumor",style="filled",/g'   | sed 's/L:\([^ ]\+\), R:/\1-/g'   | sed 's/label="[0-9][^"]*"/label=""/g' | awk -F'=' '{ if ($1 == "penwidth") {print $1 "=" ($2 ^ 6) ","} else {print $0 }}'   | tr '\n' ' '   | sed "s/;/\n/g"  > tmp
+
+cat tmp   | dot -Kneato -n -y -Tpdf -Efontname="Arial" -Nlabel="" -Nwidth=1.5 -Nheight=1.5 -Npenwidth=8	> test.pdf
+
+cat tmp   | dot -Kneato -n -y -Tsvg -Efontname="Arial" -Nlabel="" -Nwidth=1.5 -Nheight=1.5 -Npenwidth=8	> test.svg
+'''
