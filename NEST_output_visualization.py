@@ -532,7 +532,6 @@ for i in range (0, len(barcode_info)):
 	
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
-nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
 count_edges = 0
 for k in range (1, len(csv_record_final)):
@@ -542,11 +541,15 @@ for k in range (1, len(csv_record_final)):
     receptor = csv_record_final[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record_final[k][4]
-    g.add_edge(int(i), int(j), label = title_str, value=np.float64(edge_score), color=colors_point[i] ) 
+    print(edge_score)
+    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
     count_edges = count_edges + 1
-     
+
+
+nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True     
 nt.from_nx(g)
-nt.show('mygraph.html')
+# nt.show('mygraph.html')
+nt.save_graph('mygraph.html')
 os.system('cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html')
 
 # convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
