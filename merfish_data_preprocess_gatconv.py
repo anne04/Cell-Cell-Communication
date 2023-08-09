@@ -123,12 +123,12 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microgli
 
 
 ##########
-options = 'Female_Naive_Excitatory' #'Female_Virgin_ParentingExcitatory' #'Female_Parenting_Excitatory' # 
+options =  'Female_Parenting_Excitatory' #  'Female_Naive_Excitatory' #'Female_Virgin_ParentingExcitatory'
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') 
-parser.add_argument( '--data_name', type=str, default='merfish_data_'+options, help='The name of dataset') #messi_
+parser.add_argument( '--data_name', type=str, default='messi_merfish_data_'+options, help='The name of dataset') #
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 spot_diameter = 100 # micrometer # 0.2-μm-diameter carboxylate-modified orange fluorescent beads from org paper: https://www.science.org/doi/10.1126/science.aaa6090
@@ -676,7 +676,7 @@ for cell_id in microglia_cell_id:
         
 ###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 4
+total_runs = 5
 start_index = 0
 csv_record_dict = defaultdict(list)
 for run_time in range (start_index, start_index+total_runs):
@@ -684,8 +684,8 @@ for run_time in range (start_index, start_index+total_runs):
     #run_time = 2
     run = run_time
     
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
 
     #l = 3
@@ -936,7 +936,7 @@ csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 csv_record_intersect_dict = defaultdict(dict) 
 for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=4: #3: #((total_runs*80)/100):
+    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
@@ -969,7 +969,7 @@ for k in range (1, len(csv_record)):
     receptor = csv_record[k][3]
     i = csv_record[k][6]
     j = csv_record[k][7]    
-    if csv_record[k][4] >= threshold_value: # and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
+    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
         #print("%s - %s, %s - %s"%(ligand, receptor, barcode_info[i][4], barcode_info[j][4]))
         connecting_edges[i][j]=1
         count = count+1
@@ -1159,12 +1159,12 @@ import networkx as nx
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     marker_size = 'circle'
-    label_str =  str(i)+'_c:'+str(barcode_info[i][3])
+    label_str =  barcode_info[i][4]#str(i)+'_c:'+str(barcode_info[i][3])
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 #################################
-threshold_value =  np.percentile(combined_score_distribution,50)
+threshold_value =  np.percentile(combined_score_distribution,0)
 count_edges = 0
 for k in range (1, len(csv_record)):
     if csv_record[k][4] < threshold_value:
