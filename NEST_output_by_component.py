@@ -34,13 +34,6 @@ alt.themes.enable("publishTheme")
 import scipy.stats
 
 
-def readCsv(x):
-  """Parse file."""
-  #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
-  df = pd.read_csv(x, sep=",")
-
-  return df
-
 def preprocessDf(df):
   """Transform ligand and receptor columns."""
   df["ligand-receptor"] = df["ligand"] + '-' + df["receptor"]
@@ -49,8 +42,8 @@ def preprocessDf(df):
   return df
 
 
-def plot(df):
-  set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
+def plot(df, unique_component_count):
+  set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
   set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
@@ -104,14 +97,7 @@ cell_vs_gene = np.transpose(temp)
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 '''
-##################### make cell metadata: barcode_info ###################################
- 
-i=0
-barcode_serial = dict()
-for cell_code in cell_barcode:
-    barcode_serial[cell_code]=i
-    i=i+1
-    
+##################### make cell metadata: barcode_info ###################################  
 i=0
 barcode_info=[]
 for cell_code in cell_barcode:
@@ -169,10 +155,10 @@ csv_record_final = temp_csv_record_final
 
 df = pd.DataFrame(csv_record_final)
 df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
-df = readCsv(current_directory+'temp_csv.csv')
+df = pd.read_csv(current_directory+'temp_csv.csv', sep=",")
 os.remove(current_directory+'temp_csv.csv') # delete the intermediate file
-df = preprocessDf(df, unique_component_count)
-p = plot(df)
+df = preprocessDf(df)
+p = plot(df, unique_component_count)
 outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
