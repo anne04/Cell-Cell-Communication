@@ -42,20 +42,20 @@ def preprocessDf(df):
   return df
 
 
-def plot(df, unique_component_count):
-  set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
+def plot(df):
+  set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
   set1[0] = '#000000'
   base = alt.Chart(df).mark_bar().encode(
             x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y=alt.Y("count()"),
-            color=alt.Color("component:N", scale = alt.Scale(range=set1)),
+            color=alt.Color("component:N", scale = alt.Scale(range=set1)), 
             order=alt.Order("component:N", sort="ascending"),
             tooltip=["component"]
         )
   p = base
 
   return p
-
+##alt.Color("component:N", scale = alt.Scale(range=set1))
 ####################### Set the name of the sample you want to visualize ###################################
 
 data_name = 'PDAC_64630' #LUAD_GSM5702473_TD1
@@ -143,22 +143,32 @@ unique_component_count = len(component_list.keys())
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
 
 temp_csv_record_final = []
+temp_csv_record_final.append(csv_record_final[0]) #last entry is a dummy for histograms
+
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     # if at least one of ligand and receptors are tumors: 
-    if ((barcode_type[csv_record_final[record_idx][0]] == 'tumor' or barcode_type[csv_record_final[record_idx][1]] == 'tumor'): # or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
+    if (barcode_type[csv_record_final[record_idx][0]] == 'tumor' or barcode_type[csv_record_final[record_idx][1]] == 'tumor'): # or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
         if csv_record_final[record_idx][5] in component_of_interest:
             temp_csv_record_final.append(csv_record_final[record_idx]) # it is considered during making histogram. 
 	
-temp_csv_record_final.append(len(csv_record_final)-1) #last entry is a dummy for histograms
+temp_csv_record_final.append(csv_record_final[len(csv_record_final)-1]) #last entry is a dummy for histograms
 csv_record_final = temp_csv_record_final
 ###################################  Histogram plotting #################################################################################
+'''
+set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
+set1[0] = '#000000'
+csv_record_final[0].append('comp_color')
+for record_idx in range (1, len(csv_record_final)): 
+    csv_record_final[record_idx].append(set1[int(csv_record_final[record_idx][5])])
+'''
 
+	
 df = pd.DataFrame(csv_record_final)
 df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
 df = pd.read_csv(current_directory+'temp_csv.csv', sep=",")
 os.remove(current_directory+'temp_csv.csv') # delete the intermediate file
 df = preprocessDf(df)
-p = plot(df, unique_component_count)
+p = plot(df) #, unique_component_count
 outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
