@@ -1062,26 +1062,6 @@ count local 2
 
 
 ###############################################Visualization starts###################################################################################################
-# 'dt-mixture_of_distribution_lrc5_cp10_np70_lrp40_all_same'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_noisy'
-# 'dt-equally_spaced_lrc5_cp10_np70_lrp40_all_same'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_noisy'
-# 'dt-high_density_grid_lrc50_cp10_np70_lrp40_all_same_close_noisy'
-# 'dt-high_density_grid_lrc5_cp10_np70_lrp40_all_same_close_heavy_noisy'
-# 'dt-pattern_equally_spaced_lrc5_cp50_lrp40_randp30_all_same'
-# 'dt-pattern_equally_spaced_lrc5_cp50_lrp20_randp5_all_same'
-# 'dt-pattern_equally_spaced_lrc5_cp80_lrp3_randp0_all_same'
-# 'dt-pattern_equally_spaced_lrc5_cp80_lrp20_randp0_all_same' 
-# 'dt-pattern_equally_spaced_lrc1_cp70_lrp1_randp0_all_same'
-# 'dt-pattern_equally_spaced_lrc1_cp90_lrp1_randp0_all_same' --withFeature_pattern_4_attention, model_4_pattern_attention
-# 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same'
-# 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_broad_active'
-# 'dt-pattern_equally_spaced_lrc1_cp10_lrp1_randp0_all_same_overlapped_lowscale'
-# 'dt-pattern_equally_spaced_lrc5_cp50_lrp1_randp0_all_same_differentLRs'
-# 'dt-pattern_equally_spaced_lrc4_cp50_lrp1_randp0_all_sameoverlapped_highertail'
-#options = 'dt-'+datatype+'_lrc'+str(25)+'_cp'+str(cell_percent)+'_np'+str(neighbor_percent)+'_lrp'+str(lr_percent)+'_'+receptor_connections
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
@@ -1560,7 +1540,7 @@ for run_time in range (0,total_runs):
         
             csv_record_dict[key_value] = []
             for runs in run_dict.keys():
-                csv_record_dict[key_value].append([run_dict[runs],runs])
+                csv_record_dict[key_value].append([run_dict[runs],runs]) # this has values for all the edges for all runs
     
 
     
@@ -1726,16 +1706,16 @@ chart.save(save_path+'plot_type6_f_3d_tanh_poster.html')
 # ensemble 
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 5
-percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
+percentage_threshold = [0] #90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 plot_dict = defaultdict(list)
 for percentage_value in percentage_threshold:
     csv_record_dict = defaultdict(list)
-    for l in [2, 3]:
+    for l in [2]: #, 3]:
         for run_time in range (0,total_runs):
             run = run_time
             #if run in [1, 2, 4, 7, 8]:
             #    continue
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc12_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc100_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
             distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
@@ -1833,6 +1813,45 @@ for percentage_value in percentage_threshold:
 
     
     #######################################
+    all_edge_list = []
+    for key_value in csv_record_dict.keys():
+        edge_score_runs = []
+        edge_score_runs.append(key_value)
+        for runs in csv_record_dict[key_value]:
+            edge_score_runs.append(runs[0]) # 
+            
+        all_edge_list.append(edge_score_runs)
+
+    ## Find the rank of product
+    edge_rank_dictionary = defaultdict(list)
+    # sort the all_edge_list by runs and record the rank
+    print('total runs %d'%total_runs)
+    for runs in range (0, total_runs):
+        sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on score by current run and large to small
+        for rank in range (0, len(sorted_list_temp)):
+            edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention
+
+    all_edge_avg_rank = []
+    for key_val in edge_rank_dictionary.keys():
+        rank_product = 1
+        for i in range (0, len(edge_rank_dictionary[key_val])):
+            rank_product = rank_product * edge_rank_dictionary[key_val][i]
+            
+        all_edge_avg_rank.append([key_val, rank_product/len(edge_rank_dictionary[key_val])])  # small rank being high attention
+
+    all_edge_sorted_by_avgrank = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
+
+    # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
+    top_percent = 10
+    csv_record_intersect_dict = defaultdict(list)
+    threshold_amount_edge = (len(all_edge_sorted_by_avgrank)*top_percent)//100
+    for i in range (0, threshold_amount_edge):
+        csv_record_intersect_dict[all_edge_sorted_by_avgrank[i][0]].append(all_edge_sorted_by_avgrank[i][1])
+    
+
+    
+    #######################################################
+    '''
     csv_record_intersect_dict = defaultdict(list)
     for key_value in csv_record_dict.keys():
         if len(csv_record_dict[key_value])>=total_runs: #3: #((total_runs*80)/100):
@@ -1842,7 +1861,7 @@ for percentage_value in percentage_threshold:
             score = score/len(csv_record_dict[key_value]) # take the average score
 
             csv_record_intersect_dict[key_value].append(score)
-    
+    '''
     ########################################
     existing_lig_rec_dict = []
     for i in range (0, datapoint_size):
@@ -1869,7 +1888,7 @@ for percentage_value in percentage_threshold:
                 for k in existing_lig_rec_dict[i][j]:   
                     
                     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        print(k)
+                        #print(k)
                         #positive_class = positive_class + 1                     
                         confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                         #else:
