@@ -43,21 +43,9 @@ distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
 cell_percent = 100 # choose at random N% ligand cells
-#neighbor_percent = 70
-# lr_percent = 20 #40 #10
-#lr_count_percell = 1
-#receptor_connections = 'all_same' #'all_not_same'
-'''
-lr_gene_count = 20 #8 #100 #20 #100 #20 #50 # and 25 pairs
-rec_start = lr_gene_count//2 # 
-ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-receptor_gene_list = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-'''
+
 lr_gene_count = 44 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
 rec_start = lr_gene_count//2 # 
-
-# ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-# receptor_gene_list = [22,23,24, 25, 26, 27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42, 43]
 
 ligand_gene_list = []
 for i in range (0, rec_start):
@@ -67,6 +55,8 @@ receptor_gene_list = []
 for i in range (rec_start, lr_gene_count):
     receptor_gene_list.append(i)
 
+# ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+# receptor_gene_list = [22,23,24, 25, 26, 27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42, 43]
 
 
 non_lr_genes = 350 - lr_gene_count
@@ -87,7 +77,7 @@ for gene in gene_ids:
 
 ###############################################
 lr_database = []
-for i in range (0, len(ligand_gene_list)):
+for i in range (0, 12): #len(ligand_gene_list)):
     lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
 
 ligand_dict_dataset = defaultdict(dict)
@@ -147,6 +137,7 @@ while i < (len(lr_database)-connection_count_max*2):
         continue
     pattern_list.append(pattern)
 
+pattern_list = [[[0, 1], [2, 3]], [[4, 5], [6, 7]], [[8, 9], [10, 11]]]
 '''
 In [8]: pattern_list
 Out[8]: 
@@ -158,19 +149,18 @@ Out[8]:
 '''
 ################# Now create some arbitrary pairs that will be false positives #########
 
-for i in range (0, len(ligand_gene_list)-5):
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+1]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+2]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+3]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+4]])
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+5]])
-
+for i in range (12, len(ligand_gene_list)):
+#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
+#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+1]])
+#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+2]])
+    for j in range (12, len(receptor_gene_list)):
+        lr_database.append([ligand_gene_list[i],receptor_gene_list[j]])
 
 ligand_dict_dataset = defaultdict(dict)
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
 ligand_list = list(ligand_dict_dataset.keys())  
-
+''''''
 
 
 ########################################################################################
@@ -541,7 +531,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 '''
 flag_stop = 0
 pattern_count = len(pattern_list)
-for pattern_type in range (0, 4): #8): #pattern_count):	
+for pattern_type in range (0, 3): #8): #pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
     max_ligand_count = 200 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
@@ -582,15 +572,15 @@ for pattern_type in range (0, 4): #8): #pattern_count):
                 
         
         
-        if a_cell in neighbour_of_actives or b_cell in neighbour_of_actives or c_cell in neighbour_of_actives:
-            continue
+        #if a_cell in neighbour_of_actives or b_cell in neighbour_of_actives or c_cell in neighbour_of_actives:
+        #    continue
         
         if a_cell in active_spot or b_cell in active_spot or c_cell in active_spot:
             continue
 
 
-        #if a_cell in neighbour_of_actives_in_pattern[pattern_type] or b_cell in neighbour_of_actives_in_pattern[pattern_type] or c_cell in neighbour_of_actives_in_pattern[pattern_type]:
-        #    continue
+        if a_cell in neighbour_of_actives_in_pattern[pattern_type] or b_cell in neighbour_of_actives_in_pattern[pattern_type] or c_cell in neighbour_of_actives_in_pattern[pattern_type]:
+            continue
             
 	    
    
@@ -664,6 +654,7 @@ for pattern_type in range (0, 4): #8): #pattern_count):
 
         ################################
 	    # extend this list by adding the ligand / receptor who are involved with gene_off_list
+        '''
         additional_gene = []
         for gene in ligand_gene_list:
             # if there is any ligand gene who has a receptor gene in gene_off_list, the add that ligand gene to the list as well
@@ -680,6 +671,7 @@ for pattern_type in range (0, 4): #8): #pattern_count):
                     
         gene_off_list = gene_off_list + additional_gene
         gene_off_list = list(set(gene_off_list )) # to remove duplicate entries    
+        '''
         ################################
 
         active_spot[a_cell] = ''
@@ -911,7 +903,7 @@ total_cells = len(temp_x)
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 options = options + '_f'
-options = options + '_3dim' + '_4patterns'+'_temp'
+options = options + '_3dim' + '_3patterns'+'_temp'
 #options = options + '_scaled'
 
 
