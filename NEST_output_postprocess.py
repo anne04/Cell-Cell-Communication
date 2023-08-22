@@ -446,6 +446,7 @@ for run_time in range (start_index, start_index+total_runs):
     gc.collect()
     #run_time = 2
     run = run_time
+    print('run %d'%run)
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
@@ -500,7 +501,7 @@ for run_time in range (start_index, start_index+total_runs):
 	    else: 
 	        min_attention_score = 0
 	    
-	    print('min attention score %g'%min_attention_score)
+	    print('min attention score %g, total edges %d'%(min_attention_score, len(distribution)))
 	    ##############
 	    #plt.clf()
 	    #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
@@ -538,7 +539,7 @@ for run_time in range (start_index, start_index+total_runs):
 	    ###########################
 	    
 	    ccc_index_dict = dict()
-	    threshold_down =  np.percentile(sorted(distribution), 90)
+	    threshold_down =  np.percentile(sorted(distribution), 0)
 	    threshold_up =  np.percentile(sorted(distribution), 100)
 	    connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
 	    for j in range (0, datapoint_size):
@@ -587,18 +588,6 @@ for run_time in range (start_index, start_index+total_runs):
 	    #######################
 	
 	
-	    '''
-	    barcode_type=dict()
-	    for i in range (1, len(pathologist_label)):
-	        if pathologist_label[i][1] == 'tumor': #'Tumour':
-	            barcode_type[pathologist_label[i][0]] = '2_tumor'
-	        elif pathologist_label[i][1] =='stroma_deserted':
-	            barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
-	        elif pathologist_label[i][1] =='acinar_reactive':
-	            barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
-	        else:
-	            barcode_type[pathologist_label[i][0]] = 'zero' #0
-	    '''
 	    
 	    data_list=dict()
 	    data_list['pathology_label']=[]
@@ -616,8 +605,6 @@ for run_time in range (start_index, start_index+total_runs):
 	
 	
 	    data_list_pd = pd.DataFrame(data_list)
-	    #data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
-	    #df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
 	    #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
 	    set1 = altairThemes.get_colour_scheme("Set1", id_label)
 	    set1[0] = '#000000'
@@ -632,20 +619,7 @@ for run_time in range (start_index, start_index+total_runs):
 	    # output 2
 	    save_path = '/cluster/home/t116508uhn/64630/'
 	    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
-	    #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
-	    #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
-	    #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-	    #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
-	    #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
-	    #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
-	    #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
-	    #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
-	    #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
-	    #chart.save(save_path+'region_of_interest_r1.html')
-	    #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
-	    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-	    #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-	    
+
 	    ##############
 	    '''
 	    region_list =[2, 3, 9, 11, 4, 5, 7]
@@ -659,14 +633,6 @@ for run_time in range (start_index, start_index+total_runs):
 	    ###############
 	    csv_record = []
 	    csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-	    '''
-	    for j in range (0, len(barcode_info)):
-	        for i in range (0, len(barcode_info)):
-	            for k in range (0, len(lig_rec_dict[i][j])):
-	                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
-	
-	    '''
-	    
 	    for j in range (0, len(barcode_info)):
 	        for i in range (0, len(barcode_info)):
 	            
@@ -721,9 +687,41 @@ for key_value in csv_record_dict.keys():
     for runs in run_dict.keys():
         csv_record_dict[key_value].append([run_dict[runs],runs])
         
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs_allEdges', 'wb') as fp:  #b, a:[0:5]   
 	pickle.dump(csv_record_dict, fp)
-	
+
+###### write the combined result in a csv file #####################
+csv_record = []
+csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score_run1','attention_score_run2','attention_score_run3','attention_score_run4','attention_score_run5', 'from_id', 'to_id'])
+for key_value in csv_record_dict.keys():
+    item = key_value.split('-')
+    i = int(item[0])
+    j = int(item[1])
+    ligand = item[2]
+    receptor = item[3]   
+    dummy_entry = []
+    dummy_entry.append(barcode_info[i][0])
+    dummy_entry.append(barcode_info[j][0])
+    dummy_entry.append(ligand)
+    dummy_entry.append(receptor)
+    
+    
+    for k in range (0, len(csv_record_dict[key_value])):
+        dummy_entry.append(csv_record_dict[key_value][k][0])
+        
+    dummy_entry.append(i)
+    dummy_entry.append(j)        
+        
+
+    csv_record.append(dummy_entry)
+        
+        
+print('total edges count %d'%len(csv_record))
+df = pd.DataFrame(csv_record) # output 4
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_output_allEdges_5runs_'+args.data_name+'.csv', index=False, header=False)
+
+
+
 fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_merged_5runs', 'rb')
 csv_record_dict = pickle.load(fp)
 
