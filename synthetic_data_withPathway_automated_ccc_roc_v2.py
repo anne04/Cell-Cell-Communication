@@ -531,10 +531,10 @@ for i in range (0, cell_vs_gene.shape[0]):
 '''
 flag_stop = 0
 pattern_count = len(pattern_list)
-for pattern_type in range (0, 3): #8): #pattern_count):	
+for pattern_type in range (0, 1): #8): #pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = 200 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = 1000 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -753,6 +753,17 @@ print('P_class %d'%P_class)
 #cell_vs_gene[:,15] = min_lr_gene_count #-10
 #cell_vs_gene[:,6] = min_lr_gene_count #-10
 #cell_vs_gene[:,14] = min_lr_gene_count #-10
+available_cells = []
+for cell in range (0, cell_vs_gene.shape[0]):
+    if cell not in active_spot:
+        available_cells.append(cell)
+
+np.random.shuffle(available_cells)
+for i in range (0, (len(available_cells)*2)//3):
+    cell = available_cells[i]
+    gene_id = np.arange(lr_gene_count)
+    for j in range (0, (len(gene_id)*5)//6):
+        cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
 
 ##############################
 # take quantile normalization.
@@ -903,7 +914,7 @@ total_cells = len(temp_x)
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 options = options + '_f'
-options = options + '_3dim' + '_3patterns'+'_temp'
+options = options + '_3dim' + '_1patterns'+'_temp'
 #options = options + '_scaled'
 
 
@@ -1485,14 +1496,15 @@ chart.save(save_path+'plot_type4_e_3d_1layer.html')
 
 ####################
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5 #10
+total_runs = 10
 percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 plot_dict_list = []
 for run_time in range (0,total_runs):
     plot_dict_list.append(defaultdict(list))
     run = run_time
+    print('run %d'%run)
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc100_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc112_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1753,12 +1765,12 @@ chart.save(save_path+'plot_type6_f_3d_tanh_poster.html')
 ####################
 # ensemble 
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
-percentage_threshold = [0] #90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
+total_runs = 10
+percentage_threshold = [0] #, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 plot_dict = defaultdict(list)
 for percentage_value in percentage_threshold:
     csv_record_dict = defaultdict(list)
-    for l in [2]: #, 3]:
+    for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         for run_time in range (0,total_runs):
             run = run_time
             #if run in [1, 2, 4, 7, 8]:
@@ -1816,7 +1828,7 @@ for percentage_value in percentage_threshold:
             count = 0
             existing_lig_rec_dict = []
             for i in range (0, datapoint_size):
-                existing_lig_rec_dict.append([])   
+                existing_lig_rec_dict.appedt-path_uniform_distribution_lrc100_cp100_noise0_random_overlap_knn_cellCount5000_f_3dim_tempnd([])   
                 for j in range (0, datapoint_size):	
                     existing_lig_rec_dict[i].append([])   
                     existing_lig_rec_dict[i][j] = []
@@ -1861,6 +1873,7 @@ for percentage_value in percentage_threshold:
 
     
     #######################################
+    ''''''
     all_edge_list = []
     for key_value in csv_record_dict.keys():
         edge_score_runs = []
@@ -1880,29 +1893,40 @@ for percentage_value in percentage_threshold:
             edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention
 
     all_edge_avg_rank = []
+    distribution_rank = []
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
             
-        all_edge_avg_rank.append([key_val, rank_product/len(edge_rank_dictionary[key_val])])  # small rank being high attention
-
+        all_edge_avg_rank.append([key_val, rank_product**(1/total_runs)])  # small rank being high attention
+        distribution_rank.append(rank_product**(1/total_runs))
+        
     all_edge_sorted_by_avgrank = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
 
     # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
-    top_percent = 10
+    percentage_value = 10
+    
     csv_record_intersect_dict = defaultdict(list)
-    threshold_amount_edge = (len(all_edge_sorted_by_avgrank)*top_percent)//100
-    for i in range (0, threshold_amount_edge):
-        csv_record_intersect_dict[all_edge_sorted_by_avgrank[i][0]].append(all_edge_sorted_by_avgrank[i][1])
     
-
+    threshold_up = np.percentile(distribution_rank, percentage_value)
+    for i in range (0, len(all_edge_sorted_by_avgrank)):
+        if all_edge_sorted_by_avgrank[i][1] <= threshold_up:
+            csv_record_intersect_dict[all_edge_sorted_by_avgrank[i][0]].append(all_edge_sorted_by_avgrank[i][1])
     
+    threshold_up = np.percentile(distribution_rank_layer2, percentage_value)
+    for i in range (0, len(all_edge_sorted_by_avgrank_layer2)):
+        if all_edge_sorted_by_avgrank_layer2[i][1] <= threshold_up:
+            csv_record_intersect_dict[all_edge_sorted_by_avgrank_layer2[i][0]].append(all_edge_sorted_by_avgrank_layer2[i][1])
+    
+    for key_value in csv_record_intersect_dict.keys():  
+       if len(csv_record_intersect_dict[key_value])>1:
+           csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
     #######################################################
     '''
     csv_record_intersect_dict = defaultdict(list)
     for key_value in csv_record_dict.keys():
-        if len(csv_record_dict[key_value])>=total_runs: #3: #((total_runs*80)/100):
+        if len(csv_record_dict[key_value])>=7: #total_runs 3: #((total_runs*80)/100):
             score = 0
             for k in range (0, len(csv_record_dict[key_value])):
                 score = score + csv_record_dict[key_value][k][0]
@@ -1951,8 +1975,8 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('ensemble_100percent')
-    #plot_dict['Type'].append('ensemble_70percent')
+    #plot_dict['Type'].append('ensemble_100percent')
+    plot_dict['Type'].append('ensemble_70percent')
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -1961,8 +1985,8 @@ for percentage_value in percentage_threshold:
 #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
 #plt.clf()
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_70percent', 'wb') as fp: #b, b_1, a
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_70percent', 'wb') as fp: #b, b_1, a
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 
