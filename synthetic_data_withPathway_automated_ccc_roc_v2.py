@@ -1297,7 +1297,7 @@ while percentage_value > 0:
     existing_lig_rec_dict = []
     datapoint_size = temp_x.shape[0]
     for i in range (0, datapoint_size):
-        existing_lig_rec_dict.append([])   
+        existing_lig_rec_dict.append([])    
         for j in range (0, datapoint_size):	
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []
