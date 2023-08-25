@@ -33,9 +33,9 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 2 #2 = path equally spaced
+threshold_distance = 4 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'knn'  #'threshold_dist' # <-----------
+distance_measure = 'threshold_dist' #'knn'  # <-----------
 datatype = 'path_uniform_distribution' #'path_equally_spaced' #
 
 '''
@@ -203,9 +203,9 @@ def get_data(datatype):
     elif datatype == 'path_uniform_distribution':
 	
         datapoint_size = 5000
-        x_max = 500
+        x_max = 150 #500
         x_min = 0
-        y_max = 300
+        y_max = 150 #300
         y_min = 0
 	
         a = x_min
@@ -1063,17 +1063,15 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
 data_list_pd = pd.DataFrame(temp_x)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv', index=False, header=False)
 data_list_pd = pd.DataFrame(temp_y)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_y.csv', index=False, header=False)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
     cell_vs_gene = pickle.load(fp)
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
-    #max_value=np.max(cell_vs_gene[i])
-    #min_value=np.min(cell_vs_gene[i])
     for j in range (0, cell_vs_gene.shape[1]):
         data_list['a-'+str(i)].append(cell_vs_gene[i][j]) #(cell_vs_gene[i][j]-min_value)/(max_value-min_value)
         
@@ -1085,7 +1083,7 @@ for i in range (0, cell_vs_gene.shape[1]):
     
 data_list_pd[' ']=gene_name   
 data_list_pd = data_list_pd.set_index(' ')    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv')
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
 
 data_list=dict()
 data_list['ligand']=[]
@@ -1095,7 +1093,7 @@ for i in range (0, len(lr_database)):
     data_list['receptor'].append('g'+str(lr_database[i][1]))
     
 data_list_pd = pd.DataFrame(data_list)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_type6_f.csv', index=False)
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_'+options+'.csv', index=False)
 	
 	
 ###############
