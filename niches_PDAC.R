@@ -50,9 +50,9 @@ Idents(niche) <- niche[['ReceivingType']]
 
 cc.object <- NICHES_output$CellToCellSpatial #Extract the output of interest
 cc.object <- ScaleData(cc.object) #Scale
-#cc.object <- FindVariableFeatures(cc.object,selection.method="disp") #Identify variable features
-#cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
-#cc.object <- RunUMAP(cc.object,dims = 1:100)
+cc.object <- FindVariableFeatures(cc.object,selection.method="disp") #Identify variable features
+cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
+cc.object <- RunUMAP(cc.object,dims = 1:100)
 Idents(cc.object) <- cc.object[['ReceivingType']]
 ec.network <- subset(cc.object,idents ='8')
 Idents(ec.network) <- ec.network[['VectorType']]
@@ -103,22 +103,26 @@ GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
-##########################################################################################
-df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
+####################################### synthetic ###################################################
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
+
+df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
   cell_x[[i]] <- df[ , i]    
 }
-df=read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
+df=read.csv(file = paste('/cluster/home/t116508uhn/synthetic_cell_',options,'_y.csv',sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
 cell_y=list()  
 for(i in 1:ncol(df)) {      
   cell_y[[i]] <- df[ , i]    
 }
 
-countsData <- read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
-temp <- SCTransform(pdac_sample, verbose = FALSE)
+#temp <- SCTransform(pdac_sample, verbose = FALSE)
 #DefaultAssay(temp) <- "integrated"
+temp <- ScaleData(pdac_sample)
+temp <- FindVariableFeatures(temp) 
 temp <- RunPCA(temp, verbose = FALSE)
 temp <- FindNeighbors(temp, reduction = "pca", dims = 1:30)
 temp <- FindClusters(temp, verbose = FALSE)
@@ -137,7 +141,7 @@ temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
 
-lr_db <- read.csv("/cluster/home/t116508uhn/synthetic_lr_type6_f.csv")
+lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
 NICHES_output <- RunNICHES(object = temp,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
@@ -155,11 +159,9 @@ NICHES_output <- RunNICHES(object = temp,
         
 niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
-
-
-#temp_matrix = GetAssayData(object = niche, slot = "counts")
-#temp_matrix = as.matrix(temp_matrix)
-#write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_e.csv')
+temp_matrix = GetAssayData(object = niche, slot = "counts")
+temp_matrix = as.matrix(temp_matrix)
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
 
 
@@ -167,23 +169,14 @@ Idents(niche) <- niche[['ReceivingType']]
 niche <- ScaleData(niche)
 niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
-#p <- ElbowPlot(niche,ndims = 50)
-#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
-
-niche <- RunUMAP(niche,dims = 1:6)  
-#p <- DimPlot(niche,reduction = 'umap',pt.size = 0.5,shuffle = T, label = T) +ggtitle('Cellular Microenvironment')+NoLegend()
-#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
-#mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
-#GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
-#p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(colors = c("grey","white", "blue")) 
-#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
+niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 
 temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_f.csv')
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
 temp_matrix = niche[['seurat_clusters.Joint_clusters']]
-write.csv(temp_matrix, '/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
 
 ############## Niches on Lymph Node #######################
 data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
