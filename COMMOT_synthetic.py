@@ -122,8 +122,8 @@ adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_type4_e_commot
 #########################################################
 LR_pairs = []
 for i in range (0, len(lr_db)):
-    LR_pairs.append(''+'-'+'')
-    
+    LR_pairs.append(lr_db['ligand'][i]+'-'+lr_db['receptor'][i])
+   
 #LR_pairs = ['g0-g8', 'g1-g9', 'g2-g10', 'g3-g11', 'g4-g12', 'g5-g13', 'g6-g14', 'g7-g15']
 
 #################################################################################
@@ -151,7 +151,7 @@ for pair_index in range(0, len(LR_pairs)):
                 distribution.append(adata_synthetic.obsp[key_pair][i,j])
             
             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type6_f_commot_result', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
