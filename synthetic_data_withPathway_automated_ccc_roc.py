@@ -159,6 +159,7 @@ for i in range (12, len(ligand_gene_list)):
 ligand_dict_dataset = defaultdict(dict)
 for i in range (0, len(lr_database)):
     ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+    
 ligand_list = list(ligand_dict_dataset.keys())  
 ''''''
 
@@ -382,15 +383,15 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 ################
 
-start_loc = 20
+start_loc = 15
 rec_gene = lr_gene_count//2
 for i in range (0, 2): #lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc,scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc,scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -398,27 +399,27 @@ for i in range (0, 2): #lr_gene_count//2):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-start_loc = 20
+start_loc = 15
 for i in range (2, lr_gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     #gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     ################
     
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     #gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -439,23 +440,23 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
     
     
 #################
-start_loc = 31
+start_loc = np.max(gene_distribution_inactive)+10
 rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
-for i in range (0, 2):
-    gene_exp_list = np.random.normal(loc=start_loc,scale=scale_active_distribution,size=len(temp_x)) #
+for i in range (0, 4):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
     #print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc,scale=scale_active_distribution,size=len(temp_x)) #
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[rec_gene ,:] =  gene_exp_list
     #print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
     rec_gene = rec_gene + 1 
 
-start_loc = 30 #np.max(gene_distribution_inactive)+2
-for i in range (2, lr_gene_count//2):
+#start_loc = 30 #np.max(gene_distribution_inactive)+2
+for i in range (4, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
@@ -746,6 +747,21 @@ print('P_class %d'%P_class)
 
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
 ############################
+## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
+available_cells = []
+for cell in range (0, cell_vs_gene.shape[0]):
+    if cell not in active_spot:
+        available_cells.append(cell)
+
+np.random.shuffle(available_cells)
+for i in range (0, (len(available_cells)*3)//4):
+    cell = available_cells[i]
+    gene_id = np.arange(lr_gene_count)
+    np.random.shuffle(gene_id)
+    for j in range (0, (len(gene_id)*1//2)): #
+        cell_vs_gene[cell, gene_id[j]] = gene_distribution_active[gene_id[j], cell]
+        
+##############################
 '''
 # to reduce number of conections
 #cell_vs_gene[:,7] = min_lr_gene_count #-10
@@ -789,7 +805,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98.9), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99.5), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -830,8 +846,9 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
-                        #key = str(i)+'-'+str(j)+gene+'-'+gene_rec
-                        
+                        #key = str(i)+'-'+str(j)+str(gene)+'-'+str(gene_rec)
+                        #if ligand_dict_dataset[gene][gene_rec] not in lig_rec_dict_TP[i][j]:
+                        #    available_edges_to_drop.append([key, communication_scores])
 			
 
 print('total edges %d'%count)
@@ -1064,6 +1081,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+    cell_vs_gene = pickle.load(fp)
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
@@ -1072,9 +1093,6 @@ data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv',
 data_list_pd = pd.DataFrame(temp_y)        
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_y.csv', index=False, header=False)
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
-    cell_vs_gene = pickle.load(fp)
 
 data_list=defaultdict(list)
 for i in range (0, cell_vs_gene.shape[0]):
@@ -1500,10 +1518,15 @@ chart.save(save_path+'plot_type4_e_3d_1layer.html')
 
 ####################
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 10
 percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 plot_dict_list = []
-for run_time in range (0,total_runs):
+plot_dict_list.append(defaultdict(list))
+plot_dict_list.append(defaultdict(list))
+plot_dict_list.append(defaultdict(list))
+plot_dict_list.append(defaultdict(list))
+plot_dict_list.append(defaultdict(list))
+for run_time in range (5,total_runs):
     plot_dict_list.append(defaultdict(list))
     run = run_time
     print('run %d'%run)
@@ -1687,8 +1710,40 @@ for i in range (0, len(percentage_threshold)):
     plot_dict['TPR'].append(TPR_list[i])
     plot_dict['Type'].append('NEST_average_10runs')
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_5runs', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'wb') as fp: #b, b_1, a
     pickle.dump([plot_dict, plot_dict_list], fp) #a - [0:5]
+
+
+########################################################################################################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_5runs', 'rb') as fp: #b, b_1, a
+    plot_dict_temp, plot_dict_list_temp = pickle.load(fp) #a - [0:5]
+
+for run in range (0, 5):
+    for i in range (0, len(plot_dict_list_temp[run]['Type'])):
+        plot_dict_list[run]['FPR'].append(plot_dict_list_temp[run]['FPR'][i])
+        plot_dict_list[run]['TPR'].append(plot_dict_list_temp[run]['TPR'][i])
+        plot_dict_list[run]['Type'].append(plot_dict_list_temp[run]['Type'][i])  
+#########################################################################################################################
+
+
+plot_dict = defaultdict(list)
+for run in range (0, 5):
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append(plot_dict_list_temp[run]['Type'][0])
+    for i in range (0, len(plot_dict_list_temp[run]['Type'])):
+        plot_dict['FPR'].append(plot_dict_list_temp[run]['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_list_temp[run]['TPR'][i])
+        plot_dict['Type'].append(plot_dict_list_temp[run]['Type'][i])  
+        
+data_list_pd = pd.DataFrame(plot_dict)    
+chart = alt.Chart(data_list_pd).mark_line().encode(
+    x='FPR:Q',
+    y='TPR:Q',
+    color='Type:N',
+)	
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'plot_avg_naive.html')
 
 ####################
 plot_dict = defaultdict(list)
@@ -1726,7 +1781,7 @@ for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
            
 ###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_70percent', 'rb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
 plot_dict['FPR'].append(0)
 plot_dict['TPR'].append(0)
@@ -1737,13 +1792,25 @@ for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
            
 ######
-niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-niches_TPR = [0, .199627, .203358, .205224, .410448, .410448, .410448, .410448, .410448, .410448, .410448]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product', 'rb') as fp: #b, b_1, a
+    plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
+for i in range (0, len(plot_dict_temp['Type'])):
+    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+    plot_dict['Type'].append(plot_dict_temp['Type'][i])
+
+######
+niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
+niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
 for i in range (0, 11):
     plot_dict['FPR'].append(niches_FPR[i])
     plot_dict['TPR'].append(niches_TPR[i])
     plot_dict['Type'].append('Niches with 10 nearest neighbour')
-    
+'''    
 niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
 niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
 for i in range (0, 11):
@@ -1758,7 +1825,7 @@ for i in range (0, 11):
     plot_dict['FPR'].append(COMMOT_FPR[i])
     plot_dict['TPR'].append(COMMOT_TPR[i])
     plot_dict['Type'].append('COMMOT')        
-
+'''
 data_list_pd = pd.DataFrame(plot_dict)    
 chart = alt.Chart(data_list_pd).mark_line().encode(
     x='FPR:Q',
@@ -2324,6 +2391,23 @@ nt.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 #################################################################################
 #df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+
+df_ccc_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_cells_'+options+'.csv')
+df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_'+options+'.csv')
+
+for index in range (0, len(df_ccc_cells)):
+    i = df_ccc_cells['x'][index].split('—')[0]
+    j = df_ccc_cells['x'][index].split('—')[0]
+    i = int(i.split('.')[1])
+    j = int(j.split('.')[1])
+    for lr_pair_index in range (0, len(df_ccc_lrpairs)):
+        lr_pair = df_ccc_lrpairs['x'][lr_pair_index]
+        ligand_gene = lr_pair.split('—')[0][1:]
+        receptor_gene = lr_pair.split('—')[1][1:]
+        k = ligand_dict_dataset[ligand_gene][receptor_gene]
+        if 
+
+################################################################################################
 df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
 #df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 
