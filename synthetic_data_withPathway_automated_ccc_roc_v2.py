@@ -747,7 +747,7 @@ print('P_class %d'%P_class)
 
 
 ############################
-
+'''
 # to reduce number of conections
 #cell_vs_gene[:,7] = min_lr_gene_count #-10
 #cell_vs_gene[:,15] = min_lr_gene_count #-10
@@ -764,7 +764,7 @@ for i in range (0, (len(available_cells)*2)//3):
     gene_id = np.arange(lr_gene_count)
     for j in range (0, (len(gene_id)*5)//6):
         cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
-
+'''
 ##############################
 # take quantile normalization.
 cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
@@ -1066,8 +1066,8 @@ data_list_pd = pd.DataFrame(temp_x)
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv', index=False, header=False)
 data_list_pd = pd.DataFrame(temp_y)        
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_y.csv', index=False, header=False)
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 data_list=defaultdict(list)
@@ -2317,6 +2317,10 @@ nt.show('mygraph.html')
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 #################################################################################
+#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
+#df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
+
 attention_scores = []
 lig_rec_dict = []
 datapoint_size = temp_x.shape[0]
@@ -2329,9 +2333,6 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
 
-#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_type6_f.csv')
-#df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 distribution = []
 for col in range (1, len(df_pair_vs_cells.columns)):
     col_name = df_pair_vs_cells.columns[col]
@@ -2346,6 +2347,22 @@ for col in range (1, len(df_pair_vs_cells.columns)):
         lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
         attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
         distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+
+'''
+In [8]: len(distribution)
+Out[8]: 15745184
+
+In [9]: min(distribution)
+Out[9]: 0.867500827142844
+
+In [10]: max(distribution)
+Out[10]: 26.5899655845998
+'''
+
+distribution = sorted(distribution, reverse=True)
+distribution = distribution[0: len(row_col)]
+negative_class = len(distribution)-positive_class
+
 
 percentage_value = 100
 while percentage_value > 0:
@@ -2364,21 +2381,26 @@ while percentage_value > 0:
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
     rec_dict = defaultdict(dict)
+    total_edges_count = 0
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
             if i==j: 
                 continue
             atn_score_list = attention_scores[i][j]
             #print(len(atn_score_list))
+            
             for k in range (0, len(atn_score_list)):
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                     connecting_edges[i][j] = 1
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                    total_edges_count = total_edges_count + 1
+                    
 
 
     ############# 
+    print('total edges %d'%total_edges_count)
     #negative_class = 0
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
@@ -2386,31 +2408,27 @@ while percentage_value > 0:
 
             if i==j: 
                 continue
+            ''' 
             if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
                 for k in range (0, len(lig_rec_dict_TP[i][j])):
-                    if k in existing_lig_rec_dict[i][j]:
+                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
                         confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                     else:
                         confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
 
             '''
-            if len(lig_rec_dict[i][j])>0:
-                for k in lig_rec_dict[i][j]:   
+            if len(existing_lig_rec_dict[i][j])>0:
+                for k in existing_lig_rec_dict[i][j]:   
                     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        
-                        if k in existing_lig_rec_dict[i][j]:
-                            confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                        else:
-                            confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                        #print("i=%d j=%d k=%d"%(i, j, k))
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                     else:
-                        negative_class = negative_class + 1
-                        if k in existing_lig_rec_dict[i][j]:
-                            confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-                        else:
-                            confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
-              '''
-    print('%d, %g'%(percentage_value, (confusion_matrix[0][0]/positive_class)*100))    
-    
+                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1                 
+             
+    print('%d, %g, %g'%(percentage_value,  (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
+    #print('%d, %g'%(percentage_value, (confusion_matrix[0][0]/positive_class)*100))    
+
+
 import altair as alt
 from vega_datasets import data
 
