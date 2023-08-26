@@ -382,7 +382,7 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 ################
 
-start_loc = 17
+start_loc = 20
 rec_gene = lr_gene_count//2
 for i in range (0, 2): #lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc,scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
@@ -403,7 +403,7 @@ for i in range (2, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
@@ -416,7 +416,7 @@ for i in range (2, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
@@ -439,7 +439,7 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
     
     
 #################
-start_loc = 22
+start_loc = 31
 rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
 for i in range (0, 2):
@@ -454,7 +454,7 @@ for i in range (0, 2):
     #print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
     rec_gene = rec_gene + 1 
 
-start_loc = np.max(gene_distribution_inactive)+30
+start_loc = 30 #np.max(gene_distribution_inactive)+2
 for i in range (2, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
@@ -533,7 +533,7 @@ pattern_count = len(pattern_list)
 for pattern_type in range (0, 3): #8): #pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = 200 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = 250 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -752,19 +752,19 @@ cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
 #cell_vs_gene[:,15] = min_lr_gene_count #-10
 #cell_vs_gene[:,6] = min_lr_gene_count #-10
 #cell_vs_gene[:,14] = min_lr_gene_count #-10
-'''
+
 available_cells = []
 for cell in range (0, cell_vs_gene.shape[0]):
     if cell not in active_spot:
         available_cells.append(cell)
 
 np.random.shuffle(available_cells)
-for i in range (0, (len(available_cells)*4)//5):
+for i in range (0, (len(available_cells)*1)//2):
     cell = available_cells[i]
     gene_id = np.arange(lr_gene_count)
-    for j in range (0, (len(gene_id)*12//13)):
+    for j in range (0, (len(gene_id)*2//3)): #
         cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
-
+'''
 ##############################
 # take quantile normalization.
 
@@ -789,7 +789,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 75), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98.9), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -807,6 +807,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i][j] = []
  
 count = 0
+available_edges_to_drop = []
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
@@ -829,6 +830,9 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
+                        #key = str(i)+'-'+str(j)+gene+'-'+gene_rec
+                        
+			
 
 print('total edges %d'%count)
 #################
@@ -914,8 +918,8 @@ total_cells = len(temp_x)
 
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
-options = options + '_f'
-options = options + '_3dim' + '_1patterns'+'_temp'
+#options = options + '_f'
+options = options + '_3dim' + '_3patterns'+'_temp'
 #options = options + '_scaled'
 
 
@@ -1067,6 +1071,7 @@ data_list_pd = pd.DataFrame(temp_x)
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv', index=False, header=False)
 data_list_pd = pd.DataFrame(temp_y)        
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_y.csv', index=False, header=False)
+
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
