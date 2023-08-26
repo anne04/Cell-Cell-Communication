@@ -379,33 +379,18 @@ gene_distribution_inactive = np.zeros((lr_gene_count + non_lr_genes, cell_count)
 #gene_distribution_inactive_lrgenes = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
-start_loc = 20
-rec_gene = lr_gene_count//2
-'''
-for i in range (0, lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)) #10
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)) #10
-    np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
-    print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    rec_gene = rec_gene + 1 
-    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
-'''
+
 ################
 
-start_loc = 20
+start_loc = 17
 rec_gene = lr_gene_count//2
-for i in range (0, 4): #lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+for i in range (0, 2): #lr_gene_count//2):
+    gene_exp_list = np.random.normal(loc=start_loc,scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc,scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -413,7 +398,8 @@ for i in range (0, 4): #lr_gene_count//2):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-for i in range (4, lr_gene_count//2): ##):
+start_loc = 20
+for i in range (2, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
@@ -453,10 +439,23 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
     
     
 #################
-start_loc = np.max(gene_distribution_inactive)+30
+start_loc = 22
 rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
-for i in range (0, lr_gene_count//2):
+for i in range (0, 2):
+    gene_exp_list = np.random.normal(loc=start_loc,scale=scale_active_distribution,size=len(temp_x)) #
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_active[i,:] =  gene_exp_list
+    #print('%d: active: %g to %g'%(i, np.min(gene_distribution_active[i,:]),np.max(gene_distribution_active[i,:]) ))
+    
+    gene_exp_list = np.random.normal(loc=start_loc,scale=scale_active_distribution,size=len(temp_x)) #
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_active[rec_gene ,:] =  gene_exp_list
+    #print('%d: active: %g to %g'%(rec_gene, np.min(gene_distribution_active[rec_gene,:]),np.max(gene_distribution_active[rec_gene,:]) ))
+    rec_gene = rec_gene + 1 
+
+start_loc = np.max(gene_distribution_inactive)+30
+for i in range (2, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
     gene_distribution_active[i,:] =  gene_exp_list
@@ -531,10 +530,10 @@ for i in range (0, cell_vs_gene.shape[0]):
 '''
 flag_stop = 0
 pattern_count = len(pattern_list)
-for pattern_type in range (0, 1): #8): #pattern_count):	
+for pattern_type in range (0, 3): #8): #pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-    max_ligand_count = 1000 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
+    max_ligand_count = 200 #100 #cell_count//(pattern_count*6) # 10.  1/N th of the all cells are following this pattern, where, N = total patterns
     np.random.shuffle(ligand_cells)
     print("pattern_type_index %d, ligand_cell count %d"%(pattern_type, max_ligand_count ))
     #print(ligand_cells[0:10])
@@ -745,7 +744,7 @@ for pattern_type in range (0, 1): #8): #pattern_count):
 
 print('P_class %d'%P_class)                
 
-
+cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
 ############################
 '''
 # to reduce number of conections
@@ -753,25 +752,27 @@ print('P_class %d'%P_class)
 #cell_vs_gene[:,15] = min_lr_gene_count #-10
 #cell_vs_gene[:,6] = min_lr_gene_count #-10
 #cell_vs_gene[:,14] = min_lr_gene_count #-10
+'''
 available_cells = []
 for cell in range (0, cell_vs_gene.shape[0]):
     if cell not in active_spot:
         available_cells.append(cell)
 
 np.random.shuffle(available_cells)
-for i in range (0, (len(available_cells)*2)//3):
+for i in range (0, (len(available_cells)*4)//5):
     cell = available_cells[i]
     gene_id = np.arange(lr_gene_count)
-    for j in range (0, (len(gene_id)*5)//6):
+    for j in range (0, (len(gene_id)*12//13)):
         cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
-'''
+
 ##############################
 # take quantile normalization.
+
 cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
-
+#  cell_vs_gene = copy.deepcopy(cell_vs_gene_org)
 
 
 
@@ -788,7 +789,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 75), np.percentile(y, 99) , kn_value])
 
 ###############
 
