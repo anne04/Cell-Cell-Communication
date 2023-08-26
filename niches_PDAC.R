@@ -104,7 +104,7 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 ####################################### synthetic ###################################################
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp' #'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
 
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
@@ -119,24 +119,19 @@ for(i in 1:ncol(df)) {
 
 countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
-#temp <- SCTransform(pdac_sample, verbose = FALSE)
+temp <- SCTransform(pdac_sample, verbose = FALSE)
 #DefaultAssay(temp) <- "integrated"
-temp <- ScaleData(pdac_sample)
-temp <- FindVariableFeatures(temp) 
+#temp <- ScaleData(pdac_sample)
+#temp <- FindVariableFeatures(temp) 
 temp <- RunPCA(temp, verbose = FALSE)
 temp <- FindNeighbors(temp, reduction = "pca", dims = 1:30)
 temp <- FindClusters(temp, verbose = FALSE)
 temp <- RunUMAP(temp , reduction = "pca", dims = 1:30)
 
-#temp@images$slice1@coordinates$row <- cell_x[[1]]
-#temp@images$slice1@coordinates$col <- cell_y[[1]]
-
-#p1 <- DimPlot(temp , reduction = "umap",group.by = 'seurat_clusters', label = TRUE)
-#p2 <- SpatialDimPlot(temp , label = TRUE,group.by = 'seurat_clusters', label.size = 3)
-#ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = (p1+p2))
 temp@meta.data$x <- cell_x[[1]]
 temp@meta.data$y <- cell_y[[1]]
 #DefaultAssay(temp) <- "Spatial"
+
 temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
@@ -149,7 +144,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 20, 
+                           k = 24, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -159,11 +154,10 @@ NICHES_output <- RunNICHES(object = temp,
         
 niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
+
 temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
-
-
 
 # Scale and visualize
 niche <- ScaleData(niche)
@@ -171,12 +165,38 @@ niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
 niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 
-temp_matrix = GetAssayData(object = niche, slot = "counts")
-temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+Idents(niche) <- niche[['ReceivingType']]
+ec.network <- niche
+Idents(ec.network) <- ec.network[['VectorType']]
+mark.ec <- FindAllMarkers(ec.network,
+                          logfc.threshold = 1,
+                          min.pct = 0.25,
+                          only.pos = T,
+                          test.use = 'roc')
+# Pull markers of interest to plot
+mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
+marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+features = unique(marker.list.ec$gene)
+cells = WhichCells(ec.network,downsample = 100)
+
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_',options,'.csv',sep=""))
+
+
+#p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
+
+
+#temp_matrix = GetAssayData(object = niche, slot = "counts")
+#temp_matrix = as.matrix(temp_matrix)
+#write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+
+
+mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
+GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 
 temp_matrix = niche[['seurat_clusters.Joint_clusters']]
 write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
+
 
 ############## Niches on Lymph Node #######################
 data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
@@ -217,11 +237,13 @@ NICHES_output <- RunNICHES(object = lymph,
                            
 niche <- NICHES_output[['CellToCellSpatial']]
 Idents(niche) <- niche[['ReceivingType']]
+
 cc.object <- NICHES_output$CellToCellSpatial #Extract the output of interest
 cc.object <- ScaleData(cc.object) #Scale
 cc.object <- FindVariableFeatures(cc.object,selection.method="disp") #Identify variable features
 cc.object <- RunPCA(cc.object,npcs = 100) #RunPCA
 cc.object <- RunUMAP(cc.object,dims = 1:100)
+
 Idents(cc.object) <- cc.object[['ReceivingType']]
 ec.network <- subset(cc.object,idents ='3')
 Idents(ec.network) <- ec.network[['VectorType']]
@@ -232,7 +254,7 @@ mark.ec <- FindAllMarkers(ec.network,
                           test.use = 'roc')
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
-marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(10,avg_log2FC)
+marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
 p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
