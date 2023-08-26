@@ -114,7 +114,7 @@ sc.pp.log1p(adata_synthetic)
 pathways = ['1','2','3','4','5','6','7','8']
 types = ['secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling', 'secreted signaling']
 lr_db['pathways'] = pathways
-lr_db['type'] = types
+lr_db['type'] = types 
 
 ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=10, heteromeric=True, pathway_sum=True)
 adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_type4_e_commot_adata.h5ad")
