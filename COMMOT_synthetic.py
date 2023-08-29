@@ -20,6 +20,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
 from kneed import KneeLocator
+import scanpy as sc
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -29,12 +30,9 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 
 
-import os
 import gc
 import ot
-import pickle
 import anndata
-import pandas as pd
 from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
@@ -156,6 +154,35 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
-    
-    
+
+#######################################################################################
+import stlearn as st
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/' , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='The name of dataset')
+parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
+parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+args = parser.parse_args()
+
+ 
+adata = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
+print(adata)
+
+adata.var_names_make_unique()
+adata.raw = adata
+sc.pp.normalize_total(adata, inplace=True)
+sc.pp.log1p(adata)
+
+df_cellchat = ct.pp.ligand_receptor_database(species='human', signaling_type='Secreted Signaling', database='CellChat')
+df_cellchat_filtered = ct.pp.filter_lr_database(df_cellchat, adata, min_cell_pct=0.05)
+ct.tl.spatial_communication(adata, database_name='cellchat', df_ligrec=df_cellchat_filtered, dis_thr=500, heteromeric=True, pathway_sum=True)
+adata.write("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
+
+#ct.tl.spatial_communication(adata, database_name='syndb', df_ligrec=lr_db, dis_thr=500, heteromeric=True, pathway_sum=True)
+#adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
+
+#adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_type6_f_commot_adata.h5ad")
+
 
