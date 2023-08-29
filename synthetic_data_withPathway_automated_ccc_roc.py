@@ -15,7 +15,7 @@ import scipy
 import pickle
 import gzip
 import matplotlib.pyplot as plt
-from scipy import sparse
+from scipy import sparse 
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
@@ -1521,17 +1521,17 @@ filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
 total_runs = 10
 percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 plot_dict_list = []
-plot_dict_list.append(defaultdict(list))
-plot_dict_list.append(defaultdict(list))
-plot_dict_list.append(defaultdict(list))
-plot_dict_list.append(defaultdict(list))
-plot_dict_list.append(defaultdict(list))
-for run_time in range (5,total_runs):
+#plot_dict_list.append(defaultdict(list))
+#plot_dict_list.append(defaultdict(list))
+#plot_dict_list.append(defaultdict(list))
+#plot_dict_list.append(defaultdict(list))
+#plot_dict_list.append(defaultdict(list))
+for run_time in range (0,total_runs):
     plot_dict_list.append(defaultdict(list))
     run = run_time
     print('run %d'%run)
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
@@ -1550,12 +1550,11 @@ for run_time in range (5,total_runs):
                 j = X_attention_bundle[0][1][index]
                 distribution.append(X_attention_bundle[l][index][0])
     
-    
             max_value = np.max(distribution)
-    
-            #attention_scores = np.zeros((2000,2000))
-            tweak = 0
-            distribution = []
+            min_value = np.min(distribution)
+            
+			
+				
             attention_scores = []
             datapoint_size = temp_x.shape[0]
             for i in range (0, datapoint_size):
@@ -1563,20 +1562,21 @@ for run_time in range (5,total_runs):
                 for j in range (0, datapoint_size):	
                     attention_scores[i].append([])   
                     attention_scores[i][j] = []
-    
+                    
+            min_attention_score = max_value
+            distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
                 i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index] 
-                #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+                j = X_attention_bundle[0][1][index]
+                #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
                 #    continue
-                ###################################
-    
-                if tweak == 1:         
-                    attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-                    distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
-                else:
-                    attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-                    distribution.append(X_attention_bundle[l][index][0])
+                scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+                attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+                if min_attention_score > scaled_score:
+                    min_attention_score = scaled_score
+                distribution.append(scaled_score)
+				
+            print('min attention score with scaling %g'%min_attention_score)
             #######################
             #plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
             save_path = '/cluster/home/t116508uhn/64630/'
@@ -1760,7 +1760,7 @@ for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
 ###
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
+    plot_dict_temp, plot_dict_list_temp= pickle.load(fp) #a - [0:5]
 	
 plot_dict['FPR'].append(0)
 plot_dict['TPR'].append(0)
@@ -1792,7 +1792,7 @@ for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
            
 ######
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product', 'rb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
     
 plot_dict['FPR'].append(0)
@@ -1809,7 +1809,7 @@ niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
 for i in range (0, 11):
     plot_dict['FPR'].append(niches_FPR[i])
     plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches with 10 nearest neighbour')
+    plot_dict['Type'].append('Niches')
 '''    
 niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
 niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
@@ -1833,7 +1833,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
     color='Type:N',
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'plot_type6_f_3d_tanh_poster.html')
+chart.save(save_path+'plot_uniform.html')
 
 ####################
 # ensemble 
@@ -1846,22 +1846,20 @@ for percentage_value in percentage_threshold:
     for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         for run_time in range (0,total_runs):
             run = run_time
-            #if run in [1, 2, 4, 7, 8]:
-            #    continue
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
             distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
                 i = X_attention_bundle[0][0][index]
                 j = X_attention_bundle[0][1][index]
                 distribution.append(X_attention_bundle[l][index][0])
-
-
+    
             max_value = np.max(distribution)
-
-            #attention_scores = np.zeros((2000,2000))
-            tweak = 0
-            distribution = []
+            min_value = np.min(distribution)
+            
+			
+				
             attention_scores = []
             datapoint_size = temp_x.shape[0]
             for i in range (0, datapoint_size):
@@ -1869,20 +1867,24 @@ for percentage_value in percentage_threshold:
                 for j in range (0, datapoint_size):	
                     attention_scores[i].append([])   
                     attention_scores[i][j] = []
-
+                    
+            min_attention_score = max_value
+            distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
                 i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index] 
-                #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+                j = X_attention_bundle[0][1][index]
+                #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
                 #    continue
-                ###################################
+                scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+                attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+                if min_attention_score > scaled_score:
+                    min_attention_score = scaled_score
+                distribution.append(scaled_score)
+				
+            #print('min attention score with scaling %g'%min_attention_score)
+            
 
-                if tweak == 1:         
-                    attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-                    distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
-                else:
-                    attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-                    distribution.append(X_attention_bundle[l][index][0])
+            
             #######################
             plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
             save_path = '/cluster/home/t116508uhn/64630/'
@@ -2015,7 +2017,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 ######### rank product ####
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 10
 plot_dict = defaultdict(list)
 distribution_rank = []
 all_edge_sorted_by_avgrank = []
@@ -2025,27 +2027,27 @@ for layer in range (0, 2):
 
 layer = -1
 percentage_value = 0
-csv_record_dict = defaultdict(list)
+
 for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
+    csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
-        #if run in [1, 2, 4, 7, 8]:
-        #    continue
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+ 
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
         distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
             j = X_attention_bundle[0][1][index]
             distribution.append(X_attention_bundle[l][index][0])
 
-
         max_value = np.max(distribution)
-
-        #attention_scores = np.zeros((2000,2000))
-        tweak = 0
-        distribution = []
+        min_value = np.min(distribution)
+        
+        
+            
         attention_scores = []
         datapoint_size = temp_x.shape[0]
         for i in range (0, datapoint_size):
@@ -2053,20 +2055,25 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
             for j in range (0, datapoint_size):	
                 attention_scores[i].append([])   
                 attention_scores[i][j] = []
-
+                
+        min_attention_score = max_value
+        distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index] 
-            #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+            j = X_attention_bundle[0][1][index]
+            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
             #    continue
-            ###################################
+            scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+            attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+            if min_attention_score > scaled_score:
+                min_attention_score = scaled_score
+            distribution.append(scaled_score)
+            
+        #print('min attention score with scaling %g'%min_attention_score)
 
-            if tweak == 1:         
-                attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-                distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
-            else:
-                attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-                distribution.append(X_attention_bundle[l][index][0])
+
+
+        
         #######################
         plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
         save_path = '/cluster/home/t116508uhn/64630/'
@@ -2232,10 +2239,247 @@ for percentage_value in percentage_threshold:
 #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
 #plt.clf()
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a
+    pickle.dump(plot_dict, fp) #a - [0:5]
+
+########### z score ################################################################
+filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
+total_runs = 10
+z_significance = 1.65
+plot_dict = defaultdict(list)
+distribution_rank = []
+all_edge_sorted_by_avgrank = []
+for layer in range (0, 2):
+    distribution_rank.append([])
+    all_edge_sorted_by_avgrank.append([])
+
+layer = -1
+percentage_value = 0
+
+for l in [2, 3]: # 2 = layer 2, 3 = layer 1
+    csv_record_dict = defaultdict(list)
+    layer = layer + 1
+    for run_time in range (0,total_runs):
+        run = run_time
+ 
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
+        distribution = []
+        for index in range (0, X_attention_bundle[0].shape[1]):
+            i = X_attention_bundle[0][0][index]
+            j = X_attention_bundle[0][1][index]
+            distribution.append(X_attention_bundle[l][index][0])
+
+        max_value = np.max(distribution)
+        min_value = np.min(distribution)
+        
+        
+            
+        attention_scores = []
+        datapoint_size = temp_x.shape[0]
+        for i in range (0, datapoint_size):
+            attention_scores.append([])   
+            for j in range (0, datapoint_size):	
+                attention_scores[i].append([])   
+                attention_scores[i][j] = []
+                
+        min_attention_score = max_value
+        distribution = []
+        for index in range (0, X_attention_bundle[0].shape[1]):
+            i = X_attention_bundle[0][0][index]
+            j = X_attention_bundle[0][1][index]
+            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+            #    continue
+            scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+            attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+            if min_attention_score > scaled_score:
+                min_attention_score = scaled_score
+            distribution.append(scaled_score)
+            
+        #print('min attention score with scaling %g'%min_attention_score)
+
+
+
+        
+        #######################
+        plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
+        save_path = '/cluster/home/t116508uhn/64630/'
+        #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
+        #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
+        plt.clf()
+
+
+
+        datapoint_size = temp_x.shape[0]
+
+        count = 0
+        existing_lig_rec_dict = []
+        for i in range (0, datapoint_size):
+            existing_lig_rec_dict.append([])   
+            for j in range (0, datapoint_size):	
+                existing_lig_rec_dict[i].append([])   
+                existing_lig_rec_dict[i][j] = []
+
+        ccc_index_dict = dict()
+        threshold_down =  np.percentile(sorted(distribution), percentage_value)
+        threshold_up =  np.percentile(sorted(distribution), 100)
+        connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+        rec_dict = defaultdict(dict)
+        for i in range (0, datapoint_size):
+            for j in range (0, datapoint_size):
+                if i==j: 
+                    continue
+                atn_score_list = attention_scores[i][j]
+                #print(len(atn_score_list))
+                for k in range (0, len(atn_score_list)):
+                    if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                        connecting_edges[i][j] = 1
+                        ccc_index_dict[i] = ''
+                        ccc_index_dict[j] = ''
+                        existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                        key_value = str(i) +'-'+ str(j) + '-' + str(lig_rec_dict[i][j][k])
+                        csv_record_dict[key_value].append([attention_scores[i][j][k], run])
+                        count = count + 1
+                        #distribution_partial.append(attention_scores[i][j][k])
+
+
+############### merge multiple runs ##################
+
+        
+    for key_value in csv_record_dict.keys():
+        run_dict = defaultdict(list)
+        for scores in csv_record_dict[key_value]:
+            run_dict[scores[1]].append(scores[0])
+
+        for runs in run_dict.keys():
+            run_dict[runs] = np.mean(run_dict[runs])
+
+
+        csv_record_dict[key_value] = []
+        for runs in run_dict.keys():
+            csv_record_dict[key_value].append([run_dict[runs],runs])
+
+
+    # for each run, keep only those runs whose z score is significant
+    key_list = []
+    score_list = []
+    for i in range (0, total_runs):
+        score_list.append([])
+        
+    for key_value in csv_record_dict.keys():
+        key_list.append(key_value)
+        for i in range (0, len(csv_record_dict[key_value])):
+            runs = csv_record_dict[key_value][i][1]
+            score_list[runs].append(csv_record_dict[key_value][i][0])
+        
+    for runs in range (0, total_runs):
+        z_score_list = scipy.stats.zscore(score_list[runs]) 
+        score_list[runs] = z_score_list
+
+    
+    for i in range (0, len(key_list)):
+        count_of_significance = []
+        for runs in range (0, total_runs):
+            if np.abs(score_list[runs][i]) >= z_significance:
+                count_of_significance.append(np.abs(score_list[runs][i]))
+
+        if len(count_of_significance) >= 1:
+            csv_record_dict[key_list[i]] = np.mean(count_of_significance) 
+        else:
+            csv_record_dict[key_list[i]] = 0
+    #######################################
+ 
+    all_edge_avg_rank = []
+    for key_value in csv_record_dict.keys():
+        distribution_rank[layer].append(csv_record_dict[key_value])
+        all_edge_avg_rank.append([key_value, csv_record_dict[key_value]]) # high score is high attention
+        
+    all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1], reverse = True) 
+
+# now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
+
+
+percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10]
+for percentage_value in percentage_threshold:
+    csv_record_intersect_dict = defaultdict(list)
+    for layer in range (0, 2):
+        threshold_down = np.percentile(distribution_rank[layer], percentage_value)
+        for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
+            if all_edge_sorted_by_avgrank[layer][i][1] >= threshold_down:
+                csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
+    '''
+    threshold_up = np.percentile(distribution_rank_layer2, percentage_value)
+    for i in range (0, len(all_edge_sorted_by_avgrank_layer2)):
+        if all_edge_sorted_by_avgrank_layer2[i][1] <= threshold_up:
+            csv_record_intersect_dict[all_edge_sorted_by_avgrank_layer2[i][0]].append(all_edge_sorted_by_avgrank_layer2[i][1])
+    '''
+    ###### this small block does not have any impact now ###########
+    for key_value in csv_record_intersect_dict.keys():  
+       if len(csv_record_intersect_dict[key_value])>1:
+           csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
+    #######################################################
+    
+    existing_lig_rec_dict = []
+    for i in range (0, datapoint_size):
+        existing_lig_rec_dict.append([])   
+        for j in range (0, datapoint_size):	
+            existing_lig_rec_dict[i].append([])   
+            existing_lig_rec_dict[i][j] = []    
+            
+    for key_value in csv_record_intersect_dict.keys():
+        item = key_value.split('-')
+        i = int(item[0])
+        j = int(item[1])
+        LR_pair_id = int(item[2])
+        existing_lig_rec_dict[i][j].append(LR_pair_id)
+    #######################################
+    confusion_matrix = np.zeros((2,2))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+
+            if i==j: 
+                continue
+
+            if len(existing_lig_rec_dict[i][j])>0:
+                for k in existing_lig_rec_dict[i][j]:   
+                    
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                        #print(k)
+                        #positive_class = positive_class + 1                     
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                        #else:
+                        #    confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
+                    else:
+                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1
+                        #else:
+                        #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
+
+    print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))
+    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
+    plot_dict['FPR'].append(FPR_value)
+    plot_dict['TPR'].append(TPR_value)
+    plot_dict['Type'].append('z_score')
+
+#plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
+#save_path = '/cluster/home/t116508uhn/64630/'
+#plt.savefig(save_path+'distribution_e_3d_relu_partial_'+filename[run]+'_'+str(percentage_value)+'.svg', dpi=400)
+#plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
+#plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
+#plt.clf()
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
 
-###########
+##############
+
+
+
 graph = csr_matrix(connecting_edges)
 n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
 print('number of component %d'%n_components)
