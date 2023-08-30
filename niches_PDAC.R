@@ -1,3 +1,5 @@
+# https://msraredon.github.io/NICHES/articles/03%20Rat%20Alveolus.html
+# https://msraredon.github.io/NICHES/articles/01%20NICHES%20Spatial.html
 library(Seurat)             
 library(SeuratData)
 library(ggplot2)
@@ -64,6 +66,7 @@ mark.ec <- FindAllMarkers(ec.network,
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+
 #p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
@@ -104,7 +107,7 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 ####################################### synthetic ###################################################
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp' #'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' #'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
 
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
@@ -119,7 +122,7 @@ for(i in 1:ncol(df)) {
 
 countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
-#temp <- SCTransform(pdac_sample, verbose = FALSE)
+#temp <- SCTransform(pdac_sample)
 #DefaultAssay(temp) <- "integrated"
 temp <- ScaleData(pdac_sample)
 temp <- FindVariableFeatures(temp) 
@@ -144,7 +147,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 20, 
+                           k = 24, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -153,35 +156,51 @@ NICHES_output <- RunNICHES(object = temp,
                            CellToCellSpatial = T, CellToNeighborhood = F,NeighborhoodToCell = F)
         
 niche <- NICHES_output[['CellToCellSpatial']]
-Idents(niche) <- niche[['ReceivingType']]
-
+#### save  using coexpression score matrix 
 temp_matrix = GetAssayData(object = niche, slot = "counts")
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
-
-# Scale and visualize
+##### print marker genes
 niche <- ScaleData(niche)
 niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
 niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 
+temp_matrix = GetAssayData(object = niche, slot = "counts")
+temp_matrix = as.matrix(temp_matrix)
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+
+################################################################
 Idents(niche) <- niche[['ReceivingType']]
 ec.network <- niche
 Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,
                           logfc.threshold = 1,
-                          min.pct = 0.25,
+                          min.pct = 0.5,
                           only.pos = T,
                           test.use = 'roc')
+
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
-marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+marker.list.ec <- mark.ec %>% top_n(12,avg_log2FC) #group_by(cluster) %>% 
 features = unique(marker.list.ec$gene)
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top12_',options,'.csv',sep=""))
 cells = WhichCells(ec.network,downsample = 100)
-
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+cells = WhichCells(ec.network)
 write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_',options,'.csv',sep=""))
+###############################################################################################################
+Idents(niche) <- niche[['ReceivingType']]  # don't know why!
+mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
+GOI_niche <- mark %>% group_by(cluster) %>% top_n(12,myAUC) #
+features = unique(GOI_niche$gene)
+cells = WhichCells(niche)
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top12_',options,'.csv',sep=""))
+cells = WhichCells(niche,downsample = 100)
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
 
+################################################################################################################
 
 #p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 
