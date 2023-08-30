@@ -119,10 +119,10 @@ for(i in 1:ncol(df)) {
 
 countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
-temp <- SCTransform(pdac_sample, verbose = FALSE)
+#temp <- SCTransform(pdac_sample, verbose = FALSE)
 #DefaultAssay(temp) <- "integrated"
-#temp <- ScaleData(pdac_sample)
-#temp <- FindVariableFeatures(temp) 
+temp <- ScaleData(pdac_sample)
+temp <- FindVariableFeatures(temp) 
 temp <- RunPCA(temp, verbose = FALSE)
 temp <- FindNeighbors(temp, reduction = "pca", dims = 1:30)
 temp <- FindClusters(temp, verbose = FALSE)
@@ -144,7 +144,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 24, 
+                           k = 20, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
