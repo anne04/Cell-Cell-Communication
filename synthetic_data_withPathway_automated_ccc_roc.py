@@ -147,6 +147,15 @@ Out[8]:
  [[12, 13], [14, 15]],
  [[16, 17], [18, 19]]]
 '''
+
+
+# just print the lr_database
+TP_LR_genes = []
+for i in range (0, len(lr_database)):
+    print('%d: %d - %d'%(i, lr_database[i][0], lr_database[i][1]))
+    TP_LR_genes.append(lr_database[i][0])
+    TP_LR_genes.append(lr_database[i][1])
+    
 ################# Now create some arbitrary pairs that will be false positives #########
 
 for i in range (12, len(ligand_gene_list)):
@@ -382,48 +391,68 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 
 ################
-
-start_loc = 15
+start_loc = 18
 rec_gene = lr_gene_count//2
-for i in range (0, 2): #lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+
+for i in range (0, 12):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     rec_gene = rec_gene + 1 
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
+
+
+start_loc = 20
+rec_gene_save = rec_gene
+for i in range (12, lr_gene_count//2):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,0:cell_vs_gene.shape[0]//2] =  gene_exp_list
+    #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    
+    gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[rec_gene ,0:cell_vs_gene.shape[0]//2] =  gene_exp_list
+    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    rec_gene = rec_gene + 1
+    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
+
 ################
 start_loc = 15
-for i in range (2, lr_gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+rec_gene = rec_gene_save 
+for i in range (12, lr_gene_count//2): ##):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,:] =  gene_exp_list
+    gene_distribution_inactive[i,cell_vs_gene.shape[0]//2:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
+    '''
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     #gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     ################
+    '''
     
-    
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
+    gene_distribution_inactive[rec_gene , cell_vs_gene.shape[0]//2:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
+    '''
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     #gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    
+    '''
     rec_gene = rec_gene + 1 
 
 ###################################################
@@ -748,18 +777,27 @@ print('P_class %d'%P_class)
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
 ############################
 ## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
+## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
+'''
 available_cells = []
 for cell in range (0, cell_vs_gene.shape[0]):
     if cell not in active_spot:
         available_cells.append(cell)
 
 np.random.shuffle(available_cells)
-for i in range (0, (len(available_cells)*3)//4):
+
+
+for i in range (0, (len(available_cells)*1)//3):
     cell = available_cells[i]
     gene_id = np.arange(lr_gene_count)
+    if cell in neighbour_of_actives:
+        gene_id = list(set(gene_id)-set(TP_LR_genes)) 
+    
     np.random.shuffle(gene_id)
-    for j in range (0, (len(gene_id)*1//2)): #
+    for j in range (0, (len(gene_id)*1//4)): #
         cell_vs_gene[cell, gene_id[j]] = gene_distribution_active[gene_id[j], cell]
+'''
+
         
 ##############################
 '''
@@ -775,7 +813,7 @@ for cell in range (0, cell_vs_gene.shape[0]):
         available_cells.append(cell)
 
 np.random.shuffle(available_cells)
-for i in range (0, (len(available_cells)*1)//2):
+for i in range (0, (len(available_cells)*1)//3):
     cell = available_cells[i]
     gene_id = np.arange(lr_gene_count)
     for j in range (0, (len(gene_id)*2//3)): #
@@ -805,7 +843,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99.5), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
 
 ###############
 
