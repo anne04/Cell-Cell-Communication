@@ -428,7 +428,7 @@ for i in range (12, lr_gene_count//2):
 start_loc = 15
 rec_gene = rec_gene_save 
 for i in range (12, lr_gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x)//2)
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=4,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,cell_vs_gene.shape[0]//2:] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
