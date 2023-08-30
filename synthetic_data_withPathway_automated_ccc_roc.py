@@ -408,29 +408,34 @@ for i in range (0, 12):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 
+cell_dummy = np.arrange(len(temp_x))
+np.random.shuffle(cell_dummy) 
 
 start_loc = 20
 rec_gene_save = rec_gene
 for i in range (12, lr_gene_count//2):
     gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,0:cell_vs_gene.shape[0]//2] =  gene_exp_list
+    gene_distribution_inactive[i,cell_dummy[0:len(cell_dummy)//2]] =  gene_exp_list
+
+
+	
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene ,0:cell_vs_gene.shape[0]//2] =  gene_exp_list
+    gene_distribution_inactive[rec_gene ,cell_dummy[0:len(cell_dummy)//2]] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     rec_gene = rec_gene + 1
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-start_loc = 15
+start_loc = 22
 rec_gene = rec_gene_save 
 for i in range (12, lr_gene_count//2): ##):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=4,size=len(temp_x)//2)
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[i,cell_vs_gene.shape[0]//2:] =  gene_exp_list
+    gene_distribution_inactive[i, cell_dummy[len(cell_dummy)//2:]] =  gene_exp_list
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
@@ -442,9 +447,9 @@ for i in range (12, lr_gene_count//2): ##):
     ################
     '''
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x)//2)
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
-    gene_distribution_inactive[rec_gene , cell_vs_gene.shape[0]//2:] =  gene_exp_list
+    gene_distribution_inactive[rec_gene, cell_dummy[len(cell_dummy)//2:]] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
     '''
@@ -1119,8 +1124,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
@@ -2672,40 +2677,24 @@ nt.show('mygraph.html')
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 #################################################################################
-#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
-
-df_ccc_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_cells_'+options+'.csv')
-df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_'+options+'.csv')
-
-for index in range (0, len(df_ccc_cells)):
-    i = df_ccc_cells['x'][index].split('—')[0]
-    j = df_ccc_cells['x'][index].split('—')[0]
-    i = int(i.split('.')[1])
-    j = int(j.split('.')[1])
-    for lr_pair_index in range (0, len(df_ccc_lrpairs)):
-        lr_pair = df_ccc_lrpairs['x'][lr_pair_index]
-        ligand_gene = lr_pair.split('—')[0][1:]
-        receptor_gene = lr_pair.split('—')[1][1:]
-        k = ligand_dict_dataset[ligand_gene][receptor_gene]
-        if 
 
 ################################################################################################
 df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
 #df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 
-attention_scores = []
-lig_rec_dict = []
+coexpression_scores = []
+lig_rec_dict_all = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    lig_rec_dict.append([])   
+    coexpression_scores.append([])   
+    lig_rec_dict_all.append([])   
     for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
+        coexpression_scores[i].append([])   
+        coexpression_scores[i][j] = []
+        lig_rec_dict_all[i].append([])   
+        lig_rec_dict_all[i][j] = []
 
-distribution = []
+distribution_all = []
 for col in range (1, len(df_pair_vs_cells.columns)):
     col_name = df_pair_vs_cells.columns[col]
     l_c = df_pair_vs_cells.columns[col].split("—")[0]
@@ -2716,20 +2705,61 @@ for col in range (1, len(df_pair_vs_cells.columns)):
     j = int(r_c)
     
     for index in range (0, len(df_pair_vs_cells.index)):
-        lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
-        attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
-        distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        lig_rec_dict_all[i][j].append(df_pair_vs_cells.index[index])
+        coexpression_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        distribution_all.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
 
 '''
-In [8]: len(distribution)
+In [8]: len(distribution_all)
 Out[8]: 15745184
 
-In [9]: min(distribution)
+In [9]: min(distribution_all)
 Out[9]: 0.867500827142844
 
-In [10]: max(distribution)
+In [10]: max(distribution_all)
 Out[10]: 26.5899655845998
 '''
+df_ccc_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_cells_'+options+'.csv')
+df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_'+options+'.csv')
+
+attention_scores_temp = []
+lig_rec_dict_temp = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores_temp.append([])   
+    lig_rec_dict_temp.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores_temp[i].append([])   
+        attention_scores_temp[i][j] = []
+        lig_rec_dict_temp[i].append([])   
+        lig_rec_dict_temp[i][j] = []
+        
+positive_class_temp = 0
+distribution_temp = []
+for index in range (0, len(df_ccc_cells)):
+    i = df_ccc_cells['x'][index].split('—')[0]
+    j = df_ccc_cells['x'][index].split('—')[1]
+    
+    i = int(i.split('.')[1])
+    j = int(j.split('.')[1])
+    for lr_pair_index in range (0, len(df_ccc_lrpairs)):
+        lr_pair = df_ccc_lrpairs['x'][lr_pair_index]
+        ligand_gene = int(lr_pair.split('—')[0][1:])
+        receptor_gene = int(lr_pair.split('—')[1][1:])
+        k = ligand_dict_dataset[ligand_gene][receptor_gene] 
+        for lr_pair_id in range (0, len(lig_rec_dict_all[i][j])):
+            if lig_rec_dict_all[i][j][lr_pair_id] == k: 
+                lig_rec_dict_temp[i][j].append(k)
+                attention_scores_temp[i][j].append(coexpression_scores[i][j][lr_pair_id])
+                distribution_temp.append(coexpression_scores[i][j][lr_pair_id])
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+            positive_class_temp = positive_class_temp + 1
+
+lig_rec_dict = lig_rec_dict_temp
+attention_scores = attention_scores_temp
+distribution = distribution_temp
+negative_class = len(distribution) - positive_class_temp
+
 
 distribution = sorted(distribution, reverse=True)
 distribution = distribution[0: len(row_col)]
@@ -2756,8 +2786,8 @@ while percentage_value > 0:
     total_edges_count = 0
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if i==j: 
-                continue
+            #if i==j: 
+            #    continue
             atn_score_list = attention_scores[i][j]
             #print(len(atn_score_list))
             
@@ -2778,8 +2808,8 @@ while percentage_value > 0:
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
 
-            if i==j: 
-                continue
+            #if i==j: 
+            #    continue
             ''' 
             if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
                 for k in range (0, len(lig_rec_dict_TP[i][j])):
