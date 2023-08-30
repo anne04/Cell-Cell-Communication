@@ -2720,7 +2720,7 @@ In [10]: max(distribution_all)
 Out[10]: 26.5899655845998
 '''
 df_ccc_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_cells_'+options+'.csv')
-df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_'+options+'.csv')
+df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top12_'+options+'.csv')
 
 attention_scores_temp = []
 lig_rec_dict_temp = []
@@ -2752,6 +2752,7 @@ for index in range (0, len(df_ccc_cells)):
                 lig_rec_dict_temp[i][j].append(k)
                 attention_scores_temp[i][j].append(coexpression_scores[i][j][lr_pair_id])
                 distribution_temp.append(coexpression_scores[i][j][lr_pair_id])
+            
         if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
             positive_class_temp = positive_class_temp + 1
 
