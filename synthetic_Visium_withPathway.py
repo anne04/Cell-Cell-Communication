@@ -436,7 +436,7 @@ for i in range (12, lr_gene_count//2): ##):
 
 start_loc = 15
 for i in range (rec_gene, lr_gene_count + non_lr_genes):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=5,size=len(temp_x))
+    gene_exp_list = np.random.normal(loc=start_loc+(i%10),scale=6,size=len(temp_x))
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,:] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
@@ -752,7 +752,7 @@ print('P_class %d'%P_class)
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
 ############################
 ## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
-'''
+
 available_cells = []
 for cell in range (0, cell_vs_gene.shape[0]):
     if cell not in active_spot:
@@ -766,10 +766,10 @@ gene_id = list(set(gene_id)-set(TP_LR_genes))
 for i in range (0, (len(available_cells)*1)//1):
     cell = available_cells[i]
     np.random.shuffle(gene_id)
-    for j in range (0, 30): #
+    for j in range (0, 40): #
         cell_vs_gene[cell, gene_id[j]] = gene_distribution_active[gene_id[j], cell]
 
-'''
+''''''
 
 ''''''
 ##############################
@@ -2460,8 +2460,8 @@ In [10]: max(distribution)
 Out[10]: 26.5899655845998
 '''
 
-distribution = sorted(distribution, reverse=True)
-distribution = distribution[0: len(row_col)]
+#distribution = sorted(distribution, reverse=True)
+#distribution = distribution[0: len(row_col)]
 negative_class = len(distribution)-positive_class
 
 
