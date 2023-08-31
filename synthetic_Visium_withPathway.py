@@ -446,7 +446,7 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
 #################
 start_loc = 35 #np.max(gene_distribution_inactive)-10
 rec_gene = lr_gene_count//2
-scale_active_distribution = 2 #0.01
+scale_active_distribution = 1 #0.01
 for i in range (0, 12):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
