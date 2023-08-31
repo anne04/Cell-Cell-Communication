@@ -175,7 +175,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 0  #2 #1
+noise_add = 1  #2 #1
 noise_percent = 0
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
@@ -391,7 +391,7 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 
 
 ################
-start_loc = 18
+start_loc = 20
 rec_gene = lr_gene_count//2
 
 for i in range (0, 12):
@@ -414,7 +414,7 @@ np.random.shuffle(cell_dummy)
 start_loc = 20
 rec_gene_save = rec_gene
 for i in range (12, lr_gene_count//2):
-    gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[i,cell_dummy[0:len(cell_dummy)//2]] =  gene_exp_list
 
@@ -422,7 +422,7 @@ for i in range (12, lr_gene_count//2):
 	
     #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
-    gene_exp_list = np.random.normal(loc=start_loc+(i%7),scale=1,size=len(temp_x)//2)
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene ,cell_dummy[0:len(cell_dummy)//2]] =  gene_exp_list
     #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
@@ -430,7 +430,7 @@ for i in range (12, lr_gene_count//2):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
-start_loc = 22
+start_loc = 20
 rec_gene = rec_gene_save 
 for i in range (12, lr_gene_count//2): ##):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)
@@ -474,7 +474,7 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
     
     
 #################
-start_loc = np.max(gene_distribution_inactive)+10
+start_loc = np.max(gene_distribution_inactive)+30
 rec_gene = lr_gene_count//2
 scale_active_distribution = 1 #0.01
 for i in range (0, 4):
@@ -514,24 +514,32 @@ cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 ###############################################################
-noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
-if noise_add == 1:
-    gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)	
+if noise_percent > 0:
+    if noise_add == 1:
+        noise_percent = 30
+        noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
+        gene_distribution_noise = np.random.normal(loc=0, scale=1, size = (len(noise_cells), cell_vs_gene.shape[1]))
+        np.random.shuffle(gene_distribution_noise)	
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    elif noise_add == 2:
+        noise_percent = 30
+        discard_cells = list(active_spot.keys()) 
+        noise_cells = list(set(np.arange(cell_count)) - set(discard_cells))
+        np.random.shuffle(noise_cells)	
+        noise_cells = noise_cells[0:(cell_count*noise_percent)//100]
+        #noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #   
+        #gene_distribution_noise = np.random.randint(-10, 10, size=(len(noise_cells), cell_vs_gene.shape[1]))
+        gene_distribution_noise = np.random.normal(loc=5, scale=5, size = (len(noise_cells), cell_vs_gene.shape[1]))
+        np.random.shuffle(gene_distribution_noise)	
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
     
-    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-elif noise_add == 2:
-    gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)	
     
-    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-    
+    for i in range (0, len(noise_cells)):
+        cell = noise_cells[i]
+        cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i,:]
+      
 #####################################################################
-'''	
-for i in range (0, len(noise_cells)):
-    cell = noise_cells[i]
-    cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i]
-'''
+
 # record true positive connections    
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
@@ -831,7 +839,7 @@ cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
-#  cell_vs_gene = copy.deepcopy(cell_vs_gene_org)
+#  cell_vs_gene = copy.deepcopy(cell_vs_gene_notNormalized) #copy.deepcopy(cell_vs_gene_org)
 
 
 
@@ -848,7 +856,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99.2), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -965,7 +973,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
 #print('random_activation %d'%len(random_activation_index))
-print('ligand_cells %d'%len(ligand_cells))
+#print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)#'_close'
@@ -1070,7 +1078,25 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 random_activation = []
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
-        
+
+############################################################
+lig_rec_dict_TP_new = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_TP_new.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_TP_new[i].append([])   
+        lig_rec_dict_TP_new[i][j] = []
+
+for i in lig_rec_dict_TP:
+    for j in lig_rec_dict_TP[i]:
+        for k in range (0, len(lig_rec_dict_TP[i][j])):
+            lig_rec_dict_TP_new[i][j].append(lig_rec_dict_TP[i][j][k])
+
+
+lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP_new)
+lig_rec_dict_TP_new = 0
+############################################################## 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
@@ -1124,8 +1150,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
