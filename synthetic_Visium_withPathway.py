@@ -170,8 +170,8 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 0  #2 #1
-noise_percent = 0
+noise_add = 1  #2 #1
+noise_percent = 30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -2024,9 +2024,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
 
+
 ######### rank product ####
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 10
 plot_dict = defaultdict(list)
 distribution_rank = []
 all_edge_sorted_by_avgrank = []
@@ -2036,27 +2037,27 @@ for layer in range (0, 2):
 
 layer = -1
 percentage_value = 0
-csv_record_dict = defaultdict(list)
+
 for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
+    csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
-        #if run in [1, 2, 4, 7, 8]:
-        #    continue
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_f_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+ 
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+
         distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
             j = X_attention_bundle[0][1][index]
             distribution.append(X_attention_bundle[l][index][0])
 
-
         max_value = np.max(distribution)
-
-        #attention_scores = np.zeros((2000,2000))
-        tweak = 0
-        distribution = []
+        min_value = np.min(distribution)
+        
+        
+            
         attention_scores = []
         datapoint_size = temp_x.shape[0]
         for i in range (0, datapoint_size):
@@ -2064,20 +2065,25 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
             for j in range (0, datapoint_size):	
                 attention_scores[i].append([])   
                 attention_scores[i][j] = []
-
+                
+        min_attention_score = max_value
+        distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index] 
-            #if i>= temp_x.shape[0] or  j>= temp_x.shape[0]:
+            j = X_attention_bundle[0][1][index]
+            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
             #    continue
-            ###################################
+            scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
+            attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
+            if min_attention_score > scaled_score:
+                min_attention_score = scaled_score
+            distribution.append(scaled_score)
+            
+        #print('min attention score with scaling %g'%min_attention_score)
 
-            if tweak == 1:         
-                attention_scores[i][j].append(max_value+(X_attention_bundle[l][index][0]*(-1)) ) #X_attention_bundle[2][index][0]
-                distribution.append(max_value+(X_attention_bundle[l][index][0]*(-1)) )
-            else:
-                attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
-                distribution.append(X_attention_bundle[l][index][0])
+
+
+        
         #######################
         plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
         save_path = '/cluster/home/t116508uhn/64630/'
@@ -2243,7 +2249,7 @@ for percentage_value in percentage_threshold:
 #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
 #plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product', 'wb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ###########
