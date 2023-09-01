@@ -442,7 +442,7 @@ for index in range (0, len(row_col)):
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
 total_runs = 5
-start_index = 0
+start_index = 5
 
 distribution_rank = []
 all_edge_sorted_by_avgrank = []
@@ -731,10 +731,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
 
 #############################################################################################################################################
-percentage_value = 20 # top 20th percentile rank, low rank means higher attention score
+percentage_value = 1 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
-    threshold_up = np.percentile(distribution_rank[layer], percentage_value)
+    threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
         if all_edge_sorted_by_avgrank[layer][i][1] <= threshold_up:
             csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
@@ -747,7 +747,7 @@ for i in range (0, len(all_edge_sorted_by_avgrank_layer2)):
 '''
 ###### this small block make sense if you are taking top Nth percent ###########
 for key_value in csv_record_intersect_dict.keys():  
-   if len(csv_record_intersect_dict[key_value])>1:
+   if len(csv_record_intersect_dict[key_value])>=1:
        csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #mean rank
 
 ################################################################################
