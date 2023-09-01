@@ -347,7 +347,7 @@ elif data_name == 'PDAC_140694':
 ######################### read the NEST output in csv format ####################################################
 
 
-filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record_final = df.values.tolist()
@@ -372,14 +372,19 @@ unique_component_count = len(component_list.keys())
 ################################################################################
 
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
-'''
-region_of_interest = [...] 
+
+#region_of_interest = [...] 
+csv_record_final_temp = []
+csv_record_final_temp.append(csv_record_final[0])
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     # if both of ligand and receptors are tumors, or both of them are non-tumors, then remove it. Because we want to see what ccc is happening between tumor and non-tumor. 
-    if ((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
-        csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram. 0 also means black color.
-	
-'''
+    if (barcode_type[csv_record_final[record_idx][0]] == 'tumor' or barcode_type[csv_record_final[record_idx][1]] == 'tumor'): #((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
+        csv_record_final_temp.append(csv_record_final[record_idx])
+        #csv_record_final[record_idx][5] = 0 # label it 0 so that it is not considered during ploting and making histogram. 0 also means black color.
+        
+csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
+csv_record_final = copy.deepcopy(csv_record_final_temp)
+''''''
 ##################################### Altair Plot ##################################################################
 ## dictionary of those spots who are participating in CCC ##
 active_spot = defaultdict(list)
@@ -390,7 +395,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[i][1]
     Y = -barcode_info[i][2]
-    opacity = record[4]
+    opacity = np.float(record[4])
     active_spot[i].append([pathology_label, component_label, X, Y, opacity])
     
     j = record[7]
@@ -398,7 +403,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[j][1]
     Y = -barcode_info[j][2]
-    opacity = record[4]   
+    opacity = np.float(record[4])   
     active_spot[j].append([pathology_label, component_label, X, Y, opacity])
     ''''''
     
@@ -445,7 +450,7 @@ for i in range (0, len(barcode_info)):
 # converting to pandas dataframe
 
 data_list_pd = pd.DataFrame(data_list)
-id_label= unique_component_count
+id_label= len(list(set(data_list['component_label'])))#unique_component_count
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
@@ -464,6 +469,8 @@ filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
 df = readCsv(inFile)
 '''
+
+
 
 df = pd.DataFrame(csv_record_final)
 df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
