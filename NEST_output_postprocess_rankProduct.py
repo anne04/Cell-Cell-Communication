@@ -23,6 +23,7 @@ import copy
 import altairThemes
 import altair as alt
 import argparse
+import gc
 
 spot_diameter = 89.43 #pixels
 ##########################################################
