@@ -175,7 +175,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 1  #2 #1
+noise_add = 0  #2 #1
 noise_percent = 0
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
@@ -373,8 +373,7 @@ for i in range (0, datapoint_size):
         if i in cell_neighborhood[j] and j not in cell_neighborhood[i]:
             i_am_whose[i].append(j)
             
-        
-
+    
 
 max_neighbor = 0
 for i in range (0, len(cell_neighborhood)):
@@ -393,7 +392,6 @@ gene_distribution_noise = np.zeros((lr_gene_count + non_lr_genes, cell_count))
 ################
 start_loc = 20
 rec_gene = lr_gene_count//2
-
 for i in range (0, 12):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
     np.random.shuffle(gene_exp_list) 
@@ -408,9 +406,26 @@ for i in range (0, 12):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 
+start_loc = 20
+for i in range (12, lr_gene_count//2):
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))   #loc=start_loc+(i%15) from loc=start_loc+(i%5) -- gave more variations so more FP
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[i,:] =  gene_exp_list
+
+    print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
+    
+    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x))
+    np.random.shuffle(gene_exp_list) 
+    gene_distribution_inactive[rec_gene ,:] =  gene_exp_list
+    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
+    rec_gene = rec_gene + 1
+    # np.min(gene_distribution_inactive[i,:])-3, scale=.5
+
+
+
+'''
 cell_dummy = np.arrange(len(temp_x))
 np.random.shuffle(cell_dummy) 
-
 start_loc = 20
 rec_gene_save = rec_gene
 for i in range (12, lr_gene_count//2):
@@ -430,6 +445,8 @@ for i in range (12, lr_gene_count//2):
     # np.min(gene_distribution_inactive[i,:])-3, scale=.5
 
 ################
+'''
+'''
 start_loc = 20
 rec_gene = rec_gene_save 
 for i in range (12, lr_gene_count//2): ##):
@@ -439,29 +456,18 @@ for i in range (12, lr_gene_count//2): ##):
     print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
     
     ###############
-    '''
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    #gene_distribution_inactive_lrgenes[i,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(i, np.min(gene_distribution_inactive[i,:]),np.max(gene_distribution_inactive[i,:]) ))
-    ################
-    '''
+
     
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=2,size=len(temp_x)//2)
     np.random.shuffle(gene_exp_list) 
     gene_distribution_inactive[rec_gene, cell_dummy[len(cell_dummy)//2:]] =  gene_exp_list
     print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
     ###################
-    '''
-    gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=3,size=len(temp_x))
-    np.random.shuffle(gene_exp_list) 
-    #gene_distribution_inactive_lrgenes[rec_gene ,:] =  gene_exp_list
-    #print('%d: inactive: %g to %g'%(rec_gene, np.min(gene_distribution_inactive[rec_gene,:]),np.max(gene_distribution_inactive[rec_gene,:]) ))
-    '''
+
     rec_gene = rec_gene + 1 
 
 ###################################################
-
+'''
 
 
 start_loc = 15
@@ -514,31 +520,6 @@ cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 ###############################################################
-if noise_percent > 0:
-    if noise_add == 1:
-        noise_percent = 30
-        noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
-        gene_distribution_noise = np.random.normal(loc=0, scale=1, size = (len(noise_cells), cell_vs_gene.shape[1]))
-        np.random.shuffle(gene_distribution_noise)	
-        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-    elif noise_add == 2:
-        noise_percent = 30
-        discard_cells = list(active_spot.keys()) 
-        noise_cells = list(set(np.arange(cell_count)) - set(discard_cells))
-        np.random.shuffle(noise_cells)	
-        noise_cells = noise_cells[0:(cell_count*noise_percent)//100]
-        #noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #   
-        #gene_distribution_noise = np.random.randint(-10, 10, size=(len(noise_cells), cell_vs_gene.shape[1]))
-        gene_distribution_noise = np.random.normal(loc=5, scale=5, size = (len(noise_cells), cell_vs_gene.shape[1]))
-        np.random.shuffle(gene_distribution_noise)	
-        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-    
-    
-    for i in range (0, len(noise_cells)):
-        cell = noise_cells[i]
-        cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i,:]
-      
-#####################################################################
 
 # record true positive connections    
 lig_rec_dict_TP = []
@@ -788,6 +769,37 @@ for pattern_type in range (0, 3): #8): #pattern_count):
 print('P_class %d'%P_class)                
 
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
+
+if noise_percent > 0:
+    if noise_add == 1:
+        noise_percent = 30
+        noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
+        gene_distribution_noise = np.random.normal(loc=0, scale=1, size = (len(noise_cells), cell_vs_gene.shape[1]))
+        np.random.shuffle(gene_distribution_noise)	
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    elif noise_add == 2:
+        noise_percent = 30
+        discard_cells = list(active_spot.keys()) 
+        noise_cells = list(set(np.arange(cell_count)) - set(discard_cells))
+        np.random.shuffle(noise_cells)	
+        noise_cells = noise_cells[0:(cell_count*noise_percent)//100]
+        #noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #   
+        #gene_distribution_noise = np.random.randint(-10, 10, size=(len(noise_cells), cell_vs_gene.shape[1]))
+        gene_distribution_noise = np.random.normal(loc=5, scale=5, size = (len(noise_cells), cell_vs_gene.shape[1]))
+        np.random.shuffle(gene_distribution_noise)	
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    
+    
+    for i in range (0, len(noise_cells)):
+        cell = noise_cells[i]
+        cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i,:]
+      
+#####################################################################
+
+
+
+
+
 ############################
 ## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
 ## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
@@ -856,7 +868,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99.2), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1437,7 +1449,7 @@ while percentage_value > 0:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('naive_model')
+    plot_dict['Type'].append('naive_model_lowNoise')
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
@@ -1861,7 +1873,8 @@ for i in range (0, len(plot_dict_temp['Type'])):
     plot_dict['Type'].append(plot_dict_temp['Type'][i])
            
 ######
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
     plot_dict_temp = pickle.load(fp) #a - [0:5]
     
 plot_dict['FPR'].append(0)
@@ -1902,7 +1915,7 @@ chart = alt.Chart(data_list_pd).mark_line().encode(
     color='Type:N',
 )	
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'plot_uniform.html')
+chart.save(save_path+'plot_uniform_lowNoise.html')
 
 ####################
 # ensemble 
@@ -2299,7 +2312,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product')
+    plot_dict['Type'].append('rank_product_lowNoise')
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2309,7 +2322,7 @@ for percentage_value in percentage_threshold:
 #plt.clf()
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a
-    pickle.dump(plot_dict, fp) #a - [0:5]
+    pickle.dump(plot_dict_temp, fp) #a - [0:5]
 
 ########### z score ################################################################
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
