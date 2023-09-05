@@ -3,7 +3,7 @@ import csv
 import pickle
 from scipy import sparse
 import scipy.io as sio
-import scanpy as sc
+import scanpy as sc 
 import matplotlib
 matplotlib.use('Agg')
 #matplotlib.use('TkAgg')
@@ -453,7 +453,7 @@ for layer in range (0, 2):
 layer = -1
 percentage_value = 0
 
-for l in [2]: # 2 = layer 2, 3 = layer 1
+for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
@@ -731,12 +731,12 @@ for l in [2]: # 2 = layer 2, 3 = layer 1
     all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
 
 #############################################################################################################################################
-
+'''
 csv_record_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
     for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
         csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
-
+'''
 ################################ or ###############################################################################################################
 percentage_value = 1 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
@@ -753,17 +753,19 @@ for key_value in csv_record_intersect_dict.keys():
     csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #mean rank
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 ###############################################################################
-## keep only top Nth percentile rank
-percentage_value = 20 # 100 means all
+'''
+## keep only top Nth percentile rank, low rank being higher attention score
+percentage_value = 10 # 100 means all
 threshold_up = np.percentile(distribution_temp, percentage_value)
+'''
 ################################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 for key_value in csv_record_dict.keys():
-    if csv_record_dict[key_value] > threshold_up: # if rank is after the threshold point, then remove
-        continue
+    #if csv_record_dict[key_value] > threshold_up: # if rank is after the threshold point, then remove
+    #    continue
     item = key_value.split('-')
     i = int(item[0])
     j = int(item[1])
@@ -775,6 +777,19 @@ for key_value in csv_record_dict.keys():
     combined_score_distribution.append(score)
         
 print('common LR count %d'%len(csv_record))
+
+##### save the file for downstream analysis ########
+csv_record_final = []
+csv_record_final.append(csv_record[0])
+for k in range (1, len(csv_record)):
+    ligand = csv_record[k][2]
+    receptor = csv_record[k][3]
+    #if ligand =='CCL19' and receptor == 'CCR7':
+    csv_record_final.append(csv_record[k])
+
+df = pd.DataFrame(csv_record_final) # output 4
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
+
 ############################################### ONLY for Human Lymph Node #################################################################
 '''
 combined_score_distribution_ccl19_ccr7 = []
@@ -830,14 +845,6 @@ chart.save(save_path+'region_of_interest_filtered_combined_attention_distributio
 ############################################################################################
 
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
-csv_record_final = []
-csv_record_final.append(csv_record[0])
-for k in range (1, len(csv_record)):
-    ligand = csv_record[k][2]
-    receptor = csv_record[k][3]
-    #if ligand =='CCL19' and receptor == 'CCR7':
-    csv_record_final.append(csv_record[k])
-
 for k in range (1, len(csv_record_final)):
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]
@@ -879,18 +886,16 @@ for record in range (1, len(csv_record_final)):
 
 
 ######################################################################################################################## 
-##### save the file for downstream analysis ########
-i=0
-j=0
-csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
-df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
 
 ###########	list those spots who are participating in CCC ##################
 filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
 inFile = '/cluster/home/t116508uhn/64630/'+filename_str #'/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
 df = pd.read_csv(inFile, sep=",")
 csv_record_final = df.values.tolist()
+i=0
+j=0
+csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
+
 df_column_names = list(df.columns)
 csv_record_final = [df_column_names] + csv_record_final
 
