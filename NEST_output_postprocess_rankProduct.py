@@ -731,31 +731,39 @@ for l in [2]: # 2 = layer 2, 3 = layer 1
     all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
 
 #############################################################################################################################################
+
+csv_record_intersect_dict = defaultdict(list)
+for layer in range (0, 2):
+    for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
+        csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
+
+################################ or ###############################################################################################################
 percentage_value = 1 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
-for layer in range (0, 1):
+for layer in range (0, 2):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
         if all_edge_sorted_by_avgrank[layer][i][1] <= threshold_up:
             csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
 
-'''
-threshold_up = np.percentile(distribution_rank_layer2, percentage_value)
-for i in range (0, len(all_edge_sorted_by_avgrank_layer2)):
-    if all_edge_sorted_by_avgrank_layer2[i][1] <= threshold_up:
-        csv_record_intersect_dict[all_edge_sorted_by_avgrank_layer2[i][0]].append(all_edge_sorted_by_avgrank_layer2[i][1])
-'''
-###### this small block make sense if you are taking top Nth percent ###########
+###########################################################################################################################################
+## get the mean rank for all the edges ##
+distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
-   if len(csv_record_intersect_dict[key_value])>=1:
-       csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #mean rank
-
+    csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #mean rank
+    distribution_temp.append(csv_record_intersect_dict[key_value]) 
+###############################################################################
+## keep only top Nth percentile rank
+percentage_value = 20 # 100 means all
+threshold_up = np.percentile(distribution_temp, percentage_value)
 ################################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 for key_value in csv_record_dict.keys():
+    if csv_record_dict[key_value] > threshold_up: # if rank is after the threshold point, then remove
+        continue
     item = key_value.split('-')
     i = int(item[0])
     j = int(item[1])
