@@ -511,7 +511,7 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.Y('Y', scale=alt.Scale(zero=False)),
     shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    #opacity=alt.Opacity('opacity:N'), #"opacity",
+    #opacity=alt.Opacity('opacity:N'), #"opacity", 
     tooltip=['component_label'] #,'opacity'
 )#.configure_legend(labelFontSize=6, symbolLimit=50)
 
