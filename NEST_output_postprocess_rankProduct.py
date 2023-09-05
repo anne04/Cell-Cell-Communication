@@ -453,7 +453,7 @@ for layer in range (0, 2):
 layer = -1
 percentage_value = 0
 
-for l in [2, 3]: # 2 = layer 2, 3 = layer 1
+for l in [2]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
@@ -733,7 +733,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
 #############################################################################################################################################
 percentage_value = 1 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
-for layer in range (0, 2):
+for layer in range (0, 1):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
         if all_edge_sorted_by_avgrank[layer][i][1] <= threshold_up:
@@ -859,7 +859,7 @@ for i in range (0, len(barcode_info)):
         barcode_info[i][3] = index_dict[labels[i]] #2
     elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
         barcode_info[i][3] = 1
-    else:
+    else: 
         barcode_info[i][3] = 0
 
 # update the label based on new component numbers
