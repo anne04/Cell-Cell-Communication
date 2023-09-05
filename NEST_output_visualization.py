@@ -428,7 +428,7 @@ data_list['pathology_label']=[]
 data_list['component_label']=[]
 data_list['X']=[]
 data_list['Y']=[]   
-data_list['opacity']=[] 
+data_list['opacity']=[]  
 
 for i in range (0, len(barcode_info)):        
     if i in active_spot:
