@@ -738,19 +738,26 @@ for layer in range (0, 2):
         csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
 '''
 ################################ or ###############################################################################################################
-percentage_value = 1 # top 20th percentile rank, low rank means higher attention score
+percentage_value = 20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
         if all_edge_sorted_by_avgrank[layer][i][1] <= threshold_up:
-            csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
-
+            #csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append([all_edge_sorted_by_avgrank[layer][i][1], i+1])
+            csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(i+1)
 ###########################################################################################################################################
 ## get the mean rank for all the edges ##
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
-    csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #mean rank
+    '''
+    weighted_avg = 0
+    total_weight = 0
+    for i in range (0, len(csv_record_intersect_dict[key_value])):
+        weighted_avg = weighted_avg + csv_record_intersect_dict[key_value][i][0]*csv_record_intersect_dict[key_value][i][1]
+        total_weight = total_weight + csv_record_intersect_dict[key_value][i][0]
+    ''' 
+    csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #weighted_avg/total_weight #np.mean(csv_record_intersect_dict[key_value]) #mean rank
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 ###############################################################################
 '''
