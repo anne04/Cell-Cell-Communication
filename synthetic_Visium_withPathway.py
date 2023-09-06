@@ -170,7 +170,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 1  #2 #1
+noise_add = 2  #2 #1
 noise_percent = 30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
@@ -484,24 +484,7 @@ cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 ###############################################################
-noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #
-if noise_add == 1:
-    gene_distribution_noise = np.random.normal(loc=0, scale=0.1, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)	
-    
-    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-elif noise_add == 2:
-    gene_distribution_noise = np.random.normal(loc=0, scale=.5, size = cell_vs_gene.shape[0])
-    np.random.shuffle(gene_distribution_noise)	
-    
-    print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
-    
-#####################################################################
-'''	
-for i in range (0, len(noise_cells)):
-    cell = noise_cells[i]
-    cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i]
-'''
+
 # record true positive connections    
 lig_rec_dict_TP = []
 datapoint_size = temp_x.shape[0]
@@ -750,6 +733,10 @@ for pattern_type in range (0, 3): #8): #pattern_count):
 print('P_class %d'%P_class)                
 
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
+#########################################################
+
+
+
 ############################
 ## Add false positives by randomly picking some cells and assigning them expressions from active distribution but without forming pattern ##
 
@@ -768,10 +755,43 @@ for i in range (0, (len(available_cells)*1)//1):
     np.random.shuffle(gene_id)
     for j in range (0, 40): #
         cell_vs_gene[cell, gene_id[j]] = gene_distribution_active[gene_id[j], cell]
+######################################
+if noise_percent > 0:
+    cell_count = cell_vs_gene.shape[0]
+    if noise_add == 1:
+        noise_percent = 30
+        noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #   
+        gene_distribution_noise = np.zeros((len(noise_cells), cell_vs_gene.shape[1]))
+        for j in range (0,  cell_vs_gene.shape[1]):
+            gene_distribution_noise[:, j] = np.random.normal(loc=0, scale=1, size = len(noise_cells))
+            np.random.shuffle(gene_distribution_noise[:, j])
+            
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    
+    elif noise_add == 2:
+        noise_percent = 30
+        '''    
+        discard_cells = list(active_spot.keys()) 
+        noise_cells = list(set(np.arange(cell_count)) - set(discard_cells))
+        np.random.shuffle(noise_cells)	
+        noise_cells = noise_cells[0:(cell_count*noise_percent)//100]
+        '''    
+        noise_cells = list(np.random.randint(0, cell_count, size=(cell_count*noise_percent)//100)) #“discrete uniform” distribution #ccc_region #   
+        gene_distribution_noise = np.zeros((len(noise_cells), cell_vs_gene.shape[1]))
+        for j in range (0,  cell_vs_gene.shape[1]):
+            gene_distribution_noise[:, j] = np.random.normal(loc=0, scale=3, size = len(noise_cells))
+            np.random.shuffle(gene_distribution_noise[:, j])
+            
+        print('noise: %g to %g'%(np.min(gene_distribution_noise),np.max(gene_distribution_noise) ))
+    
+    
+    for i in range (0, len(noise_cells)):
+        cell = noise_cells[i]
+        cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i,:]
+      
+#####################################################################
 
-''''''
 
-''''''
 ##############################
 '''
 # to reduce number of conections
@@ -816,7 +836,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 94), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -933,7 +953,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
 print('len row col %d'%len(row_col))
 print('max local %d'%max_local) 
 #print('random_activation %d'%len(random_activation_index))
-print('ligand_cells %d'%len(ligand_cells))
+#print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)#'_close'
