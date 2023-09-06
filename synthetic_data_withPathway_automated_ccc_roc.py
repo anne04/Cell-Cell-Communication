@@ -175,8 +175,8 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 2  #2 #1
-noise_percent = 30
+noise_add = 0  #2 #1
+noise_percent = 0 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -1004,7 +1004,7 @@ total_cells = len(temp_x)
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 #options = options + '_f'
-options = options + '_3dim' + '_3patterns'+'_temp'
+options = options + '_3dim' + '_3patterns'+'_temp'+'_sample'+str(sample_no)
 #options = options + '_scaled'
 
 
@@ -1167,8 +1167,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
@@ -1454,7 +1454,7 @@ while percentage_value > 0:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('naive_model_lowNoise')
+    plot_dict['Type'].append('naive_model_HeavyNoise')
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
@@ -2122,7 +2122,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     for run_time in range (0,total_runs):
         run = run_time
  
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_heavyNoise_temp_v2_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
         distribution = []
@@ -2318,7 +2318,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product') #_lowNoise
+    plot_dict['Type'].append('rank_product_heavyNoise') #_lowNoise
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2328,7 +2328,7 @@ for percentage_value in percentage_threshold:
 #plt.clf()
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a  11to20runs
-    pickle.dump(plot_dict_temp, fp) #a - [0:5]
+    pickle.dump(plot_dict, fp) #a - [0:5]
 
 ########### z score ################################################################
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
