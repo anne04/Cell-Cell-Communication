@@ -147,7 +147,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 24, 
+                           k = 25, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -166,7 +166,7 @@ niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
 niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 
-temp_matrix = GetAssayData(object = niche, slot = "counts")
+temp_matrix = GetAssayData(object = niche, slot = "scale.data") #https://satijalab.org/seurat/articles/essential_commands.html#data-access
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
@@ -182,23 +182,62 @@ mark.ec <- FindAllMarkers(ec.network,
 
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
-marker.list.ec <- mark.ec %>% top_n(12,avg_log2FC) #group_by(cluster) %>% 
+
+marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC) #
+write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_clusters_top5_',options,'.csv',sep=""))
+
 features = unique(marker.list.ec$gene)
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top12_',options,'.csv',sep=""))
-cells = WhichCells(ec.network,downsample = 100)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
+
 cells = WhichCells(ec.network)
 write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+
+cells = WhichCells(ec.network,downsample = 100)
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+
+temp_matrix = niche[['seurat_clusters.Joint_clusters']]
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
+################################# latest ###############################
+Idents(niche) <- niche[['ReceivingType']]
+ec.network <- niche
+Idents(ec.network) <- ec.network[['VectorType']]
+mark.ec <- FindAllMarkers(ec.network,min.pct = 0.25,only.pos = T,test.use = "roc") 
+
+marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,myAUC) #
+write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+
+features = unique(marker.list.ec$gene)
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
+
+cells = WhichCells(ec.network)
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+
+cells = WhichCells(ec.network,downsample = 100)
+write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+
+temp_matrix = niche[['seurat_clusters.Joint']]
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
+
+write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+
 ###############################################################################################################
 Idents(niche) <- niche[['ReceivingType']]  # don't know why!
 mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
-GOI_niche <- mark %>% group_by(cluster) %>% top_n(12,myAUC) #
+
+GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC) #
+write.csv(GOI_niche, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_clusters_top5_',options,'.csv',sep=""))
+
 features = unique(GOI_niche$gene)
+write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
+
 cells = WhichCells(niche)
 write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top12_',options,'.csv',sep=""))
+
 cells = WhichCells(niche,downsample = 100)
 write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+
+temp_matrix = niche[['seurat_clusters.Joint_clusters']]
+write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
 
 ################################################################################################################
 
