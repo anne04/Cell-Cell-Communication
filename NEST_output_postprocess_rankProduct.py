@@ -445,10 +445,10 @@ total_runs = 5
 start_index = 5
 
 distribution_rank = []
-all_edge_sorted_by_avgrank = []
+all_edge_sorted_by_rank = []
 for layer in range (0, 2):
     distribution_rank.append([])
-    all_edge_sorted_by_avgrank.append([])
+    all_edge_sorted_by_rank.append([])
 
 layer = -1
 percentage_value = 0
@@ -518,13 +518,6 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
         #save_path = '/cluster/home/t116508uhn/64630/'
         #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
-        #plt.savefig(save_path+'dist_bothAbove98th_3dim_'+filename[run_time]+'attention_score.svg', dpi=400) # output 1
-        #plt.savefig(save_path+'PDAC_140694_dist_bothAbove98th_3dim_tanh_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_filtered_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.savefig(save_path+'dist_bothAbove98th_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.savefig(save_path+'dist_bothAbove98th_scaled_wfeature_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.savefig(save_path+'dist_bothAbove98th_'+filename[run_time]+'attention_score.svg', dpi=400)
         #plt.clf()
         ##############
         '''
@@ -708,71 +701,56 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
             
         all_edge_list.append(edge_score_runs) # [key_value, score_by_run1, score_by_run2, etc.]
 
-    ## Find the rank of product#####################################################################
-    ## all_edge_list has all the edges along with their scores for different runs: 
+    ## Find the rank product #####################################################################
+    ## all_edge_list has all the edges along with their scores for different runs in following format: 
     ## [edge_1_info, score_by_run1, score_by_run2, etc.], [edge_2_info, score_by_run1, score_by_run2, etc.], ..., [edge_N_info, score_by_run1, score_by_run2, etc.]
     edge_rank_dictionary = defaultdict(list)
-    # sort the all_edge_list by runs and record the rank
+    # sort the all_edge_list by each run's rank 
     print('total runs %d'%total_runs)
     for runs in range (0, total_runs):
-        sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on score by current run and large to small
+        sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on attention score by current run: large to small
         for rank in range (0, len(sorted_list_temp)):
             edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention
 
-    all_edge_avg_rank = []
+    all_edge_vs_rank = []
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
             
-        all_edge_avg_rank.append([key_val, rank_product**(1/total_runs)])  # small rank being high attention
+        all_edge_vs_rank.append([key_val, rank_product**(1/total_runs)])  # small rank being high attention
         distribution_rank[layer].append(rank_product**(1/total_runs))
         
-    all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
+    all_edge_sorted_by_rank[layer] = sorted(all_edge_vs_rank, key = lambda x: x[1]) # small rank being high attention 
 
 #############################################################################################################################################
 '''
 csv_record_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
-    for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
-        csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(all_edge_sorted_by_avgrank[layer][i][1])
+    for i in range (0, len(all_edge_sorted_by_rank[layer])):
+        csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 '''
 ################################ or ###############################################################################################################
 percentage_value = 20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
-    for i in range (0, len(all_edge_sorted_by_avgrank[layer])):
-        if all_edge_sorted_by_avgrank[layer][i][1] <= threshold_up:
-            #csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append([all_edge_sorted_by_avgrank[layer][i][1], i+1])
-            csv_record_intersect_dict[all_edge_sorted_by_avgrank[layer][i][0]].append(i+1)
+    for i in range (0, len(all_edge_sorted_by_rank[layer])):
+        if all_edge_sorted_by_rank[layer][i][1] <= threshold_up:
+            csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 ###########################################################################################################################################
-## get the mean rank for all the edges ##
+## get the aggregated rank for all the edges ##
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
-    '''
-    weighted_avg = 0
-    total_weight = 0
-    for i in range (0, len(csv_record_intersect_dict[key_value])):
-        weighted_avg = weighted_avg + csv_record_intersect_dict[key_value][i][0]*csv_record_intersect_dict[key_value][i][1]
-        total_weight = total_weight + csv_record_intersect_dict[key_value][i][0]
-    ''' 
-    csv_record_intersect_dict[key_value] = np.mean(csv_record_intersect_dict[key_value]) #weighted_avg/total_weight #np.mean(csv_record_intersect_dict[key_value]) #mean rank
+    csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
-###############################################################################
-'''
-## keep only top Nth percentile rank, low rank being higher attention score
-percentage_value = 10 # 100 means all
-threshold_up = np.percentile(distribution_temp, percentage_value)
-'''
+
 ################################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
 csv_record = []
 csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
 for key_value in csv_record_dict.keys():
-    #if csv_record_dict[key_value] > threshold_up: # if rank is after the threshold point, then remove
-    #    continue
     item = key_value.split('-')
     i = int(item[0])
     j = int(item[1])
@@ -782,6 +760,7 @@ for key_value in csv_record_dict.keys():
     label = -1 
     csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
     combined_score_distribution.append(score)
+
         
 print('common LR count %d'%len(csv_record))
 
@@ -797,6 +776,7 @@ for k in range (1, len(csv_record)):
 df = pd.DataFrame(csv_record_final) # output 4
 df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
 
+############################################### IGNORE the rest ###########################################################################
 ############################################### ONLY for Human Lymph Node #################################################################
 '''
 combined_score_distribution_ccl19_ccr7 = []
