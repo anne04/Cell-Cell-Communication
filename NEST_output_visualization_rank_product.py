@@ -34,7 +34,7 @@ alt.themes.enable("publishTheme")
 
 spot_diameter = 89.43 #pixels
 current_directory = '/cluster/home/t116508uhn/64630/'
-top_edge_count = 1000
+top_edge_count = 1300
 ##########################################################
 # readCsv, preprocessDf, plot: these three functions are taken from GW's repository                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
@@ -347,14 +347,13 @@ elif data_name == 'PDAC_140694':
 
 ######################### read the NEST output in csv format ####################################################
 
-
 filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
 
 ## sort the edges based on their rank (column 4 = score) column, low to high, low being higher attention score
-sorted(csv_record, key = lambda x: x[4])
+csv_record = sorted(csv_record, key = lambda x: x[4])
 
 ## add the column names and take first top_edge_count edges
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, attention_score, component, from_id, to_id
@@ -367,6 +366,7 @@ j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
 
 ############################################### Optional filtering ########################################################
+'''
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
 #region_of_interest = [...] 
 csv_record_final_temp = []
@@ -378,8 +378,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
         
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
-''''''
-
+'''
 
 ######################## connected component finding #################################
 
@@ -390,8 +389,8 @@ for k in range (1, len(csv_record_final)-1): # last record is a dummy for histog
     connecting_edges[i][j]=1
         
 graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-print('number of component %d'%n_components)
+n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) # It assigns each SPOT to a component based on what pair it belongs to
+print('number of connected components %d'%n_components) 
 
 count_points_component = np.zeros((n_components))
 for i in range (0, len(labels)):
@@ -416,7 +415,7 @@ for i in range (0, len(barcode_info)):
     else: 
         barcode_info[i][3] = 0
 
-# update the label based on new component numbers
+# update the label based on found component numbers
 #max opacity
 for record in range (1, len(csv_record_final)-1):
     i = csv_record_final[record][6]
@@ -517,11 +516,6 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 
 chart.save(current_directory +'altair_plot_test.html')
 ###################################  Histogram plotting #################################################################################
-'''
-filename_str = 'NEST_combined_output_'+args.data_name+'.csv'
-inFile = current_directory +filename_str 
-df = readCsv(inFile)
-'''
 
 df = pd.DataFrame(csv_record_final)
 df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
@@ -533,7 +527,7 @@ outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
 #####################################################################################################################
-
+#####################################################################################################################
 
 
 
