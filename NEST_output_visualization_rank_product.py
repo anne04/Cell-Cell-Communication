@@ -345,7 +345,6 @@ elif data_name == 'PDAC_140694':
            
 
 ###############################  read input graph ################################################################
-datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
@@ -356,6 +355,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 
+datapoint_size = len(barcode_info)
 lig_rec_dict = []
 for i in range (0, datapoint_size):
     lig_rec_dict.append([])  
@@ -372,7 +372,7 @@ for index in range (0, len(row_col)):
 
 ######################### read the NEST output in csv format ####################################################
 
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'3to5.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
@@ -527,7 +527,7 @@ for i in range (0, len(barcode_info)):
 # converting to pandas dataframe
 
 data_list_pd = pd.DataFrame(data_list)
-id_label= len(list(set(data_list['component_label'])))#unique_component_count
+id_label = len(list(set(data_list['component_label'])))#unique_component_count
 set1 = altairThemes.get_colour_scheme("Set1", id_label)
 set1[0] = '#000000'
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
@@ -551,10 +551,6 @@ p = plot(df)
 outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
-#####################################################################################################################
-#####################################################################################################################
-
-
 
 ############################  Network Plot ######################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
@@ -574,24 +570,24 @@ for i in range (0, len(barcode_info)):
 max_x = np.max(x_index)
 max_y = np.max(y_index)
 
-
 from pyvis.network import Network
 import networkx as nx
 
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if 'tumor'in pathologist_label[i][1]: #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
-    else:
-        barcode_type[pathologist_label[i][0]] = 0
-    '''
-    elif pathologist_label[i][1] == 'stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2
-    else:
-        barcode_type[pathologist_label[i][0]] = 'zero' #0
-    '''
+if data_name != 'LUAD_GSM5702473_TD1':
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        if 'tumor'in pathologist_label[i][1]: #'Tumour':
+            barcode_type[pathologist_label[i][0]] = 1
+        else:
+            barcode_type[pathologist_label[i][0]] = 0
+        '''
+        elif pathologist_label[i][1] == 'stroma_deserted':
+            barcode_type[pathologist_label[i][0]] = 0
+        elif pathologist_label[i][1] =='acinar_reactive':
+            barcode_type[pathologist_label[i][0]] = 2
+        else:
+            barcode_type[pathologist_label[i][0]] = 'zero' #0
+        '''
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
@@ -618,8 +614,8 @@ for k in range (1, len(csv_record_final)):
     receptor = csv_record_final[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
     edge_score = csv_record_final[k][4]
-    print(edge_score)
-    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
+    #print(edge_score)
+    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i]) #, value=np.float64(edge_score)) #
     count_edges = count_edges + 1
 
 
