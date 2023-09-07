@@ -441,8 +441,8 @@ for index in range (0, len(row_col)):
 ############# load output graph #################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 5
-start_index = 5
+total_runs = 3
+start_index = 2
 
 distribution_rank = []
 all_edge_sorted_by_rank = []
@@ -774,7 +774,7 @@ for k in range (1, len(csv_record)):
     csv_record_final.append(csv_record[k])
 
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'3to5.csv', index=False, header=False)
 
 ############################################### IGNORE the rest ###########################################################################
 ############################################### ONLY for Human Lymph Node #################################################################
