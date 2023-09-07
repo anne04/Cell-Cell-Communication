@@ -685,7 +685,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         for runs in run_dict.keys():
             run_dict[runs] = np.mean(run_dict[runs])
 
-
+ 
         csv_record_dict[key_value] = []
         for runs in run_dict.keys():
             csv_record_dict[key_value].append([run_dict[runs],runs])
