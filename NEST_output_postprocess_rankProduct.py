@@ -111,7 +111,7 @@ def totalPlot(df, features, outPath):
   return
 ##########################################################
 
-data_name = 'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -463,10 +463,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         print('run %d'%run)
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+        ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
