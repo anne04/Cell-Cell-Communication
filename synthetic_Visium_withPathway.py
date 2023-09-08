@@ -2427,40 +2427,25 @@ nt.show('mygraph.html')
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 #################################################################################
-#df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_PDAC_pair_vs_cells.csv')
+######################################################## Niches ######################################################################################################################################
 
-df_ccc_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_cells_'+options+'.csv')
-df_ccc_lrpairs = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_'+options+'.csv')
-
-for index in range (0, len(df_ccc_cells)):
-    i = df_ccc_cells['x'][index].split('—')[0]
-    j = df_ccc_cells['x'][index].split('—')[0]
-    i = int(i.split('.')[1])
-    j = int(j.split('.')[1])
-    for lr_pair_index in range (0, len(df_ccc_lrpairs)):
-        lr_pair = df_ccc_lrpairs['x'][lr_pair_index]
-        ligand_gene = lr_pair.split('—')[0][1:]
-        receptor_gene = lr_pair.split('—')[1][1:]
-        k = ligand_dict_dataset[ligand_gene][receptor_gene]
-        if 
-
-################################################################################################
+# get all the edges and their scaled scores that they use for plotting the heatmap
 df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
-#df_cells_vs_cluster = pd.read_csv('/cluster/home/t116508uhn/niches_output_cluster_vs_cells.csv')
 
-attention_scores = []
-lig_rec_dict = []
+edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
+coexpression_scores = []
+lig_rec_dict_all = []
 datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    lig_rec_dict.append([])   
+    coexpression_scores.append([])   
+    lig_rec_dict_all.append([])   
     for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
+        coexpression_scores[i].append([])   
+        coexpression_scores[i][j] = []
+        lig_rec_dict_all[i].append([])   
+        lig_rec_dict_all[i][j] = []
 
-distribution = []
+distribution_all = []
 for col in range (1, len(df_pair_vs_cells.columns)):
     col_name = df_pair_vs_cells.columns[col]
     l_c = df_pair_vs_cells.columns[col].split("—")[0]
@@ -2471,26 +2456,83 @@ for col in range (1, len(df_pair_vs_cells.columns)):
     j = int(r_c)
     
     for index in range (0, len(df_pair_vs_cells.index)):
-        lig_rec_dict[i][j].append(df_pair_vs_cells.index[index])
-        attention_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
-        distribution.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
-
-'''
-In [8]: len(distribution)
-Out[8]: 15745184
-
-In [9]: min(distribution)
-Out[9]: 0.867500827142844
-
-In [10]: max(distribution)
-Out[10]: 26.5899655845998
-'''
-
-#distribution = sorted(distribution, reverse=True)
-#distribution = distribution[0: len(row_col)]
-negative_class = len(distribution)-positive_class
+        lig_rec_dict_all[i][j].append(df_pair_vs_cells.index[index])
+        coexpression_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        distribution_all.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        edge_pair_dictionary[str(i)+'-'+str(j)][df_pair_vs_cells.index[index]]=df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]]
 
 
+######### read which edge belongs to which cluster type #############################
+vector_type = pd.read_csv('/cluster/home/t116508uhn/niches_VectorType_'+options+'.csv')
+clusterType_edge_dictionary = defaultdict(list)
+for index in range (0, len(vector_type.index)):
+    cell_cell_pair = vector_type['Unnamed: 0'][index]
+    l_c = cell_cell_pair.split("—")[0]
+    r_c = cell_cell_pair.split("—")[1]
+    l_c = l_c.split('.')[1]
+    r_c = r_c.split('.')[1]
+    i = int(l_c)
+    j = int(r_c)
+
+    cluster_type = vector_type['VectorType'][index]
+    clusterType_edge_dictionary[cluster_type].append(str(i)+'-'+str(j))
+    
+######## read the top5 edges (ccc) by Niches ########################################
+attention_scores_temp = []
+lig_rec_dict_temp = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size):
+    attention_scores_temp.append([])   
+    lig_rec_dict_temp.append([])   
+    for j in range (0, datapoint_size):	
+        attention_scores_temp[i].append([])   
+        attention_scores_temp[i][j] = []
+        lig_rec_dict_temp[i].append([])   
+        lig_rec_dict_temp[i][j] = []
+        
+
+marker_list = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
+marker_list = marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
+positive_class_found = 0
+distribution_temp = []
+total_edge_count = 0
+flag_break = 0
+for index in range (0, len(marker_list.index)):
+    cluster_type = marker_list['cluster'][index]
+    pair_type = marker_list['gene'][index]
+    ligand_gene = pair_type.split('—')[0]
+    receptor_gene = pair_type.split('—')[1]
+    ligand_gene = int(ligand_gene.split('g')[1])
+    receptor_gene = int(receptor_gene.split('g')[1])
+    lr_pair_id = ligand_dict_dataset[ligand_gene][receptor_gene] 
+    #if lr_pair_id>12: 
+    #    continue
+    edge_list = clusterType_edge_dictionary[cluster_type]
+    for edge in edge_list:
+        ccc_score_scaled = edge_pair_dictionary[edge][lr_pair_id]
+        i = int(edge.split('-')[0])
+        j = int(edge.split('-')[1])
+        total_edge_count = total_edge_count + 1
+        if total_edge_count > len(row_col):
+            flag_break = 1
+            break
+
+        lig_rec_dict_temp[i][j].append(lr_pair_id)
+        attention_scores_temp[i][j].append(ccc_score_scaled)
+        distribution_temp.append(ccc_score_scaled)
+	    
+        if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and lr_pair_id in lig_rec_dict_TP[i][j]:
+            positive_class_found = positive_class_found + 1
+	
+    if flag_break == 1:
+        break
+    
+lig_rec_dict = lig_rec_dict_temp
+attention_scores = attention_scores_temp
+distribution = distribution_temp
+negative_class = len(distribution) - positive_class_found
+
+plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
     percentage_value = percentage_value - 10
@@ -2511,8 +2553,8 @@ while percentage_value > 0:
     total_edges_count = 0
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if i==j: 
-                continue
+            #if i==j: 
+            #    continue
             atn_score_list = attention_scores[i][j]
             #print(len(atn_score_list))
             
@@ -2533,8 +2575,8 @@ while percentage_value > 0:
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
 
-            if i==j: 
-                continue
+            #if i==j: 
+            #    continue
             ''' 
             if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
                 for k in range (0, len(lig_rec_dict_TP[i][j])):
@@ -2553,38 +2595,17 @@ while percentage_value > 0:
                         confusion_matrix[1][0] = confusion_matrix[1][0] + 1                 
              
     print('%d, %g, %g'%(percentage_value,  (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
-    #print('%d, %g'%(percentage_value, (confusion_matrix[0][0]/positive_class)*100))    
+    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
+    plot_dict['FPR'].append(FPR_value)
+    plot_dict['TPR'].append(TPR_value)
+    plot_dict['Type'].append('Niches') #_lowNoise
 
 
-import altair as alt
-from vega_datasets import data
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
+    pickle.dump(plot_dict, fp) #a - [0:5]
 
 
-######################################
-FPR = [0, 7.72522, 18.3623, 30.5919, 42.7621, 54.7778, 65.9853, 76.135, 88.0556, 95.6145, 100]
-TPR_naive = [0, 0, 0, 0, 0, 0, 0, 1.82403, 12.6609, 38.5193, 100]
-TPR_us= [50, 50, 50.4292, 56.7597, 62.7682, 70.6009, 75, 82.8326, 91.4163, 95, 100]
 
-plot_dict = defaultdict(list)
-
-for i in range (0, len(FPR)):
-    plot_dict['FPR'].append(FPR[i])
-    plot_dict['TPR'].append(TPR_naive[i])
-    plot_dict['Type'].append('naive_model')
-    
-for i in range (0, len(FPR)):
-    plot_dict['FPR'].append(FPR[i])
-    plot_dict['TPR'].append(TPR_us[i])
-    plot_dict['Type'].append('our_model')
-    
-    
-data_list_pd = pd.DataFrame(plot_dict)    
-chart = alt.Chart(data_list_pd).mark_line().encode(
-    x='FPR:T',
-    y='TPR:Q',
-    color='Type:N',
-)	
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'plot_e_tanh.html')
 
 
