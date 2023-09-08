@@ -107,7 +107,7 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 ####################################### synthetic ###################################################
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' #'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp'
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' 
 
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
@@ -123,7 +123,6 @@ for(i in 1:ncol(df)) {
 countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
 #temp <- SCTransform(pdac_sample)
-#DefaultAssay(temp) <- "integrated"
 temp <- ScaleData(pdac_sample)
 temp <- FindVariableFeatures(temp) 
 temp <- RunPCA(temp, verbose = FALSE)
@@ -156,21 +155,17 @@ NICHES_output <- RunNICHES(object = temp,
                            CellToCellSpatial = T, CellToNeighborhood = F,NeighborhoodToCell = F)
         
 niche <- NICHES_output[['CellToCellSpatial']]
-#### save  using coexpression score matrix 
-temp_matrix = GetAssayData(object = niche, slot = "counts")
-temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
-##### print marker genes
 niche <- ScaleData(niche)
 niche <- FindVariableFeatures(niche,selection.method = "disp")
 niche <- RunPCA(niche)
 niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 
+#### save scaled coexpression score matrix 
 temp_matrix = GetAssayData(object = niche, slot = "scale.data") #https://satijalab.org/seurat/articles/essential_commands.html#data-access
 temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
-################################################################
+############################## print marker genes #######################################
 Idents(niche) <- niche[['ReceivingType']]
 ec.network <- niche
 Idents(ec.network) <- ec.network[['VectorType']]
@@ -184,20 +179,20 @@ mark.ec <- FindAllMarkers(ec.network,
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC) #
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_clusters_top5_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 
-features = unique(marker.list.ec$gene)
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
 
-cells = WhichCells(ec.network)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+#features = unique(marker.list.ec$gene)
+#write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
 
-cells = WhichCells(ec.network,downsample = 100)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+#cells = WhichCells(ec.network)
+#write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
 
-temp_matrix = niche[['seurat_clusters.Joint_clusters']]
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
-################################# latest ###############################
+#cells = WhichCells(ec.network,downsample = 100)
+#write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
+
+################################# if above does not work then do this ###############################
 Idents(niche) <- niche[['ReceivingType']]
 ec.network <- niche
 Idents(ec.network) <- ec.network[['VectorType']]
@@ -206,19 +201,16 @@ mark.ec <- FindAllMarkers(ec.network,min.pct = 0.25,only.pos = T,test.use = "roc
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,myAUC) #
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 
-features = unique(marker.list.ec$gene)
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
-
-cells = WhichCells(ec.network)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
-
-cells = WhichCells(ec.network,downsample = 100)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
-
-temp_matrix = niche[['seurat_clusters.Joint']]
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
-
 write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+
+#features = unique(marker.list.ec$gene)
+#write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
+
+#cells = WhichCells(ec.network)
+#write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
+
+#cells = WhichCells(ec.network,downsample = 100)
+#write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
 
 ###############################################################################################################
 Idents(niche) <- niche[['ReceivingType']]  # don't know why!
