@@ -146,7 +146,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 25, 
+                           k = 9, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
@@ -200,6 +200,7 @@ mark.ec <- FindAllMarkers(ec.network,min.pct = 0.25,only.pos = T,test.use = "roc
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,myAUC) #
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+# write.csv(mark.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 
 write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
 
@@ -212,24 +213,6 @@ write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_Vec
 #cells = WhichCells(ec.network,downsample = 100)
 #write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
 
-###############################################################################################################
-Idents(niche) <- niche[['ReceivingType']]  # don't know why!
-mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
-
-GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC) #
-write.csv(GOI_niche, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_clusters_top5_',options,'.csv',sep=""))
-
-features = unique(GOI_niche$gene)
-write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
-
-cells = WhichCells(niche)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_',options,'.csv',sep=""))
-
-cells = WhichCells(niche,downsample = 100)
-write.csv(cells, paste('/cluster/home/t116508uhn/niches_output_ccc_cells_downsampled_',options,'.csv',sep=""))
-
-temp_matrix = niche[['seurat_clusters.Joint_clusters']]
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
 
 ################################################################################################################
 
