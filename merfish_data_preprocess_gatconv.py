@@ -123,7 +123,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microgli
 
 
 ##########
-options = 'Female_Virgin_ParentingExcitatory' # 'Female_Parenting_Excitatory' #  'Female_Naive_Excitatory' #
+options = 'Female_Virgin_ParentingExcitatory' #  'Female_Parenting_Excitatory' #  'Female_Naive_Excitatory' #
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
@@ -588,7 +588,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 ##################################################################################################
 
 ###########################################################Visualization starts ##################
-animal_id = 24 #19
+animal_id = 24 #19 #
 bregma_id = 0
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 
@@ -624,7 +624,7 @@ for index in range (0, len(row_col)):
         lig_rec_dict[i][j].append(lig_rec[index])  
         
 
-###########
+########################################################
 '''
 cell_kept = []
 for cell_id in microglia_cell_id:
@@ -951,14 +951,15 @@ df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+ar
 
 ######################### read the NEST output in csv format ####################################################
 current_directory = '/cluster/home/t116508uhn/64630/'
-top_edge_count = 1000
+
 filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv'
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
+#filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
 
 ## sort the edges based on their rank (column 4 = score) column, low to high, low being higher attention score
+top_edge_count = 3000 #len(csv_record) # 3000 = microglia and 1000=general
 csv_record = sorted(csv_record, key = lambda x: x[4])
 
 ## add the column names and take first top_edge_count edges
@@ -978,6 +979,9 @@ csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'n
 csv_record_final_temp = []
 csv_record_final_temp.append(csv_record_final[0])
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
+    # if one of them is microglia, then plot them
+    i = csv_record_final[record_idx][6]
+    j = csv_record_final[record_idx][7]
     if (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') :
         csv_record_final_temp.append(csv_record_final[record_idx])
         
@@ -1133,7 +1137,7 @@ outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
 
-############################  Network Plot ######################
+############################  Network Plot ##############################################################################################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
 colors = set1
@@ -1144,8 +1148,8 @@ y_index=[]
 colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
-    x_index.append(barcode_info[i][1]*10)
-    y_index.append(barcode_info[i][2]*10)    
+    x_index.append(barcode_info[i][1])
+    y_index.append(-barcode_info[i][2])    
     colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
@@ -1157,26 +1161,22 @@ import networkx as nx
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     marker_size = 'circle'
-    label_str =  barcode_info[i][4]#str(i)+'_c:'+str(barcode_info[i][3])
+    label_str = barcode_info[i][4] # str(i)+'_c:'+str(barcode_info[i][3]) # 
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
-#################################
-threshold_value =  np.percentile(combined_score_distribution,0)
+
 count_edges = 0
-for k in range (1, len(csv_record)-1):
-    #if csv_record[k][4] < threshold_value:
-    #    continue
-    i = csv_record[k][6]
-    j = csv_record[k][7]    
-    ligand = csv_record[k][2]
-    receptor = csv_record[k][3]
+for k in range (1, len(csv_record_final)-1):
+    i = csv_record_final[k][6]
+    j = csv_record_final[k][7]    
+    ligand = csv_record_final[k][2]
+    receptor = csv_record_final[k][3]
     title_str =  "L:"+ligand+", R:"+receptor
-    edge_score = csv_record[k][4]
-    #if ((barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
+    edge_score = csv_record_final[k][4]
     g.add_edge(int(i), int(j), label = title_str, color=colors_point[i] ) #, value=np.float64(edge_score) 
     count_edges = count_edges + 1
-
+print('edges: %d'%count_edges)
 nt.from_nx(g)
 nt.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
@@ -1188,464 +1188,51 @@ write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
 ###########################################################################################################################################################################################
 #########################################################################################################################################################################################
 
-
-
-##########################
-csv_record_dict = defaultdict(list)
-for run_time in range (start_index, start_index+total_runs):
-    gc.collect()
-    #run_time = 2
-    run = run_time
-    
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
-    X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
-
-    #l = 3
-    for l in [2,3]:  # 3 = layer 1, 2 = layer 2
-        distribution = []
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-            #    continue
-            distribution.append(X_attention_bundle[l][index][0])
-
-        attention_scores = []
-        for i in range (0, datapoint_size):
-            attention_scores.append([])   
-            for j in range (0, datapoint_size):	
-                attention_scores[i].append([])   
-                attention_scores[i][j] = []
-
-        min_attention_score = 1000
-        max_value = np.max(distribution)
-        min_value = np.min(distribution)
-        distribution = []
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-            #    continue
-            scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
-            attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
-            if min_attention_score > scaled_score:
-                min_attention_score = scaled_score
-            distribution.append(scaled_score)
-
-
-        if min_attention_score<0:
-            min_attention_score = -min_attention_score
-        else: 
-            min_attention_score = 0
-
-        print('min attention score %g'%min_attention_score)
-        ##############
-        #plt.clf()
-        #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
-        #save_path = '/cluster/home/t116508uhn/64630/'
-        #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7     
-        #plt.savefig(save_path+'dist_'+args.data_name+'_bothAbove98th_3dim_tanh_h512_l2attention_'+filename[run_time]+'attention_score.svg', dpi=400)
-        #plt.clf()
-        ##############
-
-        ##############
-
-        #hold_attention_score = copy.deepcopy(attention_scores)  
-        #attention_scores = copy.deepcopy(hold_attention_score)  
-        ####################################################################################
-
-        ###########################
-
-        ccc_index_dict = dict()
-        threshold_down =  np.percentile(sorted(distribution), 80)
-        threshold_up =  np.percentile(sorted(distribution), 100)
-        connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-        for j in range (0, datapoint_size):
-            #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-            for i in range (0, datapoint_size):
-                atn_score_list = attention_scores[i][j]
-                #print(len(atn_score_list))
-                #s = min(0,len(atn_score_list)-1)
-                for k in range (0, len(atn_score_list)):
-                    if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                        connecting_edges[i][j] = 1
-                        ccc_index_dict[i] = ''
-                        ccc_index_dict[j] = ''
-
-
-
-        graph = csr_matrix(connecting_edges)
-        n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-        print('number of component %d'%n_components)
-
-        count_points_component = np.zeros((n_components))
-        for i in range (0, len(labels)):
-             count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-
-        print(count_points_component)
-
-        id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
-        index_dict = dict()
-        for i in range (0, count_points_component.shape[0]):
-            if count_points_component[i]>1:
-                index_dict[i] = id_label
-                id_label = id_label+1
-
-        print(id_label)
-
-
-        for i in range (0, len(barcode_info)):
-        #    if barcode_info[i][0] in barcode_label:
-            if count_points_component[labels[i]] > 1:
-                barcode_info[i][3] = index_dict[labels[i]] #2
-            elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
-                barcode_info[i][3] = 1
-            else:
-                barcode_info[i][3] = 0
-
-        #######################
-
-
-        '''
-        barcode_type=dict()
-        for i in range (1, len(pathologist_label)):
-            if pathologist_label[i][1] == 'tumor': #'Tumour':
-                barcode_type[pathologist_label[i][0]] = '2_tumor'
-            elif pathologist_label[i][1] =='stroma_deserted':
-                barcode_type[pathologist_label[i][0]] = '0_stroma_deserted'
-            elif pathologist_label[i][1] =='acinar_reactive':
-                barcode_type[pathologist_label[i][0]] = '1_acinar_reactive'
-            else:
-                barcode_type[pathologist_label[i][0]] = 'zero' #0
-        '''
-
-        data_list=dict()
-        data_list['pathology_label']=[]
-        data_list['component_label']=[]
-        data_list['X']=[]
-        data_list['Y']=[]
-
-        for i in range (0, len(barcode_info)):
-            #if barcode_type[barcode_info[i][0]] == 'zero':
-            #    continue
-            data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-            data_list['component_label'].append(barcode_info[i][3])
-            data_list['X'].append(barcode_info[i][1])
-            data_list['Y'].append(barcode_info[i][2])
-
-        '''
-        data_list_pd = pd.DataFrame(data_list)
-        #data_list_pd.to_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv', index=False)
-        #df_test = pd.read_csv('/cluster/home/t116508uhn/64630/omnipath_ccc_th95_tissue_plot_withFeature_woBlankEdges.csv')
-        #set1 = altairThemes.get_colour_scheme("Set1", len(data_list_pd["component_label"].unique()))
-        set1 = altairThemes.get_colour_scheme("Set1", id_label)
-        set1[0] = '#000000'
-
-        chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
-            alt.X('X', scale=alt.Scale(zero=False)),
-            alt.Y('Y', scale=alt.Scale(zero=False)),
-            shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
-            color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-            tooltip=['component_label']
-        )#.configure_legend(labelFontSize=6, symbolLimit=50)
-        # output 2
-        save_path = '/cluster/home/t116508uhn/64630/'
-        '''
-        #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
-        #chart.save(save_path+args.data_name+'_filtered_CCL19_CCR7_input_graph.html') #
-        #chart.save(save_path+args.data_name+'_CCL19_CCR7_th95_graph.html') #selective_
-        #chart.save(save_path+args.data_name+'_IL21_IL21R_attention_only_th95_l2attention_'+filename[run_time]+'.html') #
-        #chart.save(save_path+args.data_name+'_CCL19_CCR7_attention_only_th95_l1attention_'+filename[run_time]+'.html') #
-        #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_th99p9_3dim_tanh_h512_l2attention_'+filename[run_time]+'.html') #filtered_l2attention_
-        #chart.save(save_path+'altair_plot_98th_bothAbove98_3dim_tanh_h2048_'+filename[run_time]+'.html')
-        #chart.save(save_path+'altair_plot_bothAbove98_3dim_'+filename[run_time]+'.html')
-        #chart.save(save_path+'altair_plot_97th_bothAbove98_3d_input.html')
-        #chart.save(save_path+'altair_plot_97th_bothAbove98_'+filename[run_time]+'.html')
-        #chart.save(save_path+'region_of_interest_r1.html')
-        #chart.save(save_path+'altair_plot_95_withlrFeature_bothAbove98_'+filename[run_time]+'.html')
-        #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-        #chart.save(save_path+'altair_plot_'+'80'+'th_'+filename[run_time]+'.html')
-
-        ##############
-        '''
-        region_list =[2, 3, 9, 11, 4, 5, 7]
-
-        spot_interest_list = []
-        for i in range (0, len(barcode_info)):
-            if data_list['component_label'][i] in region_list:
-
-                spot_interest_list.append(i)
-        '''
-        ###############
-        csv_record = []
-        csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-        '''
-        for j in range (0, len(barcode_info)):
-            for i in range (0, len(barcode_info)):
-                for k in range (0, len(lig_rec_dict[i][j])):
-                    csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], -1, barcode_info[i][3], i, j])
-
-        '''
-
-        for j in range (0, len(barcode_info)):
-            for i in range (0, len(barcode_info)):
-
-                if i==j:
-                    if len(lig_rec_dict[i][j])==0:
-                        continue
-
-                atn_score_list = attention_scores[i][j]
-                for k in range (0, len(atn_score_list)):
-                    if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
-                        if barcode_info[i][3]==0:
-                            print('error')
-                        elif barcode_info[i][3]==1:
-                            csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
-                        else:
-                            csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
-        '''
-        df = pd.DataFrame(csv_record)
-        df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-        ############
-        alt.themes.register("publishTheme", altairThemes.publishTheme)
-        # enable the newly registered theme
-        alt.themes.enable("publishTheme")
-        inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-        df = readCsv(inFile)
-        df = preprocessDf(df)
-        outPathRoot = inFile.split('.')[0]
-        p = plot(df)
-        #outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_th99p7_h512_l2attention_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-        outPath = '/cluster/home/t116508uhn/64630/test_hist_'+args.data_name+'_'+filename[run_time]+'_selective_only_Tcellzone_th90_h512_'+str(len(csv_record))+'edges.html' #filteredl2attention__ l2attention_
-        p.save(outPath)	# output 3
-        '''
-        ###########	
-        #run = 1
-        #csv_record_dict = defaultdict(list)
-        print('records found %d'%len(csv_record))
-        for i in range (1, len(csv_record)):
-            key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
-            csv_record_dict[key_value].append([csv_record[i][4], run])
-
-
-for key_value in csv_record_dict.keys():
-    run_dict = defaultdict(list)
-    for scores in csv_record_dict[key_value]:
-        run_dict[scores[1]].append(scores[0])
-    
-    for runs in run_dict.keys():
-        run_dict[runs] = np.mean(run_dict[runs])
-        
-        
-    csv_record_dict[key_value] = []
-    for runs in run_dict.keys():
-        csv_record_dict[key_value].append([run_dict[runs],runs])
-
-        
-        
-combined_score_distribution = []
-csv_record = []
-csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-csv_record_intersect_dict = defaultdict(dict) 
-for key_value in csv_record_dict.keys():
-    if len(csv_record_dict[key_value])>=5: #3: #((total_runs*80)/100):
-        item = key_value.split('-')
-        i = int(item[0])
-        j = int(item[1])
-        ligand = item[2]
-        receptor = item[3]        
-        ###
-        
-        score = 0
-        for k in range (0, len(csv_record_dict[key_value])):
-            score = score + csv_record_dict[key_value][k][0]
-        score = score/len(csv_record_dict[key_value]) # take the average score
-        ''''''
-        ###        
-        label = -1 #csv_record_dict[key_value][total_runs-1][1]
-        #score = csv_record_dict[key_value][total_runs-1][0] #score/total_runs
-        if ligand+'-'+receptor not in csv_record_intersect_dict or label not in csv_record_intersect_dict[ligand+'-'+receptor]:
-            csv_record_intersect_dict[ligand+'-'+receptor][label] = []
-        
-        csv_record_intersect_dict[ligand+'-'+receptor][label].append(score)
-        csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
-        combined_score_distribution.append(score)
-        
-print('common LR count %d'%len(csv_record))
-            
-threshold_value =  np.percentile(combined_score_distribution,0) #50)
-connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
-count = 0
-for k in range (1, len(csv_record)):
-    ligand = csv_record[k][2]
-    receptor = csv_record[k][3]
-    i = csv_record[k][6]
-    j = csv_record[k][7]    
-    if csv_record[k][4] >= threshold_value and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):    
-        #print("%s - %s, %s - %s"%(ligand, receptor, barcode_info[i][4], barcode_info[j][4]))
-        connecting_edges[i][j]=1
-        count = count+1
-        
-print("edges after thresholding further is %d"%count)
-
-graph = csr_matrix(connecting_edges)
-n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-print('number of component %d'%n_components)
-
-count_points_component = np.zeros((n_components))
-for i in range (0, len(labels)):
-     count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-
-print(count_points_component)
-
-id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
-index_dict = dict()
-for i in range (0, count_points_component.shape[0]):
-    if count_points_component[i]>1:
-        index_dict[i] = id_label
-        id_label = id_label+1
-
-print(id_label)
-
-for i in range (0, len(barcode_info)):
-    if count_points_component[labels[i]] > 1:
-        barcode_info[i][3] = index_dict[labels[i]] #2
-    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
-        barcode_info[i][3] = 1
-    else:
-        barcode_info[i][3] = 0
-
-# update the label based on new component numbers
-#max opacity
-
-for record in range (1, len(csv_record)):
-    i = csv_record[record][6]
-    label = barcode_info[i][3]
-    csv_record[record][5] = label
-    
-#####color only OXT ligands ######
-'''
-for record in range (1, len(csv_record)):
-    i = csv_record[record][6]
-    if csv_record[record][2] == 'OXT':
-        label = 1
-    else: 
-        label = 0
-        
-    csv_record[record][5] = label
-'''       
-###########	
-
-exist_spot = defaultdict(list)
-for record_idx in range (1, len(csv_record)):
-    record = csv_record[record_idx]
-    i = record[6]
-    pathology_label = barcode_type[barcode_info[i][0]]
-    component_label = record[5]
-    X = barcode_info[i][1]
-    Y = -barcode_info[i][2]
-    opacity = record[4]
-    exist_spot[i].append([pathology_label, component_label, X, Y, opacity])
-    
-    j = record[7]
-    pathology_label = barcode_type[barcode_info[j][0]]
-    component_label = record[5]
-    X = barcode_info[j][1]
-    Y = -barcode_info[j][2]
-    opacity = record[4]   
-    exist_spot[j].append([pathology_label, component_label, X, Y, opacity])
-    
-    
-opacity_list = []
-for i in exist_spot:
-    sum_opacity = []
-    for edges in exist_spot[i]:
-        sum_opacity.append(edges[4])
-        
-    avg_opacity = np.max(sum_opacity) #np.mean(sum_opacity)
-    opacity_list.append(avg_opacity)
-    
-    exist_spot[i]=[exist_spot[i][0][0], exist_spot[i][0][1], exist_spot[i][0][2], exist_spot[i][0][3], avg_opacity]
-
-min_opacity = np.min(opacity_list)
-max_opacity = np.max(opacity_list)
-min_opacity = min_opacity - 5
-
-data_list=dict()
-data_list['pathology_label']=[]
-data_list['component_label']=[]
-data_list['X']=[]
-data_list['Y']=[]   
-data_list['opacity']=[] 
-
-for i in range (0, len(barcode_info)):
-    #if barcode_type[barcode_info[i][0]] == 'zero':
-    #    continue
-        
-    if i in exist_spot:
-        data_list['pathology_label'].append(exist_spot[i][0])
-        data_list['component_label'].append(exist_spot[i][1])
-        data_list['X'].append(exist_spot[i][2])
-        data_list['Y'].append(exist_spot[i][3])
-        data_list['opacity'].append((exist_spot[i][4]-min_opacity)/(max_opacity-min_opacity))
-        
-    else:
-        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-        data_list['component_label'].append(0)
-        data_list['X'].append(barcode_info[i][1])
-        data_list['Y'].append(-barcode_info[i][2])
-        data_list['opacity'].append(0.1)
-
-
-#id_label= len(list(set(data_list['component_label'])))
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
-data_list_pd = pd.DataFrame(data_list)
-set1 = altairThemes.get_colour_scheme("Set1", id_label)
-set1[0] = '#000000'
-chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
-    alt.X('X', scale=alt.Scale(zero=False)),
-    alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
-    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    #opacity=alt.Opacity('opacity:N'), #"opacity",
-    tooltip=['component_label'] #,'opacity'
-)#.configure_legend(labelFontSize=6, symbolLimit=50)
+set1 = altairThemes.get_colour_scheme("Set1", unique_component_count)
+colors = set1
+colors[0] = '#000000'
+ids = []
+x_index=[]
+y_index=[]
+colors_point = []
+for i in range (0, len(barcode_info)):    
+    ids.append(i)
+    x_index.append(barcode_info[i][1]*3)
+    y_index.append(barcode_info[i][2]*3)    
+    colors_point.append(colors[barcode_info[i][3]]) 
+  
+max_x = np.max(x_index)
+max_y = np.max(y_index)
 
-# output 6
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_test.html')
-#chart.save(save_path+'altair_plot_'+args.data_name+'_opacity_bothAbove98_th97_90_3dim_tanh_h512_l1l2attention_combined_5runs_'+str(len(csv_record))+'edges.html')
+from pyvis.network import Network
+import networkx as nx
 
-########################################################################################################################
-threshold_value =  np.percentile(combined_score_distribution,0) #50)
-csv_record_temp = []
-csv_record_temp.append(csv_record[0])
-for k in range (1, len(csv_record)):
-    i = csv_record[k][6]
-    j = csv_record[k][7] 
-    if csv_record[k][4] >= threshold_value: # and ( (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') ):   
-        #print(barcode_info[i])
-        csv_record_temp.append(csv_record[k])
+g = nx.MultiDiGraph(directed=True) #nx.Graph()
+for i in range (0, len(barcode_info)):
+    marker_size = 'circle'
+    label_str = barcode_info[i][4] # str(i)+'_c:'+str(barcode_info[i][3]) # 
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
+
+nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
+
+count_edges = 0
+for k in range (1, len(csv_record_final)-1):
+    i = csv_record_final[k][6]
+    j = csv_record_final[k][7]    
+    ligand = csv_record_final[k][2]
+    receptor = csv_record_final[k][3]
+    title_str =  "L:"+ligand+", R:"+receptor
+    edge_score = csv_record_final[k][4]
+    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i] ) #, value=np.float64(edge_score) 
+    count_edges = count_edges + 1
+print('edges: %d'%count_edges)
+nt.from_nx(g)
+nt.show('mygraph.html')
+cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
+
+from networkx.drawing.nx_agraph import write_dot
+write_dot(g, "/cluster/home/t116508uhn/64630/test_interactive.dot")
          
-i=0
-j=0
-csv_record_temp.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j])
-df = pd.DataFrame(csv_record_temp) # output 4
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_filtered_l2attention_edges'+str(len(csv_record))+'_combined_th90_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-#df.to_csv('/cluster/home/t116508uhn/64630/input_test_'+args.data_name+'_h512_l2attention_edges'+str(len(csv_record))+'_combined_th98p5_100percent_totalruns_'+str(total_runs)+'.csv', index=False, header=False) #
-df.to_csv('/cluster/home/t116508uhn/64630/input_test.csv', index=False, header=False)
-
-alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-alt.themes.enable("publishTheme")
-inFile = '/cluster/home/t116508uhn/64630/input_test.csv' #sys.argv[1]
-df = readCsv(inFile)
-df = preprocessDf(df)
-outPathRoot = inFile.split('.')[0]
-p = plot(df)
-outPath = '/cluster/home/t116508uhn/64630/test_hist_temp.html'
-p.save(outPath)	# output 5
-##########################            
-            
+  
 
