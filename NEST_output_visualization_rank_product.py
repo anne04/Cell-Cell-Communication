@@ -543,26 +543,17 @@ max_y = np.max(y_index)
 from pyvis.network import Network
 import networkx as nx
 
-if data_name != 'LUAD_GSM5702473_TD1':
-    barcode_type=dict()
-    for i in range (1, len(pathologist_label)):
-        if 'tumor'in pathologist_label[i][1]: #'Tumour':
-            barcode_type[pathologist_label[i][0]] = 1
-        else:
-            barcode_type[pathologist_label[i][0]] = 0
-        '''
-        elif pathologist_label[i][1] == 'stroma_deserted':
-            barcode_type[pathologist_label[i][0]] = 0
-        elif pathologist_label[i][1] =='acinar_reactive':
-            barcode_type[pathologist_label[i][0]] = 2
-        else:
-            barcode_type[pathologist_label[i][0]] = 'zero' #0
-        '''
+
+barcode_type=dict()
+for i in range (1, len(pathologist_label)):
+    if 'tumor'in pathologist_label[i][1]: #'Tumour':
+        barcode_type[pathologist_label[i][0]] = 1
+    else:
+        barcode_type[pathologist_label[i][0]] = 0
+
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
-    #if barcode_type[barcode_info[i][0]] == 'zero':
-    #    continue
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_' # label of the node or spot is consists of: spot id, component number, type of the spot 
     if barcode_type[barcode_info[i][0]] == 0: #stroma
         marker_size = 'circle'
         label_str = label_str + 'stroma'
@@ -577,23 +568,25 @@ for i in range (0, len(barcode_info)):
 
 
 count_edges = 0
-for k in range (1, len(csv_record_final)):
+for k in range (1, len(csv_record_final)-1):
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]    
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
-    title_str =  "L:"+ligand+", R:"+receptor
-    edge_score = csv_record_final[k][4]
-    #print(edge_score)
-    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i]) #, value=np.float64(edge_score)) #
+    edge_score = csv_record_final[k][8] 
+    title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
+    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
     count_edges = count_edges + 1
 
+print("total edges plotted: %d"%count_edges)
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True     
 nt.from_nx(g)
-# nt.show('mygraph.html')
 nt.save_graph('mygraph.html')
 os.system('cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html')
+
+################## The rest can be ignored ##############################################################################
+ 
 
 # convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
 from networkx.drawing.nx_agraph import write_dot
