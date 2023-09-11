@@ -44,7 +44,7 @@ def readCsv(x):
   """Parse file."""
   #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
   df = pd.read_csv(x, sep=",")
-
+ 
   return df
 
 def preprocessDf(df):
