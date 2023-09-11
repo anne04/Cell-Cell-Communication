@@ -27,12 +27,7 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 alt.themes.enable("publishTheme")
 
 
-############# readCsv, preprocessDf, plot: these three functions are taken from GW's repository ####################################################################################                                                                                                                                                                  /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
-def readCsv(x):
-  """Parse file."""
-  #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
-  df = pd.read_csv(x, sep=",")
-  return df
+############# preprocessDf, plot: these three functions are taken from GW's repository ####################################################################################                                                                                                                                                                  /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 
 def preprocessDf(df):
   """Transform ligand and receptor columns."""
@@ -285,7 +280,7 @@ if __name__ == "__main__":
     
     df = pd.DataFrame(csv_record_final)
     df.to_csv(current_directory+'temp_csv.csv', index=False, header=False)
-    df = readCsv(current_directory+'temp_csv.csv')
+    df =  pd.read_csv(current_directory+'temp_csv.csv', sep=",")
     os.remove(current_directory+'temp_csv.csv') # delete the intermediate file
     df = preprocessDf(df)
     p = plot(df)
