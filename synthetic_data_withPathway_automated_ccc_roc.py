@@ -21,7 +21,7 @@ from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
 from kneed import KneeLocator
 
-
+ 
  
 
 
@@ -35,8 +35,8 @@ args = parser.parse_args()
 
 threshold_distance = 4 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'path_uniform_distribution' #'path_equally_spaced' #
+distance_measure = 'knn'  # 'threshold_dist' #<-----------
+datatype = 'path_mixture_of_distribution' #'path_uniform_distribution' #'path_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -175,8 +175,8 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 0  #2 #1
-noise_percent = 0 #30
+noise_add = 1 #0  #2 #1
+noise_percent = 30 # 0 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -220,18 +220,52 @@ def get_data(datatype):
 	
         a = x_min
         b = x_max
-        #coord_x = np.random.randint(a, b, size=(datapoint_size))
         coord_x = (b - a) * np.random.random_sample(size=datapoint_size) + a
 
         a = y_min
         b = y_max
         coord_y = (b - a) * np.random.random_sample(size=datapoint_size) + a
+       
+        temp_x = list(coord_x)
+        temp_y = list(coord_y)
+        
+        ccc_regions = []        
+        for i in range (0, len(temp_x)):
+            for region in region_list:
+                x_max = region[1]
+                x_min = region[0]
+                y_min = region[2]
+                y_max = region[3]
+                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
+                    ccc_regions.append(i)
+                    
+        temp_x = np.array(temp_x)
+        temp_y = np.array(temp_y)
+              
+        return temp_x, temp_y, ccc_regions
+          
+    elif datatype == 'path_mixture_of_distribution':
+	
+        datapoint_size = 5000
+        x_max = 500
+        x_min = 0
+        y_max = 300
+        y_min = 0
+	
+        a = x_min
+        b = x_max
+        #coord_x = np.random.randint(a, b, size=(datapoint_size))
+        coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+
+        a = y_min
+        b = y_max
+        coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
         #coord_y = np.random.randint(a, b, size=(datapoint_size))
 
         temp_x = coord_x
         temp_y = coord_y
         region_list = [] 
-        '''
+        
         coord_x_t = np.random.normal(loc=200, scale=5, size=datapoint_size//8)
         coord_y_t = np.random.normal(loc=150, scale=5, size=datapoint_size//8)
         temp_x = np.concatenate((temp_x, coord_x_t))
@@ -257,28 +291,10 @@ def get_data(datatype):
         region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
         
         region_list.append([200, 350, 200, 300])
-        '''
-        discard_points = dict()
-        '''
-        for i in range (0, temp_x.shape[0]):
-            if i not in discard_points:
-                for j in range (i+1, temp_x.shape[0]):
-                    if j not in discard_points:
-                        if euclidean_distances(np.array([[temp_x[i],temp_y[i]]]), np.array([[temp_x[j],temp_y[j]]]))[0][0] < 1 :
-                            print('i: %d and j: %d'%(i,j))
-                            discard_points[j]=''
-        '''
-        coord_x = []
-        coord_y = []
-        for i in range (0, temp_x.shape[0]):
-            if i not in discard_points:
-                coord_x.append(temp_x[i])
-                coord_y.append(temp_y[i])
-
-        temp_x = coord_x
-        temp_y = coord_y
+        temp_x = list(temp_x)
+        temp_y = list(temp_y)
         
-        ccc_regions = []        
+        concentrated_regions = []        
         for i in range (0, len(temp_x)):
             for region in region_list:
                 x_max = region[1]
@@ -286,19 +302,18 @@ def get_data(datatype):
                 y_min = region[2]
                 y_max = region[3]
                 if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
-                    ccc_regions.append(i)
+                    concentrated_regions.append(i)
                     
         temp_x = np.array(temp_x)
         temp_y = np.array(temp_y)
               
-        return temp_x, temp_y, ccc_regions
-          
-        
+        return temp_x, temp_y, concentrated_regions
+                  
         
         
 
 ################################# 
-temp_x, temp_y, ccc_region = get_data(datatype)
+temp_x, temp_y, concentrated_region = get_data(datatype)
 #############################################
 print(len(temp_x))
 plt.gca().set_aspect(1)	
@@ -856,7 +871,7 @@ cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
-#  cell_vs_gene = copy.deepcopy(cell_vs_gene_notNormalized) #copy.deepcopy(cell_vs_gene_org)
+#  cell_vs_gene = copy.deepcopy(cell_vs_gene_org) #copy.deepcopy(cell_vs_gene_notNormalized) #
 
 
 
@@ -1004,7 +1019,7 @@ total_cells = len(temp_x)
 options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 #options = options + '_f'
-options = options + '_3dim' + '_3patterns'+'_temp'+'_sample'+str(sample_no)
+options = options + '_3dim' + '_3patterns'+'_temp'#+'_sample'+str(sample_no)
 #options = options + '_scaled'
 
 
@@ -1454,7 +1469,7 @@ while percentage_value > 0:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('naive_model_HeavyNoise')
+    plot_dict['Type'].append('naive_model') #_HeavyNoise
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
