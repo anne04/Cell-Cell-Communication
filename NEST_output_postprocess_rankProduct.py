@@ -385,7 +385,6 @@ for i in range (0, len(barcode_info)):
 '''
 ##### load input graph ##########################
 
-datapoint_size = len(barcode_info)
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
@@ -395,18 +394,24 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
+datapoint_size = len(barcode_info)
 lig_rec_dict = []
+self_loop_found = defaultdict(dict)
 for i in range (0, datapoint_size):
     lig_rec_dict.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
 
-total_type = np.zeros((2))        
 for index in range (0, len(row_col)):
         i = row_col[index][0]
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
+        self_loop_found[i][j] = ''
+
+with gzip.open(current_directory+'self_loop_record_'+args.data_name, 'wb') as fp:  #b, a:[0:5]   _filtered
+	pickle.dump(self_loop_found, fp)
+
 ############################################################################
 '''
 attention_scores = []
