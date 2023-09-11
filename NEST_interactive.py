@@ -111,7 +111,7 @@ if __name__ == "__main__":
         
     ######################### read the NEST output in csv format ####################################################
     
-    filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
+    filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv'
     inFile = current_directory +filename_str 
     df = pd.read_csv(inFile, sep=",")
     
