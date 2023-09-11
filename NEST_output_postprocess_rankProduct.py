@@ -111,8 +111,8 @@ def totalPlot(df, features, outPath):
   return
 ##########################################################
 
-data_name = 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
-
+data_name = 'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+current_directory = '/cluster/projects/schwartzgroup/fatema/find_ccc/'
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
     parser = argparse.ArgumentParser()
@@ -446,8 +446,8 @@ for index in range (0, len(row_col)):
 ############# load output graph #################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 3
-start_index = 2
+total_runs = 5
+start_index = 5
 
 distribution_rank = []
 all_edge_sorted_by_rank = []
@@ -468,10 +468,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         print('run %d'%run)
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-        ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
@@ -702,8 +702,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         edge_score_runs = []
         edge_score_runs.append(key_value)
         for runs in csv_record_dict[key_value]:
-            edge_score_runs.append(runs[0]) # 
-            
+            edge_score_runs.append(runs[0]) #
+        
         all_edge_list.append(edge_score_runs) # [key_value, score_by_run1, score_by_run2, etc.]
 
     ## Find the rank product #####################################################################
@@ -720,10 +720,17 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     all_edge_vs_rank = []
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
+        attention_score_list = csv_record_dict[key_value]
+        avg_score = 0
+        total_weight = 0
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
+            weight_by_run = edge_rank_dictionary[key_val][i]
+            avg_score = avg_score + attention_score_list[i][0] * weight_by_run
+            total_weight = total_weight + weight_by_run
             
-        all_edge_vs_rank.append([key_val, rank_product**(1/total_runs)])  # small rank being high attention
+        avg_score = avg_score/total_weight # lower weight being higher attention
+        all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])  # small rank being high attention
         distribution_rank[layer].append(rank_product**(1/total_runs))
         
     all_edge_sorted_by_rank[layer] = sorted(all_edge_vs_rank, key = lambda x: x[1]) # small rank being high attention 
@@ -738,36 +745,55 @@ for layer in range (0, 2):
 ################################ or ###############################################################################################################
 percentage_value = 20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
+edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_rank[layer])):
         if all_edge_sorted_by_rank[layer][i][1] <= threshold_up:
             csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
+            edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2])
 ###########################################################################################################################################
 ## get the aggregated rank for all the edges ##
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
+    edge_score_intersect_dict[key_value] = np.mean(edge_score_intersect_dict[key_value]) # average score
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 
 ################################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
 csv_record = []
-csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'edge_rank', 'component', 'from_id', 'to_id', 'attention_score'])
 for key_value in csv_record_dict.keys():
     item = key_value.split('-')
     i = int(item[0])
     j = int(item[1])
     ligand = item[2]
     receptor = item[3]        
-    score = csv_record_dict[key_value]        
+    edge_rank = csv_record_dict[key_value]        
+    score = edge_score_intersect_dict[key_value] # weighted average attention score, where weight is the rank, lower rank being higher attention score
     label = -1 
-    csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
+    csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, edge_rank, label, i, j, score])
     combined_score_distribution.append(score)
 
         
 print('common LR count %d'%len(csv_record))
+
+##### scale the attention scores from 0 to 1 : low score representing higher attention ########
+score_distribution = []
+for k in range (1, len(csv_record)):
+    score_distribution.append(csv_record[k][8])
+
+min_score = np.min(score_distribution)
+max_score = np.max(score_distribution)
+for k in range (1, len(csv_record)):
+    scaled_score = (csv_record[k][8]-min_score)/(max_score-min_score) 
+    csv_record[k][8] = scaled_score
+    
+# now, flip the scores so that higher score (~1) will represent higher attention scores ############
+for k in range (1, len(csv_record)):
+    csv_record[k][8] =  (1 - csv_record[k][8]) + .1 # so that no score is completely zero
 
 ##### save the file for downstream analysis ########
 csv_record_final = []
@@ -778,8 +804,11 @@ for k in range (1, len(csv_record)):
     #if ligand =='CCL19' and receptor == 'CCR7':
     csv_record_final.append(csv_record[k])
 
+
+
+    
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'3to5.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
 
 ############################################### IGNORE the rest ###########################################################################
 ############################################### ONLY for Human Lymph Node #################################################################
