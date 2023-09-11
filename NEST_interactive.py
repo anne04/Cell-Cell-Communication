@@ -121,7 +121,7 @@ print('All reading done. Now start processing.')
 
 csv_record = df.values.tolist()
 
-## sort the edges based on their rank (column 4 = score) column, low to high, low rank being higher attention score
+## sort the edges based on their rank (column 4) column, low to high, low rank being higher attention score
 csv_record = sorted(csv_record, key = lambda x: x[4])
 
 ## add the column names and take first top_edge_count edges
@@ -216,7 +216,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[i][1]
     Y = -barcode_info[i][2]
-    opacity = np.float(record[4])
+    opacity = np.float(record[8])
     active_spot[i].append([pathology_label, component_label, X, Y, opacity])
     
     j = record[7]
@@ -224,7 +224,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[j][1]
     Y = -barcode_info[j][2]
-    opacity = np.float(record[4])   
+    opacity = np.float(record[8])   
     active_spot[j].append([pathology_label, component_label, X, Y, opacity])
     ''''''
     
@@ -239,9 +239,6 @@ for i in active_spot:
     opacity_list.append(avg_opacity) 
     active_spot[i]=[active_spot[i][0][0], active_spot[i][0][1], active_spot[i][0][2], active_spot[i][0][3], avg_opacity]
 
-min_opacity = np.min(opacity_list)
-max_opacity = np.max(opacity_list)
-#min_opacity = min_opacity - 5
 
 #### making dictionary for converting to pandas dataframe to draw altair plot ###########
 data_list=dict()
@@ -257,7 +254,7 @@ for i in range (0, len(barcode_info)):
         data_list['component_label'].append(active_spot[i][1])
         data_list['X'].append(active_spot[i][2])
         data_list['Y'].append(active_spot[i][3])
-        data_list['opacity'].append((active_spot[i][4]-min_opacity)/(max_opacity-min_opacity))
+        data_list['opacity'].append(active_spot[i][4])
         
     else:
         data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
@@ -277,11 +274,11 @@ set1[0] = '#000000'
 chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
+    shape = alt.Shape('pathology_label:N'), 
     color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
-    #opacity=alt.Opacity('opacity:N'), #"opacity", 
-    tooltip=['component_label'] #,'opacity'
-)#.configure_legend(labelFontSize=6, symbolLimit=50)
+    #opacity=alt.Opacity('opacity:N'), #"opacity", # ignore the opacity for now
+    tooltip=['component_label']  
+)
 
 chart.save(current_directory +'altair_plot_test.html')
 ###################################  Histogram plotting #################################################################################
@@ -342,16 +339,17 @@ for i in range (0, len(barcode_info)):
 
 
 count_edges = 0
-for k in range (1, len(csv_record_final)):
+for k in range (1, len(csv_record_final)-1):
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]    
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
-    title_str =  "L:"+ligand+", R:"+receptor
-    edge_score = csv_record_final[k][4] # rank of this edge. Later, we will assign actual 'attention score' instead of the rank
-    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i]) #, value=np.float64(edge_score)) #
+    edge_score = csv_record_final[k][8] 
+    title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
+    g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
     count_edges = count_edges + 1
 
+print("total edges plotted: %d"%count_edges)
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True     
 nt.from_nx(g)
