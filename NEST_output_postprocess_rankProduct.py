@@ -808,7 +808,7 @@ for k in range (1, len(csv_record)):
 
     
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv', index=False, header=False)
 
 ############################################### IGNORE the rest ###########################################################################
 ############################################### ONLY for Human Lymph Node #################################################################
