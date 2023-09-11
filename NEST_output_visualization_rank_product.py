@@ -169,16 +169,7 @@ for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
     i=i+1
 
-'''
-i=0
-node_id_sorted_xy=[]
-for cell_code in cell_barcode:
-    node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
-    i=i+1
-	
-node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-'''
-
+ 
 
 ####### load annotations ##############################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -344,31 +335,10 @@ elif data_name == 'PDAC_140694':
             barcode_type[pathologist_label[i][0]] = 'others'
            
 
-###############################  read input graph ################################################################
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
-#    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
-    row_col, edge_weight, lig_rec = pickle.load(fp) # density_
-
-
-datapoint_size = len(barcode_info)
-lig_rec_dict = []
-for i in range (0, datapoint_size):
-    lig_rec_dict.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
-
-total_type = np.zeros((2))        
-for index in range (0, len(row_col)):
-        i = row_col[index][0]
-        j = row_col[index][1]
-        lig_rec_dict[i][j].append(lig_rec[index])  
-
+###############################  read which spots have self loops ################################################################
+with gzip.open(current_directory+'self_loop_record_'+args.data_name, 'rb') as fp:  
+    self_loop_found = pickle.load(fp)
+    
 
 ######################### read the NEST output in csv format ####################################################
 
@@ -435,7 +405,7 @@ print(id_label)
 for i in range (0, len(barcode_info)):
     if count_points_component[labels[i]] > 1:
         barcode_info[i][3] = index_dict[labels[i]] #2
-    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+    elif connecting_edges[i][i] == 1 and (i in self_loop_found and i in self_loop_found[i]): # that is: self_loop_found[i][i] do exist 
         barcode_info[i][3] = 1
     else: 
         barcode_info[i][3] = 0
@@ -472,7 +442,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[i][1]
     Y = -barcode_info[i][2]
-    opacity = np.float(record[4])
+    opacity = np.float(record[8])
     active_spot[i].append([pathology_label, component_label, X, Y, opacity])
     
     j = record[7]
@@ -480,7 +450,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     component_label = record[5]
     X = barcode_info[j][1]
     Y = -barcode_info[j][2]
-    opacity = np.float(record[4])   
+    opacity = np.float(record[8])   
     active_spot[j].append([pathology_label, component_label, X, Y, opacity])
     ''''''
     
