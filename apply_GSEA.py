@@ -21,23 +21,8 @@ from gseapy import gseaplot
 import csv
 import stlearn as st
 from collections import defaultdict
-####################  get the whole training dataset
 
 
-#rootPath = os.path.dirname(sys.path[0])
-#os.chdir(rootPath+'/CCST')
-
-print("hello world!")
-
-#if __name__ == "__main__":
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/spaceranger_output_new/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
-parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
-args = parser.parse_args()
-
-#    main(args)
 def processFile(f):
 
     df = pd.read_csv(f)
