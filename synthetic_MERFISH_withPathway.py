@@ -6,7 +6,6 @@ import copy
 import csv
 import numpy as np
 import sys
-import altair as alt
 from collections import defaultdict
 import stlearn as st
 import scanpy as sc
@@ -21,6 +20,12 @@ from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
 from kneed import KneeLocator
 
+import altairThemes
+import altair as alt
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
 
  
 
@@ -1832,95 +1837,6 @@ save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'plot_avg_naive.html')
 
 ####################
-plot_dict = defaultdict(list)
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
-    plot_dict_temp, plot_dict_list_temp= pickle.load(fp) #a - [0:5]
-	
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-######
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_11to20runs', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-    
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-
-######
-niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
-niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches')
-'''    
-niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches with 20 nearest neighbour')
-    
-######
-COMMOT_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-COMMOT_TPR = [0, .50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
-for i in range (0, 11):
-    plot_dict['FPR'].append(COMMOT_FPR[i])
-    plot_dict['TPR'].append(COMMOT_TPR[i])
-    plot_dict['Type'].append('COMMOT')        
-'''
-data_list_pd = pd.DataFrame(plot_dict)    
-chart = alt.Chart(data_list_pd).mark_line().encode(
-    x='FPR:Q',
-    y='TPR:Q',
-    color='Type:N',
-)	
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'plot_uniform_11to20.html') # _lowNoise
 
 ####################
 # ensemble 
@@ -2671,14 +2587,16 @@ plt.legend(fontsize=4,loc='upper right')
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'toomanycells_PCA_64embedding_pathologist_label_l1mp5_temp_plot.svg', dpi=400)
 plt.clf()
- 
+###########################
+
+
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
     if i in ccc_index_dict:
-        datapoint_label.append(2)
+        datapoint_label.append(1)
     else:
         datapoint_label.append(0)
-        
+
 ####################
 ids = []
 x_index=[] 
@@ -2902,3 +2820,157 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 
 
+######################### PLOTS ################################################################################################################
+datapoint_label = []
+for i in range (0, temp_x.shape[0]):
+    if i in ccc_index_dict:
+        datapoint_label.append(1)
+    else:
+        datapoint_label.append(0)
+
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]   
+data_list['label']=[]  
+for i in range (0, len(temp_x)):    
+    data_list['X'].append(temp_x[i])
+    data_list['Y'].append(temp_y[i])    
+    data_list['label'].append(datapoint_label[i]) 
+
+data_list_pd = pd.DataFrame(data_list)
+set1 = altairThemes.get_colour_scheme("Set1", len(list(set(data_list['label']))) )
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+    	
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    color=alt.Color('label:N', scale=alt.Scale(range=set1)),
+)
+chart.save('/cluster/home/t116508uhn/' +'input_data.html')
+
+##############################################################
+sample_type = ["", "_LowNoise", "_HighNoise"]
+sample_name = ["dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp", 
+              "dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp",
+              "dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2"]
+
+for t in range (0, len(sample_name)):
+    plot_dict = defaultdict(list)
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("Naive"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("Naive"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    ###
+    
+    ######
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_11to20runs', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'Niches', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    
+    
+    data_list_pd = pd.DataFrame(plot_dict)    
+    chart = alt.Chart(data_list_pd).mark_line().encode(
+        x='FPR:Q',
+        y='TPR:Q',
+        color='Type:N',
+    )	
+    save_path = '/cluster/home/t116508uhn/'
+    chart.save(save_path+'plot_uniform'+sample_type[t]+'.html')
+
+################################################################################################################################
+niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
+niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
+for i in range (0, 11):
+    plot_dict['FPR'].append(niches_FPR[i])
+    plot_dict['TPR'].append(niches_TPR[i])
+    plot_dict['Type'].append('Niches')
+    
+'''    
+niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
+niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
+for i in range (0, 11):
+    plot_dict['FPR'].append(niches_FPR[i])
+    plot_dict['TPR'].append(niches_TPR[i])
+    plot_dict['Type'].append('Niches with 20 nearest neighbour')
+    
+######
+COMMOT_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
+COMMOT_TPR = [0, .50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
+for i in range (0, 11):
+    plot_dict['FPR'].append(COMMOT_FPR[i])
+    plot_dict['TPR'].append(COMMOT_TPR[i])
+    plot_dict['Type'].append('COMMOT')        
+'''
+data_list_pd = pd.DataFrame(plot_dict)    
+chart = alt.Chart(data_list_pd).mark_line().encode(
+    x='FPR:Q',
+    y='TPR:Q',
+    color='Type:N',
+)	
+save_path = '/cluster/home/t116508uhn/'
+chart.save(save_path+'plot_uniform.html') # _lowNoise
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
+    plot_dict_temp, plot_dict_list_temp= pickle.load(fp) #a - [0:5]
+	
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
+for i in range (0, len(plot_dict_temp['Type'])):
+    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+    plot_dict['Type'].append(plot_dict_temp['Type'][i])
+###
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'ensemble_100percent', 'rb') as fp: #b, b_1, a
+    plot_dict_temp = pickle.load(fp) #a - [0:5]
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
+for i in range (0, len(plot_dict_temp['Type'])):
+    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+    plot_dict['Type'].append(plot_dict_temp['Type'][i])
+           
+###
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'rb') as fp: #b, b_1, a
+    plot_dict_temp = pickle.load(fp) #a - [0:5]
+plot_dict['FPR'].append(0)
+plot_dict['TPR'].append(0)
+plot_dict['Type'].append(plot_dict_temp['Type'][0])
+for i in range (0, len(plot_dict_temp['Type'])):
+    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+    plot_dict['Type'].append(plot_dict_temp['Type'][i])
+           
+##############################################################
