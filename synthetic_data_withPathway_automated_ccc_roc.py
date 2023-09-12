@@ -2915,5 +2915,93 @@ while percentage_value > 0:
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
 
+######################### PLOTS ################################################################################################################
+datapoint_label = []
+for i in range (0, temp_x.shape[0]):
+    if i in ccc_index_dict:
+        datapoint_label.append(1)
+    else:
+        datapoint_label.append(0)
 
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]   
+data_list['label']=[]  
+for i in range (0, len(temp_x)):    
+    data_list['X'].append(temp_x[i])
+    data_list['Y'].append(temp_y[i])    
+    data_list['label'].append(datapoint_label[i]) 
 
+data_list_pd = pd.DataFrame(data_list)
+set1 = altairThemes.get_colour_scheme("Set1", len(list(set(data_list['label']))) )
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+    	
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    color=alt.Color('label:N', scale=alt.Scale(range=set1)),
+)
+chart.save('/cluster/home/t116508uhn/' +'input_data.html')
+
+##############################################################
+sample_type = ["", "_LowNoise", "_HighNoise"]
+sample_name = ["dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overlap_knn_cellCount5000_3dim_3patterns_temp", 
+              "dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp",
+              "dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp"]
+
+for t in range (0, len(sample_name)):
+    plot_dict = defaultdict(list)
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("Naive"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("Naive"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    ###
+    
+    ######
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_11to20runs', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'Niches', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    
+    
+    data_list_pd = pd.DataFrame(plot_dict)    
+    chart = alt.Chart(data_list_pd).mark_line().encode(
+        x='FPR:Q',
+        y='TPR:Q',
+        color='Type:N',
+    )	
+    save_path = '/cluster/home/t116508uhn/'
+    chart.save(save_path+'plot_uniform'+sample_type[t]+'.html')
+
+###################
