@@ -24,6 +24,10 @@ import altairThemes
 import altair as alt
 import gc
 
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+
 ##########################################################
 # written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
