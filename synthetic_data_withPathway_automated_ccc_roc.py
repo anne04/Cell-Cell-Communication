@@ -1183,7 +1183,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
 '''
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
@@ -2137,7 +2137,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     for run_time in range (0,total_runs):
         run = run_time
  
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample3_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
         distribution = []
