@@ -22,7 +22,13 @@ from sklearn.metrics.pairwise import euclidean_distances
 from kneed import KneeLocator
 
  
- 
+import altairThemes
+import altair as alt
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+
 
 
 import argparse
@@ -2130,14 +2136,13 @@ for layer in range (0, 2):
 
 layer = -1
 percentage_value = 0
-
 for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
  
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_highNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
         distribution = []
@@ -3002,6 +3007,6 @@ for t in range (0, len(sample_name)):
         color='Type:N',
     )	
     save_path = '/cluster/home/t116508uhn/'
-    chart.save(save_path+'plot_uniform'+sample_type[t]+'.html')
+    chart.save(save_path+'plot_mixture_of_distributions'+sample_type[t]+'.html')
 
 ###################
