@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_140694' #'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 
 
 
@@ -315,6 +315,8 @@ elif data_name == 'PDAC_140694':
             
     barcode_type=dict()
     for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
+	    '''
         if 'tumor_LVI' in pathologist_label[i][1]:
             barcode_type[pathologist_label[i][0]] = 'tumor_LVI'
         elif 'tumor_PNI' in pathologist_label[i][1]:
@@ -333,7 +335,7 @@ elif data_name == 'PDAC_140694':
         #    barcode_type[pathologist_label[i][0]] = 'acinar_reactive'
         else:
             barcode_type[pathologist_label[i][0]] = 'others'
-           
+        '''  
 
 ###############################  read which spots have self loops ################################################################
 with gzip.open(current_directory+'self_loop_record_'+args.data_name, 'rb') as fp:  
