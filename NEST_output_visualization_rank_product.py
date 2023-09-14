@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_140694' #'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_64630' #'PDAC_140694' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -362,21 +362,6 @@ i=0
 j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
 
-############################################### Optional filtering ########################################################
-'''
-## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
-#region_of_interest = [...] 
-csv_record_final_temp = []
-csv_record_final_temp.append(csv_record_final[0])
-for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
-    # if at least one spot of the pair is tumor, then plot it
-    if (barcode_type[csv_record_final[record_idx][0]] == 'tumor' or barcode_type[csv_record_final[record_idx][1]] == 'tumor'): #((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
-        csv_record_final_temp.append(csv_record_final[record_idx])
-        
-csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
-csv_record_final = copy.deepcopy(csv_record_final_temp)
-'''
-
 ######################## connected component finding #################################
 
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
@@ -419,15 +404,37 @@ for record in range (1, len(csv_record_final)-1):
     label = barcode_info[i][3]
     csv_record_final[record][5] = label
 
+############################################### Optional filtering ########################################################
+'''
+## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
+#region_of_interest = [...] 
+csv_record_final_temp = []
+csv_record_final_temp.append(csv_record_final[0])
+component_dictionary_dummy = dict()
+for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
+    # if at least one spot of the pair is tumor, then plot it
+    if (barcode_type[csv_record_final[record_idx][0]] == 'tumor' or barcode_type[csv_record_final[record_idx][1]] == 'tumor'): #((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
+        csv_record_final_temp.append(csv_record_final[record_idx])
+    if csv_record_final[record_idx][5] not in component_dictionary_dummy:
+        component_dictionary_dummy[csv_record_final[record_idx][5]] = csv_record_final[record_idx]
+        
+# insert just one record from each other components so that the color scheme does not change in the altair scatter plot and histogram :-(
+for component_id in component_dictionary_dummy:
+    csv_record_final_temp.append(component_dictionary_dummy[component_id])
+ 
+csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
+csv_record_final = copy.deepcopy(csv_record_final_temp)
+'''
 
+#####################################
 component_list = dict()
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     record = csv_record_final[record_idx]
     i = record[6]
     j = record[7]
     component_label = record[5]
-    barcode_info[i][3] = component_label 
-    barcode_info[j][3] = component_label
+    #barcode_info[i][3] = component_label #?
+    #barcode_info[j][3] = component_label #?
     component_list[component_label] = ''
 
 component_list[0] = ''
@@ -493,6 +500,7 @@ for i in range (0, len(barcode_info)):
         data_list['X'].append(barcode_info[i][1])
         data_list['Y'].append(-barcode_info[i][2])
         data_list['opacity'].append(0.1)
+        # barcode_info[i][3] = 0
 
 
 
