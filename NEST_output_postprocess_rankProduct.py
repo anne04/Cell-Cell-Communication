@@ -29,6 +29,12 @@ spot_diameter = 89.43 #pixels
 ##########################################################
 # written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
 import scipy.stats
+import altairThemes
+import altair as alt
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
 
 #sys.path.append("/home/gw/code/utility/altairThemes/")
 #if True:  # In order to bypass isort when saving
@@ -111,7 +117,7 @@ def totalPlot(df, features, outPath):
   return
 ##########################################################
 
-data_name = 'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'V1_Human_Lymph_Node_spatial' #'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 current_directory = '/cluster/projects/schwartzgroup/fatema/find_ccc/'
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -391,7 +397,7 @@ for i in range (0, len(barcode_info)):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 datapoint_size = len(barcode_info)
