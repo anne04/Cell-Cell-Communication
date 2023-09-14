@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_64630' #'PDAC_140694' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -338,7 +338,7 @@ elif data_name == 'PDAC_140694':
         '''  
 
 ###############################  read which spots have self loops ################################################################
-with gzip.open(current_directory+'self_loop_record_'+args.data_name, 'rb') as fp:  
+with gzip.open(current_directory +'self_loop_record_'+args.data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
     self_loop_found = pickle.load(fp)
     
 
@@ -433,12 +433,12 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     i = record[6]
     j = record[7]
     component_label = record[5]
-    #barcode_info[i][3] = component_label #?
-    #barcode_info[j][3] = component_label #?
+    barcode_info[i][3] = component_label #?
+    barcode_info[j][3] = component_label #?
     component_list[component_label] = ''
 
 component_list[0] = ''
-unique_component_count = len(component_list.keys())
+unique_component_count = max(len(component_list.keys()), id_label)
 
 
 ##################################### Altair Plot ##################################################################
