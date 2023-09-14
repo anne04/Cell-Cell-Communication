@@ -1317,7 +1317,7 @@ print('number of component %d'%n_components)
 count_points_component = np.zeros((n_components))
 for i in range (0, len(labels)):
      count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-
+ 
 print(count_points_component)
 
 id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
