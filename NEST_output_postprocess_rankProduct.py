@@ -749,7 +749,7 @@ for layer in range (0, 2):
         csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 '''
 ################################ or ###############################################################################################################
-percentage_value = 20 #100 # top 20th percentile rank, low rank means higher attention score
+percentage_value = 20 #20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
@@ -763,7 +763,7 @@ for layer in range (0, 2):
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
-    edge_score_intersect_dict[key_value] = np.mean(edge_score_intersect_dict[key_value]) # average score
+    edge_score_intersect_dict[key_value] = np.min(edge_score_intersect_dict[key_value]) # average score
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 
 ################################################################################
