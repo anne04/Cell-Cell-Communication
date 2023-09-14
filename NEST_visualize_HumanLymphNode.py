@@ -197,6 +197,8 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'V1_humanLymphNode.html') #   
 '''            
+############################ load input graph ##################################################################################################################################
+
 
 ###############################  read which spots have self loops ################################################################
 with gzip.open('/cluster/projects/schwartzgroup/fatema/find_ccc/'+'self_loop_record_'+args.data_name, 'rb') as fp:  #current_directory
@@ -204,8 +206,8 @@ with gzip.open('/cluster/projects/schwartzgroup/fatema/find_ccc/'+'self_loop_rec
     
 
 ######################### read the NEST output in csv format ####################################################
-
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv'
+#filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_all.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
@@ -222,20 +224,96 @@ csv_record_final = [df_column_names] + csv_record
 i=0
 j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
+flag_only_ccl_ccr7 = 0
 ############################################### Optional filtering ########################################################
- 
+
+'''
+flag_only_ccl_ccr7 = 0
+# only to take the t cell zone
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
 #region_of_interest = [...] 
 csv_record_final_temp = []
 csv_record_final_temp.append(csv_record_final[0])
 for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
     # if at least one spot of the pair is tumor, then plot it
-    if (barcode_type[csv_record_final[record_idx][0]] == 1 or barcode_type[csv_record_final[record_idx][1]] == 1): #((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
+    if (barcode_type[csv_record_final[record_idx][0]] == 1 and barcode_type[csv_record_final[record_idx][1]] == 1): #((barcode_type[csv_record_final[record_idx][0]] == 'tumor' and barcode_type[csv_record_final[record_idx][1]] == 'tumor') or (barcode_type[csv_record_final[record_idx][0]] != 'tumor' and barcode_type[csv_record_final[record_idx][1]] != 'tumor')):
         csv_record_final_temp.append(csv_record_final[record_idx])
 
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
- 
+'''
+##################
+# out of all regions, where the ccl19-ccr7 is most active? Plot it. total edges in the plot 5515. 
+#flag_only_ccl_ccr7 = 1
+# max_keep_edge = 
+## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
+#region_of_interest = [...] 
+csv_record_final_temp = []
+csv_record_final_temp.append(csv_record_final[0])
+count_edge = 0
+for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
+    # if at least one spot of the pair is tumor, then plot it
+    if csv_record_final[record_idx][2] == 'CCL19' and csv_record_final[record_idx][3] == 'CCR7':
+        csv_record_final_temp.append(csv_record_final[record_idx])
+        count_edge = count_edge + 1
+    #if count_edge >= max_keep_edge:
+    #     break
+
+csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
+csv_record_final = copy.deepcopy(csv_record_final_temp)
+#################### for ploting the attention score distribution in Tcell zone #################
+combined_score_distribution_ccl19_ccr7 = []
+combined_score_distribution = []
+# 63470 is the length of csv_record_final (number of records in Tcell zone)
+for k in range (1, len(csv_record_final)-1): 
+    i = csv_record_final[k][6]
+    j = csv_record_final[k][7]
+    ligand = csv_record_final[k][2]
+    receptor = csv_record_final[k][3]
+    if ligand =='CCL19' and receptor == 'CCR7':
+        combined_score_distribution_ccl19_ccr7.append(csv_record_final[k][8])
+    
+    combined_score_distribution.append(csv_record_final[k][8])
+        
+some_dict = dict(A=combined_score_distribution, B=combined_score_distribution_ccl19_ccr7)
+
+df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in some_dict.items()]))
+
+df = df.rename(columns={'A': 'all_pairs', 'B': 'CCL19_CCR7'})
+
+source = df
+
+chart = alt.Chart(source).transform_fold(
+    ['all_pairs',
+     'CCL19_CCR7'],
+    as_ = ['distribution_type', 'value']
+).transform_density(
+    density = 'value',
+    bandwidth=0.3,
+    groupby=['distribution_type'],        
+    counts = True,
+    steps=100
+).mark_area(opacity=0.5).encode(
+    alt.X('value:Q'),
+    alt.Y('density:Q', stack='zero' ),
+    alt.Color('distribution_type:N')
+)#.properties(width=400, height=100)
+
+
+chart = alt.Chart(source).transform_fold(
+    ['all_pairs', 'CCL19_CCR7'],
+    as_=['Distribution Type', 'Attention Score']
+).mark_bar(
+    opacity=0.5,
+    binSpacing=0
+).encode(
+    alt.X('Attention Score:Q', bin=alt.Bin(maxbins=100)),
+    alt.Y('count()', stack=None),
+    alt.Color('Distribution Type:N')
+)
+
+chart.save(save_path+'region_of_interest_filtered_combined_attention_distribution.html')
+
 ######################## connected component finding #################################
 print('total edges in the plot %d'%len(csv_record_final))
 connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))  
@@ -271,13 +349,21 @@ for i in range (0, len(barcode_info)):
     else: 
         barcode_info[i][3] = 0
 
+####################################################
+if flag_only_ccl_ccr7 == 1:
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][3] >= 2:
+            barcode_info[i][3] = 1
+        else:
+            barcode_info[i][3] = 0
+######################################################
+
 # update the label based on found component numbers
 #max opacity
 for record in range (1, len(csv_record_final)-1):
     i = csv_record_final[record][6]
     label = barcode_info[i][3]
     csv_record_final[record][5] = label
-
 
 
 #####################################
@@ -397,9 +483,16 @@ y_index=[]
 colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
-    x_index.append(barcode_info[i][1])
-    y_index.append(barcode_info[i][2])    
-    colors_point.append(colors[barcode_info[i][3]]) 
+    x_index.append(barcode_info[i][1]*1.5)
+    y_index.append(barcode_info[i][2]*1.5)    
+
+    if barcode_info[i][3]==0:
+        colors_point.append("#000000")
+    else:
+        #colors_point.append("#377eb8")
+        colors_point.append("#ce2730")
+    
+    #colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
 max_y = np.max(y_index)
@@ -408,26 +501,22 @@ from pyvis.network import Network
 import networkx as nx
 
 
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if 'tumor'in pathologist_label[i][1]: #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1
-    else:
-        barcode_type[pathologist_label[i][0]] = 0
 
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
-    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_' # label of the node or spot is consists of: spot id, component number, type of the spot 
-    if barcode_type[barcode_info[i][0]] == 0: #stroma
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3])+'_'
+    if barcode_type[barcode_info[i][0]] == 0: 
+        label_str = label_str + 'mixed'
         marker_size = 'circle'
-        label_str = label_str + 'stroma'
-    elif barcode_type[barcode_info[i][0]] == 1: #tumor
+    elif barcode_type[barcode_info[i][0]] == 1:
+        label_str = label_str + 'Tcell'
         marker_size = 'box'
-        label_str = label_str + 'tumor'
+    elif barcode_type[barcode_info[i][0]] == 2:
+        label_str = label_str + 'B'
+        marker_size = 'circle'
     else:
-        marker_size = 'ellipse'
-        label_str = label_str + 'acinar_reactive'
-	
+        label_str = label_str + 'GC'
+        marker_size = 'circle'
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 
@@ -438,7 +527,7 @@ for k in range (1, len(csv_record_final)-1):
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
     edge_score = csv_record_final[k][8] 
-    title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
+    title_str =  "" #"L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
     g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
     count_edges = count_edges + 1
 
