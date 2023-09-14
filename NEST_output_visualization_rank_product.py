@@ -316,7 +316,7 @@ elif data_name == 'PDAC_140694':
     barcode_type=dict()
     for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
-	    '''
+        '''
         if 'tumor_LVI' in pathologist_label[i][1]:
             barcode_type[pathologist_label[i][0]] = 'tumor_LVI'
         elif 'tumor_PNI' in pathologist_label[i][1]:
