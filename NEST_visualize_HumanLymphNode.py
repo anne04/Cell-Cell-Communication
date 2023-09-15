@@ -312,7 +312,7 @@ chart = alt.Chart(source).transform_fold(
     alt.Color('Distribution Type:N')
 )
 
-chart.save(save_path+'region_of_interest_filtered_combined_attention_distribution.html')
+chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_filtered_combined_attention_distribution.html')
 
 ######################## connected component finding #################################
 print('total edges in the plot %d'%len(csv_record_final))
