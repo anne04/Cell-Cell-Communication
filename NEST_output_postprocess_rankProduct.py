@@ -729,9 +729,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         attention_score_list = csv_record_dict[key_value]
         avg_score = 0
         total_weight = 0
+        max_weight = np.max(edge_rank_dictionary[key_val])+1
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
-            weight_by_run = edge_rank_dictionary[key_val][i]
+            weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
             avg_score = avg_score + attention_score_list[i][0] * weight_by_run
             total_weight = total_weight + weight_by_run
             
@@ -749,7 +750,7 @@ for layer in range (0, 2):
         csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 '''
 ################################ or ###############################################################################################################
-percentage_value = 20 #20 # top 20th percentile rank, low rank means higher attention score
+percentage_value = 100 #20 #20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
@@ -763,7 +764,7 @@ for layer in range (0, 2):
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
-    edge_score_intersect_dict[key_value] = np.min(edge_score_intersect_dict[key_value]) # average score
+    edge_score_intersect_dict[key_value] = np.mean(edge_score_intersect_dict[key_value]) # average score
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 
 ################################################################################
@@ -796,11 +797,12 @@ max_score = np.max(score_distribution)
 for k in range (1, len(csv_record)):
     scaled_score = (csv_record[k][8]-min_score)/(max_score-min_score) 
     csv_record[k][8] = scaled_score
-    
+
+'''
 # now, flip the scores so that higher score (~1) will represent higher attention scores ############
 for k in range (1, len(csv_record)):
     csv_record[k][8] =  (1 - csv_record[k][8]) + .1 # so that no score is completely zero
-
+'''
 ##### save the file for downstream analysis ########
 csv_record_final = []
 csv_record_final.append(csv_record[0])
