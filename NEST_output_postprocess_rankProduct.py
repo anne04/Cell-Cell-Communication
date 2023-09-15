@@ -692,10 +692,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         run_dict = defaultdict(list)
         for scores in csv_record_dict[key_value]:
             run_dict[scores[1]].append(scores[0])
-
+        
         for runs in run_dict.keys():
-            run_dict[runs] = np.mean(run_dict[runs])
-
+            run_dict[runs] = np.mean(run_dict[runs]) 
+        
  
         csv_record_dict[key_value] = []
         for runs in run_dict.keys():
@@ -722,21 +722,21 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on attention score by current run: large to small
         for rank in range (0, len(sorted_list_temp)):
             edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention
-
+            
+    max_weight = len(sorted_list_temp)
     all_edge_vs_rank = []
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
         attention_score_list = csv_record_dict[key_value]
-        avg_score = 0
+        avg_score = []
         total_weight = 0
-        max_weight = np.max(edge_rank_dictionary[key_val])+1
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
             weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
-            avg_score = avg_score + attention_score_list[i][0] * weight_by_run
+            avg_score.append(attention_score_list[i][0]) #= avg_score + attention_score_list[i][0] * weight_by_run
             total_weight = total_weight + weight_by_run
             
-        avg_score = avg_score/total_weight # lower weight being higher attention
+        avg_score = np.max(avg_score) #avg_score/total_weight # lower weight being higher attention
         all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])  # small rank being high attention
         distribution_rank[layer].append(rank_product**(1/total_runs))
         
@@ -750,7 +750,7 @@ for layer in range (0, 2):
         csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 '''
 ################################ or ###############################################################################################################
-percentage_value = 100 #20 #20 # top 20th percentile rank, low rank means higher attention score
+percentage_value = 20 #20 #20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
@@ -764,7 +764,7 @@ for layer in range (0, 2):
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
-    edge_score_intersect_dict[key_value] = np.mean(edge_score_intersect_dict[key_value]) # average score
+    edge_score_intersect_dict[key_value] = np.max(edge_score_intersect_dict[key_value]) # average score
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 
 ################################################################################
