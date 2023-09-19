@@ -82,8 +82,8 @@ for gene in gene_ids:
 
 ###############################################
 lr_database = []
-for i in range (0, len(ligand_gene_list)-5):
-    for j in range (i, i+5):
+for i in range (0, len(ligand_gene_list)-7):
+    for j in range (i, i+7):
         lr_database.append([ligand_gene_list[i],receptor_gene_list[j]])
 
 ligand_dict_dataset = defaultdict(dict)
@@ -194,7 +194,6 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'synthetic_spatial_plot_'+datatype+'.svg', dpi=400)
 plt.clf()
 
-
 get_cell = defaultdict(dict)  
 available_cells = []
 for i in range (0, temp_x.shape[0]):
@@ -209,7 +208,6 @@ for i in range (0, datapoint_size):
     
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-     
 ########### weighted edge, based on neighborhood ##########
 dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
 cell_neighborhood = []
@@ -360,30 +358,45 @@ cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
 ###############################################################
+# record true positive connections    
+lig_rec_dict_TP = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_TP.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_TP[i].append([])   
+        lig_rec_dict_TP[i][j] = []
+	
+P_class = 0
 #####################################################################
-available_cells = list(np.random.randint(0, cell_count, size=(cell_count*100)//100))
+available_cells = np.arange(cell_count)
 gene_id = np.arange(lr_gene_count)
 active_cell_gene_dict = defaultdict(list)
 neighbour_of_actives = dict()
+active_count_max = cell_count//2
 for i in range (0, len(available_cells)):
     cell = available_cells[i]
+    if cell in neighbour_of_actives: #it also has actives
+        continue
     np.random.shuffle(gene_id)
-    
-    for j in range (0, len(gene_id)//2): #
-        cell_vs_gene[cell, gene_id[j]] = gene_distribution_active[gene_id[j], cell]  
+    for j in range (0, 1): #len(gene_id)//2): #
+        ligand_gene = gene_id[j]
+        cell_vs_gene[cell, ligand_gene] = gene_distribution_active[ligand_gene, cell]  
         receptor_cell = cell_neighborhood[cell][len(cell_neighborhood[cell])-1]
-        for receptor_gene in lr_database[gene_id[j]]:
+        for receptor_gene in ligand_dict_dataset[ligand_gene]:
             cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
+            lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+            P_class = P_class + 1
             
         # now add all other neighbors of cell and receptor cell to the neighborhood list and discard them from available cell list next time
         for neighbor_cell in cell_neighborhood[cell]:
  #           if neighbor_cell==cell or neighbor_cell==receptor_cell:
  #               continue
-            neighbour_of_actives.append(neighbor_cell)
+            neighbour_of_actives[neighbor_cell] = ''
         for neighbor_cell in cell_neighborhood[receptor_cell]:
 #           if neighbor_cell==cell or neighbor_cell==receptor_cell:
 #                continue
-            neighbour_of_actives.append(neighbor_cell)
+            neighbour_of_actives[neighbor_cell] = ''
 
     if P_class == active_count_max:
         break
@@ -464,16 +477,7 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i].append([])
         cells_ligand_vs_receptor[i][j] = []
 
-# record true positive connections    
-lig_rec_dict_TP = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size): 
-    lig_rec_dict_TP.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict_TP[i].append([])   
-        lig_rec_dict_TP[i][j] = []
-	
-P_class = 0
+
 
 count = 0
 available_edges_to_drop = []
