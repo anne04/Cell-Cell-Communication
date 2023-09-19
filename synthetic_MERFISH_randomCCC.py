@@ -38,10 +38,10 @@ parser.add_argument( '--generated_data_path', type=str, default='generated_data/
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 4 #2 = path equally spaced
+threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'path_uniform_distribution' #'path_equally_spaced' #
+datatype = 'randomCCC_uniform_distribution' #'path_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -100,7 +100,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 noise_add = 0  #2 #1
 noise_percent = 0 #30
 random_active_percent = 0
-active_type = 'random_overlap' #'highrange_overlap' #
+#active_type = 'random_overlap' #'highrange_overlap' #
 
 
 def get_data(datatype):
@@ -132,7 +132,7 @@ def get_data(datatype):
         temp_y = np.array(temp_y)
         return temp_x, temp_y, 0
     
-    elif datatype == 'path_uniform_distribution':
+    elif datatype == 'randomCCC_uniform_distribution':
 	
         datapoint_size = 5000
         x_max = 150 #500
@@ -357,6 +357,8 @@ cell_vs_gene = np.zeros((cell_count,lr_gene_count + non_lr_genes))
 # initially all are in inactive state
 for i in range (0, lr_gene_count + non_lr_genes):
     cell_vs_gene[:,i] = gene_distribution_inactive[i,:]
+
+#min_lr_gene_count = np.min(cell_vs_gene)
 ###############################################################
 # record true positive connections    
 lig_rec_dict_TP = []
@@ -373,21 +375,41 @@ available_cells = np.arange(cell_count)
 gene_id = np.arange(lr_gene_count)
 active_cell_gene_dict = defaultdict(list)
 neighbour_of_actives = dict()
-active_count_max = cell_count//2
+active_count_max = (cell_count*3)//4
+active_spot = dict()
 for i in range (0, len(available_cells)):
     cell = available_cells[i]
     if cell in neighbour_of_actives: #it also has actives
         continue
+    receptor_cell = cell_neighborhood[cell][len(cell_neighborhood[cell])-1]
+    if receptor_cell in neighbour_of_actives: #it also has actives
+        continue        
+    active_spot[cell] = ''
+    active_spot[receptor_cell] = ''
     np.random.shuffle(gene_id)
     for j in range (0, 1): #len(gene_id)//2): #
         ligand_gene = gene_id[j]
-        cell_vs_gene[cell, ligand_gene] = gene_distribution_active[ligand_gene, cell]  
-        receptor_cell = cell_neighborhood[cell][len(cell_neighborhood[cell])-1]
-        for receptor_gene in ligand_dict_dataset[ligand_gene]:
+        cell_vs_gene[cell, ligand_gene] = gene_distribution_active[ligand_gene, cell]
+        # make other genes off so that it does not act in other communications
+        #for gene in range (0, lr_gene_count):
+        #    if gene != ligand_gene:
+        #        cell_vs_gene[cell, gene] = min_lr_gene_count 
+
+        ##############################################################
+        receptor_gene_list = list(ligand_dict_dataset[ligand_gene].keys())
+        np.random.shuffle(receptor_gene_list)
+        receptor_gene_list = receptor_gene_list[0:5]
+        for receptor_gene in receptor_gene_list:
             cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
-            lig_rec_dict_TP[i][j].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+            lig_rec_dict_TP[cell][receptor_cell].append(ligand_dict_dataset[ligand_gene][receptor_gene])
             P_class = P_class + 1
-            
+        # make other genes off so that it does not act in other communication
+        '''
+        for gene in range (0, lr_gene_count):
+            if gene not in receptor_gene_list:
+                cell_vs_gene[receptor_cell, gene] = min_lr_gene_count 
+        '''
+        ###############################################################
         # now add all other neighbors of cell and receptor cell to the neighborhood list and discard them from available cell list next time
         for neighbor_cell in cell_neighborhood[cell]:
  #           if neighbor_cell==cell or neighbor_cell==receptor_cell:
@@ -398,7 +420,7 @@ for i in range (0, len(available_cells)):
 #                continue
             neighbour_of_actives[neighbor_cell] = ''
 
-    if P_class == active_count_max:
+    if len(active_spot) == active_count_max:
         break
             
 ########################################################################
@@ -435,7 +457,23 @@ if noise_percent > 0:
       
         
 ##############################
+# to reduce number of conections
+#cell_vs_gene[:,7] = min_lr_gene_count #-10
+#cell_vs_gene[:,15] = min_lr_gene_count #-10
+#cell_vs_gene[:,6] = min_lr_gene_count #-10
+#cell_vs_gene[:,14] = min_lr_gene_count #-10
 
+available_cells = []
+for cell in range (0, cell_vs_gene.shape[0]):
+    if cell not in active_spot:
+        available_cells.append(cell)
+
+np.random.shuffle(available_cells)
+for i in range (0, 0): #(len(available_cells)*2)//3):
+    cell = available_cells[i]
+    gene_id = np.arange(lr_gene_count)
+    for j in range (0, len(gene_id)): #
+        cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
 ##############################
 # take quantile normalization.
 
@@ -460,7 +498,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 99), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98.5), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -495,8 +533,6 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
-                        lig_rec_dict_TP[i][j].append(ligand_dict_dataset[gene][gene_rec])
-                        P_class = P_class + 1
 
 print('total edges %d'%count)
 #################
@@ -579,10 +615,10 @@ if noise_add == 2:
 
 total_cells = len(temp_x)
 
-options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
+options = options+ '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 #options = options + '_f'
-options = options + '_3dim' + '_3patterns'+'_temp'+'_sample'+str(sample_no)
+options = options + '_3dim' 
 #options = options + '_scaled'
 
 
@@ -745,8 +781,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synt
                         
 '''
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
