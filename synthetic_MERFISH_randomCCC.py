@@ -379,10 +379,10 @@ active_count_max = (cell_count*3)//4
 active_spot = dict()
 for i in range (0, len(available_cells)):
     cell = available_cells[i]
-    if cell in neighbour_of_actives: #it also has actives
+    if cell in neighbour_of_actives or cell in active_spot: #it also has actives
         continue
     receptor_cell = cell_neighborhood[cell][len(cell_neighborhood[cell])-1]
-    if receptor_cell in neighbour_of_actives: #it also has actives
+    if receptor_cell in neighbour_of_actives or receptor_cell in active_spot: #it also has actives
         continue        
     active_spot[cell] = ''
     active_spot[receptor_cell] = ''
@@ -391,35 +391,48 @@ for i in range (0, len(available_cells)):
         ligand_gene = gene_id[j]
         cell_vs_gene[cell, ligand_gene] = gene_distribution_active[ligand_gene, cell]
         # make other genes off so that it does not act in other communications
-        #for gene in range (0, lr_gene_count):
-        #    if gene != ligand_gene:
-        #        cell_vs_gene[cell, gene] = min_lr_gene_count 
-
+         
+        for gene in range (0, lr_gene_count):
+            if gene != ligand_gene:
+                cell_vs_gene[cell, gene] = min_lr_gene_count 
+         
         ##############################################################
         receptor_gene_list = list(ligand_dict_dataset[ligand_gene].keys())
-        np.random.shuffle(receptor_gene_list)
-        receptor_gene_list = receptor_gene_list[0:5]
+        #np.random.shuffle(receptor_gene_list)
+        #receptor_gene_list = receptor_gene_list[0:5]
         for receptor_gene in receptor_gene_list:
             cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
             lig_rec_dict_TP[cell][receptor_cell].append(ligand_dict_dataset[ligand_gene][receptor_gene])
             P_class = P_class + 1
+        #################################################################
         # make other genes off so that it does not act in other communication
-        '''
+         
         for gene in range (0, lr_gene_count):
             if gene not in receptor_gene_list:
                 cell_vs_gene[receptor_cell, gene] = min_lr_gene_count 
-        '''
+        
         ###############################################################
         # now add all other neighbors of cell and receptor cell to the neighborhood list and discard them from available cell list next time
+        used_gene_list = [ligand_gene] + receptor_gene_list
         for neighbor_cell in cell_neighborhood[cell]:
- #           if neighbor_cell==cell or neighbor_cell==receptor_cell:
- #               continue
+            if neighbor_cell==cell or neighbor_cell==receptor_cell:
+                continue
             neighbour_of_actives[neighbor_cell] = ''
+             
+            for gene in used_gene_list:
+                cell_vs_gene[neighbor_cell, gene] = min_lr_gene_count 
+             
+            
         for neighbor_cell in cell_neighborhood[receptor_cell]:
-#           if neighbor_cell==cell or neighbor_cell==receptor_cell:
-#                continue
+            if neighbor_cell==cell or neighbor_cell==receptor_cell:
+                continue
             neighbour_of_actives[neighbor_cell] = ''
-
+             
+            for gene in used_gene_list:
+                cell_vs_gene[neighbor_cell, gene] = min_lr_gene_count 
+     
+             
+            
     if len(active_spot) == active_count_max:
         break
             
@@ -498,7 +511,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98.5), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97.7), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -927,88 +940,6 @@ save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'distribution_type6_f_input.svg', dpi=400)
 plt.clf()
 '''
-'''
-###########
-# split it into two set of edges
-    ###########
-    dict_cell_edge = defaultdict(list) # incoming edges
-    dict_cell_neighbors = defaultdict(list) # incoming edges
-    for i in range(0, len(row_col)):
-        dict_cell_edge[row_col[i][1]].append(i) # index
-        dict_cell_neighbors[row_col[i][1]].append(row_col[i][0])
-
-    for i in range (0, datapoint_size):
-        neighbor_list = dict_cell_neighbors[i]
-        neighbor_list = list(set(neighbor_list))
-        dict_cell_neighbors[i] = neighbor_list
-
-    set1_nodes = []
-    set1_edges_index = []
-    node_limit_set1 = datapoint_size//2
-    set1_direct_edges = []
-    print('set 1 has nodes upto: %d'%node_limit_set1)
-    for i in range (0, node_limit_set1):
-        set1_nodes.append(i)
-        # add it's edges - first hop
-        for edge_index in dict_cell_edge[i]:
-            set1_edges_index.append(edge_index) # has both row_col and edge_weight
-            set1_direct_edges.append(edge_index)
-        # add it's neighbor's edges - second hop
-        for neighbor in dict_cell_neighbors[i]:
-            if i == neighbor:
-                continue
-            for edge_index in dict_cell_edge[neighbor]:
-                set1_edges_index.append(edge_index) # has both row_col and edge_weight
-
-    set1_edges_index = list(set(set1_edges_index))
-    print('amount of edges in set 1 is: %d'%len(set1_edges_index))
-
-    set2_nodes = []
-    set2_edges_index = []
-    set2_direct_edges = []
-    print('set 2 has nodes upto: %d'%datapoint_size)
-    for i in range (node_limit_set1, datapoint_size):
-        set2_nodes.append(i)
-        # add it's edges - first hop
-        for edge_index in dict_cell_edge[i]:
-            set2_edges_index.append(edge_index) # has both row_col and edge_weight
-            set2_direct_edges.append(edge_index)
-        # add it's neighbor's edges - second hop
-        for neighbor in dict_cell_neighbors[i]:
-            if i == neighbor:
-                continue
-            for edge_index in dict_cell_edge[neighbor]:
-                set2_edges_index.append(edge_index) # has both row_col and edge_weight
-
-    set2_edges_index = list(set(set2_edges_index))
-    print('amount of edges in set 1 is: %d'%len(set2_edges_index))
-
-    set1_edges = []
-    for i in range (0, len(set1_direct_edges)): #len(set1_edges_index)
-        set1_edges.append([row_col[i], edge_weight[i]])
-
-    set2_edges = []
-    for i in range (0, len(set2_direct_edges)): #set2_edges_index
-        set2_edges.append([row_col[i], edge_weight[i]])
-'''
-##################################################
-'''
-for i in range (0, datapoint_size):  
-    for j in range (0, datapoint_size):	
-        if i in ccc_index_dict and j in ccc_index_dict:
-            for k in range (0, len(lig_rec_dict[i][j])):
-                if j not in lig_rec_dict_TP[i]:
-                    lig_rec_dict_TP[i][j] = []
-                lig_rec_dict_TP[i][j].append(lig_rec_dict[i][j][k])
-        
-ccc_index_dict = dict()  
-P_class = 0
-for i in lig_rec_dict_TP:
-    ccc_index_dict[i] = ''
-    for j in lig_rec_dict_TP[i]:
-        ccc_index_dict[j] = ''  
-        P_class = P_class + len(lig_rec_dict_TP[i][j])
-'''        
 ############
 
 plot_dict = defaultdict(list)
@@ -1447,185 +1378,6 @@ chart.save(save_path+'plot_avg_naive.html')
 
 ####################
 
-####################
-# ensemble 
-filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
-percentage_threshold = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
-plot_dict = defaultdict(list)
-for percentage_value in percentage_threshold:
-    csv_record_dict = defaultdict(list)
-    for l in [2, 3]: # 2 = layer 2, 3 = layer 1
-        for run_time in range (0,total_runs):
-            run = run_time
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-            X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
-
-            distribution = []
-            for index in range (0, X_attention_bundle[0].shape[1]):
-                i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index]
-                distribution.append(X_attention_bundle[l][index][0])
-    
-            max_value = np.max(distribution)
-            min_value = np.min(distribution)
-            
-			
-				
-            attention_scores = []
-            datapoint_size = temp_x.shape[0]
-            for i in range (0, datapoint_size):
-                attention_scores.append([])   
-                for j in range (0, datapoint_size):	
-                    attention_scores[i].append([])   
-                    attention_scores[i][j] = []
-                    
-            min_attention_score = max_value
-            distribution = []
-            for index in range (0, X_attention_bundle[0].shape[1]):
-                i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index]
-                #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-                #    continue
-                scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
-                attention_scores[i][j].append(scaled_score) #X_attention_bundle[2][index][0]
-                if min_attention_score > scaled_score:
-                    min_attention_score = scaled_score
-                distribution.append(scaled_score)
-				
-            #print('min attention score with scaling %g'%min_attention_score)
-            
-
-            
-            #######################
-            plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
-            save_path = '/cluster/home/t116508uhn/64630/'
-            #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
-            plt.clf()
-
-
-
-            datapoint_size = temp_x.shape[0]
-
-            count = 0
-            existing_lig_rec_dict = []
-            for i in range (0, datapoint_size):
-                existing_lig_rec_dict.append([])   
-                for j in range (0, datapoint_size):	
-                    existing_lig_rec_dict[i].append([])   
-                    existing_lig_rec_dict[i][j] = []
-
-            ccc_index_dict = dict()
-            threshold_down =  np.percentile(sorted(distribution), percentage_value)
-            threshold_up =  np.percentile(sorted(distribution), 100)
-            connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
-            rec_dict = defaultdict(dict)
-            for i in range (0, datapoint_size):
-                for j in range (0, datapoint_size):
-                    if i==j: 
-                        continue
-                    atn_score_list = attention_scores[i][j]
-                    #print(len(atn_score_list))
-                    for k in range (0, len(atn_score_list)):
-                        if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                            connecting_edges[i][j] = 1
-                            ccc_index_dict[i] = ''
-                            ccc_index_dict[j] = ''
-                            existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
-                            key_value = str(i) +'-'+ str(j) + '-' + str(lig_rec_dict[i][j][k])
-                            csv_record_dict[key_value].append([attention_scores[i][j][k], run])
-                            count = count + 1
-                            #distribution_partial.append(attention_scores[i][j][k])
-
-
-    ############### merge multiple runs ##################
-    for key_value in csv_record_dict.keys():
-        run_dict = defaultdict(list)
-        for scores in csv_record_dict[key_value]:
-            run_dict[scores[1]].append(scores[0])
-
-        for runs in run_dict.keys():
-            run_dict[runs] = np.mean(run_dict[runs])
-
-
-        csv_record_dict[key_value] = []
-        for runs in run_dict.keys():
-            csv_record_dict[key_value].append([run_dict[runs],runs])
-
-
-    
-    #######################################
-
-    
-    csv_record_intersect_dict = defaultdict(list)
-    for key_value in csv_record_dict.keys():
-        if len(csv_record_dict[key_value])>=4: #total_runs 3: #((total_runs*80)/100):
-            score = 0
-            for k in range (0, len(csv_record_dict[key_value])):
-                score = score + csv_record_dict[key_value][k][0]
-            score = score/len(csv_record_dict[key_value]) # take the average score
-
-            csv_record_intersect_dict[key_value].append(score)
-    
-    ########################################
-    existing_lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        existing_lig_rec_dict.append([])   
-        for j in range (0, datapoint_size):	
-            existing_lig_rec_dict[i].append([])   
-            existing_lig_rec_dict[i][j] = []    
-            
-    for key_value in csv_record_intersect_dict.keys():
-        item = key_value.split('-')
-        i = int(item[0])
-        j = int(item[1])
-        LR_pair_id = int(item[2])
-        existing_lig_rec_dict[i][j].append(LR_pair_id)
-    #######################################
-    confusion_matrix = np.zeros((2,2))
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-
-            if i==j: 
-                continue
-
-            if len(existing_lig_rec_dict[i][j])>0:
-                for k in existing_lig_rec_dict[i][j]:   
-                    
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        #print(k)
-                        #positive_class = positive_class + 1                     
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                        #else:
-                        #    confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
-                    else:
-                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-                        #else:
-                        #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
-
-    print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))
-    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
-    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
-    plot_dict['FPR'].append(FPR_value)
-    plot_dict['TPR'].append(TPR_value)
-    #plot_dict['Type'].append('ensemble_100percent')
-    plot_dict['Type'].append('ensemble_80percent')
-
-#plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
-#save_path = '/cluster/home/t116508uhn/64630/'
-#plt.savefig(save_path+'distribution_e_3d_relu_partial_'+filename[run]+'_'+str(percentage_value)+'.svg', dpi=400)
-#plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
-#plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
-#plt.clf()
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'wb') as fp: #b, b_1, a
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'wb') as fp: #b, b_1, a
-    pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######### rank product ####
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
@@ -1647,7 +1399,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     for run_time in range (0,total_runs):
         run = run_time
  
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample3_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
         distribution = []
