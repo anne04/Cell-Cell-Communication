@@ -203,7 +203,7 @@ print(adata_h5)
 
 #sc.pp.log1p(adata_h5)
 
-sc.pp.filter_genes(adata_h5, min_cells=2)
+sc.pp.filter_genes(adata_h5, min_cells=5)
 print(adata_h5)
 
 #sc.pp.highly_variable_genes(adata_h5) #3952
@@ -290,7 +290,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 98), kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99), kn_value])
 
 
 '''
