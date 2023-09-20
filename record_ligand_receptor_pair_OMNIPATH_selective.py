@@ -107,6 +107,7 @@ def totalPlot(df, features, outPath):
 
   return
 ##########################################################
+'''
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/' , help='The path to dataset') 
@@ -146,6 +147,7 @@ temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))
 adata_X = np.transpose(temp)  
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = adata_X
+'''
 #############################################################    
 '''
 import argparse
@@ -177,6 +179,22 @@ parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The n
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
 '''
+'''
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_B1/outs/' , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='PDAC_130355_B1', help='The name of dataset')
+args = parser.parse_args()
+'''
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_A1/outs/' , help='The path to dataset') 
+parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+parser.add_argument( '--data_name', type=str, default='PDAC_130355_A1', help='The name of dataset')
+args = parser.parse_args()
+
+
 ####### get the gene expressions ######
 data_fold = args.data_path #+args.data_name+'/'
 print(data_fold)
@@ -185,7 +203,7 @@ print(adata_h5)
 
 #sc.pp.log1p(adata_h5)
 
-sc.pp.filter_genes(adata_h5, min_cells=1)
+sc.pp.filter_genes(adata_h5, min_cells=2)
 print(adata_h5)
 
 #sc.pp.highly_variable_genes(adata_h5) #3952
@@ -265,7 +283,7 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 '''
-'''
+
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
@@ -285,7 +303,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
     #print('%d'%(kn.knee ))
     cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 95), np.percentile(cell_vs_gene[i], 98), kn_value])
-
+'''
 #gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
 '''
 gene_percentile = dict()
@@ -517,11 +535,7 @@ for g in range(start_index, end_index):
     
 print('total number of edges in the input graph %d '%count_total_edges)
 
-count = 0
-for gene in included_LR:
-    for gene_rec in included_LR[gene]:
-        
-
+ 
 
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'omnipath_communication_scores_allPair_bothAboveDensity', 'wb') as fp: #b, b_1, a
