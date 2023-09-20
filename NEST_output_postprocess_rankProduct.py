@@ -464,7 +464,7 @@ for layer in range (0, 2):
 layer = -1
 percentage_value = 0
 
-for l in [2, 3]: # 2 = layer 2, 3 = layer 1
+for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
@@ -685,6 +685,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #csv_record_dict = defaultdict(list)
         print('records found %d'%len(csv_record))
         for i in range (1, len(csv_record)):
+            # insert if both of them are in tcell zone
+            #if (barcode_type[barcode_info[csv_record[i][6]][0]] == 1 and barcode_type[barcode_info[csv_record[i][7]][0]] == 1)!=True:
+            #    continue
+                
             key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]# + '-'  + str( csv_record[i][5])
             csv_record_dict[key_value].append([csv_record[i][4], run])
         
@@ -728,15 +732,16 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
         attention_score_list = csv_record_dict[key_value]
-        avg_score = []
+        avg_score = 0 #[]
         total_weight = 0
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
             weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
-            avg_score.append(attention_score_list[i][0]) #= avg_score + attention_score_list[i][0] * weight_by_run
+            avg_score = avg_score + attention_score_list[i][0] * weight_by_run
+            #avg_score.append(attention_score_list[i][0])  
             total_weight = total_weight + weight_by_run
             
-        avg_score = np.max(avg_score) #avg_score/total_weight # lower weight being higher attention
+        avg_score = avg_score/total_weight # lower weight being higher attention np.max(avg_score) #
         all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])  # small rank being high attention
         distribution_rank[layer].append(rank_product**(1/total_runs))
         
@@ -750,7 +755,7 @@ for layer in range (0, 2):
         csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
 '''
 ################################ or ###############################################################################################################
-percentage_value = 20 #20 #20 # top 20th percentile rank, low rank means higher attention score
+percentage_value = #100 #20 #20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
 edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
@@ -763,10 +768,19 @@ for layer in range (0, 2):
 ## get the aggregated rank for all the edges ##
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
+    arg_index = np.argmin(csv_record_intersect_dict[key_value])
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
-    edge_score_intersect_dict[key_value] = np.max(edge_score_intersect_dict[key_value]) # average score
+    edge_score_intersect_dict[key_value] = edge_score_intersect_dict[key_value][arg_index]
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
 
+#################
+'''
+keyval = '2219-502-CCL21-CXCR4' #'1965-1868-CCL21-CXCR4'
+for i in range (0, len( all_edge_sorted_by_rank)):
+    if  all_edge_sorted_by_rank[0][i][0]==keyval:
+        print(all_edge_sorted_by_rank[0][i])
+        break
+'''
 ################################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
@@ -816,8 +830,9 @@ for k in range (1, len(csv_record)):
 
     
 df = pd.DataFrame(csv_record_final) # output 4
-#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv', index=False, header=False)
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all_TcellZone.csv', index=False, header=False)
 
 ############################################### IGNORE the rest ###########################################################################
 ############################################### ONLY for Human Lymph Node #################################################################
