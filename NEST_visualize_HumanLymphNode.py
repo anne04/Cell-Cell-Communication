@@ -207,7 +207,7 @@ with gzip.open('/cluster/projects/schwartzgroup/fatema/find_ccc/'+'self_loop_rec
 
 ######################### read the NEST output in csv format ####################################################
 #filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv'
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_all.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_all_TcellZone.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
@@ -218,7 +218,7 @@ csv_record = sorted(csv_record, key = lambda x: x[4])
 ## add the column names and take first top_edge_count edges
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, attention_score, component, from_id, to_id
 df_column_names = list(df.columns)
-csv_record_final = [df_column_names] + csv_record 
+csv_record_final = [df_column_names] + csv_record[0:(len(csv_record)*20)//100] 
 
 ## add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
 i=0
@@ -282,24 +282,21 @@ df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in some_dict.item
 df = df.rename(columns={'A': 'all_pairs', 'B': 'CCL19_CCR7'})
 
 source = df
-
+#########################################################################
 chart = alt.Chart(source).transform_fold(
     ['all_pairs',
      'CCL19_CCR7'],
     as_ = ['distribution_type', 'value']
 ).transform_density(
     density = 'value',
-    bandwidth=0.3,
     groupby=['distribution_type'],        
-    counts = True,
-    steps=100
-).mark_area(opacity=0.5).encode(
+    steps=200
+).mark_area(opacity=0.7).encode(
     alt.X('value:Q'),
     alt.Y('density:Q', stack='zero' ),
     alt.Color('distribution_type:N')
-)#.properties(width=400, height=100)
-
-
+)
+####################### or ###################################### 
 chart = alt.Chart(source).transform_fold(
     ['all_pairs', 'CCL19_CCR7'],
     as_=['Distribution Type', 'Attention Score']
@@ -308,10 +305,10 @@ chart = alt.Chart(source).transform_fold(
     binSpacing=0
 ).encode(
     alt.X('Attention Score:Q', bin=alt.Bin(maxbins=100)),
-    alt.Y('count()', stack=None),
+    alt.Y('count()', stack='zero'),
     alt.Color('Distribution Type:N')
 )
-
+###########################################################################
 chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_filtered_combined_attention_distribution.html')
 
 ######################## connected component finding #################################
