@@ -475,7 +475,7 @@ chart = alt.Chart(source).transform_fold(
 )   
 chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_cccScore_distribution.html')
 
-'''''' 
+'''
 
 ############# load output graph #################################################
 
