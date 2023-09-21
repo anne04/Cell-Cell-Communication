@@ -186,6 +186,8 @@ parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwart
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='PDAC_130355_B1', help='The name of dataset')
 args = parser.parse_args()
+filter_min_cell = 5
+threshold_expression = 98.1
 '''
 import argparse
 parser = argparse.ArgumentParser()
@@ -193,7 +195,8 @@ parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwart
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='PDAC_130355_A1', help='The name of dataset')
 args = parser.parse_args()
-
+filter_min_cell = 5
+threshold_expression = 98.7
 
 ####### get the gene expressions ######
 data_fold = args.data_path #+args.data_name+'/'
@@ -203,7 +206,7 @@ print(adata_h5)
 
 #sc.pp.log1p(adata_h5)
 
-sc.pp.filter_genes(adata_h5, min_cells=5)
+sc.pp.filter_genes(adata_h5, min_cells=filter_min_cell)
 print(adata_h5)
 
 #sc.pp.highly_variable_genes(adata_h5) #3952
@@ -290,7 +293,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99), kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, threshold_expression), kn_value])
 
 
 '''
