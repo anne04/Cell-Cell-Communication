@@ -430,23 +430,51 @@ for i in range (0, datapoint_size):
 
 distribution = []
 ccc_index_dict = dict()
+combined_score_distribution_ccl19_ccr7 = []
+combined_score_distribution = []
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    #if i==j:
-    #    if len(lig_rec_dict[i][j])==0:
-    #        continue 
-    #if barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1: #i in spot_interest_list and j in spot_interest_list:
+    if i==j:
+        if len(lig_rec_dict[i][j])==0:
+            continue 
+    if (barcode_type[cell_barcode[i]]==1 and barcode_type[cell_barcode[j]]==1) != True: #i in spot_interest_list and j in spot_interest_list:
     #if lig_rec[index][0]!='CCL19' or lig_rec[index][1] != "CCR7": #lig_rec[index][0]=='IL21' and lig_rec[index][1] == "IL21R": #
-    #    continue
+        continue
     if edge_weight[index][1]>0:
+        ligand = lig_rec[index][0]
+        receptor = lig_rec[index][1]
+        if ligand =='CCL19' and receptor == 'CCR7':
+            combined_score_distribution_ccl19_ccr7.append(edge_weight[index][1])
+        
+        combined_score_distribution.append(edge_weight[index][1])
         attention_scores[i][j].append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
         distribution.append(edge_weight[index][1]) # * edge_weight[index][0]) # * edge_weight[index][2])
         ccc_index_dict[i] = ''
         ccc_index_dict[j] = ''   
-        #lig_rec_dict[i][j].append(lig_rec[index])  
+        #lig_rec_dict[i][j].append(lig_rec[index])          
+
         
-'''        
+some_dict = dict(A=combined_score_distribution, B=combined_score_distribution_ccl19_ccr7)
+df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in some_dict.items()]))
+df = df.rename(columns={'A': 'all_pairs', 'B': 'CCL19_CCR7'})
+source = df
+#########################################################################
+chart = alt.Chart(source).transform_fold(
+    ['all_pairs',
+     'CCL19_CCR7'],
+    as_ = ['distribution_type', 'value']
+).transform_density(
+    density = 'value',
+    groupby=['distribution_type'],        
+    steps=0.5
+).mark_area(opacity=0.7).encode(
+    alt.X('value:Q'),
+    alt.Y('density:Q', stack='zero' ),
+    alt.Color('distribution_type:N')
+)   
+chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_cccScore_distribution.html')
+
 '''''' 
 
 ############# load output graph #################################################
