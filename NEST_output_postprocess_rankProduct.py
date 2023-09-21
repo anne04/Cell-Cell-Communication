@@ -829,7 +829,7 @@ for key_value in csv_record_dict.keys():
         
 print('common LR count %d'%len(csv_record))
 
-##### scale the attention scores from 0 to 1 : low score representing higher attention ########
+##### scale the attention scores from 0 to 1 : high score representing higher attention ########
 score_distribution = []
 for k in range (1, len(csv_record)):
     score_distribution.append(csv_record[k][8])
@@ -840,11 +840,7 @@ for k in range (1, len(csv_record)):
     scaled_score = (csv_record[k][8]-min_score)/(max_score-min_score) 
     csv_record[k][8] = scaled_score
 
-'''
-# now, flip the scores so that higher score (~1) will represent higher attention scores ############
-for k in range (1, len(csv_record)):
-    csv_record[k][8] =  (1 - csv_record[k][8]) + .1 # so that no score is completely zero
-'''
+
 ##### save the file for downstream analysis ########
 csv_record_final = []
 csv_record_final.append(csv_record[0])
