@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_130355_A1' #'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -315,30 +315,38 @@ elif data_name == 'PDAC_140694':
             
     barcode_type=dict()
     for i in range (1, len(pathologist_label)):
-        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
-        '''
-        if 'tumor_LVI' in pathologist_label[i][1]:
-            barcode_type[pathologist_label[i][0]] = 'tumor_LVI'
-        elif 'tumor_PNI' in pathologist_label[i][1]:
-            barcode_type[pathologist_label[i][0]] = 'tumor_PNI'
-        elif 'tumor_stroma' in pathologist_label[i][1]:
-            barcode_type[pathologist_label[i][0]] = 'tumor_stroma'
-        elif 'tumor_vs_acinar' in pathologist_label[i][1]:
-            barcode_type[pathologist_label[i][0]] = 'tumor_vs_acinar'     
-        elif 'nerve' in pathologist_label[i][1]: 
-            barcode_type[pathologist_label[i][0]] = 'nerve'
-        elif 'vessel' in pathologist_label[i][1]: 
-            barcode_type[pathologist_label[i][0]] = 'vessel'
-        #elif pathologist_label[i][1] =='stroma_deserted':
-        #    barcode_type[pathologist_label[i][0]] = 'stroma_deserted'
-        #elif pathologist_label[i][1] =='acinar_reactive':
-        #    barcode_type[pathologist_label[i][0]] = 'acinar_reactive'
-        else:
-            barcode_type[pathologist_label[i][0]] = 'others'
-        '''  
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+	    
+elif data_name == 'PDAC_130355_B1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/V10M26-61_B1_IX_annotation_pathology.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+	    
+elif data_name == 'PDAC_130355_A1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/V10M25-61_A1_N_130355_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
 
 ###############################  read which spots have self loops ################################################################
-with gzip.open(current_directory +'self_loop_record_'+args.data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
+with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
     self_loop_found = pickle.load(fp)
     
 
