@@ -492,7 +492,7 @@ for layer in range (0, 2):
 layer = -1
 percentage_value = 0
 
-for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
+for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1 
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
