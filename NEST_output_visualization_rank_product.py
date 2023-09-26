@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_130355_A1' #'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_130355_B1' #'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -111,7 +111,24 @@ elif data_name == 'PDAC_140694':
     parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
     parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
     args = parser.parse_args()
-
+	
+elif data_name == 'PDAC_130355_B1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_B1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_B1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98.1
+    
+elif data_name == 'PDAC_130355_A1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_A1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_A1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98.7
 ####### get the gene id, cell barcode, cell coordinates ######
 
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -142,7 +159,7 @@ if data_name == 'LUAD_GSM5702473_TD1':
 else:
     adata_h5 = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
     print(adata_h5)
-    sc.pp.filter_genes(adata_h5, min_cells=1)
+    sc.pp.filter_genes(adata_h5, min_cells=filter_min_cell)
     print(adata_h5)
     gene_ids = list(adata_h5.var_names)
     coordinates = adata_h5.obsm['spatial']
