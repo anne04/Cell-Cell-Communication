@@ -116,8 +116,7 @@ def totalPlot(df, features, outPath):
 
   return
 ##########################################################
-
-data_name = 'V1_Human_Lymph_Node_spatial' #'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_130355_B1' #'V1_Human_Lymph_Node_spatial' #'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 current_directory = '/cluster/projects/schwartzgroup/fatema/find_ccc/'
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -148,6 +147,23 @@ elif data_name == 'PDAC_64630':
     parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
     args = parser.parse_args()
 
+elif data_name == 'PDAC_130355_B1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_B1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_B1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98.1
+    
+elif data_name == 'PDAC_130355_A1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp2_A1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_A1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98.7
 
 elif data_name == 'PDAC_140694':
     parser = argparse.ArgumentParser()
@@ -165,7 +181,7 @@ if data_name == 'LUAD_GSM5702473_TD1':
     temp = sc.read_10x_mtx(args.data_path)
     print(temp)
     #sc.pp.log1p(temp)
-    sc.pp.filter_genes(temp, min_cells=1)
+    sc.pp.filter_genes(temp, min_cells=filter_min_cell)
     print(temp)
     #sc.pp.highly_variable_genes(temp) #3952
     #temp = temp[:, temp.var['highly_variable']]
@@ -192,7 +208,7 @@ if data_name == 'LUAD_GSM5702473_TD1':
 else:
     adata_h5 = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
     print(adata_h5)
-    sc.pp.filter_genes(adata_h5, min_cells=1)
+    sc.pp.filter_genes(adata_h5, min_cells=filter_min_cell)
     print(adata_h5)
     gene_ids = list(adata_h5.var_names)
     coordinates = adata_h5.obsm['spatial']
@@ -224,171 +240,179 @@ node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
 
 
 ####### load annotations ##############################################
-
-'''
-pathologist_label_file='/cluster/home/t116508uhn/human_lymphnode_Spatial10X_manual_annotations.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][1] == 'GC': 
-        barcode_type[pathologist_label[i][0]] = 1 
-    #elif pathologist_label[i][1] =='':
-    #    barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
-    else:
-        barcode_type[pathologist_label[i][0]] = 0
-'''
-
-'''
-pathologist_label_file='/cluster/home/t116508uhn/64630/spot_vs_type_dataframe_V1_HumanLympNode.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-	
-spot_label = []
-for i in range (1, len(pathologist_label)):
-    spot_label.append([pathologist_label[i][0], float(pathologist_label[i][1]), float(pathologist_label[i][2]), float(pathologist_label[i][3])])
+if data_name == 'LUAD_GSM5702473_TD1':
+    '''
+    ccc_too_many_cells_LUAD = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCST/exp2_D1_ccc_toomanycells_cluster.csv')
+    ccc_too_many_cells_LUAD_dict = dict()
+    for i in range(0, len(ccc_too_many_cells_LUAD)):
+        ccc_too_many_cells_LUAD_dict[ccc_too_many_cells_LUAD['cell'][i]] = int(ccc_too_many_cells_LUAD['cluster'][i])
     
-spot_label = sorted(spot_label, key = lambda x: x[3], reverse=True) # descending order of 
-barcode_Tcell = []
-barcode_B = []
-barcode_GC = []
-for i in range (0, len(spot_label)):
-    if spot_label[i][1] >= (spot_label[i][2] + spot_label[i][3])*2:
-        barcode_Tcell.append(spot_label[i][0])
-    elif spot_label[i][2] >= (spot_label[i][1] + spot_label[i][3])*2:
-        barcode_B.append(spot_label[i][0])
-    elif spot_label[i][3] >= (spot_label[i][1] + spot_label[i][2])*2:
-        barcode_GC.append(spot_label[i][0])
-       
-barcode_type=dict()
-for i in range (0, len(barcode_Tcell)):
-    barcode_type[barcode_Tcell[i]] = 1 # tcell
+    for i in range(0, len(barcode_info)):
+        barcode_info[i][3] = ccc_too_many_cells_LUAD_dict[barcode_info[i][0]]
+    	
+    '''
+    barcode_type=dict()
+    for i in range (0, len(barcode_info)):
+        barcode_type[barcode_info[i][0]] = 0 
     
-for i in range (0, len(barcode_B)):
-    barcode_type[barcode_B[i]] = 2
-  
-for i in range (0, len(barcode_GC)):
-    barcode_type[barcode_GC[i]] = 3
     
-for i in range (0, len(spot_label)):
-    if spot_label[i][0] not in barcode_type:
-        barcode_type[spot_label[i][0]] = 0
-#############################################################################
-data_list=dict()
-data_list['pathology_label']=[]
-data_list['X']=[]
-data_list['Y']=[]
-
-for i in range (0, len(barcode_info)):
-    data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
-    data_list['X'].append(barcode_info[i][1])
-    data_list['Y'].append(barcode_info[i][2])
-
-
-data_list_pd = pd.DataFrame(data_list)
-set1 = altairThemes.get_colour_scheme("Set1", 4)
-set1[0] = '#000000'
-
-chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
-    alt.X('X', scale=alt.Scale(zero=False)),
-    alt.Y('Y', scale=alt.Scale(zero=False)),
-    shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
-    color=alt.Color('pathology_label:N', scale=alt.Scale(range=set1)),
-    tooltip=['pathology_label']
-)
-
-save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'V1_humanLymphNode.html') #   
+elif data_name == 'V1_Human_Lymph_Node_spatial':
+    '''
+    pathologist_label_file='/cluster/home/t116508uhn/human_lymphnode_Spatial10X_manual_annotations.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+    
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        if pathologist_label[i][1] == 'GC': 
+            barcode_type[pathologist_label[i][0]] = 1 
+        #elif pathologist_label[i][1] =='':
+        #    barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
+        else:
+            barcode_type[pathologist_label[i][0]] = 0
+    '''
+    pathologist_label_file=current_directory + '/spot_vs_type_dataframe_V1_HumanLympNode.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+    	
+    spot_label = []
+    for i in range (1, len(pathologist_label)):
+        spot_label.append([pathologist_label[i][0], float(pathologist_label[i][1]), float(pathologist_label[i][2]), float(pathologist_label[i][3])])
         
-'''
-
-'''
-########## sabrina ###########################################	
-pathologist_label_file='/cluster/projects/schwartzgroup/fatema/find_ccc/singleR_spot_annotation_Sabrina.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if pathologist_label[i][1] == 'tumor': #'Tumour':
-        barcode_type[pathologist_label[i][0]] = 1 #'tumor'
-    elif pathologist_label[i][1] =='stroma_deserted':
-        barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
-    elif pathologist_label[i][1] =='acinar_reactive':
-        barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
-    else:
-        barcode_type[pathologist_label[i][0]] = 0 #'zero' 
-'''	
-#################################################################
-pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)	
-	
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
-    
-		
-
-'''
-spot_type = []
-pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
-pathologist_label=[]
-with open(pathologist_label_file) as file:
-    csv_file = csv.reader(file, delimiter=",")
-    for line in csv_file:
-        pathologist_label.append(line)
-        spot_type.append(line[1])
+    spot_label = sorted(spot_label, key = lambda x: x[3], reverse=True) # descending order of 
+    barcode_Tcell = []
+    barcode_B = []
+    barcode_GC = []
+    for i in range (0, len(spot_label)):
+        if spot_label[i][1] >= (spot_label[i][2] + spot_label[i][3])*2:
+            barcode_Tcell.append(spot_label[i][0])
+        elif spot_label[i][2] >= (spot_label[i][1] + spot_label[i][3])*2:
+            barcode_B.append(spot_label[i][0])
+        elif spot_label[i][3] >= (spot_label[i][1] + spot_label[i][2])*2:
+            barcode_GC.append(spot_label[i][0])
+           
+    barcode_type=dict()
+    for i in range (0, len(barcode_Tcell)):
+        barcode_type[barcode_Tcell[i]] = 1 # tcell
         
-barcode_type=dict()
-for i in range (1, len(pathologist_label)):
-    if 'tumor_LVI' in pathologist_label[i][1]:
-        barcode_type[pathologist_label[i][0]] = 'tumor_LVI'
-    elif 'tumor_PNI' in pathologist_label[i][1]:
-        barcode_type[pathologist_label[i][0]] = 'tumor_PNI'
-    elif 'tumor_stroma' in pathologist_label[i][1]:
-        barcode_type[pathologist_label[i][0]] = 'tumor_stroma'
-    elif 'tumor_vs_acinar' in pathologist_label[i][1]:
-        barcode_type[pathologist_label[i][0]] = 'tumor_vs_acinar'     
-    elif 'nerve' in pathologist_label[i][1]: 
-        barcode_type[pathologist_label[i][0]] = 'nerve'
-    elif 'vessel' in pathologist_label[i][1]: 
-        barcode_type[pathologist_label[i][0]] = 'vessel'
-    #elif pathologist_label[i][1] =='stroma_deserted':
-    #    barcode_type[pathologist_label[i][0]] = 'stroma_deserted'
-    #elif pathologist_label[i][1] =='acinar_reactive':
-    #    barcode_type[pathologist_label[i][0]] = 'acinar_reactive'
-    else:
-        barcode_type[pathologist_label[i][0]] = 'others'
-'''
-#############################################################################
-'''
-ccc_too_many_cells_LUAD = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCST/exp2_D1_ccc_toomanycells_cluster.csv')
-ccc_too_many_cells_LUAD_dict = dict()
-for i in range(0, len(ccc_too_many_cells_LUAD)):
-    ccc_too_many_cells_LUAD_dict[ccc_too_many_cells_LUAD['cell'][i]] = int(ccc_too_many_cells_LUAD['cluster'][i])
+    for i in range (0, len(barcode_B)):
+        barcode_type[barcode_B[i]] = 2
+      
+    for i in range (0, len(barcode_GC)):
+        barcode_type[barcode_GC[i]] = 3
+        
+    for i in range (0, len(spot_label)):
+        if spot_label[i][0] not in barcode_type:
+            barcode_type[spot_label[i][0]] = 0
+    #############################################################################
+    '''
+    data_list=dict()
+    data_list['pathology_label']=[]
+    data_list['X']=[]
+    data_list['Y']=[]
+    
+    for i in range (0, len(barcode_info)):
+        data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(barcode_info[i][2])
+    
+    
+    data_list_pd = pd.DataFrame(data_list)
+    set1 = altairThemes.get_colour_scheme("Set1", 4)
+    set1[0] = '#000000'
+    
+    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
+        color=alt.Color('pathology_label:N', scale=alt.Scale(range=set1)),
+        tooltip=['pathology_label']
+    )
+    
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+'V1_humanLymphNode.html') #   
+    '''            
+elif data_name == 'PDAC_64630':
+    pathologist_label_file='/cluster/home/t116508uhn/IX_annotation_artifacts.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)	
+    	
+    barcode_type=dict() # record the type (annotation) of each spot (barcode)
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1]
+        
+    '''
+    ########## sabrina ###########################################	
+    pathologist_label_file='/cluster/projects/schwartzgroup/fatema/find_ccc/singleR_spot_annotation_Sabrina.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+    
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        if pathologist_label[i][1] == 'tumor': #'Tumour':
+            barcode_type[pathologist_label[i][0]] = 1 #'tumor'
+        elif pathologist_label[i][1] =='stroma_deserted':
+            barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
+        elif pathologist_label[i][1] =='acinar_reactive':
+            barcode_type[pathologist_label[i][0]] = 2 #'acinar_reactive'
+        else:
+            barcode_type[pathologist_label[i][0]] = 0 #'zero' 
+    '''	
+    #################################################################		
+elif data_name == 'PDAC_140694':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/V10M25-060_C1_T_140694_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+	    
+elif data_name == 'PDAC_130355_B1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/V10M26-61_B1_IX_annotation_pathology.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+	    
+elif data_name == 'PDAC_130355_A1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/V10M25-61_A1_N_130355_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
 
-for i in range(0, len(barcode_info)):
-    barcode_info[i][3] = ccc_too_many_cells_LUAD_dict[barcode_info[i][0]]
-	
-
-barcode_type=dict()
-for i in range (0, len(barcode_info)):
-    barcode_type[barcode_info[i][0]] = 0 
-'''
 ##### load input graph ##########################
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
