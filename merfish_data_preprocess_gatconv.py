@@ -645,7 +645,7 @@ for layer in range (0, 2):
 
 layer = -1
 percentage_value = 0
-for l in [3]: # 2 = layer 2, 3 = layer 1
+for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
@@ -1142,8 +1142,45 @@ outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
 ######################### 3D plotting #####################################################################################################
+plt.clf()
 node_xyz = np.array(coordinates)
+edge_xyz = []
+for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
+    i = csv_record_final[k][6]
+    j = csv_record_final[k][7]
+    coordinate_i = coordinate[i]
+    coordinate_j = coordinate[j]
+    edge_i_j = (coordinate_i, coordinate_j)
+    edge_xyz.append(edge_i_j)
 
+edge_i_j = np.array(edge_i_j)
+################
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
+# Plot the nodes - alpha is scaled by "depth" automatically
+ax.scatter(*node_xyz.T, s=100, ec="w")
+# Plot the edges
+for vizedge in edge_xyz:
+    ax.plot(*vizedge.T, color="tab:gray")
+
+_format_axes(ax)
+fig.tight_layout()
+save_path = '/cluster/home/t116508uhn/64630/'
+plt.savefig(save_path+'3d_merfish.svg', dpi=400) #
+plt.clf()
+
+def _format_axes(ax):
+    """Visualization options for the 3D axes."""
+    # Turn gridlines off
+    ax.grid(False)
+    # Suppress tick labels
+    for dim in (ax.xaxis, ax.yaxis, ax.zaxis):
+        dim.set_ticks([])
+    # Set axes labels
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+###############
 
 ############################  Network Plot ##############################################################################################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
