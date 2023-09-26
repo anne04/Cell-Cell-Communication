@@ -127,7 +127,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microgli
 
 
 ##########
-options = 'Female_Virgin_ParentingExcitatory' #  'Female_Parenting_Excitatory' #  'Female_Naive_Excitatory' #
+options =  'Female_Naive_Excitatory' #'Female_Virgin_ParentingExcitatory' #  'Female_Parenting_Excitatory' # 
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default="/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_mouse_cortex/" , help='The path to dataset') 
@@ -575,7 +575,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
     pickle.dump(coordinates, fp)
 
 
-#### read for 3D  (x, y, bregma) ########
+#### read for 3D  (x, y, bregma) #######################################################
 animal_id = 1
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_xyz_3d', 'rb') as fp:  #b, a:[0:5]  _filtered 
     row_col, edge_weight, lig_rec = pickle.load(fp)
@@ -587,9 +587,6 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
     coordinates = pickle.load(fp)
 
-
-
-##################################################################################################
 
 ###########################################################Visualization starts ##################
 animal_id = 24 #19 #
@@ -637,7 +634,7 @@ for cell_id in microglia_cell_id:
 '''     
 ###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 5
+total_runs = 4 #5
 start_index = 0
 
 distribution_rank = []
@@ -648,7 +645,7 @@ for layer in range (0, 2):
 
 layer = -1
 percentage_value = 0
-for l in [2, 3]: # 2 = layer 2, 3 = layer 1
+for l in [3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
     for run_time in range (start_index, start_index+total_runs):
@@ -656,8 +653,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #run_time = 2
         run = run_time
         print('run %d'%run)
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
+        X_attention_filename = 'new_alignment/Embedding_data_ccc_rgcn/merfish_data_Female_Naive_Excitatory/'+'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
     
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
@@ -951,19 +948,20 @@ for k in range (1, len(csv_record)):
     csv_record_final.append(csv_record[k])
 
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv', index=False, header=False)
 
 ######################### read the NEST output in csv format ####################################################
 current_directory = '/cluster/home/t116508uhn/64630/'
-
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'.csv'
+#filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv'
 #filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
 
 ## sort the edges based on their rank (column 4 = score) column, low to high, low being higher attention score
-top_edge_count = 3000 #len(csv_record) # 3000 = microglia and 1000=general
+top_edge_count = 1000 #len(csv_record) # 3000 = microglia and 1000=general
 csv_record = sorted(csv_record, key = lambda x: x[4])
 
 ## add the column names and take first top_edge_count edges
@@ -976,8 +974,11 @@ i=0
 j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
 
-############################################### Optional filtering ########################################################
+############################################################################################################################
 
+
+############################################### Optional filtering ########################################################
+'''
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
 #region_of_interest = [...] 
 csv_record_final_temp = []
@@ -991,7 +992,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
         
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
-
+'''
 
 ######################## connected component finding #################################
 
@@ -1139,6 +1140,9 @@ df = preprocessDf(df)
 p = plot(df)
 outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
+
+######################### 3D plotting #####################################################################################################
+node_xyz = np.array(coordinates)
 
 
 ############################  Network Plot ##############################################################################################
