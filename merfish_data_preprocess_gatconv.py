@@ -1148,12 +1148,12 @@ edge_xyz = []
 for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]
-    coordinate_i = coordinate[i]
-    coordinate_j = coordinate[j]
+    coordinate_i = coordinates[i]
+    coordinate_j = coordinates[j]
     edge_i_j = (coordinate_i, coordinate_j)
     edge_xyz.append(edge_i_j)
 
-edge_i_j = np.array(edge_i_j)
+edge_xyz = np.array(edge_xyz)
 ################
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
@@ -1193,8 +1193,9 @@ y_index=[]
 colors_point = []
 for i in range (0, len(barcode_info)):    
     ids.append(i)
-    x_index.append(barcode_info[i][1])
-    y_index.append(-barcode_info[i][2])    
+    x_index.append(barcode_info[i][1]*3)
+    y_index.append(-barcode_info[i][2]*3) 
+	z_index.append(barcode_info[i][3]*3) 
     colors_point.append(colors[barcode_info[i][3]]) 
   
 max_x = np.max(x_index)
@@ -1206,8 +1207,8 @@ import networkx as nx
 g = nx.MultiDiGraph(directed=True) #nx.Graph()
 for i in range (0, len(barcode_info)):
     marker_size = 'circle'
-    label_str = barcode_info[i][4] # str(i)+'_c:'+str(barcode_info[i][3]) # 
-    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
+    label_str =  str(i)+'_c:'+str(barcode_info[i][3]) # barcode_info[i][4] #
+    g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), z=int(z_index[i]) label = label_str, pos = str(x_index[i])+","+str(y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True
 
