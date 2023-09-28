@@ -52,7 +52,7 @@ if __name__ == "__main__":
     args.embedding_data_path = args.embedding_data_path + args.data_name +'/'
     args.model_path = args.model_path + args.data_name +'/'
     #args.result_path = args.result_path +'/'+ args.data_name +'/'
-    args.model_load_path = args.model_load_path + args.data_name +'/'
+    args.model_load_path = args.model_load_path + args.data_name +'/' 
 
     print(args.model_name+', '+str(args.heads)+', '+args.training_data+', '+str(args.hidden) )
 
