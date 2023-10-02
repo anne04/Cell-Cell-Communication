@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_130355_B1' #'PDAC_140694' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_140694' #'PDAC_130355_B1' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -111,6 +111,8 @@ elif data_name == 'PDAC_140694':
     parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
     parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
     args = parser.parse_args()
+    filter_min_cell = 1
+    threshold_expression = 98
 	
 elif data_name == 'PDAC_130355_B1':
     parser = argparse.ArgumentParser()
