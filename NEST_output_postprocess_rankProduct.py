@@ -116,7 +116,7 @@ def totalPlot(df, features, outPath):
 
   return
 ##########################################################
-data_name = 'PDAC_130355_B1' #'V1_Human_Lymph_Node_spatial' #'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_140694' #'PDAC_130355_B1' #'V1_Human_Lymph_Node_spatial' #'PDAC_64630' # 'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 current_directory = '/cluster/projects/schwartzgroup/fatema/find_ccc/'
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -173,7 +173,8 @@ elif data_name == 'PDAC_140694':
     #parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
     #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
     args = parser.parse_args()
-
+    filter_min_cell = 1
+    threshold_expression = 98
 ####### get the gene id, cell barcode, cell coordinates ######
 
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -439,7 +440,7 @@ for index in range (0, len(row_col)):
         lig_rec_dict[i][j].append(lig_rec[index])  
         self_loop_found[i][j] = ''
 
-with gzip.open(current_directory+'self_loop_record_'+args.data_name, 'wb') as fp:  #b, a:[0:5]   _filtered
+with gzip.open('/cluster/home/t116508uhn/64630/'+'self_loop_record_'+args.data_name, 'wb') as fp:  #b, a:[0:5]   _filtered
 	pickle.dump(self_loop_found, fp)
 
 ############################################################################
@@ -706,7 +707,7 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
                 if i==j:
                     if len(lig_rec_dict[i][j])==0:
                         continue
-                
+                 
                 atn_score_list = attention_scores[i][j]
                 for k in range (0, len(atn_score_list)):
                     if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
