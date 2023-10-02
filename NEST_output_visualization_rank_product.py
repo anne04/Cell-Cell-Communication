@@ -140,7 +140,7 @@ if data_name == 'LUAD_GSM5702473_TD1':
     sc.pp.filter_genes(temp, min_cells=1)
     print(temp)
     
-    gene_ids = list(temp.var_names) 
+    #gene_ids = list(temp.var_names) 
     cell_barcode = np.array(temp.obs.index)
     
     # now read the tissue position file. It has the format: 
@@ -161,12 +161,12 @@ if data_name == 'LUAD_GSM5702473_TD1':
 else:
     adata_h5 = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') #count_file=args.data_name+'_filtered_feature_bc_matrix.h5' )
     print(adata_h5)
-    sc.pp.filter_genes(adata_h5, min_cells=filter_min_cell)
-    print(adata_h5)
-    gene_ids = list(adata_h5.var_names)
+    #sc.pp.filter_genes(adata_h5, min_cells=filter_min_cell)
+    #print(adata_h5)
+    #gene_ids = list(adata_h5.var_names)
     coordinates = adata_h5.obsm['spatial']
     cell_barcode = np.array(adata_h5.obs.index)
-    temp = adata_h5.X
+    #temp = adata_h5.X
 
 
 ######################### get the cell vs gene matrix ##################
@@ -192,39 +192,12 @@ for cell_code in cell_barcode:
 
 ####### load annotations ##############################################
 if data_name == 'LUAD_GSM5702473_TD1':
-    '''
-    ccc_too_many_cells_LUAD = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCST/exp2_D1_ccc_toomanycells_cluster.csv')
-    ccc_too_many_cells_LUAD_dict = dict()
-    for i in range(0, len(ccc_too_many_cells_LUAD)):
-        ccc_too_many_cells_LUAD_dict[ccc_too_many_cells_LUAD['cell'][i]] = int(ccc_too_many_cells_LUAD['cluster'][i])
-    
-    for i in range(0, len(barcode_info)):
-        barcode_info[i][3] = ccc_too_many_cells_LUAD_dict[barcode_info[i][0]]
-    	
-    '''
     barcode_type=dict()
     for i in range (0, len(barcode_info)):
         barcode_type[barcode_info[i][0]] = 0 
     
     
 elif data_name == 'V1_Human_Lymph_Node_spatial':
-    '''
-    pathologist_label_file='/cluster/home/t116508uhn/human_lymphnode_Spatial10X_manual_annotations.csv' #IX_annotation_artifacts.csv' #
-    pathologist_label=[]
-    with open(pathologist_label_file) as file:
-        csv_file = csv.reader(file, delimiter=",")
-        for line in csv_file:
-            pathologist_label.append(line)
-    
-    barcode_type=dict()
-    for i in range (1, len(pathologist_label)):
-        if pathologist_label[i][1] == 'GC': 
-            barcode_type[pathologist_label[i][0]] = 1 
-        #elif pathologist_label[i][1] =='':
-        #    barcode_type[pathologist_label[i][0]] = 0 #'stroma_deserted'
-        else:
-            barcode_type[pathologist_label[i][0]] = 0
-    '''
     pathologist_label_file=current_directory + '/spot_vs_type_dataframe_V1_HumanLympNode.csv' #IX_annotation_artifacts.csv' #
     pathologist_label=[]
     with open(pathologist_label_file) as file:
@@ -430,7 +403,7 @@ for record in range (1, len(csv_record_final)-1):
     i = csv_record_final[record][6]
     label = barcode_info[i][3]
     csv_record_final[record][5] = label
-
+ 
 ############################################### Optional filtering ########################################################
 '''
 ## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
