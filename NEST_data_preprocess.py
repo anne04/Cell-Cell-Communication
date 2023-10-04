@@ -22,8 +22,10 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
-spot_diameter = 89.43 #pixels
+import argparse
 
+spot_diameter = 89.43 #pixels
+data_name = 'PDAC_130355_D1'
 
 
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -84,7 +86,7 @@ elif data_name == 'PDAC_140694':
 
 elif data_name == 'PDAC_130355_D1':
     parser = argparse.ArgumentParser()
-    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1_D1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1/exp1_D1/outs/' , help='The path to dataset') 
     parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
     parser.add_argument( '--data_name', type=str, default='PDAC_130355_D1', help='The name of dataset')
     #parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
