@@ -23,6 +23,9 @@ import copy
 import altairThemes
 import altair as alt
 spot_diameter = 89.43 #pixels
+
+
+
 if data_name == 'LUAD_GSM5702473_TD1':
     parser = argparse.ArgumentParser()
     parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/' , help='The path to dataset') 
@@ -77,6 +80,18 @@ elif data_name == 'PDAC_140694':
     args = parser.parse_args()
     filter_min_cell = 1
     threshold_expression = 98
+
+
+elif data_name == 'PDAC_130355_D1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1_D1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_D1', help='The name of dataset')
+    #parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
+    #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98
 ####### get the gene id, cell barcode, cell coordinates ######
 
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -129,8 +144,6 @@ barcode_info=[]
 for cell_code in cell_barcode:
     barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
     i=i+1
-
-
 
 
 
