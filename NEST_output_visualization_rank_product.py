@@ -577,13 +577,23 @@ for i in range (0, len(barcode_info)):
     g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
 
 
+
+# scale the edge scores [0 to 1] to make plot work
+score_list = []
+for k in range (1, len(csv_record_final)-1):
+    score_list.append(csv_record_final[k][8])
+
+min_score = np.min(score_list)
+max_score = np.max(score_list)
+
 count_edges = 0
 for k in range (1, len(csv_record_final)-1):
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]    
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
-    edge_score = csv_record_final[k][8] 
+    edge_score = csv_record_final[k][8]
+    edge_score = (max_score-edge_score)/(max_score-min_score)   
     title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
     g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
     count_edges = count_edges + 1
