@@ -589,7 +589,9 @@ max_score = np.max(score_list)
 count_edges = 0
 for k in range (1, len(csv_record_final)-1):
     i = csv_record_final[k][6]
-    j = csv_record_final[k][7]    
+    j = csv_record_final[k][7] 
+    #if colors_point[i]==:
+    #    continue
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
     edge_score = csv_record_final[k][8]
