@@ -29,7 +29,7 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 alt.themes.enable("publishTheme")
 
 ##########################################################
-# written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
+# written by GW                                                                                                                                                                                                                                                                                                                                                              
 import scipy.stats
 
 #sys.path.append("/home/gw/code/utility/altairThemes/")
@@ -1142,6 +1142,25 @@ outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
 ######################### 3D plotting #####################################################################################################
+for i in range (0, coordinates.shape[0]):
+    for d in range (0, coordinates.shape[1]):
+        coordinates[i][d] = coordinates[i][d]*10
+
+from mpl_toolkits.mplot3d import Axes3D
+def _format_axes(ax):
+    """Visualization options for the 3D axes."""
+    # Turn gridlines off
+    ax.grid(False)
+    # Suppress tick labels
+    for dim in (ax.xaxis, ax.yaxis, ax.zaxis):
+        dim.set_ticks([])
+    # Set axes labels
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+	
+###############
+
 plt.clf()
 node_xyz = np.array(coordinates)
 edge_xyz = []
@@ -1156,31 +1175,20 @@ for k in range (1, len(csv_record_final)-1): # last record is a dummy for histog
 edge_xyz = np.array(edge_xyz)
 ################
 fig = plt.figure()
-ax = fig.add_subplot(111, projection="3d")
+ax = fig.add_subplot(projection="3d")
 # Plot the nodes - alpha is scaled by "depth" automatically
-ax.scatter(*node_xyz.T, s=100, ec="w")
+ax.scatter(*node_xyz.T, s=.1, alpha=0.5, c="#4F4F4F")
 # Plot the edges
 for vizedge in edge_xyz:
-    ax.plot(*vizedge.T, color="tab:gray")
+    ax.plot(*vizedge.T, color="tab:blue", linewidth=.6 )
 
 _format_axes(ax)
-fig.tight_layout()
+#fig.tight_layout()
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'3d_merfish.svg', dpi=400) #
 plt.clf()
 
-def _format_axes(ax):
-    """Visualization options for the 3D axes."""
-    # Turn gridlines off
-    ax.grid(False)
-    # Suppress tick labels
-    for dim in (ax.xaxis, ax.yaxis, ax.zaxis):
-        dim.set_ticks([])
-    # Set axes labels
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-###############
+
 
 ############################  Network Plot ##############################################################################################
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
