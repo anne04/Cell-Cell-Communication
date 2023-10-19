@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_64630' #'PDAC_140694' #'PDAC_130355_B1' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_130355_D1' #'PDAC_64630' #'PDAC_140694' #'PDAC_130355_B1' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -131,6 +131,17 @@ elif data_name == 'PDAC_130355_A1':
     args = parser.parse_args()
     filter_min_cell = 5
     threshold_expression = 98.7
+
+elif data_name == 'PDAC_130355_D1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1/exp1_D1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_D1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98
+
+
 ####### get the gene id, cell barcode, cell coordinates ######
 
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -336,6 +347,21 @@ elif data_name == 'PDAC_130355_A1':
     barcode_type=dict()
     for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+
+elif data_name == 'PDAC_130355_D1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/v10M25-060_D1_N_130355_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+
 
 ###############################  read which spots have self loops ################################################################
 with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
