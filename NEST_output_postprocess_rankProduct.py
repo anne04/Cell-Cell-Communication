@@ -25,98 +25,9 @@ import altair as alt
 import argparse
 import gc
 
-spot_diameter = 89.43 #pixels
+
 ##########################################################
-# written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
-import scipy.stats
-import altairThemes
-import altair as alt
-
-alt.themes.register("publishTheme", altairThemes.publishTheme)
-# enable the newly registered theme
-alt.themes.enable("publishTheme")
-
-#sys.path.append("/home/gw/code/utility/altairThemes/")
-#if True:  # In order to bypass isort when saving
-#    import altairThemes
-
-def readCsv(x):
-  """Parse file."""
-  #colNames = ["method", "benchmark", "start", "end", "time", "memory"]
-  df = pd.read_csv(x, sep=",")
-
-  return df
-
-def preprocessDf(df):
-  """Transform ligand and receptor columns."""
-  df["ligand-receptor"] = df["ligand"] + '-' + df["receptor"]
-  df["component"] = df["component"] #.astype(str).str.zfill(2)
-
-  return df
-
-def statOrNan(xs, ys):
-  if len(xs) == 0 or len(ys) == 0:
-    return None
-  else:
-    return scipy.stats.mannwhitneyu(xs, ys)
-
-def summarizeStats(df, feature):
-  meanRes = df.groupby(["benchmark", "method"])[feature].mean()
-  statRes = df.groupby("benchmark").apply(lambda x: post.posthoc_ttest(x, val_col = feature, group_col = "method", p_adjust = "fdr_bh"))
-
-  return (meanRes, statRes)
-
-def writeStats(stats, feature, outStatsPath):
-  stats[0].to_csv(outStatsPath + "_feature_" + feature + "_mean.csv")
-  stats[1].to_csv(outStatsPath + "_feature_" + feature + "_test.csv")
-
-  return
-
-def plot(df):
-  set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  set1[0] = '#000000'
-  base = alt.Chart(df).mark_bar().encode(
-            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-            y=alt.Y("count()"),
-            color=alt.Color("component:N", scale = alt.Scale(range=set1)),
-            order=alt.Order("component:N", sort="ascending"),
-            tooltip=["component"]
-        )
-  p = base
-
-  return p
-'''
-def plot(df):
-  number = 20
-  cmap = plt.get_cmap('tab20')
-  colors = [cmap(i) for i in np.linspace(0, 1, number)]
-  for i in range (0, len(colors)): 
-    colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
-  
-  #set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  #set1[0] = '#000000'
-  base = alt.Chart(df).mark_bar().encode(
-            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-            y=alt.Y("count()"),
-            color=alt.Color("component:N", scale = alt.Scale(range=colors)),
-            order=alt.Order("component:N", sort="ascending"),
-            tooltip=["component"]
-        )
-  p = base
-
-  return p
-'''
-def totalPlot(df, features, outPath):
-
-  p = alt.hconcat(*map(lambda x: plot(df, x), features))
-
-  outPath = outPath + "_boxplot.html"
-
-  p.save(outPath)
-
-  return
-##########################################################
-data_name = 'PDAC_64630' # 'PDAC_140694' #'PDAC_130355_B1' #'V1_Human_Lymph_Node_spatial' #'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_130355_D1' #'PDAC_64630' # 'PDAC_140694' #'PDAC_130355_B1' #'V1_Human_Lymph_Node_spatial' #'LUAD_GSM5702473_TD1' #'PDAC_64630' #LUAD_GSM5702473_TD1
 current_directory = '/cluster/projects/schwartzgroup/fatema/find_ccc/'
 ##########################################################
 if data_name == 'LUAD_GSM5702473_TD1':
@@ -162,7 +73,16 @@ elif data_name == 'PDAC_130355_A1':
     args = parser.parse_args()
     filter_min_cell = 5
     threshold_expression = 98.7
-
+	
+elif data_name == 'PDAC_130355_D1':
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1/exp1_D1/outs/' , help='The path to dataset') 
+    parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
+    parser.add_argument( '--data_name', type=str, default='PDAC_130355_D1', help='The name of dataset')
+    args = parser.parse_args()
+    filter_min_cell = 5
+    threshold_expression = 98
+	
 elif data_name == 'PDAC_140694':
     parser = argparse.ArgumentParser()
     parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/V10M25-60_C1_PDA_140694_Pa_P_Spatial10x/outs/' , help='The path to dataset') 
@@ -411,16 +331,30 @@ elif data_name == 'PDAC_130355_A1':
     barcode_type=dict()
     for i in range (1, len(pathologist_label)):
         barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
+	    
+elif data_name == 'PDAC_130355_D1':
+    spot_type = []
+    pathologist_label_file='/cluster/home/t116508uhn/v10M25-060_D1_N_130355_Histology_annotation_IX.csv' #IX_annotation_artifacts.csv' #
+    pathologist_label=[]
+    with open(pathologist_label_file) as file:
+        csv_file = csv.reader(file, delimiter=",")
+        for line in csv_file:
+            pathologist_label.append(line)
+            spot_type.append(line[1])
+            
+    barcode_type=dict()
+    for i in range (1, len(pathologist_label)):
+        barcode_type[pathologist_label[i][0]] = pathologist_label[i][1] 
 
 ##### load input graph ##########################
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_c_'+'all_avg', 'rb') as fp:  #b, a:[0:5]           
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_synthetic_region1_onlyccc_70', 'wb') as fp:
 #    row_col, edge_weight = pickle.load(fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_kneepoint_woBlankedge', 'rb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
 datapoint_size = len(barcode_info)
@@ -504,7 +438,7 @@ chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_cccScore_distri
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
 total_runs = 5
-start_index = 5 # 0 #5 if pdac 64630
+start_index = 0 # 0 #5 if pdac 64630
 
 distribution_rank = []
 all_edge_sorted_by_rank = []
@@ -523,19 +457,8 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
         #run_time = 2
         run = run_time
         print('run %d'%run)
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_Female_Virgin_ParentingExcitatory_id24_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_r1_th500'+filename[run_time]+'attention_l1.npy'   
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_140694_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_70_attention.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'totalsynccc_gat_r1_2attr_noFeature_selective_lr_STnCCC_c_all_avg_bothlayer_attention_l1.npy' #a
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_3dim_'+filename[run_time]+'attention_l1.npy'
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_withlrFeature_bothAbove_cell98th_'+filename[run_time]+'attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAboveDensity_r2_attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_omnipath_threshold_distance_bothAboveDensity_attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_eitherAbove_cell_knee_'+filename[run_time]+'attention_l1.npy' #a
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_scaled_'+filename[run_time]+'attention_l1.npy' #a
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+        ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
     
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
         distribution = []
