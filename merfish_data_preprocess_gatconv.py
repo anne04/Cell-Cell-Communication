@@ -992,6 +992,23 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
         
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
+
+
+## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
+#region_of_interest = [...] 
+csv_record_final_temp = []
+csv_record_final_temp.append(csv_record_final[0])
+for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for histograms, so ignore it.
+    # if they are from different z value, then plot them
+    i = csv_record_final[record_idx][6]
+    j = csv_record_final[record_idx][7]
+    z_i = coordinates[i][2]
+    z_j = coordinates[j][2]
+    if z_i != z_j:
+        csv_record_final_temp.append(csv_record_final[record_idx])
+        
+csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
+csv_record_final = copy.deepcopy(csv_record_final_temp)
 '''
 
 ######################## connected component finding #################################
@@ -1180,7 +1197,7 @@ ax = fig.add_subplot(projection="3d")
 ax.scatter(*node_xyz.T, s=.1, alpha=0.5, c="#4F4F4F")
 # Plot the edges
 for vizedge in edge_xyz:
-    ax.plot(*vizedge.T, color="tab:blue", linewidth=.6 )
+    ax.plot(*vizedge.T, color="tab:green", linewidth=.6 )
 
 _format_axes(ax)
 #fig.tight_layout()
