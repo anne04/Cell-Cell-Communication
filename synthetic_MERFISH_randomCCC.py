@@ -27,9 +27,6 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
- 
-
-
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -41,12 +38,13 @@ args = parser.parse_args()
 threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'randomCCC_uniform_distribution' #'path_equally_spaced' #
+datatype = 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' #'path_equally_spaced' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
 '''
+
 cell_percent = 100 # choose at random N% ligand cells
 
 lr_gene_count = 44 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
@@ -181,6 +179,71 @@ def get_data(datatype):
         return temp_x, temp_y, ccc_regions
           
         
+    elif datatype == 'randomCCC_mix_distribution':
+	
+        datapoint_size = 5000
+        x_max = 500
+        x_min = 0
+        y_max = 300
+        y_min = 0
+	
+        a = x_min
+        b = x_max
+        #coord_x = np.random.randint(a, b, size=(datapoint_size))
+        coord_x = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+
+        a = y_min
+        b = y_max
+        coord_y = (b - a) * np.random.random_sample(size=datapoint_size//2) + a
+        #coord_y = np.random.randint(a, b, size=(datapoint_size))
+
+        temp_x = coord_x
+        temp_y = coord_y
+        region_list = [] 
+        
+        coord_x_t = np.random.normal(loc=200, scale=5, size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=150, scale=5, size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x, coord_x_t))
+        temp_y = np.concatenate((temp_y, coord_y_t))
+        region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+	
+        coord_x_t = np.random.normal(loc=100, scale=10, size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100, scale=10, size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x, coord_x_t))
+        temp_y = np.concatenate((temp_y, coord_y_t))
+        #region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        
+        coord_x_t = np.random.normal(loc=400,scale=15,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=100,scale=15,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x, coord_x_t))
+        temp_y = np.concatenate((temp_y, coord_y_t))
+        #region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        
+        coord_x_t = np.random.normal(loc=400,scale=20,size=datapoint_size//8)
+        coord_y_t = np.random.normal(loc=200,scale=20,size=datapoint_size//8)
+        temp_x = np.concatenate((temp_x, coord_x_t))
+        temp_y = np.concatenate((temp_y, coord_y_t))
+        region_list.append([min(coord_x_t), max(coord_x_t), min(coord_y_t), max(coord_y_t)])
+        
+        region_list.append([200, 350, 200, 300])
+        temp_x = list(temp_x)
+        temp_y = list(temp_y)
+        
+        concentrated_regions = []        
+        for i in range (0, len(temp_x)):
+            for region in region_list:
+                x_max = region[1]
+                x_min = region[0]
+                y_min = region[2]
+                y_max = region[3]
+                if temp_x[i]>=x_min and temp_x[i]<=x_max and temp_y[i]>=y_min and temp_y[i]<=y_max:
+                    concentrated_regions.append(i)
+                    
+        temp_x = np.array(temp_x)
+        temp_y = np.array(temp_y)
+              
+        return temp_x, temp_y, concentrated_regions
+                  
         
         
 
@@ -318,9 +381,9 @@ for i in range (rec_gene, lr_gene_count + non_lr_genes):
     
     
 #################
-start_loc = np.max(gene_distribution_inactive)+30
+start_loc = np.max(gene_distribution_inactive)+10
 rec_gene = lr_gene_count//2
-scale_active_distribution = 1 #0.01
+scale_active_distribution = 2 #0.01
 for i in range (0, 4):
     gene_exp_list = np.random.normal(loc=start_loc+(i%5),scale=scale_active_distribution,size=len(temp_x)) #
     np.random.shuffle(gene_exp_list) 
@@ -489,14 +552,13 @@ for i in range (0, 0): #(len(available_cells)*2)//3):
     for j in range (0, len(gene_id)): #
         cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
 ##############################
-'''
+
 # take quantile normalization.
 cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 #  cell_vs_gene = copy.deepcopy(cell_vs_gene_notNormalized) #copy.deepcopy(cell_vs_gene_org)
-'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
@@ -589,7 +651,7 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                     row_col.append([i,j])
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    edge_weight.append([dist_X[i,j], mean_ccc, cells_ligand_vs_receptor[i][j][k][3] ])
+                    edge_weight.append([dist_X[i,j], mean_ccc]) #, cells_ligand_vs_receptor[i][j][k][3] 
                     lig_rec.append(cells_ligand_vs_receptor[i][j][k][3])
                 if max_local < count_local:
                     max_local = count_local
@@ -622,7 +684,7 @@ total_cells = len(temp_x)
 options = options+ '_' + distance_measure  + '_cellCount' + str(total_cells)
 
 #options = options + '_f'
-options = options + '_3dim' 
+#options = options + '_2dim' 
 #options = options + '_scaled'
 
 
@@ -893,6 +955,7 @@ for index in range (0, len(row_col)):
 		
 positive_class = np.sum(total_type)
 negative_class = count - positive_class           
+
 ############# draw the points which are participating in positive classes  ######################
 ccc_index_dict = dict()     
 for i in lig_rec_dict_TP:
