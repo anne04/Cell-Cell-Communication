@@ -372,7 +372,7 @@ for i in range (0, datapoint_size):
 P_class = 0
 #####################################################################
 available_cells = np.arange(cell_count)
-gene_id = np.arange(lr_gene_count)
+gene_id = ligand_list
 active_cell_gene_dict = defaultdict(list)
 neighbour_of_actives = dict()
 active_count_max = (cell_count*3)//4
@@ -391,11 +391,10 @@ for i in range (0, len(available_cells)):
         ligand_gene = gene_id[j]
         cell_vs_gene[cell, ligand_gene] = gene_distribution_active[ligand_gene, cell]
         # make other genes off so that it does not act in other communications
-         
         for gene in range (0, lr_gene_count):
             if gene != ligand_gene:
                 cell_vs_gene[cell, gene] = min_lr_gene_count 
-         
+        
         ##############################################################
         receptor_gene_list = list(ligand_dict_dataset[ligand_gene].keys())
         #np.random.shuffle(receptor_gene_list)
@@ -404,9 +403,10 @@ for i in range (0, len(available_cells)):
             cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
             lig_rec_dict_TP[cell][receptor_cell].append(ligand_dict_dataset[ligand_gene][receptor_gene])
             P_class = P_class + 1
+	    
         #################################################################
+        '''
         # make other genes off so that it does not act in other communication
-         
         for gene in range (0, lr_gene_count):
             if gene not in receptor_gene_list:
                 cell_vs_gene[receptor_cell, gene] = min_lr_gene_count 
@@ -419,8 +419,8 @@ for i in range (0, len(available_cells)):
                 continue
             neighbour_of_actives[neighbor_cell] = ''
              
-            for gene in used_gene_list:
-                cell_vs_gene[neighbor_cell, gene] = min_lr_gene_count 
+            #for gene in used_gene_list:
+            cell_vs_gene[neighbor_cell, :] = min_lr_gene_count 
              
             
         for neighbor_cell in cell_neighborhood[receptor_cell]:
@@ -428,9 +428,9 @@ for i in range (0, len(available_cells)):
                 continue
             neighbour_of_actives[neighbor_cell] = ''
              
-            for gene in used_gene_list:
-                cell_vs_gene[neighbor_cell, gene] = min_lr_gene_count 
-     
+            #for gene in used_gene_list:
+            cell_vs_gene[neighbor_cell, :] = min_lr_gene_count 
+        '''
              
             
     if len(active_spot) == active_count_max:
@@ -488,29 +488,19 @@ for i in range (0, 0): #(len(available_cells)*2)//3):
     for j in range (0, len(gene_id)): #
         cell_vs_gene[cell, gene_id[j]] = min_lr_gene_count
 ##############################
+'''
 # take quantile normalization.
-
 cell_vs_gene_notNormalized = copy.deepcopy(cell_vs_gene)
 temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #, axis=0
 adata_X = np.transpose(temp)  
 cell_vs_gene = adata_X
 #  cell_vs_gene = copy.deepcopy(cell_vs_gene_notNormalized) #copy.deepcopy(cell_vs_gene_org)
-
-
+'''
 
 cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
-    '''
-    y_1 = np.histogram(cell_vs_gene[i])[0] # density: 
-    x = range(0, len(y_1))
-    kn = KneeLocator(x, y_1, curve='convex', direction='decreasing')
-    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]    
-    '''
-    x = range(1, len(y)+1)
-    kn = KneeLocator(x, y, curve='convex', direction='increasing')
-    kn_value = y[kn.knee-1]
-    
+    kn_value = 0
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97.7), np.percentile(y, 99) , kn_value])
 
 ###############
