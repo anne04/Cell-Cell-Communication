@@ -405,12 +405,13 @@ for i in range (0, len(available_cells)):
             P_class = P_class + 1
 	    
         #################################################################
-        '''
+        
         # make other genes off so that it does not act in other communication
+        '''
         for gene in range (0, lr_gene_count):
             if gene not in receptor_gene_list:
                 cell_vs_gene[receptor_cell, gene] = min_lr_gene_count 
-        
+        '''
         ###############################################################
         # now add all other neighbors of cell and receptor cell to the neighborhood list and discard them from available cell list next time
         used_gene_list = [ligand_gene] + receptor_gene_list
@@ -420,7 +421,7 @@ for i in range (0, len(available_cells)):
             neighbour_of_actives[neighbor_cell] = ''
              
             #for gene in used_gene_list:
-            cell_vs_gene[neighbor_cell, :] = min_lr_gene_count 
+            cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count 
              
             
         for neighbor_cell in cell_neighborhood[receptor_cell]:
@@ -429,8 +430,8 @@ for i in range (0, len(available_cells)):
             neighbour_of_actives[neighbor_cell] = ''
              
             #for gene in used_gene_list:
-            cell_vs_gene[neighbor_cell, :] = min_lr_gene_count 
-        '''
+            cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count 
+        
              
             
     if len(active_spot) == active_count_max:
