@@ -38,7 +38,7 @@ args = parser.parse_args()
 threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' #'path_equally_spaced' #
+datatype = 'randomCCC_equally_spaced' # 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' 
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -102,7 +102,7 @@ random_active_percent = 0
 
 
 def get_data(datatype):
-    if datatype == 'path_equally_spaced':
+    if datatype == 'randomCCC_equally_spaced':
         x_max = 50 #50 
         x_min = 0
         y_max = 60 #20 #30 
