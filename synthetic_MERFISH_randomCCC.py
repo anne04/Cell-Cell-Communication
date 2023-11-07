@@ -37,8 +37,8 @@ args = parser.parse_args()
 
 threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'randomCCC_equally_spaced' # 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' 
+distance_measure = 'knn'  # <-----------'threshold_dist' #
+datatype = 'randomCCC_uniform_distribution' #'randomCCC_mix_distribution' #'randomCCC_equally_spaced' # 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' 
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -456,7 +456,7 @@ for i in range (0, len(available_cells)):
         # make other genes off so that it does not act in other communications
         for gene in range (0, lr_gene_count):
             if gene != ligand_gene:
-                cell_vs_gene[cell, gene] = min_lr_gene_count 
+                cell_vs_gene[cell, gene] = 0 #min_lr_gene_count 
         
         ##############################################################
         receptor_gene_list = list(ligand_dict_dataset[ligand_gene].keys())
@@ -484,7 +484,8 @@ for i in range (0, len(available_cells)):
             neighbour_of_actives[neighbor_cell] = ''
              
             #for gene in used_gene_list:
-            cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count 
+            if neighbor_cell not in active_spot:
+                cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count #
              
             
         for neighbor_cell in cell_neighborhood[receptor_cell]:
@@ -493,7 +494,8 @@ for i in range (0, len(available_cells)):
             neighbour_of_actives[neighbor_cell] = ''
              
             #for gene in used_gene_list:
-            cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count 
+            if neighbor_cell not in active_spot:
+                cell_vs_gene[neighbor_cell, :] = 0 #min_lr_gene_count #0
         
              
             
@@ -564,7 +566,7 @@ cell_percentile = []
 for i in range (0, cell_vs_gene.shape[0]):
     y = sorted(cell_vs_gene[i])
     kn_value = 0
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 97.7), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -1053,7 +1055,7 @@ while percentage_value > 0:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('naive_model_HeavyNoise')
+    plot_dict['Type'].append('naive_model')
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
@@ -1215,13 +1217,9 @@ for run_time in range (0,total_runs):
     plot_dict_list.append(defaultdict(list))
     run = run_time
     print('run %d'%run)
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_6_path_knn10_f_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3 #_swappedLRid
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_relu_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_gatconv_3dim_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_4_path_threshold_distance_e_tanh_3dim_dropout_'+filename[run]+'_attention_l1.npy' #withFeature_4_pattern_overlapped_highertail, tp7p_,4_pattern_differentLRs, tp7p_broad_active, 4_r3,5_close, overlap_noisy, 6_r3
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_equidistant_th2p5_lrc105_cell3000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
     csv_record_dict = defaultdict(list)
@@ -1261,7 +1259,7 @@ for run_time in range (0,total_runs):
                     min_attention_score = scaled_score
                 distribution.append(scaled_score)
 				
-            print('min attention score with scaling %g'%min_attention_score)
+            #print('min attention score with scaling %g'%min_attention_score)
             #######################
             #plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
             save_path = '/cluster/home/t116508uhn/64630/'
