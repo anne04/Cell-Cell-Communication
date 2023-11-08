@@ -45,7 +45,8 @@ k_nn = 4 # #5 = h
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
 
-options =  'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' #'dt-path_mixture_of_distribution_lrc8_cp100_noise0_random_overlap_knn_cellCount2534_f_3dim'
+options =  'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
+'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' #'dt-path_mixture_of_distribution_lrc8_cp100_noise0_random_overlap_knn_cellCount2534_f_3dim'
 
 
 pathways = [] #['1','2','3','4','5','6','7','8']
@@ -53,7 +54,7 @@ types = [] #['secreted signaling', 'secreted signaling', 'secreted signaling', '
 lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_"+options+".csv")
 for i in range (0, len(lr_db)):
     types.append('secreted signaling')
-    pathways.append(str(i+1))
+    pathways.append(1) #str(i+1)
  
 
 
@@ -152,8 +153,8 @@ for pair_index in range(0, len(LR_pairs)):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
-    pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
+#    pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
 
 #######################################################################################
 import stlearn as st
