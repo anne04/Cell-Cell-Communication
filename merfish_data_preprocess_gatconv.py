@@ -81,27 +81,7 @@ def plot(df):
   p = base
 
   return p
-'''
-def plot(df):
-  number = 20
-  cmap = plt.get_cmap('tab20')
-  colors = [cmap(i) for i in np.linspace(0, 1, number)]
-  for i in range (0, len(colors)): 
-    colors[i] = matplotlib.colors.to_hex([colors[i][0], colors[i][1], colors[i][2], colors[i][3]])
-  
-  #set1 = altairThemes.get_colour_scheme("Set1", len(df["component"].unique()))
-  #set1[0] = '#000000'
-  base = alt.Chart(df).mark_bar().encode(
-            x=alt.X("ligand-receptor:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-            y=alt.Y("count()"),
-            color=alt.Color("component:N", scale = alt.Scale(range=colors)),
-            order=alt.Order("component:N", sort="ascending"),
-            tooltip=["component"]
-        )
-  p = base
 
-  return p
-'''
 def totalPlot(df, features, outPath):
 
   p = alt.hconcat(*map(lambda x: plot(df, x), features))
@@ -113,6 +93,7 @@ def totalPlot(df, features, outPath):
   return
 
 ###################
+
 meta_file = '/cluster/projects/schwartzgroup/fatema/MESSI/input/merfish_meta_Virgin_Parenting_Female.csv'
 df = pd.read_csv(meta_file)
 microglia_cell_id = []
@@ -154,7 +135,7 @@ with gzip.open(args.data_path + args.data_name, 'rb') as fp:
 #bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 #bregma_id = 0
 bregma_interest = [-0.09, 0.21]
-#for bregma_id in range (0, 1): #len(bregma)): #bregma:
+#for bregma_id in range (0, len(bregma)): #bregma:
 for animal_id in [1]:   
     print('animal id:%d'%(animal_id))
     #print('animal id:%d, bregma: %g'%(animal_id, bregma[bregma_id]))
@@ -163,17 +144,28 @@ for animal_id in [1]:
     cell_vs_gene_list = []
     total_cell = 0
     sample_index = 0
+    z_index = -100
     for index in range (0,len(data_sets_gatconv)):
-        if data_sets_gatconv[index][4][0][0] == animal_id and data_sets_gatconv[index][4][0][3] in bregma_interest: #== bregma[bregma_id]:
+        if data_sets_gatconv[index][4][0][0] == animal_id : #and data_sets_gatconv[index][4][0][3] in bregma_interest: #== bregma[bregma_id]:
             sample_index = index
+            z_index = z_index + 100
             cell_barcodes = data_sets_gatconv[index][0]
             coordinates = data_sets_gatconv[index][1]
+            # plot everything at 0,0 point
+            
+            add_x = -1*min(coordinates[:,0])
+            add_y = -1*min(coordinates[:,1])
+            for i in range (0, coordinates.shape[0]):
+                coordinates[i,0] = coordinates[i,0] + add_x 
+                coordinates[i,1] = coordinates[i,1] + add_y
+            
             cell_vs_gene = data_sets_gatconv[index][2]
             cell_vs_gene_list.append(cell_vs_gene)
             total_cell = total_cell + cell_vs_gene.shape[0]
-            z_index = data_sets_gatconv[index][4][0][3]
+            bregma = data_sets_gatconv[index][4][0][3]
             neuron_type = data_sets_gatconv[index][5]
-            print('animal id:%d, bregma: %g'%(animal_id, z_index))
+		
+            print('animal id:%d, bregma: %g'%(animal_id, bregma))
             print('index:%d, cell count: %d'%(index, cell_vs_gene.shape[0]))
             if z_index_yes == 1:
                 for i in range (0, len(cell_barcodes)):
@@ -205,7 +197,25 @@ for animal_id in [1]:
             temp_x[coordinates[i][2]].append(coordinates[i][0])
             temp_y[coordinates[i][2]].append(coordinates[i][1])
 
+
+	
     '''
+    plt.clf()
+    node_xyz = np.array(coordinates)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    # Plot the nodes - alpha is scaled by "depth" automatically
+    
+
+    
+    ax.scatter(*node_xyz.T, s=.1, alpha=0.5, c="#4F4F4F")
+    _format_axes(ax)
+    #fig.tight_layout()
+    save_path = '/cluster/home/t116508uhn/64630/'
+    plt.savefig(save_path+'3d_merfish.svg', dpi=400) #
+    plt.clf()    
+
+    
     # color plotting of the bregma slides #
     color_list = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#29aecf', '#8c014b']
     data_list=dict()
@@ -429,7 +439,7 @@ for animal_id in [1]:
         x = range(1, len(y)+1)
         kn = KneeLocator(x, y, curve='convex', direction='increasing')
         kn_value = y[kn.knee-1]
-        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 95), kn_value]) 
+        cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 98), kn_value]) 
        
     #######################################################
 
