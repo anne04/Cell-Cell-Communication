@@ -71,7 +71,7 @@ def plot(df):
 
 ####################### Set the name of the sample you want to visualize ###################################
 
-data_name = 'PDAC_130355_D1' #'PDAC_64630' #'PDAC_140694' #'PDAC_130355_B1' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
+data_name = 'PDAC_64630' #'PDAC_130355_D1' #'PDAC_140694' #'PDAC_130355_B1' #'PDAC_64630' #'LUAD_GSM5702473_TD1' #LUAD_GSM5702473_TD1
 
 
 
@@ -387,6 +387,68 @@ csv_record_final = [df_column_names] + csv_record[0:top_edge_count]
 i=0
 j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
+
+
+
+####################### pattern finding ##########################################################################
+# make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
+each_node_outgoing = defaultdict(list)
+for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
+    i = csv_record_final[k][6]
+    j = csv_record_final[k][7]
+    if i == j:
+        continue
+    ligand = csv_record_final[k][2]
+    receptor = csv_record_final[k][3]
+    each_node_outgoing[i].append([j, ligand, receptor])
+
+# all possible 2 hop pattern count
+pattern_distribution = defaultdict(list)
+# pattern_distribution['ligand-receptor to ligand-receptor']=[1,1,1,1, ...]
+for i in each_node_outgoing:
+    for tupple in each_node_outgoing[i]: # first hop
+        j = tupple[0]
+        lig_rec_1 = tupple[1]+'-'+tupple[2]
+        if j in each_node_outgoing:
+            for tupple_next in each_node_outgoing[j]: # second hop
+                k = tupple_next[0]
+                if k == i or k == j:
+                    continue
+                lig_rec_2 = tupple_next[1]+'-'+tupple_next[2]
+                if k in each_node_outgoing:
+                    for tupple_next_next in each_node_outgoing[k]: # third hop
+                        l = tupple_next_next[0]
+                        if l in [i, j , k]:
+                            continue
+                        lig_rec_3 = tupple_next_next[1]+'-'+tupple_next_next[2]
+                        pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2 + ' to ' + lig_rec_3].append(1)
+
+
+'''                
+                if lig_rec_1 in pattern_distribution:
+                    pattern_distribution[lig_rec_1][lig_rec_2].append(1)
+                else:
+                    pattern_distribution[lig_rec_1]=defaultdict(list)
+                    pattern_distribution[lig_rec_1][lig_rec_2].append(1)
+'''
+two_hop_pattern_distribution = []
+same_count = 0
+for key in pattern_distribution:
+    count = len(pattern_distribution[key])
+    two_hop_pattern_distribution.append([key, count]) 
+    #if lig_rec_1 == lig_rec_2:
+    #    same_count = same_count + 1
+
+two_hop_pattern_distribution = sorted(two_hop_pattern_distribution, key = lambda x: x[1], reverse=True) 
+
+            
+
+
+
+
+
+
+
 
 ######################## connected component finding #################################
 
