@@ -37,8 +37,8 @@ args = parser.parse_args()
 
 threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'knn'  # <-----------'threshold_dist' #
-datatype = 'randomCCC_uniform_distribution' #'randomCCC_mix_distribution' #'randomCCC_equally_spaced' # 'randomCCC_mix_distribution' #'randomCCC_uniform_distribution' 
+distance_measure = 'threshold_dist' #'knn'  # <-----------
+datatype = 'randomCCC_equally_spaced'  #'randomCCC_mix_distribution' # 'randomCCC_uniform_distribution' #
 
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
@@ -1309,10 +1309,10 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
- 
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_ #knn
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_equidistant_th2p5_lrc105_cell3000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
-
         distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
@@ -1445,8 +1445,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
 
 # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
 
-percentage_value = 10
-percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+
+percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 for percentage_value in percentage_threshold:
     csv_record_intersect_dict = defaultdict(list)
     for layer in range (0, 2):
@@ -1506,7 +1506,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product_heavyNoise') #_lowNoise
+    plot_dict['Type'].append('rank_product') #_lowNoise #_heavyNoise
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
