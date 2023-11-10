@@ -1961,7 +1961,7 @@ for index in range (0, len(vector_type.index)):
     cluster_type = vector_type['VectorType'][index]
     clusterType_edge_dictionary[cluster_type].append(str(i)+'-'+str(j))
     
-######## read the top5 edges (ccc) by Niches ########################################
+######## read the top edges (ccc) by Niches ########################################
 attention_scores_temp = []
 lig_rec_dict_temp = []
 datapoint_size = temp_x.shape[0]
@@ -2120,12 +2120,12 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
 chart.save('/cluster/home/t116508uhn/' +'input_data.html')
 
 ##############################################################
-sample_type = ["", "_LowNoise", "_HighNoise"]
-sample_name = ["dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp", 
-              "dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp",
-              "dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2"]
-
-for t in range (0, len(sample_name)):
+sample_type = ["", "", ""]
+sample_name = ["dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000", 
+              "dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000",
+              "dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000"]
+output_name = ['plot_equidistant_randomCCC', 'plot_uniform_randomCCC', 'plot_mix_randomCCC' ]
+for t in range (2, 3):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
@@ -2143,7 +2143,7 @@ for t in range (0, len(sample_name)):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_11to20runs', 'rb') as fp: #b, b_1, a
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
-        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        plot_dict_temp_2 = pickle.load(fp) #a - [0:5]
     
     plot_dict_temp['FPR'].append(1.0)
     plot_dict_temp['TPR'].append(1.0)
@@ -2159,18 +2159,6 @@ for t in range (0, len(sample_name)):
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'Niches', 'rb') as fp: #b, b_1, a
-        plot_dict_temp = pickle.load(fp) #a - [0:5]
-        
-    plot_dict['FPR'].append(0)
-    plot_dict['TPR'].append(0)
-    plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][0])
-    for i in range (0, len(plot_dict_temp['Type'])):
-        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-        plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
-    
-    
     
     data_list_pd = pd.DataFrame(plot_dict)    
     chart = alt.Chart(data_list_pd).mark_line().encode(
@@ -2179,7 +2167,7 @@ for t in range (0, len(sample_name)):
         color='Type:N',
     )	
     save_path = '/cluster/home/t116508uhn/'
-    chart.save(save_path+'plot_uniform'+sample_type[t]+'.html')
+    chart.save(save_path+output_name[t]+sample_type[t]+'.html')
 
 ################################################################################################################################
 niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
