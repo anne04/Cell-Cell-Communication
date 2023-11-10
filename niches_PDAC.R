@@ -107,7 +107,7 @@ p <- DoHeatmap(niche,features = unique(GOI_niche$gene))+ scale_fill_gradientn(co
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
 ####################################### synthetic ###################################################
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' 
+options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
 
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
@@ -146,7 +146,7 @@ NICHES_output <- RunNICHES(object = temp,
                            assay = "alra",
                            position.x = 'x',
                            position.y = 'y',
-                           k = 18, 
+                           k = 30, 
                            cell_types = "seurat_clusters",
                            min.cells.per.ident = 0,
                            min.cells.per.gene = NULL,
