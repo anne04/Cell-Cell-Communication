@@ -168,16 +168,22 @@ parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The na
 parser.add_argument( '--model_name', type=str, default='gat_2attr', help='model name')
 parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
+filter_min_cell = 5
+threshold_expression = 98
 '''
 '''
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/V10M25-60_C1_PDA_140694_Pa_P_Spatial10x/outs/' , help='The path to dataset') 
+parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/exp1/exp1_C1/outs/' , help='The path to dataset') 
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
 #parser.add_argument( '--model_name', type=str, default='gat_r1_2attr', help='model name')
 #parser.add_argument( '--slice', type=int, default=0, help='starting index of ligand')
 args = parser.parse_args()
+filter_min_cell = 1
+threshold_expression = 98
+
+
 '''
 '''
 import argparse
@@ -218,10 +224,49 @@ coordinates = adata_h5.obsm['spatial']
 cell_barcode = np.array(adata_h5.obs.index)
 #barcode_info.append("")
 temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  
-adata_X = np.transpose(temp)  
+adata_X = np.transpose(temp)
+#adata_X=sparse.csr_matrix.toarray(adata_h5.X)
 #adata_X = sc.pp.scale(adata_X)
 cell_vs_gene = copy.deepcopy(adata_X)
 print('min value %g'%np.min(cell_vs_gene))
+
+
+#######################################################
+
+## find PLXNB2 gene id
+for j in range (0, len(gene_ids)):
+    if gene_ids[j]=='PLXNB2':
+        print(j)
+        break
+
+i=0
+barcode_info=[]
+for cell_code in cell_barcode:
+    #scaled_count = (max_count-cell_vs_gene[i,j])/(max_count-min_count)
+    barcode_info.append([cell_code, coordinates[i,0], coordinates[i,1], cell_vs_gene[i,j]])
+    i=i+1
+    
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]   
+data_list['gene_expression']=[] 
+
+for i in range (0, len(barcode_info)):
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
+    data_list['gene_expression'].append(barcode_info[i][3])
+
+
+source= pd.DataFrame(data_list)
+
+chart = alt.Chart(source).mark_point(filled=True).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    color='gene_expression:Q'
+)
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'altair_plot_plxnb2.html')
+
 
 ########################################################
  
@@ -912,6 +957,63 @@ for index in range (0, len(row_col)):
         i = row_col[index][0]
         j = row_col[index][1]
         lig_rec_dict[i][j].append(lig_rec[index])  
+
+
+#######################################################################
+cell_expression = defaultdict(list)
+for index in range (0, len(row_col)):
+    ligand = lig_rec[index][0]
+    rec = lig_rec[index][1]
+    if ligand=='PLXNB2' and rec=='MET':
+        i = row_col[index][0]
+        j = row_col[index][1]        
+        ccc = edge_weight[index][1]
+        cell_expression[i].append(ccc)
+        cell_expression[j].append(ccc)
+        
+i=0
+barcode_info=[]
+expression_distribution = []
+for cell_code in cell_barcode:
+    if len(cell_expression[i])==0:
+        cell_expression[i].append(0)
+        
+    barcode_info.append([cell_code, coordinates[i,0], coordinates[i,1], np.max(cell_expression[i])])
+    expression_distribution.append(np.max(cell_expression[i]))
+    i=i+1
+
+min_count = np.min(expression_distribution)
+max_count = np.max(expression_distribution)
+for i in range (0, len(barcode_info)):
+    barcode_info[i][3] = (max_count-barcode_info[i][3])/(max_count-min_count)
+
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]   
+data_list['component_label']=[] 
+data_list['opacity']=[] 
+
+for i in range (0, len(barcode_info)):
+    data_list['X'].append(barcode_info[i][1])
+    data_list['Y'].append(-barcode_info[i][2])
+    data_list['component_label'].append(1)
+    data_list['opacity'].append(barcode_info[i][3])
+
+
+data_list_pd = pd.DataFrame(data_list)
+set1 = altairThemes.get_colour_scheme("Set1", 1)
+chart = alt.Chart(data_list_pd).mark_point(filled=True).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+    color=alt.Color('component_label:N', scale=alt.Scale(range=set1)),
+    opacity=alt.Opacity('opacity:N'), #"opacity",
+    tooltip=['opacity'] 
+)#.configure_legend(labelFontSize=6, symbolLimit=50)
+
+# output 6
+save_path = '/cluster/home/t116508uhn/64630/'
+chart.save(save_path+'altair_plot_plxnb2.html')
+    
 ############################################################################
 '''
 attention_scores = []
