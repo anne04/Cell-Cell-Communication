@@ -181,7 +181,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 1 #0  #2 #1
+noise_add = 0  #2 #1
 noise_percent = 30 # 0 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
@@ -2141,8 +2141,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
- 
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_highNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_highNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
         distribution = []
@@ -2277,8 +2277,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
 
 # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
 
-percentage_value = 10
-percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 for percentage_value in percentage_threshold:
     csv_record_intersect_dict = defaultdict(list)
     for layer in range (0, 2):
@@ -2338,7 +2337,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product_heavyNoise') #_lowNoise
+    plot_dict['Type'].append('rank_product_relu') #_lowNoise #_heavyNoise
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2347,7 +2346,7 @@ for percentage_value in percentage_threshold:
 #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
 #plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a  11to20runs
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_relu_10runs', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ########### z score ################################################################
@@ -2920,6 +2919,86 @@ while percentage_value > 0:
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
 
+######################### COMMOT ###############################################################################################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
+    attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
+
+
+distribution = sorted(distribution, reverse=True)
+#distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+negative_class=len(distribution)-confusion_matrix[0][0]
+
+plot_dict = defaultdict(list)
+percentage_value = 100
+while percentage_value > 0:
+    percentage_value = percentage_value - 10
+#for percentage_value in [79, 85, 90, 93, 95, 97]:
+    existing_lig_rec_dict = []
+    datapoint_size = temp_x.shape[0]
+    for i in range (0, datapoint_size):
+        existing_lig_rec_dict.append([])   
+        for j in range (0, datapoint_size):	
+            existing_lig_rec_dict[i].append([])   
+            existing_lig_rec_dict[i][j] = []
+
+    ccc_index_dict = dict()
+    threshold_down =  np.percentile(sorted(distribution), percentage_value)
+    threshold_up =  np.percentile(sorted(distribution), 100)
+    connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+    rec_dict = defaultdict(dict)
+    total_edges_count = 0
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            atn_score_list = attention_scores[i][j]
+            
+            
+            for k in range (0, len(atn_score_list)):
+                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
+                    connecting_edges[i][j] = 1
+                    ccc_index_dict[i] = ''
+                    ccc_index_dict[j] = ''
+                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                    total_edges_count = total_edges_count + 1
+                    
+
+
+    ############# 
+    print('total edges %d'%total_edges_count)
+    #negative_class = 0
+    confusion_matrix = np.zeros((2,2))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+
+            #if i==j: 
+            #    continue
+            ''' 
+            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
+                for k in range (0, len(lig_rec_dict_TP[i][j])):
+                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                    else:
+                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
+
+            '''
+            if len(existing_lig_rec_dict[i][j])>0:
+                for k in existing_lig_rec_dict[i][j]:   
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                        #print("i=%d j=%d k=%d"%(i, j, k))
+                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
+                    else:
+                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1                 
+             
+    print('%d, %g, %g'%(percentage_value,  (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
+    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
+    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
+    plot_dict['FPR'].append(FPR_value)
+    plot_dict['TPR'].append(TPR_value)
+    plot_dict['Type'].append('COMMOT') #_lowNoise
+
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
+    pickle.dump(plot_dict, fp) #a - [0:5]
+
 ######################### PLOTS ################################################################################################################
 datapoint_label = []
 for i in range (0, temp_x.shape[0]):
@@ -2953,7 +3032,7 @@ sample_name = ["dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overl
               "dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp",
               "dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp"]
 
-for t in range (0, len(sample_name)):
+for t in range (0, 1): #len(sample_name)):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
@@ -2987,6 +3066,24 @@ for t in range (0, len(sample_name)):
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_relu_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    #plot_dict_temp['FPR'].append(1.0)
+    #plot_dict_temp['TPR'].append(1.0)
+    #plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_relu"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_relu"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    ######
+    
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'Niches', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
@@ -2998,7 +3095,19 @@ for t in range (0, len(sample_name)):
         plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
         plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
+    ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
+       
     
     data_list_pd = pd.DataFrame(plot_dict)    
     chart = alt.Chart(data_list_pd).mark_line().encode(
