@@ -2825,8 +2825,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
 
 
 distribution = sorted(distribution, reverse=True)
-distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
-negative_class=len(distribution)-confusion_matrix[0][0]
+#distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+#negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
 percentage_value = 100
