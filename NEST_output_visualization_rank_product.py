@@ -397,7 +397,7 @@ for k in range (1, len(csv_record_final)-1): # last record is a dummy for histog
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]
     if i == j:
-        continue
+        continue        
     ligand = csv_record_final[k][2]
     receptor = csv_record_final[k][3]
     each_node_outgoing[i].append([j, ligand, receptor])
@@ -415,6 +415,8 @@ for i in each_node_outgoing:
                 if k == i or k == j:
                     continue
                 lig_rec_2 = tupple_next[1]+'-'+tupple_next[2]
+                pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2].append(1)
+                '''
                 if k in each_node_outgoing:
                     for tupple_next_next in each_node_outgoing[k]: # third hop
                         l = tupple_next_next[0]
@@ -422,6 +424,7 @@ for i in each_node_outgoing:
                             continue
                         lig_rec_3 = tupple_next_next[1]+'-'+tupple_next_next[2]
                         pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2 + ' to ' + lig_rec_3].append(1)
+                '''
 
 
 '''                
@@ -441,11 +444,20 @@ for key in pattern_distribution:
 
 two_hop_pattern_distribution = sorted(two_hop_pattern_distribution, key = lambda x: x[1], reverse=True) 
 
-            
-
-
-
-
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]   
+for key in pattern_distribution:
+    for i in range (0, len(pattern_distribution[key])):
+        data_list['X'].append(key)
+        data_list['Y'].append(1)
+        
+data_list_pd = pd.DataFrame(data_list)
+chart= alt.Chart(data_list_pd).mark_bar().encode(
+            x=alt.X("X:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y=alt.Y("count()"),
+        )
+chart.save(current_directory +'pattern_distribution.html')
 
 
 
