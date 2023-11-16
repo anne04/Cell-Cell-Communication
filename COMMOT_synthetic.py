@@ -179,7 +179,17 @@ sc.pp.log1p(adata)
 df_cellchat = ct.pp.ligand_receptor_database(species='human', signaling_type='Secreted Signaling', database='CellChat')
 df_cellchat_filtered = ct.pp.filter_lr_database(df_cellchat, adata, min_cell_pct=0.05)
 ct.tl.spatial_communication(adata, database_name='cellchat', df_ligrec=df_cellchat_filtered, dis_thr=500, heteromeric=True, pathway_sum=True)
-adata.write("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
+#adata.write("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
+adata = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
+
+
+ct.tl.communication_direction(adata, database_name='cellchat',  lr_pair=['CCL19','CCR7'],  k=5) #pathway_name='CCL',
+ct.pl.plot_cell_communication(adata, database_name='cellchat', lr_pair=['CCL19','CCR7'], plot_method='grid', background_legend=True,
+    scale=0.00003, ndsize=8, grid_density=0.4, summary='sender', background='image', clustering='leiden', cmap='Alphabet',
+    normalize_v = True, normalize_v_quantile=0.995, filename='PSAP_cluster.pdf') #pathway_name='CCL', 
+
+
+
 
 #ct.tl.spatial_communication(adata, database_name='syndb', df_ligrec=lr_db, dis_thr=500, heteromeric=True, pathway_sum=True)
 #adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/"+args.data_name+"_commot_adata.h5ad")
