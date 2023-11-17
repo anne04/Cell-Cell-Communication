@@ -15,11 +15,11 @@ import scipy
 import pickle
 import gzip
 import matplotlib.pyplot as plt
-from scipy import sparse
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
+#from scipy import sparse
+#from scipy.sparse import csr_matrix
+#from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
-from kneed import KneeLocator
+#from kneed import KneeLocator
 import scanpy as sc
 import argparse
 parser = argparse.ArgumentParser()
@@ -37,16 +37,16 @@ from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from scipy.stats import spearmanr, pearsonr
-from scipy.spatial import distance_matrix
+#from scipy.spatial import distance_matrix
 import commot as ct
+from sklearn.metrics.pairwise import euclidean_distances
 
-threshold_distance = 2 #2 = path equally spaced
-k_nn = 4 # #5 = h
-distance_measure = 'knn'  #'threshold_dist' # <-----------
-datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
 
-options =  'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
-'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_f_3dim_3patterns_temp' #'dt-path_mixture_of_distribution_lrc8_cp100_noise0_random_overlap_knn_cellCount2534_f_3dim'
+threshold_distance = 1.6 #2 = path equally spaced
+#k_nn = 4 # #5 = h
+#distance_measure = 'knn'  #'threshold_dist' # <-----------
+#datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
+options =  'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
 
 
 pathways = [] #['1','2','3','4','5','6','7','8']
@@ -67,6 +67,8 @@ coordinate_synthetic = np.zeros((cell_vs_gene.shape[0],2))
 for i in range (0, len(df_x)):
     coordinate_synthetic[i][0] = df_x[0][i]
     coordinate_synthetic[i][1] = df_y[0][i]
+
+distance_matrix = euclidean_distances(coordinate_synthetic, coordinate_synthetic)
 
 
 
@@ -144,6 +146,8 @@ for pair_index in range(0, len(LR_pairs)):
     key_pair = 'commot-syndb-' + pair
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
+            if distance_matrix[i,j] > threshold_distance:
+                continue
             if adata_synthetic.obsp[key_pair][i,j]>0:
                 attention_scores[i][j].append(adata_synthetic.obsp[key_pair][i,j])
                 lig_rec_dict[i][j].append(pair_index)
