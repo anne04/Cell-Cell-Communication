@@ -54,7 +54,7 @@ types = [] #['secreted signaling', 'secreted signaling', 'secreted signaling', '
 lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_"+options+".csv")
 for i in range (0, len(lr_db)):
     types.append('secreted signaling')
-    pathways.append(1) #str(i+1)
+    pathways.append(str(i+1)) 
  
 
 
@@ -88,8 +88,8 @@ lr_db['pathways'] = pathways
 lr_db['type'] = types
 
 ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=4, heteromeric=True, pathway_sum=True)
-adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
-adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_type6_f_commot_adata.h5ad")
+#adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
+adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata2.h5ad")
 ###########################################
 '''
 options = 'dt-path_equally_spaced_lrc8_cp100_noise0_random_overlap_threshold_dist_cellCount3000_e_3dim'
