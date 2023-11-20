@@ -54,7 +54,7 @@ types = [] #['secreted signaling', 'secreted signaling', 'secreted signaling', '
 lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_"+options+".csv")
 for i in range (0, len(lr_db)):
     types.append('secreted signaling')
-    pathways.append(str(i+1)) 
+    pathways.append(1) 
  
 
 
@@ -87,9 +87,9 @@ sc.pp.log1p(adata_synthetic)
 lr_db['pathways'] = pathways
 lr_db['type'] = types
 
-ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=4, heteromeric=True, pathway_sum=True)
-#adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
-adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata2.h5ad")
+ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=1.6, heteromeric=True, pathway_sum=True) #11.05
+adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
+adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
 ###########################################
 '''
 options = 'dt-path_equally_spaced_lrc8_cp100_noise0_random_overlap_threshold_dist_cellCount3000_e_3dim'
@@ -144,6 +144,7 @@ distribution = []
 for pair_index in range(0, len(LR_pairs)):
     pair = LR_pairs[pair_index]
     key_pair = 'commot-syndb-' + pair
+    print('%d, size %d'%(pair_index, len(distribution)))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
             if distance_matrix[i,j] > threshold_distance:
@@ -154,7 +155,7 @@ for pair_index in range(0, len(LR_pairs)):
                 distribution.append(adata_synthetic.obsp[key_pair][i,j])
             
             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result2', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
