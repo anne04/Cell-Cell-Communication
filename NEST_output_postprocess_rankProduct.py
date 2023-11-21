@@ -457,27 +457,28 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
         #run_time = 2
         run = run_time
         print('run %d'%run)
-	    
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
-        ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a 
-    
-        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
-        distribution = []
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
-            #    continue
-            distribution.append(X_attention_bundle[l][index][0])
-        
+
         attention_scores = []
         for i in range (0, datapoint_size):
             attention_scores.append([])   
             for j in range (0, datapoint_size):	
                 attention_scores[i].append([])   
                 attention_scores[i][j] = []
-                
+
+        distribution = []
+        ##############################################
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
+        ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a 
+        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
+        for index in range (0, X_attention_bundle[0].shape[1]):
+            i = X_attention_bundle[0][0][index]
+            j = X_attention_bundle[0][1][index]
+            #if barcode_type[barcode_info[i][0]] != 1 or barcode_type[barcode_info[j][0]] != 1:
+            #    continue
+            distribution.append(X_attention_bundle[l][index][0])
+
+        ################# scaling the attention scores so that layer 1 and 2 will be comparable ##############################        
         min_attention_score = 1000
         max_value = np.max(distribution)
         min_value = np.min(distribution)
@@ -500,34 +501,69 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
             min_attention_score = 0
         
         print('min attention score %g, total edges %d'%(min_attention_score, len(distribution)))
-        ##############
-        #plt.clf()
-        #plt.hist(distribution, color = 'blue',bins = int(len(distribution)/5))
-        #save_path = '/cluster/home/t116508uhn/64630/'
-        #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
-        #plt.clf()
-        ##############
+
+            
         '''
-        attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-        ##############
-        adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            adjacency_matrix [i][j] = 1
-        '''
+        ####################following if split###########################
+        for set_id in range(0, len(edge_list)):
+            print('subgraph %d'%set_id)
+            ##############
+            set1_exist_dict = defaultdict(dict)
+            for i in range (0, datapoint_size):  
+                for j in range (0, datapoint_size):	
+                    set1_exist_dict[i][j]=-1
     
-        ##############
+            for edge in edge_list[set_id]:
+                row_col = edge[0]
+                new_i = row_col[0]
+                new_j = row_col[1]
+                i = id_map_new_old[set_id][new_i] 
+                j = id_map_new_old[set_id][new_j] 
+                set1_exist_dict[i][j] = 1
+            
+            ############
+            #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy' #_h1024
+            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_split_'+filename[run_time]+'attention_l1_'+str(set_id+1)+'.npy'
+            X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature args.data_name + 
+    
+            for index in range (0, X_attention_bundle[0].shape[1]):
+                new_i = X_attention_bundle[0][0][index]
+                new_j = X_attention_bundle[0][1][index] 
+                # these returned i and j are new
+                i = id_map_new_old[set_id][new_i] 
+                j = id_map_new_old[set_id][new_j]           
+                            
+                if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
+                ###################################
+                    attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+                    distribution.append(X_attention_bundle[l][index][0])
+
+        min_attention_score = 1000
+        max_value = np.max(distribution)
+        min_value = np.min(distribution)
+        distribution = []    
+        for i in range (0, datapoint_size):  
+            for j in range (0, datapoint_size):    
+                if len(attention_scores[i][j])>0:
+                    for k in range (0, len(attention_scores[i][j])):
+                        scaled_score = (attention_scores[i][j][k]-min_value)/(max_value-min_value)
+                        attention_scores[i][j][k] = scaled_score 
+                        distribution.append(attention_scores[i][j][k])
+                        if min_attention_score > scaled_score:
+                            min_attention_score = scaled_score                    
+                        
         
-        #hold_attention_score = copy.deepcopy(attention_scores)  
-        #attention_scores = copy.deepcopy(hold_attention_score)  
+        ##################################
+        if min_attention_score<0:
+            min_attention_score = -min_attention_score
+        else: 
+            min_attention_score = 0
+            
+        '''
         ####################################################################################
-       
-        ###########################
+
+
+
         
         ccc_index_dict = dict()
         threshold_down =  np.percentile(sorted(distribution), 0)
@@ -579,7 +615,7 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
         #######################
     
     
-        
+        '''
         data_list=dict()
         data_list['pathology_label']=[]
         data_list['component_label']=[]
@@ -609,8 +645,8 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
         )#.configure_legend(labelFontSize=6, symbolLimit=50)
         # output 2
         save_path = '/cluster/home/t116508uhn/64630/'
-        #chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
-
+        chart.save(save_path+args.data_name+'_altair_plot_bothAbove98_3dim_tanh_3heads_l2attention_th95_'+filename[run_time]+'.html')
+        '''
         ##############
         '''
         region_list =[2, 3, 9, 11, 4, 5, 7]
@@ -802,7 +838,8 @@ for k in range (1, len(csv_record)):
 
     
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_split_top20percent.csv', index=False, header=False)
+#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all_TcellZone.csv', index=False, header=False)
