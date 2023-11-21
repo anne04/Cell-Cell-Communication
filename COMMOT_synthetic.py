@@ -15,12 +15,13 @@ import scipy
 import pickle
 import gzip
 import matplotlib.pyplot as plt
-#from scipy import sparse
-#from scipy.sparse import csr_matrix
-#from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
-#from kneed import KneeLocator
 import scanpy as sc
+import commot as ct
+import gc
+import ot
+import anndata
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
@@ -30,23 +31,18 @@ parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/E
 args = parser.parse_args()
 
 
-import gc
-import ot
-import anndata
-from scipy import sparse
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
-from scipy.stats import spearmanr, pearsonr
+
+#from scipy import sparse
+#from scipy.sparse import csr_matrix
+#from scipy.stats import spearmanr, pearsonr
 #from scipy.spatial import distance_matrix
-import commot as ct
-from sklearn.metrics.pairwise import euclidean_distances
 
 
-threshold_distance = 1.6 #2 = path equally spaced
+threshold_distance = 4 #2 = path equally spaced
 #k_nn = 4 # #5 = h
 #distance_measure = 'knn'  #'threshold_dist' # <-----------
 #datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
-options =  'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+options =  'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
 
 
 pathways = [] #['1','2','3','4','5','6','7','8']
@@ -79,15 +75,15 @@ adata_synthetic = anndata.AnnData(cell_vs_gene, obsm=spatial_dict)
 
 adata_synthetic.var_names_make_unique()
 adata_synthetic.raw = adata_synthetic
-sc.pp.normalize_total(adata_synthetic, inplace=True)
-sc.pp.log1p(adata_synthetic)
+#sc.pp.normalize_total(adata_synthetic, inplace=True)
+#sc.pp.log1p(adata_synthetic)
 
 
    
 lr_db['pathways'] = pathways
 lr_db['type'] = types
 
-ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=1.6, heteromeric=True, pathway_sum=True) #11.05
+ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=threshold_distance, heteromeric=True, pathway_sum=True) #11.05
 adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
 adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
 ###########################################
