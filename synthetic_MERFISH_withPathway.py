@@ -2037,8 +2037,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
- 
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy'
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy'
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample3_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
@@ -2235,7 +2235,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product_relu') #_lowNoise #_heavyNoise
+    plot_dict['Type'].append('rank_product') #_lowNoise #_heavyNoise #_relu
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2842,8 +2842,8 @@ while percentage_value > 0:
             existing_lig_rec_dict[i][j] = []
 
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), percentage_value)
-    threshold_up =  np.percentile(sorted(distribution), 100)
+    threshold_down =  np.percentile(distribution, percentage_value)
+    threshold_up =  np.percentile(distribution, 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
     rec_dict = defaultdict(dict)
     total_edges_count = 0
