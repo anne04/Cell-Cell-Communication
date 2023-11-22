@@ -597,6 +597,18 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_index_4_10_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
     coordinates = pickle.load(fp)
 
+########## multiple slide ####################################################
+
+with gzip.open('/cluster/projects/schwartzgroup/fatema/find_ccc/' +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_xyz_3d', 'rb') as fp: 
+    row_col, edge_weight, lig_rec = pickle.load(fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
+    barcode_info = pickle.load(fp)
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
+    coordinates = pickle.load(fp)
+
+
 
 ###########################################################Visualization starts ##################
 animal_id = 24 #19 #
@@ -621,18 +633,26 @@ barcode_type=dict()
 for i in range (0, datapoint_size):
     barcode_type[barcode_info[i][0]] = 0 
     
-lig_rec_dict = []
+
+'''lig_rec_dict = []
 for i in range (0, datapoint_size):
     lig_rec_dict.append([])  
     for j in range (0, datapoint_size):	
         lig_rec_dict[i].append([])   
         lig_rec_dict[i][j] = []
-
+'''
+lig_rec_dict = defaultdict(dict)
 total_type = np.zeros((2))        
 for index in range (0, len(row_col)):
-        i = row_col[index][0]
-        j = row_col[index][1]
-        lig_rec_dict[i][j].append(lig_rec[index])  
+    i = row_col[index][0]
+    j = row_col[index][1]
+    #########################
+    if i not in lig_rec_dict:
+        lig_rec_dict[i][j] = []
+    elif j not in  lig_rec_dict[i]:
+        lig_rec_dict[i][j]=[]
+    #########################
+    lig_rec_dict[i][j].append(lig_rec[index])  
         
 
 ########################################################
@@ -644,7 +664,7 @@ for cell_id in microglia_cell_id:
 '''     
 ###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 4 #5
+total_runs = 1 #5
 start_index = 0
 
 distribution_rank = []
@@ -663,7 +683,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #run_time = 2
         run = run_time
         print('run %d'%run)
-        X_attention_filename = 'new_alignment/Embedding_data_ccc_rgcn/merfish_data_Female_Naive_Excitatory/'+'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
+        X_attention_filename = 
+        #X_attention_filename = 'new_alignment/Embedding_data_ccc_rgcn/merfish_data_Female_Naive_Excitatory/'+'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
     
@@ -711,20 +732,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #save_path = '/cluster/home/t116508uhn/64630/'
         #plt.savefig(save_path+'distribution_region_of_interest_'+filename[run_time]+'_l2attention_score.svg', dpi=400) # _CCL19_CCR7
         #plt.clf()
-        ##############
-        '''
-        attention_scores_normalized = np.zeros((len(barcode_info),len(barcode_info)))
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            attention_scores_normalized [i][j] = X_attention_bundle[1][index][0]
-        ##############
-        adjacency_matrix = np.zeros((len(barcode_info),len(barcode_info)))
-        for index in range (0, X_attention_bundle[0].shape[1]):
-            i = X_attention_bundle[0][0][index]
-            j = X_attention_bundle[0][1][index]
-            adjacency_matrix [i][j] = 1
-        '''
+
     
         ##############
         
@@ -904,50 +912,77 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         for rank in range (0, len(sorted_list_temp)):
             edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention
 
+    max_weight = len(sorted_list_temp)
     all_edge_vs_rank = []
     for key_val in edge_rank_dictionary.keys():
         rank_product = 1
+        attention_score_list = csv_record_dict[key_value]
+        avg_score = 0 #[]
+        total_weight = 0
         for i in range (0, len(edge_rank_dictionary[key_val])):
             rank_product = rank_product * edge_rank_dictionary[key_val][i]
+            weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
+            avg_score = avg_score + attention_score_list[i][0] * weight_by_run
+            #avg_score.append(attention_score_list[i][0])  
+            total_weight = total_weight + weight_by_run
             
-        all_edge_vs_rank.append([key_val, rank_product**(1/total_runs)])  # small rank being high attention
+        avg_score = avg_score/total_weight # lower weight being higher attention np.max(avg_score) #
+        all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])  # small rank being high attention
         distribution_rank[layer].append(rank_product**(1/total_runs))
-        
+    
     all_edge_sorted_by_rank[layer] = sorted(all_edge_vs_rank, key = lambda x: x[1]) # small rank being high attention 
-
+    
 
 percentage_value = 20 # top 20th percentile rank, low rank means higher attention score
 csv_record_intersect_dict = defaultdict(list)
+edge_score_intersect_dict = defaultdict(list)
 for layer in range (0, 2):
     threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
     for i in range (0, len(all_edge_sorted_by_rank[layer])):
         if all_edge_sorted_by_rank[layer][i][1] <= threshold_up:
             csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i)
+            edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2])
+
+
 ###########################################################################################################################################
 ## get the aggregated rank for all the edges ##
 distribution_temp = []
 for key_value in csv_record_intersect_dict.keys():  
+    arg_index = np.argmin(csv_record_intersect_dict[key_value])
     csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # smaller rank being the higher attention
+    edge_score_intersect_dict[key_value] = edge_score_intersect_dict[key_value][arg_index]
     distribution_temp.append(csv_record_intersect_dict[key_value]) 
-
-################################################################################
+##############################################################################
 csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
 combined_score_distribution = []
 csv_record = []
-csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
+csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'edge_rank', 'component', 'from_id', 'to_id', 'attention_score'])
 for key_value in csv_record_dict.keys():
     item = key_value.split('-')
     i = int(item[0])
     j = int(item[1])
     ligand = item[2]
     receptor = item[3]        
-    score = csv_record_dict[key_value]        
+    edge_rank = csv_record_dict[key_value]        
+    score = edge_score_intersect_dict[key_value] # weighted average attention score, where weight is the rank, lower rank being higher attention score
     label = -1 
-    csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, score, label, i, j])
+    csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, edge_rank, label, i, j, score])
     combined_score_distribution.append(score)
 
+  
         
 print('common LR count %d'%len(csv_record))
+
+score_distribution = []
+for k in range (1, len(csv_record)):
+    score_distribution.append(csv_record[k][8])
+
+min_score = np.min(score_distribution)
+max_score = np.max(score_distribution)
+for k in range (1, len(csv_record)):
+    scaled_score = (csv_record[k][8]-min_score)/(max_score-min_score) 
+    csv_record[k][8] = scaled_score
+
 
 ##### save the file for downstream analysis ########
 csv_record_final = []
@@ -955,10 +990,12 @@ csv_record_final.append(csv_record[0])
 for k in range (1, len(csv_record)):
     ligand = csv_record[k][2]
     receptor = csv_record[k][3]
+    #if ligand =='CCL19' and receptor == 'CCR7':
     csv_record_final.append(csv_record[k])
 
+
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'.csv', index=False, header=False)
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_top20.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv', index=False, header=False)
 
 ######################### read the NEST output in csv format ####################################################
