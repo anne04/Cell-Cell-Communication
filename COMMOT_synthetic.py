@@ -50,11 +50,11 @@ types = [] #['secreted signaling', 'secreted signaling', 'secreted signaling', '
 lr_db = pd.read_csv("/cluster/home/t116508uhn/synthetic_lr_"+options+".csv")
 for i in range (0, len(lr_db)):
     types.append('secreted signaling')
-    pathways.append(1) 
+    pathways.append(str(i+1)) 
  
 
 
-gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv', index_col=0)  
+gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'_not_quantileTransformed.csv', index_col=0)  
 cell_vs_gene = gene_vs_cell.transpose()
 
 df_x=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv',header=None)
@@ -75,8 +75,8 @@ adata_synthetic = anndata.AnnData(cell_vs_gene, obsm=spatial_dict)
 
 adata_synthetic.var_names_make_unique()
 adata_synthetic.raw = adata_synthetic
-#sc.pp.normalize_total(adata_synthetic, inplace=True)
-#sc.pp.log1p(adata_synthetic)
+sc.pp.normalize_total(adata_synthetic, inplace=True)
+sc.pp.log1p(adata_synthetic)
 
 
    
@@ -140,10 +140,10 @@ distribution = []
 for pair_index in range(0, len(LR_pairs)):
     pair = LR_pairs[pair_index]
     key_pair = 'commot-syndb-' + pair
-    print('%d, size %d'%(pair_index, len(distribution)))
+    print('%d, size %d, matrix d%'%(pair_index, len(distribution), np.max(adata_synthetic.obsp[key_pair])))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if distance_matrix[i,j] > threshold_distance:
+            if distance_matrix[i,j] > threshold_distance: 
                 continue
             if adata_synthetic.obsp[key_pair][i,j]>0:
                 attention_scores[i][j].append(adata_synthetic.obsp[key_pair][i,j])
