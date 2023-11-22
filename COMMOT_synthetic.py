@@ -54,7 +54,7 @@ for i in range (0, len(lr_db)):
  
 
 
-gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'_not_quantileTransformed.csv', index_col=0)  
+gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv', index_col=0) #_not_quantileTransformed 
 cell_vs_gene = gene_vs_cell.transpose()
 
 df_x=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv',header=None)
@@ -140,18 +140,18 @@ distribution = []
 for pair_index in range(0, len(LR_pairs)):
     pair = LR_pairs[pair_index]
     key_pair = 'commot-syndb-' + pair
-    print('%d, size %d, matrix d%'%(pair_index, len(distribution), np.max(adata_synthetic.obsp[key_pair])))
+    print('%d, size %d, matrix %d'%(pair_index, len(distribution), np.max(adata_synthetic.obsp[key_pair])))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            if distance_matrix[i,j] > threshold_distance: 
-                continue
+            #if distance_matrix[i,j] > threshold_distance: 
+            #    continue
             if adata_synthetic.obsp[key_pair][i,j]>0:
                 attention_scores[i][j].append(adata_synthetic.obsp[key_pair][i,j])
                 lig_rec_dict[i][j].append(pair_index)
                 distribution.append(adata_synthetic.obsp[key_pair][i,j])
             
             
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result2', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
 
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_type4_e_commot_result', 'wb') as fp:
