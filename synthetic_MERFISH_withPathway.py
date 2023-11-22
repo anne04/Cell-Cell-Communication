@@ -1198,7 +1198,7 @@ for i in range (0, cell_vs_gene.shape[1]):
     
 data_list_pd[' ']=gene_name   
 data_list_pd = data_list_pd.set_index(' ')    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
+data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'_not_quantileTransformed.csv')
 
 data_list=dict()
 data_list['ligand']=[]
@@ -2117,7 +2117,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
                     if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                         connecting_edges[i][j] = 1
                         ccc_index_dict[i] = ''
-                        ccc_index_dict[j] = ''
+                        c10830cc_index_dict[j] = ''
                         existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
                         key_value = str(i) +'-'+ str(j) + '-' + str(lig_rec_dict[i][j][k])
                         csv_record_dict[key_value].append([attention_scores[i][j][k], run])
