@@ -2516,7 +2516,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 
 ######################### COMMOT ###############################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result2', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
@@ -2628,7 +2628,7 @@ sample_type = ["", "_LowNoise", "_HighNoise"]
 sample_name = ["dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp", 
               "dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp",
               "dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp"]
-for t in range (0, len(sample_name)):
+for t in range (0, 1):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
@@ -2656,7 +2656,43 @@ for t in range (0, len(sample_name)):
         plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
+
+
+######################
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_relu_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
     
+#    plot_dict_temp['FPR'].append(1.0)
+#    plot_dict_temp['TPR'].append(1.0)
+#    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_ReLU"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_ReLU"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+        
+
+
+###################
+
+	
     data_list_pd = pd.DataFrame(plot_dict)    
     chart = alt.Chart(data_list_pd).mark_line().encode(
         x='FPR:Q',
@@ -2665,6 +2701,13 @@ for t in range (0, len(sample_name)):
     )	
     save_path = '/cluster/home/t116508uhn/'
     chart.save(save_path+'plot_equidistant'+sample_type[t]+'.html')
+
+
+
+
+
+
+	       
 
 ##############################################################################################################################################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
