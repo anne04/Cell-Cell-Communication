@@ -416,16 +416,6 @@ for i in each_node_outgoing:
                     continue
                 lig_rec_2 = tupple_next[1]+'-'+tupple_next[2]
                 pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2].append(1)
-                '''
-                if k in each_node_outgoing:
-                    for tupple_next_next in each_node_outgoing[k]: # third hop
-                        l = tupple_next_next[0]
-                        if l in [i, j , k]:
-                            continue
-                        lig_rec_3 = tupple_next_next[1]+'-'+tupple_next_next[2]
-                        pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2 + ' to ' + lig_rec_3].append(1)
-                '''
-
 
 '''                
                 if lig_rec_1 in pattern_distribution:
