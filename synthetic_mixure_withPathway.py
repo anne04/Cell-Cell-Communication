@@ -3096,6 +3096,7 @@ for t in range (0, 1): #len(sample_name)):
         plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
+	'''
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
@@ -3108,7 +3109,7 @@ for t in range (0, 1): #len(sample_name)):
         plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
        
-    
+    '''
     data_list_pd = pd.DataFrame(plot_dict)    
     chart = alt.Chart(data_list_pd).mark_line().encode(
         x='FPR:Q',
