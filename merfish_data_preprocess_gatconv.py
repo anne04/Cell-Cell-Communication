@@ -1000,7 +1000,7 @@ df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+ar
 
 ######################### read the NEST output in csv format ####################################################
 current_directory = '/cluster/home/t116508uhn/64630/'
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_top20.csv'
 #filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'.csv'
 #filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'.csv'
 inFile = current_directory +filename_str 
@@ -1008,7 +1008,7 @@ df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
 
 ## sort the edges based on their rank (column 4 = score) column, low to high, low being higher attention score
-top_edge_count = 1000 #len(csv_record) # 3000 = microglia and 1000=general
+top_edge_count = 10000 #len(csv_record) # 3000 = microglia and 1000=general
 csv_record = sorted(csv_record, key = lambda x: x[4])
 
 ## add the column names and take first top_edge_count edges
@@ -1036,12 +1036,15 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     j = csv_record_final[record_idx][7]
     if (barcode_info[i][4]=='Microglia' and barcode_info[j][4]!='Microglia') or (barcode_info[i][4]!='Microglia' and barcode_info[j][4]=='Microglia') :
         csv_record_final_temp.append(csv_record_final[record_idx])
-        
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_relu_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_ #knn
+   ...:         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_equidistant_th2p5_lrc105_cell3000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropou
+   ...: t_
+   ...:         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True)
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
 
 
-## change the csv_record_final here if you want histogram for specific components/regions only. e.g., if you want to plot only stroma region, or tumor-stroma regions etc.    ##
+## plotting only between different z axis ##
 #region_of_interest = [...] 
 csv_record_final_temp = []
 csv_record_final_temp.append(csv_record_final[0])
