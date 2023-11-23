@@ -22,6 +22,11 @@ from kneed import KneeLocator
 import copy 
 import altairThemes
 import altair as alt
+
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+
 spot_diameter = 89.43 #pixels
 ##########################################################
 # written by GW                                                                                                                                                                     /mnt/data0/gw/research/notta_pancreatic_cancer_visium/plots/fatema_signaling/hist.py                                                                                                                                                                                         
@@ -235,7 +240,7 @@ print('min value %g'%np.min(cell_vs_gene))
 
 ## find PLXNB2 gene id
 for j in range (0, len(gene_ids)):
-    if gene_ids[j]=='PLXNB2':
+    if gene_ids[j]=='MST1R': #'PLXNB2':
         print(j)
         break
 
@@ -262,7 +267,7 @@ source= pd.DataFrame(data_list)
 chart = alt.Chart(source).mark_point(filled=True).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
-    color='gene_expression:Q'
+    color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
 )
 save_path = '/cluster/home/t116508uhn/64630/'
 chart.save(save_path+'altair_plot_plxnb2.html')
