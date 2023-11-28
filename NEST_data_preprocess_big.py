@@ -240,7 +240,7 @@ print('min value %g'%np.min(cell_vs_gene))
 
 ## find PLXNB2 gene id
 for j in range (0, len(gene_ids)):
-    if gene_ids[j]=='MST1R': #'PLXNB2':
+    if gene_ids[j]=='APOE': #'PLXNB2':
         print(j)
         break
 
