@@ -134,7 +134,6 @@ print(temp)
 gene_ids = list(temp.var_names) 
 cell_barcode = np.array(temp.obs.index)
 # now read the tissue position file. It has the format: 
-#df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/spatial/tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
 df = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/LUAD/LUAD_GSM5702473_TD1/GSM5702473_TD1_tissue_positions_list.csv', sep=",",header=None)   # read dummy .tsv file into memory
 tissue_position = df.values
 barcode_vs_xy = dict() # record the x and y coord for each spot
