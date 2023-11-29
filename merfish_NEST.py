@@ -664,7 +664,7 @@ for cell_id in microglia_cell_id:
 '''     
 ###########
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 1 #5
+total_runs = 3 #5
 start_index = 0
 
 distribution_rank = []
@@ -683,7 +683,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         #run_time = 2
         run = run_time
         print('run %d'%run)
-        X_attention_filename = 
+        X_attention_filename = 'new_alignment/Embedding_data_ccc_rgcn/merfish_data_Female_Naive_Excitatory/'+'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_xyz_manySlides_'+filename[run_time]+'_attention_l1.npy'
         #X_attention_filename = 'new_alignment/Embedding_data_ccc_rgcn/merfish_data_Female_Naive_Excitatory/'+'merfish_data_id1_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_xyz_'+filename[run_time]+'_attention_l1.npy' 
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'merfish_data_'+options+'_id'+str(animal_id)+'_bregma_p11_cellchat_nichenet_threshold_distance_bothAbove_cell95th_tanh_3dim_'+filename[run_time]+'_attention_l1.npy'   
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
