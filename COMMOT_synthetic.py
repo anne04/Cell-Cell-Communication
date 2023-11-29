@@ -1,3 +1,4 @@
+# sbatch -p veryhimem commot_job_hpc.sh
 import os
 #import glob 
 import pandas as pd
@@ -22,26 +23,19 @@ import gc
 import ot
 import anndata
 
-import argparse
+'''import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
+'''
 
 
-
-#from scipy import sparse
-#from scipy.sparse import csr_matrix
-#from scipy.stats import spearmanr, pearsonr
-#from scipy.spatial import distance_matrix
 
 
 threshold_distance = 4 #2 = path equally spaced
-#k_nn = 4 # #5 = h
-#distance_measure = 'knn'  #'threshold_dist' # <-----------
-#datatype = 'path_mixture_of_distribution' #'path_equally_spaced' #
 options =  'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
 
 
@@ -54,7 +48,7 @@ for i in range (0, len(lr_db)):
  
 
 
-gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv', index_col=0) #_not_quantileTransformed 
+gene_vs_cell = pd.read_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'not_quantileTransformed.csv', index_col=0) #_not_quantileTransformed 
 cell_vs_gene = gene_vs_cell.transpose()
 
 df_x=pd.read_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv',header=None)
@@ -65,9 +59,6 @@ for i in range (0, len(df_x)):
     coordinate_synthetic[i][1] = df_y[0][i]
 
 distance_matrix = euclidean_distances(coordinate_synthetic, coordinate_synthetic)
-
-
-
 
 spatial_dict = dict()
 spatial_dict['spatial'] = coordinate_synthetic
@@ -85,7 +76,7 @@ lr_db['type'] = types
 
 ct.tl.spatial_communication(adata_synthetic, database_name='syndb', df_ligrec=lr_db, dis_thr=threshold_distance, heteromeric=True, pathway_sum=True) #11.05
 adata_synthetic.write("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
-adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
+# adata_synthetic = sc.read_h5ad("/cluster/projects/schwartzgroup/fatema/syn_"+options+"_commot_adata.h5ad")
 ###########################################
 '''
 options = 'dt-path_equally_spaced_lrc8_cp100_noise0_random_overlap_threshold_dist_cellCount3000_e_3dim'
@@ -143,8 +134,8 @@ for pair_index in range(0, len(LR_pairs)):
     print('%d, size %d, matrix %d'%(pair_index, len(distribution), np.max(adata_synthetic.obsp[key_pair])))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            #if distance_matrix[i,j] > threshold_distance: 
-            #    continue
+            if distance_matrix[i,j] > threshold_distance: 
+                continue
             if adata_synthetic.obsp[key_pair][i,j]>0:
                 attention_scores[i][j].append(adata_synthetic.obsp[key_pair][i,j])
                 lig_rec_dict[i][j].append(pair_index)
