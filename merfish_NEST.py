@@ -633,7 +633,6 @@ barcode_type=dict()
 for i in range (0, datapoint_size):
     barcode_type[barcode_info[i][0]] = 0 
     
-
 '''lig_rec_dict = []
 for i in range (0, datapoint_size):
     lig_rec_dict.append([])  
@@ -649,7 +648,7 @@ for index in range (0, len(row_col)):
     #########################
     if i not in lig_rec_dict:
         lig_rec_dict[i][j] = []
-    elif j not in  lig_rec_dict[i]:
+    if j not in  lig_rec_dict[i]:
         lig_rec_dict[i][j]=[]
     #########################
     lig_rec_dict[i][j].append(lig_rec[index])  
@@ -1019,10 +1018,12 @@ csv_record_final = [df_column_names] + csv_record[0:top_edge_count]
 ## add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
 i=0
 j=0
-csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
+csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j, 0]) # dummy for histogram
 
-############################################################################################################################
-
+###############################  read which spots have self loops ################################################################
+with gzip.open(current_directory +'self_loop_record_'+args.data_name+'_id'+str(animal_id), 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
+    self_loop_found = pickle.load(fp)
+    
 
 ############################################### Optional filtering ########################################################
 '''
@@ -1053,9 +1054,10 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     i = csv_record_final[record_idx][6]
     j = csv_record_final[record_idx][7]
     z_i = coordinates[i][2]
-    z_j = coordinates[j][2]
-    if z_i != z_j:
-        csv_record_final_temp.append(csv_record_final[record_idx])
+    z_j = coordinates[j][2]   
+    if z_i in [0,100] and z_j in [0, 100]:
+        if z_i != z_j:
+            csv_record_final_temp.append(csv_record_final[record_idx])
         
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
 csv_record_final = copy.deepcopy(csv_record_final_temp)
@@ -1091,7 +1093,7 @@ print(id_label)
 for i in range (0, len(barcode_info)):    
     if count_points_component[labels[i]] > 1:
         barcode_info[i][3] = index_dict[labels[i]] #2
-    elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+    elif connecting_edges[i][i] == 1 and (i in self_loop_found and i in self_loop_found[i]):
         barcode_info[i][3] = 1
     else: 
         barcode_info[i][3] = 0
@@ -1209,9 +1211,20 @@ outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
 ######################### 3D plotting #####################################################################################################
+
+coordinates_temp = np.zeros((coordinates.shape[0], 3))
+j = 0
+for i in range (0, coordinates.shape[0]):
+    if coordinates[i][2] in [0, 100]:
+        coordinates_temp[j][:] = coordinates[i][:]
+        j = j+1
+
+coordinates = coordinates_temp[0:j]
+'''
 for i in range (0, coordinates.shape[0]):
     for d in range (0, coordinates.shape[1]):
-        coordinates[i][d] = coordinates[i][d]*10
+        coordinates[i][d] = coordinates[i][d] #*10
+'''     
 
 from mpl_toolkits.mplot3d import Axes3D
 def _format_axes(ax):
@@ -1253,7 +1266,9 @@ _format_axes(ax)
 #fig.tight_layout()
 save_path = '/cluster/home/t116508uhn/64630/'
 plt.savefig(save_path+'3d_merfish.svg', dpi=400) #
+plt.savefig(save_path+'3d_merfish.png', dpi=400) #
 plt.clf()
+
 
 
 
