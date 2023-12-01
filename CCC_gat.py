@@ -1,15 +1,15 @@
-  GNU nano 2.3.1                                                                                                                                                                                                                                                                                   File: /cluster/projects/schwartzgroup/fatema/CCC_project/CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-
+                                                                                                                                                                                                                                                                              File: /cluster/projects/schwartzgroup/fatema/CCC_project/CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 from scipy import sparse
 import pickle
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GATConv, Linear, DeepGraphInfomax, global_mean_pool, global_max_pool, GATv2Conv
+from torch_geometric.nn import Linear, DeepGraphInfomax,
 from torch_geometric.data import Data, DataLoader
 
-
+#import GATv2Conv from NEST_GATv2Conv
+import GATv2Conv from NEST_GATv2Conv_ReLU 
 
 def get_graph(X, training_data_name):
 
@@ -156,11 +156,15 @@ def train_DGI(args, data_loader, in_channels):
                     saved_attention_unnormalized = DGI_model.encoder.attention_scores_mine_unnormalized
                     saved_attention_l1 = DGI_model.encoder.attention_scores_mine_l1
                     saved_attention_unnormalized_l1 = DGI_model.encoder.attention_scores_mine_unnormalized_l1
-
-                    #print(DGI_model.encoder.attention_scores_mine_l1[0][0:10])
-                    #print(DGI_model.encoder.attention_scores_mine_l1[1][0:10])
-                    #print(saved_attention_unnormalized_l1.shape)
                     print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
+
+
+
+
+
+
+
+
 
 
 
