@@ -2516,12 +2516,12 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 
 ######################### COMMOT ###############################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
+with gzip.open("/cluster/home/t116508uhn/commot_result/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
 distribution = sorted(distribution, reverse=True)
-#distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+distribution = distribution[0:1132949] # len(distribution) = 6634880, len(row_col)=21659
 #negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
