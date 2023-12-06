@@ -2676,7 +2676,7 @@ for t in range (0, 1):
         plot_dict['Type'].append("NEST_ReLU"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
 
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
     plot_dict['FPR'].append(0)

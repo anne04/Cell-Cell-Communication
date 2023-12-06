@@ -2820,7 +2820,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######################### COMMOT ###############################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result2', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
@@ -2897,7 +2897,7 @@ while percentage_value > 0:
 
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
-    pickle.dump(plot_dict, fp) #a - [0:5]
+    pickle.dump(plot_dict_temp, fp) #a - [0:5]
 
 
 ######################### PLOTS ################################################################################################################
@@ -2933,7 +2933,7 @@ sample_name = ["dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_
               "dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp",
               "dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2"]
 
-for t in range (0, 1): #len(sample_name)):
+for t in range (1, 2): #len(sample_name)):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]

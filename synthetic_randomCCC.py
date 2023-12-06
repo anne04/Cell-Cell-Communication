@@ -2149,7 +2149,6 @@ for t in range (1, 2):
     plot_dict_temp['TPR'].append(1.0)
     plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
     
-    
     plot_dict['FPR'].append(0)
     plot_dict['TPR'].append(0)
     plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][0])
@@ -2176,7 +2175,19 @@ for t in range (1, 2):
         plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
         plot_dict['Type'].append("NEST_ReLU"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
-
+    ######
+    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+        
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append('COMMOT'+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+       
 
     data_list_pd = pd.DataFrame(plot_dict)    
     chart = alt.Chart(data_list_pd).mark_line().encode(
