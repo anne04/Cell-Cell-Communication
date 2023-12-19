@@ -370,7 +370,7 @@ with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #
 
 ######################### read the NEST output in csv format ####################################################
 
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv'
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv' #h2048_
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()
@@ -388,8 +388,14 @@ i=0
 j=0
 csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j]) # dummy for histogram
 
+######################## unique ligand-receptor count ##############################################################
+unique_ligand_receptor = dict()
+for k in range (1, len(csv_record_final)-1): 
+    ligand = csv_record_final[k][2]
+    receptor = csv_record_final[k][3]
+    unique_ligand_receptor[ligand+'-'+receptor] = 1
 
-
+print('unique ligand-receptor count is %d'%(len(unique_ligand_receptor.keys())))
 ####################### pattern finding ##########################################################################
 # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
 each_node_outgoing = defaultdict(list)

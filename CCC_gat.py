@@ -1,15 +1,15 @@
-                                                                                                                                                                                                                                                                              File: /cluster/projects/schwartzgroup/fatema/CCC_project/CCC_gat.py                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 from scipy import sparse
 import pickle
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import Linear, DeepGraphInfomax,
+from torch_geometric.nn import Linear, DeepGraphInfomax
 from torch_geometric.data import Data, DataLoader
+import gzip
 
-#import GATv2Conv from NEST_GATv2Conv
-import GATv2Conv from NEST_GATv2Conv_ReLU 
+from NEST_GATv2Conv import GATv2Conv
+#from NEST_GATv2Conv_ReLU import GATv2Conv
 
 def get_graph(X, training_data_name):
 
@@ -194,5 +194,4 @@ def train_DGI(args, data_loader, in_channels):
         logfile.close()
 
     return DGI_model
-
 

@@ -626,7 +626,17 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_bregma'+str(bregma[bregma_id])+'_coordinates', 'rb') as fp:  #b, a:[0:5]   _filtered
     coordinates = pickle.load(fp)
 
-      
+'''
+df = pd.DataFrame(coordinates)
+df.to_csv('/cluster/home/t116508uhn/64630/animal_id1_coordinates.csv', index=False, header=False) 
+
+cell_barcode = []
+for i in range (0, len(barcode_info)):
+    cell_barcode.append([barcode_info[i][0], barcode_info[i][5]])
+
+df = pd.DataFrame(cell_barcode)   
+df.to_csv('/cluster/home/t116508uhn/64630/animal_id1_cell_barcode.csv', index=False, header=False) 
+'''
 ###############################################
 datapoint_size = len(barcode_info)    
 barcode_type=dict()
@@ -1056,7 +1066,7 @@ for record_idx in range (1, len(csv_record_final)-1): #last entry is a dummy for
     z_i = coordinates[i][2]
     z_j = coordinates[j][2]   
     if z_i in [0,100] and z_j in [0, 100]:
-        if z_i != z_j:
+        #if z_i != z_j:
             csv_record_final_temp.append(csv_record_final[record_idx])
         
 csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
@@ -1260,7 +1270,7 @@ ax = fig.add_subplot(projection="3d")
 ax.scatter(*node_xyz.T, s=.1, alpha=0.5, c="#4F4F4F")
 # Plot the edges
 for vizedge in edge_xyz:
-    ax.plot(*vizedge.T, color="tab:green", linewidth=.6 )
+    ax.plot(*vizedge.T, color="tab:green", linewidth=.3 )
 
 _format_axes(ax)
 #fig.tight_layout()
