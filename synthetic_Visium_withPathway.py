@@ -60,7 +60,7 @@ for i in range (rec_start, lr_gene_count):
 
 
 non_lr_genes = 10000 - lr_gene_count
-
+# 1000/
 gene_ids = []
 for i in range (0, lr_gene_count):
     gene_ids.append(i) 
