@@ -836,7 +836,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
     
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, 99) , kn_value])
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 98), np.percentile(y, 99) , kn_value])
 
 ###############
 
@@ -993,8 +993,8 @@ lig_rec_dict_TP = lig_rec_dict_TP_temp
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene_notNormalized, fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
+#    pickle.dump(cell_vs_gene_notNormalized, fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
@@ -1150,7 +1150,30 @@ for i in range (0, len(lr_database)):
 data_list_pd = pd.DataFrame(data_list)        
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_'+options+'.csv', index=False)
 	
-	
+#######################
+lig_rec_dict_TP = []
+datapoint_size = temp_x.shape[0]
+for i in range (0, datapoint_size): 
+    lig_rec_dict_TP.append([])  
+    for j in range (0, datapoint_size):	
+        lig_rec_dict_TP[i].append([])   
+        lig_rec_dict_TP[i][j] = []
+
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+    lr_database, lig_rec_dict_TP_temp, random_activation = pickle.load( fp)
+
+P_class = 0
+datapoint_size = temp_x.shape[0]              
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        #if i==j: 
+        #    continue
+        if i in lig_rec_dict_TP_temp and j in lig_rec_dict_TP_temp[i] and len(lig_rec_dict_TP_temp[i][j]) > 0:
+            for k in range (0, len(lig_rec_dict_TP_temp[i][j])):
+                lig_rec_dict_TP[i][j].append(lig_rec_dict_TP_temp[i][j][k])
+                P_class = P_class + 1
+
+
 ###############
 '''
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
