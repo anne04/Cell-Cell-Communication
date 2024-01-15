@@ -370,7 +370,7 @@ with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #
 
 ######################### read the NEST output in csv format ####################################################
 
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv' #h2048_
+filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_h64_top20percent.csv' #h2048_
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()

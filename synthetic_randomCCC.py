@@ -1075,8 +1075,8 @@ for run_time in range (0,total_runs):
     plot_dict_list.append(defaultdict(list))
     run = run_time
     print('run %d'%run)
-    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
-    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_knn_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_
+    X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
+    #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_knn_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_
     #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_equidistant_th2p5_lrc105_cell3000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
     X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
     # [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
@@ -1308,8 +1308,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
-        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_ #knn
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_mix_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy'
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_uniform_th2p5_lrc105_cell5000_tanh_3d_'+filename[run]+'_attention_l1.npy' #_th2p5_ #knn
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_equidistant_th2p5_lrc105_cell3000_tanh_3d_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
         distribution = []
@@ -2123,8 +2123,13 @@ sample_type = ["", "", ""]
 sample_name = ["dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000", 
               "dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000",
               "dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000"]
+
+sample_name_alternate = ["dt-randomCCC_equally_spaced_lrc105_cp100_noise0_knn100_cellCount3000",
+                "dt-randomCCC_uniform_distribution_lrc105_cp100_knn100_cellCount5000",
+                "dt-randomCCC_mix_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000"]
+
 output_name = ['plot_equidistant_randomCCC', 'plot_uniform_randomCCC', 'plot_mix_randomCCC' ]
-for t in range (1, 2):
+for t in range (0, 1):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
@@ -2142,7 +2147,7 @@ for t in range (1, 2):
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_lowNoise_10runs', 'rb') as fp: #b, b_1, a
     #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_11to20runs', 'rb') as fp: #b, b_1, a
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
-        plot_dict_temp_2 = pickle.load(fp) #a - [0:5]
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
     
     plot_dict_temp['FPR'].append(1.0)
     plot_dict_temp['TPR'].append(1.0)
@@ -2155,6 +2160,22 @@ for t in range (1, 2):
         plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
         plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name_alternate[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
 
@@ -2198,67 +2219,3 @@ for t in range (1, 2):
     chart.save(save_path+output_name[t]+sample_type[t]+'.html')
 
 ################################################################################################################################
-niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
-niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches')
-    
-'''    
-niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches with 20 nearest neighbour')
-    
-######
-COMMOT_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-COMMOT_TPR = [0, .50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
-for i in range (0, 11):
-    plot_dict['FPR'].append(COMMOT_FPR[i])
-    plot_dict['TPR'].append(COMMOT_TPR[i])
-    plot_dict['Type'].append('COMMOT')        
-'''
-data_list_pd = pd.DataFrame(plot_dict)    
-chart = alt.Chart(data_list_pd).mark_line().encode(
-    x='FPR:Q',
-    y='TPR:Q',
-    color='Type:N',
-)	
-save_path = '/cluster/home/t116508uhn/'
-chart.save(save_path+'plot_uniform.html') # _lowNoise
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
-    plot_dict_temp, plot_dict_list_temp= pickle.load(fp) #a - [0:5]
-	
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'ensemble_100percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-##############################################################

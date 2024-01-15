@@ -66,7 +66,7 @@ for i in range (rec_start, lr_gene_count):
 
 
 non_lr_genes = 350 - lr_gene_count
-
+# 44/350=12%
 gene_ids = []
 for i in range (0, lr_gene_count):
     gene_ids.append(i) 
@@ -3032,6 +3032,10 @@ sample_name = ["dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overl
               "dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp",
               "dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp"]
 
+sample_name_alt = ["dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overlap_threshold4_cellCount5000_3dim_3patterns_temp", 
+              "dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold4_cellCount5000_3dim_3patterns_temp",
+              "dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold4_cellCount5000_3dim_3patterns_temp"]
+
 for t in range (0, 1): #len(sample_name)):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
@@ -3066,6 +3070,23 @@ for t in range (0, 1): #len(sample_name)):
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name_alt[t] +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    ######
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_relu_10runs', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
     
@@ -3096,8 +3117,8 @@ for t in range (0, 1): #len(sample_name)):
         plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
-	
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
     plot_dict['FPR'].append(0)

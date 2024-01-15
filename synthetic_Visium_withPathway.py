@@ -1995,8 +1995,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
- 
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_tanh_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_knn10_cellCount3000_3dim_3patterns_temp_' + filename[run]+'_attention_l1.npy' #split_ #dropout
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_tanh_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
         distribution = []
@@ -2192,7 +2192,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product_lowNoise')
+    plot_dict['Type'].append('rank_product') #_lowNoise')
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2651,6 +2651,14 @@ sample_type = ["", "_LowNoise", "_HighNoise"]
 sample_name = ["dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp", 
               "dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp",
               "dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp"]
+
+sample_name_alt = ["dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_knn10_cellCount3000_3dim_3patterns_temp", 
+              "dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_knn10_cellCount3000_3dim_3patterns_temp",
+              "dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_knn10_cellCount3000_3dim_3patterns_temp"]
+
+
+
+
 for t in range (0, 1):
     plot_dict = defaultdict(list)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'naive_model', 'rb') as fp: #b, b_1, a
@@ -2680,6 +2688,21 @@ for t in range (0, 1):
         plot_dict['Type'].append("NEST"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
 
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name_alt[t]  +'_'+'rank_product_10runs', 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_alternate_cutOff"+sample_type[t]) #(plot_dict_temp['Type'][i])
+ 
 
 ######################
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t] +'_'+'rank_product_relu_10runs', 'rb') as fp: #b, b_1, a
@@ -2689,6 +2712,7 @@ for t in range (0, 1):
 #    plot_dict_temp['TPR'].append(1.0)
 #    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
     
+
     
     plot_dict['FPR'].append(0)
     plot_dict['TPR'].append(0)
@@ -2698,8 +2722,8 @@ for t in range (0, 1):
         plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
         plot_dict['Type'].append("NEST_ReLU"+sample_type[t]) #(plot_dict_temp['Type'][i])
     
-
-    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: # t = 0,1
+    #with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
     plot_dict['FPR'].append(0)
@@ -2724,70 +2748,6 @@ for t in range (0, 1):
     )	
     save_path = '/cluster/home/t116508uhn/'
     chart.save(save_path+'plot_equidistant'+sample_type[t]+'.html')
-
-
-
-
-
-
-	       
-
-##############################################################################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'average_10runs', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-	
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_100percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-###
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'ensemble_80percent', 'rb') as fp: #b, b_1, a
-    plot_dict_temp = pickle.load(fp) #a - [0:5]
-plot_dict['FPR'].append(0)
-plot_dict['TPR'].append(0)
-plot_dict['Type'].append(plot_dict_temp['Type'][0])
-for i in range (0, len(plot_dict_temp['Type'])):
-    plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
-    plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
-    plot_dict['Type'].append(plot_dict_temp['Type'][i])
-           
-######
-niches_FPR = [0, .08, .15, .25, .35, .43, .52, .62, .72, .83, 1.00]
-niches_TPR = [0, .20, .43, .51, .61, .76, .89, .97, .98, .99, 1.00]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches with 10 nearest neighbour')
-'''    
-niches_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-niches_TPR = [0, .43097, .451493, .455224, .91791, .91791, .91791, .91791, .91791, .91791, .91791]
-for i in range (0, 11):
-    plot_dict['FPR'].append(niches_FPR[i])
-    plot_dict['TPR'].append(niches_TPR[i])
-    plot_dict['Type'].append('Niches with 20 nearest neighbour')
-    
-######
-COMMOT_FPR = [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.00]
-COMMOT_TPR = [0, .50, .50, .50, .50, .50, .50, .50, .50, .50, .50]
-for i in range (0, 11):
-    plot_dict['FPR'].append(COMMOT_FPR[i])
-    plot_dict['TPR'].append(COMMOT_TPR[i])
-    plot_dict['Type'].append('COMMOT')        
-'''
 
 
 
