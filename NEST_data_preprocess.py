@@ -25,7 +25,7 @@ import altair as alt
 import argparse
 
 spot_diameter = 89.43 #pixels
-data_name = 'PDAC_130355_D1'
+data_name = 'PDAC_64630'
 
 
 if data_name == 'LUAD_GSM5702473_TD1':
