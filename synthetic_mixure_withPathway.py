@@ -2141,7 +2141,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_highNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
@@ -3117,8 +3117,8 @@ for t in range (0, 1): #len(sample_name)):
         plot_dict['Type'].append('Niches'+sample_type[t]) #(plot_dict_temp['Type'][i])
     
     ######
-    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #b, b_1, a
+    with gzip.open("/cluster/home/t116508uhn/commot_result/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + sample_name[t]  +'_'+'COMMOT', 'rb') as fp: #
         plot_dict_temp = pickle.load(fp) #a - [0:5]
         
     plot_dict['FPR'].append(0)

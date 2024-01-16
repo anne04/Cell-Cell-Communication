@@ -336,36 +336,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     cell_percentile.append([np.percentile(sorted(cell_vs_gene_scaled[i]), 10), np.percentile(sorted(cell_vs_gene_scaled[i]), 20),np.percentile(sorted(cell_vs_gene_scaled[i]), 70), np.percentile(sorted(cell_vs_gene_scaled[i]), 97)])
 '''
 
-cell_percentile = []
-for i in range (0, cell_vs_gene.shape[0]):
-    y = sorted(cell_vs_gene[i])
-    x = range(1, len(y)+1)
-    kn = KneeLocator(x, y, curve='convex', direction='increasing')
-    kn_value = y[kn.knee-1]
-    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, threshold_expression), kn_value])
 
-
-'''
-cell_percentile = []
-for i in range (0, cell_vs_gene.shape[0]):
-    #print(np.histogram(cell_vs_gene[i]))
-    y = np.histogram(cell_vs_gene[i])[0] # density: 
-    x = range(0, len(y))
-    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
-    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
-    #print('%d'%(kn.knee ))
-    cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 95), np.percentile(cell_vs_gene[i], 98), kn_value])
-'''
-#gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
-'''
-gene_percentile = dict()
-for i in range (0, cell_vs_gene.shape[1]):
-    y = np.histogram(cell_vs_gene[:,i])[0]
-    x = range(1, len(y)+1)
-    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
-    kn_value = np.histogram(cell_vs_gene[:,i])[1][kn.knee-1]
-    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 80), np.percentile(cell_vs_gene[:,i], 97), kn_value]
-'''
 gene_info=dict()
 for gene in gene_ids:
     gene_info[gene]=''
@@ -495,9 +466,9 @@ for gene in list(ligand_dict_dataset.keys()):
         
 print('total type of l-r pairs found: %d'%lr_id )
 
-id_list = []
-for receptor_gene in l_r_pair['CCL19']:
-    id_list.append(l_r_pair['CCL19'][receptor_gene])
+#id_list = []
+#for receptor_gene in l_r_pair['CCL19']:
+#    id_list.append(l_r_pair['CCL19'][receptor_gene])
 
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -519,6 +490,36 @@ cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
 
 ########
 ######################################
+cell_percentile = []
+for i in range (0, cell_vs_gene.shape[0]):
+    y = sorted(cell_vs_gene[i])
+    x = range(1, len(y)+1)
+    kn = KneeLocator(x, y, curve='convex', direction='increasing')
+    kn_value = y[kn.knee-1]
+    cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, threshold_expression), kn_value])
+
+
+'''
+cell_percentile = []
+for i in range (0, cell_vs_gene.shape[0]):
+    #print(np.histogram(cell_vs_gene[i]))
+    y = np.histogram(cell_vs_gene[i])[0] # density: 
+    x = range(0, len(y))
+    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
+    kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
+    #print('%d'%(kn.knee ))
+    cell_percentile.append([np.percentile(cell_vs_gene[i], 10), np.percentile(cell_vs_gene[i], 20),np.percentile(cell_vs_gene[i], 95), np.percentile(cell_vs_gene[i], 98), kn_value])
+'''
+#gene_file='/cluster/home/t116508uhn/64630/spaceranger_output_new/unzipped/features.tsv' # 1406
+'''
+gene_percentile = dict()
+for i in range (0, cell_vs_gene.shape[1]):
+    y = np.histogram(cell_vs_gene[:,i])[0]
+    x = range(1, len(y)+1)
+    kn = KneeLocator(x, y, curve='convex', direction='decreasing')
+    kn_value = np.histogram(cell_vs_gene[:,i])[1][kn.knee-1]
+    gene_percentile[gene_ids[i]] = [np.percentile(cell_vs_gene[:,i], 10), np.percentile(cell_vs_gene[:,i], 50),np.percentile(cell_vs_gene[:,i], 80), np.percentile(cell_vs_gene[:,i], 97), kn_value]
+'''
 ##############################################################################
 count_total_edges = 0
 activated_cell_index = dict()
@@ -706,7 +707,7 @@ for gene in l_r_pair:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'all_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_omniPath_separate_'+'threshold_distance_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'eitherOne_density_kneepoint', 'wb') as fp:  #b, a:[0:5]   
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'eitherOne_density_kneepoint', 'rb') as fp:  #b, a:[0:5]   
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'cell_vs_gene_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   
