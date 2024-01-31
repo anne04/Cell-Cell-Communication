@@ -239,7 +239,7 @@ print('min value %g'%np.min(cell_vs_gene))
 
 ## find PLXNB2 gene id
 for j in range (0, len(gene_ids)):
-    if gene_ids[j]=='APOE': #'PLXNB2':
+    if gene_ids[j]=='SEMA4C': #'PLXNB2':
         print(j)
         break
 
@@ -269,7 +269,7 @@ chart = alt.Chart(source).mark_point(filled=True).encode(
     color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
 )
 save_path = '/cluster/home/t116508uhn/64630/'
-chart.save(save_path+'altair_plot_plxnb2.html')
+#chart.save(save_path+'altair_plot_sema4c.html')
 
 
 ########################################################
@@ -294,8 +294,8 @@ for cell_code in cell_barcode:
 	
 node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
-	pickle.dump(node_id_sorted_xy, fp)
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   ##
+#	pickle.dump(node_id_sorted_xy, fp)
 
 
 #################### 
@@ -496,6 +496,7 @@ for i in range (0, cell_vs_gene.shape[0]):
     x = range(1, len(y)+1)
     kn = KneeLocator(x, y, curve='convex', direction='increasing')
     kn_value = y[kn.knee-1]
+    #print(y[kn.knee-1])
     cell_percentile.append([np.percentile(y, 10), np.percentile(y, 20),np.percentile(y, 90), np.percentile(y, threshold_expression), kn_value])
 
 
@@ -505,6 +506,8 @@ for i in range (0, cell_vs_gene.shape[0]):
     #print(np.histogram(cell_vs_gene[i]))
     y = np.histogram(cell_vs_gene[i])[0] # density: 
     x = range(0, len(y))
+    #print(np.histogram(cell_vs_gene[i])[0])
+
     kn = KneeLocator(x, y, curve='convex', direction='decreasing')
     kn_value = np.histogram(cell_vs_gene[i])[1][kn.knee]
     #print('%d'%(kn.knee ))

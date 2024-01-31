@@ -51,7 +51,7 @@ elif data_name == 'PDAC_64630':
     parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
     parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
     args = parser.parse_args()
-    filter_min_cell = 5
+    filter_min_cell = 10
     threshold_expression = 98
 
 elif data_name == 'PDAC_130355_B1':
@@ -370,6 +370,7 @@ edge_weight = []
 lig_rec = []
 count_edge = 0
 max_local = 0
+active_point=dict()
 #local_list = np.zeros((102))
 for i in range (0, len(cells_ligand_vs_receptor)):
     #ccc_j = []
@@ -380,6 +381,9 @@ for i in range (0, len(cells_ligand_vs_receptor)):
                 for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                     gene = cells_ligand_vs_receptor[i][j][k][0]
                     gene_rec = cells_ligand_vs_receptor[i][j][k][1]
+                    if gene=='PLXNB2' and gene_rec=='MET':
+                        active_point[i]=''
+                        active_point[j]=''
                     count_edge = count_edge + 1
                     count_local = count_local + 1
                     #print(count_edge)                      
@@ -406,6 +410,33 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 	pickle.dump(cell_vs_gene, fp)
 
 
+    active_point=dict()
+    for i in range (0, len(lig_rec)):
+        if lig_rec[i][0]=='PLXNB2' and lig_rec[i][1]=='MET':
+            active_point[row_col[i][0]]=''
+            active_point[row_col[i][1]]=''
 
 
-	
+
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[]   
+    data_list['color']=[] 
+
+    for i in range (0, len(barcode_info)):
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(-barcode_info[i][2])
+        if i in active_point:
+            data_list['color'].append(1)
+        else:
+            data_list['color'].append(0)
+
+    source= pd.DataFrame(data_list)
+
+    chart = alt.Chart(source).mark_point(filled=True).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        color=alt.Color('color:N')
+    )
+    save_path = '/cluster/home/t116508uhn/64630/'
+    chart.save(save_path+'altair_plot_plxnb2.html')

@@ -357,6 +357,11 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_r
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+ '_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th_3d', 'rb') as fp: 
     row_col, edge_weight, lig_rec = pickle.load(fp) # density_
 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/NEST/input_graph/PDAC_64630_mincell10_th98/PDAC_64630_mincell10_th98_adjacency_records", 'rb') as fp: 
+ row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp) 
+
+
+
 datapoint_size = len(barcode_info)
 lig_rec_dict = []
 self_loop_found = defaultdict(dict)
@@ -437,7 +442,7 @@ chart.save('/cluster/home/t116508uhn/64630/'+'region_of_interest_cccScore_distri
 ############# load output graph #################################################
 
 filename = ["r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-total_runs = 5
+total_runs = 1
 start_index = 0 # 0 #5 if pdac 64630
 
 distribution_rank = []
@@ -467,9 +472,10 @@ for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1
 
         distribution = []
         ##############################################
+        X_attention_filename = '/cluster/projects/schwartzgroup/fatema/NEST/embedding_data/PDAC_64630_mincell10_th98/PDAC_mincell10_th98_'+filename[run_time]+'attention.npy'
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + args.data_name + '_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy'
         ##X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_'+filename[run_time]+'attention_l1.npy' #a
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a 
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'PDAC_cellchat_nichenet_threshold_distance_bothAbove_cell98th_tanh_3dim_h2048_'+filename[run_time]+'attention_l1.npy' #a 
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) #_withFeature
         for index in range (0, X_attention_bundle[0].shape[1]):
             i = X_attention_bundle[0][0][index]
@@ -838,7 +844,8 @@ for k in range (1, len(csv_record)):
 
     
 df = pd.DataFrame(csv_record_final) # output 4
-df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv', index=False, header=False) #split_
+df.to_csv('/cluster/home/t116508uhn/64630/NEST_latest_top20percent.csv', index=False, header=False) 
+#df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv', index=False, header=False) #split_
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_h2048_top20percent.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_top20percent.csv', index=False, header=False)
 #df.to_csv('/cluster/home/t116508uhn/64630/NEST_combined_rank_product_output_'+args.data_name+'_all.csv', index=False, header=False)

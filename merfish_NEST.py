@@ -93,7 +93,7 @@ def totalPlot(df, features, outPath):
   return
 
 ###################
-
+'''
 meta_file = '/cluster/projects/schwartzgroup/fatema/MESSI/input/merfish_meta_Virgin_Parenting_Female.csv'
 df = pd.read_csv(meta_file)
 microglia_cell_id = []
@@ -104,7 +104,7 @@ for i in range (0, df["Cell_ID"].shape[0]):
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/merfish_microglia", 'wb') as fp:  #b, a:[0:5]  _filtered 
     pickle.dump(microglia_cell_id, fp)
  
-
+'''
 
 
 ##########
@@ -563,12 +563,15 @@ for animal_id in [1]:
         pickle.dump(coordinates, fp)
         
 
-##########
+##################################################################################################
+        
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell95th_xyz_3d', 'wb') as fp:  #b, a:[0:5]  _filtered 
     pickle.dump([row_col, edge_weight, lig_rec], fp)
              
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_name+'_id'+str(animal_id)+'_cell_vs_gene_xyz_quantile_transformed', 'wb') as fp:  #b, a:[0:5]   _filtered
 	pickle.dump(cell_vs_gene, fp)
+
+
 
 ########### 3D ###################################################################################
 
@@ -611,7 +614,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +args.data_nam
 
 
 ###########################################################Visualization starts ##################
-animal_id = 24 #19 #
+animal_id = 19 #24 #
 bregma_id = 0
 bregma = [0.11, 0.16, 0.21, 0.26] #data_sets_gatconv[0][4][0][3] []
 
@@ -651,7 +654,8 @@ for i in range (0, datapoint_size):
         lig_rec_dict[i][j] = []
 '''
 lig_rec_dict = defaultdict(dict)
-total_type = np.zeros((2))        
+total_type = np.zeros((2))    
+self_loop_found = defaultdict(dict)    
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
@@ -662,8 +666,12 @@ for index in range (0, len(row_col)):
         lig_rec_dict[i][j]=[]
     #########################
     lig_rec_dict[i][j].append(lig_rec[index])  
+    if i==j:
+        self_loop_found[i][j] = ''
         
 
+with gzip.open('/cluster/home/t116508uhn/' + options  +'_self_loop_record', 'wb') as fp:  #b, a:[0:5]   _filtered
+    pickle.dump(self_loop_found, fp)
 ########################################################
 '''
 cell_kept = []

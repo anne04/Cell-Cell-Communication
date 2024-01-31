@@ -245,6 +245,28 @@ elif data_name == 'V1_Human_Lymph_Node_spatial':
     for i in range (0, len(spot_label)):
         if spot_label[i][0] not in barcode_type:
             barcode_type[spot_label[i][0]] = 0
+            
+    ##############################################################################
+    barcode_type=defaultdict(list)
+    for i in range (0, len(barcode_Tcell)):
+        barcode_type['Barcode'].append(barcode_Tcell[i])
+        barcode_type['Type'].append('T-cell') # tcell
+        
+    for i in range (0, len(barcode_B)):
+        barcode_type['Barcode'].append(barcode_B[i])
+        barcode_type['Type'].append('B follicle')
+      
+    for i in range (0, len(barcode_GC)):
+        barcode_type['Barcode'].append(barcode_GC[i])
+        barcode_type['Type'].append('Germinal Center')
+        
+    for i in range (0, len(spot_label)):
+        if spot_label[i][0] not in barcode_type['Barcode']:
+            barcode_type['Barcode'].append(spot_label[i][0])
+            barcode_type['Type'].append('Mixed')
+
+    df = pd.DataFrame(barcode_type)    
+    df.to_csv(current_directory+'V1_Human_Lymph_Node_spatial_annotation.csv', index=False, header=False)    
     #############################################################################
     '''
     data_list=dict()
@@ -364,13 +386,14 @@ elif data_name == 'PDAC_130355_D1':
 
 
 ###############################  read which spots have self loops ################################################################
-with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
+with gzip.open('/cluster/projects/schwartzgroup/fatema/NEST/metadata/PDAC_64630_mincell10_th98/PDAC_64630_mincell10_th98_self_loop_record', 'rb') as fp: 
+#with gzip.open(current_directory +'self_loop_record_'+data_name, 'rb') as fp:  #'/cluster/projects/schwartzgroup/fatema/find_ccc/'+
     self_loop_found = pickle.load(fp)
     
 
 ######################### read the NEST output in csv format ####################################################
 
-filename_str = 'NEST_combined_rank_product_output_'+args.data_name+'_h64_top20percent.csv' #h2048_
+filename_str = 'NEST_latest_top20percent.csv' #'NEST_combined_rank_product_output_'+args.data_name+'_h64_top20percent.csv' #h2048_
 inFile = current_directory +filename_str 
 df = pd.read_csv(inFile, sep=",")
 csv_record = df.values.tolist()

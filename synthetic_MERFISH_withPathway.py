@@ -2021,7 +2021,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 ######### rank product ####
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
 
-for sample_name in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
     filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
     total_runs = 10
     plot_dict = defaultdict(list)
@@ -2193,8 +2193,8 @@ for sample_name in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
         '''
         ###### this small block does not have any impact now ###########
         for key_value in csv_record_intersect_dict.keys():  
-        if len(csv_record_intersect_dict[key_value])>1:
-            csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
+            if len(csv_record_intersect_dict[key_value])>1:
+                csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
         #######################################################
         
         existing_lig_rec_dict = []
@@ -3044,3 +3044,31 @@ for t in range (1, 2): #len(sample_name)):
     save_path = '/cluster/home/t116508uhn/'
     chart.save(save_path+'plot_uniform'+sample_type[t]+'.html')
 
+#################################################################################
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_sample'
+plot_dict = defaultdict(list)
+for s in range (1, 11): #len(sample_name)):
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +str(s)+'_'+'rank_product_10runs'+'_sample'+str(s), 'rb') as fp: #b, b_1, a
+        plot_dict_temp = pickle.load(fp) #a - [0:5]
+    
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append(plot_dict_temp['Type'][1])
+    
+    
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("NEST_sample"+str(s)) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("NEST_sample"+str(s)) #(plot_dict_temp['Type'][i])
+
+data_list_pd = pd.DataFrame(plot_dict)    
+chart = alt.Chart(data_list_pd).mark_line().encode(
+    x='FPR:Q',
+    y='TPR:Q',
+    color='Type:N',
+)	
+save_path = '/cluster/home/t116508uhn/'
+chart.save(save_path+'NEST_multiple_samples.html')
