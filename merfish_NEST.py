@@ -1228,65 +1228,6 @@ p = plot(df)
 outPath = current_directory+'histogram_test.html'
 p.save(outPath)	
 
-######################### 3D plotting #####################################################################################################
-
-coordinates_temp = np.zeros((coordinates.shape[0], 3))
-j = 0
-for i in range (0, coordinates.shape[0]):
-    if coordinates[i][2] in [0, 100]:
-        coordinates_temp[j][:] = coordinates[i][:]
-        j = j+1
-
-coordinates = coordinates_temp[0:j]
-'''
-for i in range (0, coordinates.shape[0]):
-    for d in range (0, coordinates.shape[1]):
-        coordinates[i][d] = coordinates[i][d] #*10
-'''     
-
-from mpl_toolkits.mplot3d import Axes3D
-def _format_axes(ax):
-    """Visualization options for the 3D axes."""
-    # Turn gridlines off
-    ax.grid(False)
-    # Suppress tick labels
-    for dim in (ax.xaxis, ax.yaxis, ax.zaxis):
-        dim.set_ticks([])
-    # Set axes labels
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-	
-###############
-
-plt.clf()
-node_xyz = np.array(coordinates)
-edge_xyz = []
-for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
-    i = csv_record_final[k][6]
-    j = csv_record_final[k][7]
-    coordinate_i = coordinates[i]
-    coordinate_j = coordinates[j]
-    edge_i_j = (coordinate_i, coordinate_j)
-    edge_xyz.append(edge_i_j)
-
-edge_xyz = np.array(edge_xyz)
-################
-fig = plt.figure()
-ax = fig.add_subplot(projection="3d")
-# Plot the nodes - alpha is scaled by "depth" automatically
-ax.scatter(*node_xyz.T, s=.1, alpha=0.5, c="#4F4F4F")
-# Plot the edges
-for vizedge in edge_xyz:
-    ax.plot(*vizedge.T, color="tab:green", linewidth=.3 )
-
-_format_axes(ax)
-#fig.tight_layout()
-save_path = '/cluster/home/t116508uhn/64630/'
-plt.savefig(save_path+'3d_merfish.svg', dpi=400) #
-plt.savefig(save_path+'3d_merfish.png', dpi=400) #
-plt.clf()
-
 
 
 
