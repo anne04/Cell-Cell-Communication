@@ -78,3 +78,82 @@ if __name__ == "__main__":
         i=i+1
 
 
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_GAT_selective_lr_STnCCC_separate_'+'bothAbove_cell98th', 'rb') as fp:  #b, a:[0:5]   
+        row_col, edge_weight, lig_rec = pickle.load(fp)
+    
+    
+    attention_scores = np.zeros((len(barcode_info),len(barcode_info)))
+    distribution = []
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        attention_scores[i][j] = edge_weight[index][1]
+        distribution.append(attention_scores[i][j])
+        
+        
+    
+    threshold =  np.percentile(sorted(distribution), 95)
+    connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+    
+    for j in range (0, attention_scores.shape[1]):
+        #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
+        for i in range (0, attention_scores.shape[0]):
+            if attention_scores[i][j] > threshold: #np.percentile(sorted(attention_scores[:,i]), 50): #np.percentile(sorted(distribution), 50):
+                connecting_edges[i][j] = 1
+                
+    
+    
+    graph = csr_matrix(connecting_edges)
+    n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
+    print('number of component %d'%n_components)
+    
+    count_points_component = np.zeros((n_components))
+    for i in range (0, len(labels)):
+         count_points_component[labels[i]] = count_points_component[labels[i]] + 1
+               
+    print(count_points_component)
+    
+    id_label = 0  
+    index_dict = dict()
+    for i in range (0, count_points_component.shape[0]):
+        if count_points_component[i]>1:
+            id_label = id_label+1
+            index_dict[i] = id_label
+    print(id_label)
+            
+
+    for i in range (0, len(barcode_info)):
+        barcode_info[i][3] = 0 # initially all are zero
+        if count_points_component[labels[i]] > 1:
+            barcode_info[i][3] = index_dict[labels[i]]
+        
+           
+    
+    ########
+    number = 20
+    cmap = plt.get_cmap('tab20')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
+        
+    cell_count_cluster=np.zeros((labels.shape[0]))
+    filltype='full'
+    for j in range (0, n_components):
+        label_i = j
+        x_index=[]
+        y_index=[]
+        marker_size = []
+        #fillstyles_type = []
+        for i in range (0, len(barcode_info)):
+            if barcode_info[i][3] == label_i:
+                x_index.append(barcode_info[i][1])
+                y_index.append(barcode_info[i][2])
+                cell_count_cluster[j] = cell_count_cluster[j]+1
+                if j>1:
+                    j=1 # all positive nodes will have same color
+                spot_color = colors[j]
+                marker_size.append('o') 
+        
+        for i in range (0, len(x_index)):  
+            plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
+    
+    save_path = '/cluster/home/t116508uhn/64630/'
+    plt.savefig(save_path+'plot_naive_pdac_64630.svg', dpi=400)
