@@ -133,27 +133,34 @@ if __name__ == "__main__":
     number = 20
     cmap = plt.get_cmap('tab20')
     colors = [cmap(i) for i in np.linspace(0, 1, number)]
+    
+    
+    plt.clf()
+    x_index=[]
+    y_index=[]
+    marker_size = []   
+    spot_color = []
+    label = []
+    for i in range (0, len(barcode_info)):
+        x_index.append(barcode_info[i][1])
+        y_index.append(-barcode_info[i][2])
+        marker_size.append(matplotlib.markers.MarkerStyle(marker='o', fillstyle=filltype))
+        spot_color.append(colors[0])
+        label.append(-1)
         
     cell_count_cluster=np.zeros((labels.shape[0]))
     filltype='full'
     for j in range (0, n_components):
         label_i = j
-        x_index=[]
-        y_index=[]
-        marker_size = []
-        #fillstyles_type = []
+        
         for i in range (0, len(barcode_info)):
             if barcode_info[i][3] == label_i:
-                x_index.append(barcode_info[i][1])
-                y_index.append(barcode_info[i][2])
-                cell_count_cluster[j] = cell_count_cluster[j]+1
-                if j>1:
-                    j=1 # all positive nodes will have same color
-                spot_color = colors[j]
-                marker_size.append('o') 
-        
-        for i in range (0, len(x_index)):  
-            plt.scatter(x=x_index[i], y=-y_index[i], label = j, color=colors[j], marker=matplotlib.markers.MarkerStyle(marker=marker_size[i], fillstyle=filltype), s=15)   
-    
+                if label_i>1:
+                    label_i=1
+                label[i] = label_i
+                spot_color[i]=colors[label_i]
+                
+   
+    plt.scatter(x=x_index, y=y_index, label = label, color=spot_color, s=15) 
     save_path = '/cluster/home/t116508uhn/64630/'
     plt.savefig(save_path+'plot_naive_pdac_64630.svg', dpi=400)
