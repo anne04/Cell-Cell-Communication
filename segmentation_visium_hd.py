@@ -26,7 +26,14 @@ print(f"Number of segments: {len(np.unique(img['segmented_watershed']))}")
 # Number of segments: 9927
 # Number of segments: 14747 # sigma = 3
 # Number of segments: 28574 # sigma = 2
-# Number of segments:  # sigma = 1
+# Number of segments: 88284 # sigma = 1
+
+
+img = sq.im.ImageContainer(img='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/tissue_hires_image.png')
+sq.im.process(img, layer="image", method="smooth", sigma=1)
+sq.im.segment(img, channel=0, layer="image_smooth", method="watershed", geq=False)
+print(f"Number of segments: {len(np.unique(img['segmented_watershed']))}")
+# Number of segments: 88284 # sigma = 1
 
 fig, axes = plt.subplots(1, 2)
 img.show("image", channel=0, ax=axes[0], save='/cluster/home/t116508uhn/visium_hd_hne.png')
@@ -49,3 +56,5 @@ print(f"Number of segments in crop: {len(np.unique(img['segmented_watershed']))}
 
 # https://squidpy.readthedocs.io/en/stable/notebooks/examples/image/compute_segment_hne.html
 # https://squidpy.readthedocs.io/en/stable/api/squidpy.im.segment.html
+# https://squidpy.readthedocs.io/en/stable/notebooks/examples/image/compute_segmentation_features.html
+# https://squidpy.readthedocs.io/en/stable/classes/squidpy.im.ImageContainer.features_segmentation.html
