@@ -19,6 +19,8 @@ pdac <- FindNeighbors(pdac, reduction = "pca", dims = 1:30)
 pdac <- FindClusters(pdac, verbose = FALSE)
 pdac <- RunUMAP(pdac, reduction = "pca", dims = 1:30)
 
+write.csv(pdac[['seurat_clusters']], '/cluster/projects/schwartzgroup/fatema/CCC_project/pdac_64630_niches_seurat_barcode_vs_cluster.csv')
+
 p1 <- DimPlot(pdac, reduction = "umap", label = TRUE)
 p2 <- SpatialDimPlot(pdac, label = TRUE,  label.size = 3)
 # Error in FUN(left, right) : non-numeric argument to binary operator
