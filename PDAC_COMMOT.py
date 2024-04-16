@@ -38,7 +38,7 @@ threshold_distance = 500
 path = '/cluster/projects/schwartzgroup/fatema/CCC_project/'
 
 adata = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') 
-print(data)
+print(adata)
 
 cell_barcode = np.array(adata.obs.index)
 cell_barcode_index = dict()
@@ -139,7 +139,7 @@ key_distribution = sorted(key_distribution, key = lambda x: x[1], reverse=True) 
 data_list=dict()
 data_list['X']=[]
 data_list['Y']=[] 
-for i in range (0, 100): 
+for i in range (0, len(key_distribution)): 
     data_list['X'].append(key_distribution[i][0])
     data_list['Y'].append(key_distribution[i][1])
     
@@ -153,4 +153,26 @@ chart = alt.Chart(data_list_pd).mark_bar().encode(
     y='Communication (#)'
 )
 
-chart.save(output_name + args.data_name +'_commot_classical_ccc.html')
+chart.save('/cluster/home/t116508uhn/' + args.data_name +'_commot_classical_ccc.html')
+
+ct.tl.communication_direction(adata, database_name='cellchat',  lr_pair=['MDK','ITGA6_ITGB1'],  k=5) #pathway_name='CCL',
+print('Plot the CCC')
+ct.pl.plot_cell_communication(adata, database_name='cellchat', lr_pair=['MDK','ITGA6_ITGB1'], plot_method='grid', background_legend=True,
+    scale=0.00003, ndsize=8, grid_density=0.4, summary='sender', background='image', clustering='leiden', cmap='Alphabet',
+    normalize_v = True, normalize_v_quantile=0.995, filename='/cluster/home/t116508uhn/' + args.data_name + '_MDK-ITGA6_ITGB1_' + 'PSAP_cluster.pdf')
+
+ct.tl.communication_direction(adata, database_name='cellchat',  lr_pair=['MDK','SDC4'],  k=5) #pathway_name='CCL',
+print('Plot the CCC')
+ct.pl.plot_cell_communication(adata, database_name='cellchat', lr_pair=['MDK','SDC4'], plot_method='grid', background_legend=True,
+    scale=0.00003, ndsize=8, grid_density=0.4, summary='sender', background='image', clustering='leiden', cmap='Alphabet',
+    normalize_v = True, normalize_v_quantile=0.995, filename='/cluster/home/t116508uhn/' + args.data_name + '_MDK-SDC4_' + 'PSAP_cluster.pdf')
+
+ct.tl.communication_direction(adata, database_name='cellchat',  lr_pair=['MDK','NCL'],  k=5) #pathway_name='CCL',
+print('Plot the CCC')
+ct.pl.plot_cell_communication(adata, database_name='cellchat', lr_pair=['MDK','NCL'], plot_method='grid', background_legend=True,
+    scale=0.00003, ndsize=8, grid_density=0.4, summary='sender', background='image', clustering='leiden', cmap='Alphabet',
+    normalize_v = True, normalize_v_quantile=0.995, filename='/cluster/home/t116508uhn/' + args.data_name + '_MDK-NCL_' + 'PSAP_cluster.pdf')
+
+ct.pl.plot_cell_communication(adata, database_name='cellchat', lr_pair=['MDK','NCL'], plot_method='grid', background_legend=True,
+    scale=0.00003, ndsize=8, grid_density=0.4, summary='sender', background='image', clustering='leiden', cmap='Alphabet',
+    normalize_v = True, normalize_v_quantile=0.5, filename='/cluster/home/t116508uhn/' + args.data_name + '_MDK-NCL_p5' + 'PSAP_cluster.pdf')
