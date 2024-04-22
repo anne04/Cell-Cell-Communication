@@ -228,6 +228,9 @@ gdf['id'] = [f"ID_{i+1}" for i, _ in enumerate(gdf.index)]
 # Define a single color cmap
 cmap=ListedColormap(['grey'])
 
+
+with gzip.open(dir_base+ 'gdf_p8', 'wb') as fp:  #b, a:[0:5]   
+    pickle.dump(gdf, fp)
 # Create Plot
 plot_mask_and_save_image(title="Region of Interest 1",gdf=gdf,bbox=(12844,7700,13760,8664),cmap=cmap,img=img,output_name=dir_base+"image_mask.ROI1.tif")
 plot_mask_and_save_image(title="Region full",gdf=gdf,cmap=cmap,img=img,output_name=dir_base+"image_mask_full.tif")
@@ -237,7 +240,7 @@ raw_h5_file = dir_base+'filtered_feature_bc_matrix.h5'
 adata = sc.read_10x_h5(raw_h5_file)
 
 # Load the Spatial Coordinates
-tissue_position_file = dir_base+'tissue_positions.parquet'
+tissue_position_file = dir_base+'spatial/'+'tissue_positions.parquet'
 df_tissue_positions=pd.read_parquet(tissue_position_file)
 
 #Set the index of the dataframe to the barcodes
@@ -299,5 +302,8 @@ summed_counts = summed_counts.tocsr()
 grouped_filtered_adata = anndata.AnnData(X=summed_counts,obs=pd.DataFrame(polygon_id,columns=['id'],index=polygon_id),var=filtered_adata.var)
 
 %store grouped_filtered_adata
+grouped_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p8.h5ad', compression='gzip')
+grouped_filtered_adata.write_h5(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p8.h5', compression='gzip')
+
 
 
