@@ -181,8 +181,14 @@ def total_umi(adata_, cut_off):
 
 # Load the image file
 # Change dir_base as needed to the directory where the downloaded example data is stored
-dir_base = '/path_to_data/'
-filename = 'SJ0309_MsSI_slide08_01_20x_BF_01.btf'
+'''
+dir_base = '/cluster/projects/schwartzgroup/fatema/data/square_002um/'
+filename = 'Visium_HD_Mouse_Small_Intestine_tissue_image.btf'
+'''
+
+dir_base = '/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/'
+filename = 'Visium_HD_Human_Colon_Cancer_tissue_image.btf'
+
 img = imread(dir_base + filename)
 
 # Load the pretrained model
@@ -197,7 +203,7 @@ img = normalize(img, min_percentile, max_percentile)
 # Predict cell nuclei using the normalized image
 # Adjust nms_thresh and prob_thresh as needed
 
-labels, polys = model.predict_instances_big(img, axes='YXC', block_size=4096, prob_thresh=0.01,nms_thresh=0.001, min_overlap=128, context=128, normalizer=None, n_tiles=(4,4,1))
+labels, polys = model.predict_instances_big(img, axes='YXC', block_size=4096, prob_thresh=0.8,nms_thresh=0.001, min_overlap=128, context=128, normalizer=None, n_tiles=(4,4,1))
 
 
 # Creating a list to store Polygon geometries
@@ -224,6 +230,7 @@ cmap=ListedColormap(['grey'])
 
 # Create Plot
 plot_mask_and_save_image(title="Region of Interest 1",gdf=gdf,bbox=(12844,7700,13760,8664),cmap=cmap,img=img,output_name=dir_base+"image_mask.ROI1.tif")
+plot_mask_and_save_image(title="Region full",gdf=gdf,cmap=cmap,img=img,output_name=dir_base+"image_mask_full.tif")
 
 # Load Visium HD data
 raw_h5_file = dir_base+'filtered_feature_bc_matrix.h5'
