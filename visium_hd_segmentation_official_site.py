@@ -147,7 +147,7 @@ def plot_clusters_and_save_image(title, gdf, img, adata, bbox=None, color_by_obs
         plt.show()
 
 # Plotting function for nuclei area distribution
-def plot_nuclei_area(gdf,area_cut_off):
+def plot_nuclei_area(gdf,area_cut_off,output_name):
     fig, axs = plt.subplots(1, 2, figsize=(15, 4))
     # Plot the histograms
     axs[0].hist(gdf['area'], bins=50, edgecolor='black')
@@ -157,10 +157,14 @@ def plot_nuclei_area(gdf,area_cut_off):
     axs[1].set_title('Nuclei Area Filtered:'+str(area_cut_off))
 
     plt.tight_layout()
-    plt.show()
+    # Save the plot if output_name is provided
+    if output_name is not None:
+        plt.savefig(output_name, bbox_inches='tight')  # Use bbox_inches='tight' to include the legend
+    else:
+        plt.show()
 
 # Total UMI distribution plotting function
-def total_umi(adata_, cut_off):
+def total_umi(adata_, cut_off,output_name):
     fig, axs = plt.subplots(1, 2, figsize=(12, 4))
 
     # Box plot
@@ -176,7 +180,11 @@ def total_umi(adata_, cut_off):
         ax.get_yaxis().set_visible(False)
 
     plt.tight_layout()
-    plt.show()
+    # Save the plot if output_name is provided
+    if output_name is not None:
+        plt.savefig(output_name, bbox_inches='tight')  # Use bbox_inches='tight' to include the legend
+    else:
+        plt.show()
 
 
 # Load the image file
@@ -233,7 +241,7 @@ cmap=ListedColormap(['grey'])
 with gzip.open(dir_base+ 'gdf_p7', 'wb') as fp:     
     pickle.dump(gdf, fp)
 
-#fp = gzip.open(dir_base+ 'gdf_p8', 'rb')   
+#fp = gzip.open(dir_base+ 'gdf_p75', 'rb') #8   
 #gdf = pickle.load(fp)
 
 # Create Plot
@@ -308,7 +316,7 @@ grouped_filtered_adata = anndata.AnnData(X=summed_counts,obs=pd.DataFrame(polygo
 
 %store grouped_filtered_adata
 grouped_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p7.h5ad', compression='gzip')
-
+#grouped_filtered_adata = anndata.read_h5ad('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p75.h5ad')
 
 # Store the area of each nucleus in the GeoDataframe
 gdf['area'] = gdf['geometry'].area
@@ -316,12 +324,12 @@ gdf['area'] = gdf['geometry'].area
 sc.pp.calculate_qc_metrics(grouped_filtered_adata, inplace=True)
 
 # Plot the nuclei area distribution before and after filtering
-#plot_nuclei_area(gdf=gdf,area_cut_off=500)
+plot_nuclei_area(gdf=gdf,area_cut_off=1000,output_name=dir_base+"image_nuclei_area.tif")
 # Plot total UMI distribution
-#total_umi(grouped_filtered_adata, 100)
+total_umi(grouped_filtered_adata, 100,output_name=dir_base+"image_umi.tif")
 
-# Create a mask based on the 'id' column for values present in 'gdf' with 'area' less than 500
-mask_area = grouped_filtered_adata.obs['id'].isin(gdf[gdf['area'] < 500].id)
+# Create a mask based on the 'id' column for values present in 'gdf' with 'area' less than 1000
+mask_area = grouped_filtered_adata.obs['id'].isin(gdf[gdf['area'] < 1000].id)
 # Create a mask based on the 'total_counts' column for values greater than 100
 mask_count = grouped_filtered_adata.obs['total_counts'] > 100
 # Apply both masks to the original AnnData to create a new filtered AnnData object
@@ -330,12 +338,12 @@ count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 # Calculate quality control metrics for the filtered AnnData object
 sc.pp.calculate_qc_metrics(count_area_filtered_adata, inplace=True)
 
-count_area_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/count_area_filtered_adata_p7.h5ad', compression='gzip')
+count_area_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/count_area_filtered_adata_p75.h5ad', compression='gzip')
 # Plot and save the clustering results
 # plot_clusters_and_save_image(title="Region of interest 1", gdf=gdf, img=img, adata=count_area_filtered_adata, bbox=(12844,7700,13760,8664), color_by_obs='clusters', output_name=dir_base+"image_clustering.ROI1.tiff")
 # Plot Lyz1 gene expression
-plot_gene_and_save_image(title="Region of interest 1", gdf=gdf, gene='MUC2', img=img, adata=count_area_filtered_adata, bbox=(12844+12844,7700,12844+13760,8664),output_name=dir_base+"image_Muc2.ROI1.tiff")
-plot_gene_and_save_image(title="Region full", gdf=gdf, gene='MUC2', img=img, adata=count_area_filtered_adata,output_name=dir_base+"image_full_Muc2.tiff")
+plot_gene_and_save_image(title="Region of interest 1", gdf=gdf, gene='TGFBI', img=img, adata=count_area_filtered_adata, bbox=(12844+12844,7700,12844+13760,8664),output_name=dir_base+"image_TGFBI.ROI1.tiff")
+plot_gene_and_save_image(title="Region full", gdf=gdf, gene='TGFBI', img=img, adata=count_area_filtered_adata,output_name=dir_base+"image_full_TGFBI.tiff")
 
 
 
