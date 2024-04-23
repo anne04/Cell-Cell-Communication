@@ -56,7 +56,7 @@ if __name__ == "__main__":
     gene_count_after = len(list(adata_h5.var_names) )  
     print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
     gene_ids = list(adata_h5.var_names)
-    cell_barcode = np.array(adata_h5.obs.index)
+    cell_id = np.array(adata_h5.obs.index) #id
     print('Number of barcodes: %d'%cell_barcode.shape[0])
     print('Applying quantile normalization')
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
@@ -66,33 +66,54 @@ if __name__ == "__main__":
     # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
     adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
 
-    #
+    # following will give barcode vs id
     barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
 
+    # combine above two to get: barcode, id, coordinates
+    id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
     
-    ############################################################################################################################
-        # now read the tissue position file. It has the format:     
-        df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
-        tissue_position = df.values
-        barcode_vs_xy = dict() # record the x and y coordinates for each spot/cell
-        for i in range (0, tissue_position.shape[0]):
-            barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] # x and y coordinates
-            #barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format for LUAD sample, the x and y are swapped
-        
-        coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
-        for i in range (0, cell_barcode.shape[0]):
-            coordinates[i,0] = barcode_vs_xy[cell_barcode[i]][0]
-            coordinates[i,1] = barcode_vs_xy[cell_barcode[i]][1]
-        
-    
-    
-    
+    # intersect barcode_id_coord with adata_h5.obs['id'] --> to get coordinates of cells in adata_h5
+    coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
+    cell_barcode = []
+    for i in range (0, cell_id.shape[0]):    
+        coordinates[i,0] = id_barcode_coord[cell_id[i]][1][0]
+        coordinates[i,1] = id_barcode_coord[cell_id[i]][1][1]
+        cell_barcode.append(id_barcode_coord[cell_id[i]][0])
     ##################### make metadata: barcode_info ###################################
     i=0
     barcode_info=[]
     for cell_code in cell_barcode:
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
+
+    
+    ############################ Now plot it to see how does it look ###################
+    data_list=dict()
+    #data_list['pathology_label']=[]
+    data_list['X']=[]
+    data_list['Y']=[]     
+
+    for i in range (0, len(barcode_info)):        
+        #data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(barcode_info[i][2])
+
+   
+    data_list_pd = pd.DataFrame(data_list)
+    #category_count = len(list(set(data_list['pathology_label']))) 
+    #set1 = altairThemes.get_colour_scheme("Set1",category_count)
+    #set1[0] = '#000000'
+    chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        #shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
+        #color=alt.Color('pathology_label:N', scale=alt.Scale(range=set1)), 
+        #tooltip=['pathology_label'] #,'opacity'
+    )
+
+    chart.save(output_name + args.data_name +'_tissue_altair_plot.html')
+    print('Altair plot generation done')    
+
     ################################################
     
     gene_info=dict()
