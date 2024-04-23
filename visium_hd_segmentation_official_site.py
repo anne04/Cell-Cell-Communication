@@ -238,11 +238,11 @@ gdf['id'] = [f"ID_{i+1}" for i, _ in enumerate(gdf.index)]
 cmap=ListedColormap(['grey'])
 
 
-with gzip.open(dir_base+ 'gdf_p7', 'wb') as fp:     
-    pickle.dump(gdf, fp)
+#with gzip.open(dir_base+ 'gdf_p7', 'wb') as fp:     
+#    pickle.dump(gdf, fp)
 
-#fp = gzip.open(dir_base+ 'gdf_p75', 'rb') #8   
-#gdf = pickle.load(fp)
+fp = gzip.open(dir_base+ 'gdf_p75', 'rb') #8   
+gdf = pickle.load(fp)
 
 # Create Plot
 plot_mask_and_save_image(title="Region of Interest 1",gdf=gdf,bbox=(12844+12844,7700,12844+13760,8664),cmap=cmap,img=img,output_name=dir_base+"image_mask.ROI1.tif")
@@ -317,6 +317,8 @@ grouped_filtered_adata = anndata.AnnData(X=summed_counts,obs=pd.DataFrame(polygo
 %store grouped_filtered_adata
 grouped_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p7.h5ad', compression='gzip')
 #grouped_filtered_adata = anndata.read_h5ad('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p75.h5ad')
+barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
+barcode_vs_id.to_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv',header=None)
 
 # Store the area of each nucleus in the GeoDataframe
 gdf['area'] = gdf['geometry'].area
