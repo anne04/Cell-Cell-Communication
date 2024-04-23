@@ -63,9 +63,13 @@ if __name__ == "__main__":
     cell_vs_gene = np.transpose(temp)      
 
     ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
-    df_tissue_positions=pd.read_parquet(args.tissue_position_file)  
-    
+    # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
+    adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
 
+    #
+    barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
+
+    
     ############################################################################################################################
         # now read the tissue position file. It has the format:     
         df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
