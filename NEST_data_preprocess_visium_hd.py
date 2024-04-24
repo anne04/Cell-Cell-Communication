@@ -11,6 +11,7 @@ import gzip
 import argparse
 import os
 import scanpy as sc
+import anndata
 
 print('user input reading')
 #current_dir = 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
     parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs")  
-    parser.add_argument( '--data_from', type=str, deafault='/cluster/projects/schwartzgroup/fatema/data/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+    parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.metadata_to):
         os.makedirs(args.metadata_to)
     
-    data_path = data_from + data_name+ '/' + 'count_area_filtered_adata_p75.h5ad'
+    data_path = args.data_from + args.data_name+ '/' + 'count_area_filtered_adata_p75.h5ad'
   
     ####### get the gene id, cell barcode, cell coordinates ######
     print('input data reading')
@@ -57,7 +58,7 @@ if __name__ == "__main__":
     print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
     gene_ids = list(adata_h5.var_names)
     cell_id = np.array(adata_h5.obs.index) #id
-    print('Number of barcodes: %d'%cell_barcode.shape[0])
+    print('Number of barcodes: %d'%cell_id.shape[0])
     print('Applying quantile normalization')
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
     cell_vs_gene = np.transpose(temp)      
@@ -65,17 +66,42 @@ if __name__ == "__main__":
     ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
     # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
     adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
+    barcode_list = list(adata.obs.index)
+    barcode_coord = dict()
+    for i in range(0, len(barcode_list)):
+        barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
 
-    # following will give barcode vs id
+
+    
+    # following will give barcode vs id for segmented+grouped data p75
     barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
 
-    # combine above two to get: barcode, id, coordinates
-    id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
     
+    # combine above two to get: id = list of (barcodes, coordinates) assigned to that id
+    id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
+    for i in range(0, len(barcode_vs_id)):
+        id_barcode_coord[barcode_vs_id[1][i]].append([barcode_vs_id[0][i], barcode_coord[barcode_vs_id[0][i]]])
+
+    # filter it to keep only those who are in the final area+UMI filtered data
+    id_barcode_coord_temp = defaultdict(list) # key=id, value=[[barcode, [coord]]]
+    for i in range(0, len(cell_id)):
+        id_barcode_coord_temp[cell_id[i]] = id_barcode_coord[cell_id[i]]
+
+    id_barcode_coord = id_barcode_coord_temp
+
+        
     # intersect barcode_id_coord with adata_h5.obs['id'] --> to get coordinates of cells in adata_h5
-    coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
+    coordinates = np.zeros((cell_id.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
     cell_barcode = []
     for i in range (0, cell_id.shape[0]):    
+        list_barcodes_coord = id_barcode_coord[cell_id[i]]
+        cell_barcode.append([])
+        
+        for j in range (0,len(list_barcodes_coord)):
+            cell_barcode[i].append(list_barcodes_coord[j][0])
+            
+        
+        
         coordinates[i,0] = id_barcode_coord[cell_id[i]][1][0]
         coordinates[i,1] = id_barcode_coord[cell_id[i]][1][1]
         cell_barcode.append(id_barcode_coord[cell_id[i]][0])
