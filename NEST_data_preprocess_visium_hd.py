@@ -12,6 +12,7 @@ import argparse
 import os
 import scanpy as sc
 import anndata
+from shapely import MultiPoint, centroid
 
 print('user input reading')
 #current_dir = 
@@ -28,9 +29,12 @@ if __name__ == "__main__":
     parser.add_argument( '--tissue_position_file', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/tissue_positions.parquet', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
     parser.add_argument( '--spot_diameter', type=float, default=89.43, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
+    parser.add_argument( '--distance_measure', type=str, default='knn' , help='Set neighborhood cutoff criteria')
+    parser.add_argument( '--k', type=int, default=10 , help='Set neighborhood cutoff number')    
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     args = parser.parse_args()
+    k_nn = args.k
     
     if args.neighborhood_threshold == 0:
         args.neighborhood_threshold = args.spot_diameter*4
@@ -97,22 +101,25 @@ if __name__ == "__main__":
         list_barcodes_coord = id_barcode_coord[cell_id[i]]
         cell_barcode.append([])
         list_coords = []
-        for j in range (0,len(list_barcodes_coord)):
+        for j in range (0, len(list_barcodes_coord)):
             cell_barcode[i].append(list_barcodes_coord[j][0])
             list_coords.append((list_barcodes_coord[j][1]))
-        if len(list_coords) < 4:
-            point = MultiPoint(list_coords)
-        else:
-            point = Polygon(list_coords)  
+
+        #coordinates[i,0] = list_coords[0][0]
+        #coordinates[i,1] = list_coords[0][1]
+        #if len(list_coords) < 4:
+        point = MultiPoint(list_coords)
+        #else:
+        #    point = Polygon(list_coords)  
             
         coordinates[i,0] = point.centroid.coords[0][0]
         coordinates[i,1] = point.centroid.coords[0][1]
         
-
+    
     ##################### make metadata: barcode_info ###################################
     i=0
     barcode_info=[]
-    for cell_code in cell_barcode:
+    for cell_code in cell_id:
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
 
@@ -141,7 +148,7 @@ if __name__ == "__main__":
         #tooltip=['pathology_label'] #,'opacity'
     )
 
-    chart.save(output_name + args.data_name +'_tissue_altair_plot.html')
+    chart.save('/cluster/home/t116508uhn/' + args.data_name +'_tissue_altair_plot.html')
     print('Altair plot generation done')    
 
     ################################################
@@ -168,8 +175,60 @@ if __name__ == "__main__":
         with gzip.open(metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
         	pickle.dump(node_id_sorted_xy, fp)
     
+    ###################################### Neighborhood Cutoff ###########################################
+    # build physical distance matrix
+    from sklearn.metrics.pairwise import euclidean_distances
+    distance_matrix = np.zeros((len(cell_id), len(cell_id)))
+    distance_matrix[:,0:10000] = euclidean_distances(coordinates, coordinates[0:10000])
+    distance_matrix[:,10000:20000] = euclidean_distances(coordinates, coordinates[10000:20000])
+    distance_matrix[:,20000:30000] = euclidean_distances(coordinates, coordinates[20000:30000])
+    distance_matrix[:,30000:40000] = euclidean_distances(coordinates, coordinates[30000:40000])
+    distance_matrix[:,40000:50000] = euclidean_distances(coordinates, coordinates[40000:50000])
+    distance_matrix[:,50000:len(cell_id)] = euclidean_distances(coordinates, coordinates[50000:len(cell_id)])
+
     
-    ####################################################################
+    # assign weight to the neighborhood relations based on neighborhood distance 
+    dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
+    for j in range(49659, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
+        max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
+        min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
+        for i in range(distance_matrix.shape[0]):
+            dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
+            	
+        #list_indx = list(np.argsort(dist_X[:,j]))
+        #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+
+        if args.distance_measure=='knn':
+            list_indx = list(np.argsort(dist_X[:,j]))
+            k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+            for i in range(0, distance_matrix.shape[0]):
+                if i not in k_higher:
+                    dist_X[i,j] = 0 #-1
+        else:
+            for i in range(0, distance_matrix.shape[0]):
+                if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
+                    dist_X[i,j] = 0 # no ccc happening outside threshold distance
+    
+
+    dist_X_list = []
+    for i in range (0, dist_X.shape[0]):
+        for j in range (0, dist_X.shape[1]):
+            if dist_X[i,j]!=0:
+                dist_X_list.append([i, j, dist_X[i,j]])
+                
+    with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'wb') as fp:  
+        pickle.dump(dist_X_list, fp)
+
+    
+
+
+
+
+
+    
+    #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
+    #####################################################################################        
+
     # ligand - receptor database 
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
@@ -224,26 +283,6 @@ if __name__ == "__main__":
         
     
     ###################################################################################
-    # build physical distance matrix
-    from sklearn.metrics.pairwise import euclidean_distances
-    distance_matrix = euclidean_distances(coordinates, coordinates)
-    
-    # assign weight to the neighborhood relations based on neighborhood distance 
-    dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
-    for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
-        max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
-        min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
-        for i in range(distance_matrix.shape[0]):
-            dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
-            	
-        #list_indx = list(np.argsort(dist_X[:,j]))
-        #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-        for i in range(0, distance_matrix.shape[0]):
-            if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
-                dist_X[i,j] = 0 # no ccc happening outside threshold distance
-                
-    #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
-    #####################################################################################
     # Set threshold gene percentile
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
