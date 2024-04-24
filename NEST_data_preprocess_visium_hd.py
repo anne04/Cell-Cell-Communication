@@ -96,15 +96,19 @@ if __name__ == "__main__":
     for i in range (0, cell_id.shape[0]):    
         list_barcodes_coord = id_barcode_coord[cell_id[i]]
         cell_barcode.append([])
-        
+        list_coords = []
         for j in range (0,len(list_barcodes_coord)):
             cell_barcode[i].append(list_barcodes_coord[j][0])
+            list_coords.append((list_barcodes_coord[j][1]))
+        if len(list_coords) < 4:
+            point = MultiPoint(list_coords)
+        else:
+            point = Polygon(list_coords)  
             
+        coordinates[i,0] = point.centroid.coords[0][0]
+        coordinates[i,1] = point.centroid.coords[0][1]
         
-        
-        coordinates[i,0] = id_barcode_coord[cell_id[i]][1][0]
-        coordinates[i,1] = id_barcode_coord[cell_id[i]][1][1]
-        cell_barcode.append(id_barcode_coord[cell_id[i]][0])
+
     ##################### make metadata: barcode_info ###################################
     i=0
     barcode_info=[]
