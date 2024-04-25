@@ -309,7 +309,7 @@ if __name__ == "__main__":
     
     ##############################################################################
     # some preprocessing before making the input graph
-    count_total_edges = 0
+    
     '''
     cells_ligand_vs_receptor = []
     for i in range (0, cell_vs_gene.shape[0]):
@@ -325,6 +325,7 @@ if __name__ == "__main__":
     start_index = 0 #args.slice
     end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
     cell_contact_found = 0
+    count_total_edges = 0
     for g in range(start_index, end_index): 
         gene = ligand_list[g]
         for i in range (0, cell_vs_gene.shape[0]): # ligand
@@ -335,9 +336,11 @@ if __name__ == "__main__":
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if i not in dist_X_dict or j not in dist_X_dict[i]: #dist_X[i,j]==0: 
                     continue
-    
+                #print('%d, %d'%(i, j))
+                
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                        #print('i and j are both high')
                         if gene_rec in cell_cell_contact:
                             if distance_matrix[i,j] > args.spot_diameter:
                                 continue
