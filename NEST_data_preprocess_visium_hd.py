@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument( '--filter_min_cell', type=int, default=1 , help='Minimum number of cells for gene filtering') 
     parser.add_argument( '--threshold_gene_exp', type=float, default=98, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     parser.add_argument( '--tissue_position_file', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/tissue_positions.parquet', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
-    parser.add_argument( '--spot_diameter', type=float, default=89.43, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
+    parser.add_argument( '--spot_diameter', type=float, default=37.04, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--distance_measure', type=str, default='knn' , help='Set neighborhood cutoff criteria')
     parser.add_argument( '--k', type=int, default=10 , help='Set neighborhood cutoff number')    
@@ -172,7 +172,7 @@ if __name__ == "__main__":
             i=i+1
         	
         node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-        with gzip.open(metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+        with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
         	pickle.dump(node_id_sorted_xy, fp)
     
     ###################################### Neighborhood Cutoff ###########################################
@@ -216,14 +216,24 @@ if __name__ == "__main__":
             if dist_X[i,j]!=0:
                 dist_X_list.append([i, j, dist_X[i,j]])
                 
-    with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'wb') as fp:  
-        pickle.dump(dist_X_list, fp)
+    # len is 595,460
+    #with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'wb') as fp:  
+    #    pickle.dump(dist_X_list, fp)
 
-    
+    with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'rb') as fp:  
+        dist_X_list = pickle.load(fp)    
 
-
-
-
+    dist_X_dict = defaultdict(dict)
+    for k in range (0, len(dist_X_list)):
+        i = dist_X_list[k][0]
+        j = dist_X_list[k][1]
+        score = dist_X_list[k][2]
+        if i not in dist_X_dict:
+            dist_X_dict[i][j] = score
+        elif j not in dist_X_dict[i]:
+            dist_X_dict[i][j] = score
+        else:
+            print('error')
 
     
     #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
@@ -243,6 +253,8 @@ if __name__ == "__main__":
     ligand_dict_dataset = defaultdict(list)
     cell_cell_contact = dict() 
     count_pair = 0
+    ligand_gene = dict()
+    receptor_gene = dict()
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i]
         if ligand not in gene_info: # not found in the dataset
@@ -255,6 +267,10 @@ if __name__ == "__main__":
         ligand_dict_dataset[ligand].append(receptor)
         gene_info[ligand] = 'included'
         gene_info[receptor] = 'included'
+
+        ligand_gene[ligand] = ''
+        receptor_gene[receptor] = ''
+        
         count_pair = count_pair + 1
         
         if df["Annotation"][i] == 'Cell-Cell Contact':
@@ -263,6 +279,8 @@ if __name__ == "__main__":
     
     print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
     print('number of ligands %d '%len(ligand_dict_dataset.keys()))
+    print('number of ligands %d '%len(ligand_gene.keys()))
+    print('number of receptor %d '%len(receptor_gene.keys()))
     
     included_gene=[]
     for gene in gene_info.keys(): 
@@ -292,20 +310,21 @@ if __name__ == "__main__":
     ##############################################################################
     # some preprocessing before making the input graph
     count_total_edges = 0
-    
+    '''
     cells_ligand_vs_receptor = []
     for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor.append([])
-        
+      
     for i in range (0, cell_vs_gene.shape[0]):
         for j in range (0, cell_vs_gene.shape[0]):
             cells_ligand_vs_receptor[i].append([])
             cells_ligand_vs_receptor[i][j] = []
-
+    '''
+    cells_ligand_vs_receptor = defaultdict(dict)
     ligand_list =  list(ligand_dict_dataset.keys())            
     start_index = 0 #args.slice
     end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
-    
+    cell_contact_found = 0
     for g in range(start_index, end_index): 
         gene = ligand_list[g]
         for i in range (0, cell_vs_gene.shape[0]): # ligand
@@ -314,13 +333,16 @@ if __name__ == "__main__":
                 continue
             
             for j in range (0, cell_vs_gene.shape[0]): # receptor
-                if dist_X[i,j]==0: #distance_matrix[i,j] >= args.neighborhood_threshold: #spot_diameter*4
+                if i not in dist_X_dict or j not in dist_X_dict[i]: #dist_X[i,j]==0: 
                     continue
     
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
-                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > args.spot_diameter:
-                            continue
+                        if gene_rec in cell_cell_contact:
+                            if distance_matrix[i,j] > args.spot_diameter:
+                                continue
+                            else:
+                                cell_contact_found = cell_contact_found + 1
     
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
                         relation_id = l_r_pair[gene][gene_rec]
@@ -328,14 +350,25 @@ if __name__ == "__main__":
                         if communication_score<=0:
                             print('zero valued ccc score found. Might be a potential ERROR!! ')
                             continue	
-                            
-                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+
+                        #cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                        if i in cells_ligand_vs_receptor:
+                            if j in cells_ligand_vs_receptor[i]:
+                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            else:
+                                cells_ligand_vs_receptor[i][j] = []
+                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                        else:
+                            cells_ligand_vs_receptor[i][j] = []
+                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+
+                        
                         count_total_edges = count_total_edges + 1
                         
         print('%d genes done out of %d ligand genes'%(g+1, len(ligand_list)))
     
     
-    #print('total number of edges in the input graph %d '%count_total_edges)
+    print('total number of edges in the input graph %d with cell_contact_found %d'%(count_total_edges,cell_contact_found))
     ################################################################################
     # input graph generation
     ccc_index_dict = dict()
@@ -346,7 +379,7 @@ if __name__ == "__main__":
     for i in range (0, len(cells_ligand_vs_receptor)):
         #ccc_j = []
         for j in range (0, len(cells_ligand_vs_receptor)):
-            if dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
+            if i in dist_X_dict and j in dist_X_dict[i]: #dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
                 count_local = 0
                 if len(cells_ligand_vs_receptor[i][j])>0:
                     for k in range (0, len(cells_ligand_vs_receptor[i][j])):
@@ -388,8 +421,11 @@ if __name__ == "__main__":
     
     ######### optional #############################################################           
     # we do not need this to use anywhere. But just for debug purpose we are saving this. We can skip this if we have space issue.
-    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
-    	pickle.dump(cell_vs_gene, fp)
+    #with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
+    #	pickle.dump(cell_vs_gene, fp)
+    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:  
+    	cell_vs_gene = pickle.load(fp)
+    
         
     print('write data done')
     
