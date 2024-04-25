@@ -24,14 +24,14 @@ if __name__ == "__main__":
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
-    parser.add_argument( '--filter_min_cell', type=int, default=1 , help='Minimum number of cells for gene filtering') 
+    parser.add_argument( '--filter_min_cell', type=int, default=1000 , help='Minimum number of cells for gene filtering') 
     parser.add_argument( '--threshold_gene_exp', type=float, default=98, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     parser.add_argument( '--tissue_position_file', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/tissue_positions.parquet', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
     parser.add_argument( '--spot_diameter', type=float, default=37.04, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--distance_measure', type=str, default='knn' , help='Set neighborhood cutoff criteria')
     parser.add_argument( '--k', type=int, default=10 , help='Set neighborhood cutoff number')    
-    parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
+    parser.add_argument( '--neighborhood_threshold', type=float, default=0, help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     args = parser.parse_args()
     k_nn = args.k
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     distance_matrix[:,40000:50000] = euclidean_distances(coordinates, coordinates[40000:50000])
     distance_matrix[:,50000:len(cell_id)] = euclidean_distances(coordinates, coordinates[50000:len(cell_id)])
 
-    
+    '''
     # assign weight to the neighborhood relations based on neighborhood distance 
     dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
     for j in range(49659, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     # len is 595,460
     #with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'wb') as fp:  
     #    pickle.dump(dist_X_list, fp)
-
+    '''
     with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'rb') as fp:  
         dist_X_list = pickle.load(fp)    
 
@@ -424,10 +424,10 @@ if __name__ == "__main__":
     
     ######### optional #############################################################           
     # we do not need this to use anywhere. But just for debug purpose we are saving this. We can skip this if we have space issue.
-    #with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
-    #	pickle.dump(cell_vs_gene, fp)
-    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:  
-    	cell_vs_gene = pickle.load(fp)
+    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
+    	pickle.dump(cell_vs_gene, fp)
+    #with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:  
+    #	cell_vs_gene = pickle.load(fp)
     
         
     print('write data done')
