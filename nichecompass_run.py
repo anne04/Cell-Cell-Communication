@@ -67,7 +67,7 @@ differential_gp_test_results_key = "nichecompass_differential_gp_test_results"
 
 # Get time of notebook execution for timestamping saved artifacts
 now = datetime.now()
-current_timestamp = now.strftime("%d%m%Y_%H%M%S")
+current_timestamp = '25042024_171242' #now.strftime("%d%m%Y_%H%M%S")
 
 # Define paths
 ga_data_folder_path = "data/gene_annotations"
@@ -161,6 +161,17 @@ print(f"Number of gene programs after filtering and combining: "
 adata = sc.read_h5ad(
         f"{so_data_folder_path}/{dataset}_batch1.h5ad")
 
+######### Human lymph #######################################
+adata = sc.read_visium("/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/")
+adata.layers['counts']=adata.X
+adata_batch = []
+
+for i in range (0, adata.X.shape[0]):
+     adata_batch.append('sagittal1')
+
+adata.obs['batch'] = adata_batch
+################################################
+
 # Compute spatial neighborhood
 sq.gr.spatial_neighbors(adata,
                         coord_type="generic",
@@ -187,22 +198,22 @@ add_gps_from_gp_dict_to_adata(
     max_genes_per_gp=None,
     max_source_genes_per_gp=None,
     max_target_genes_per_gp=None)
-
+'''
 cell_type_colors = create_new_color_dict(
     adata=adata,
     cat_key=cell_type_key)
-
+'''
 print(f"Number of nodes (observations): {adata.layers['counts'].shape[0]}")
 print(f"Number of node features (genes): {adata.layers['counts'].shape[1]}")
-
+'''
 # Visualize cell-level annotated data in physical space
 sc.pl.spatial(adata,
               color=cell_type_key,
               palette=cell_type_colors,
               spot_size=spot_size)        
-
-load_timestamp = "09022024_180928"
-# load_timestamp = current_timestamp # uncomment if you trained the model in this notebook
+'''
+#load_timestamp = "09022024_180928"
+load_timestamp = current_timestamp # uncomment if you trained the model in this notebook
 
 figure_folder_path = f"{artifacts_folder_path}/single_sample/{load_timestamp}/figures"
 model_folder_path = f"{artifacts_folder_path}/single_sample/{load_timestamp}/model"
@@ -238,11 +249,11 @@ model.train(n_epochs=n_epochs,
 sc.pp.neighbors(model.adata,
                 use_rep=latent_key,
                 key_added=latent_key)
-
+'''
 # Compute UMAP embedding
 sc.tl.umap(model.adata,
            neighbors_key=latent_key)
-
+'''
 # Save trained model
 model.save(dir_path=model_folder_path,
            overwrite=True,
@@ -260,11 +271,11 @@ model = NicheCompass.load(dir_path=model_folder_path,
                           gp_names_key=gp_names_key)
 
 samples = model.adata.obs[sample_key].unique().tolist()
-
+'''
 cell_type_colors = create_new_color_dict(
     adata=model.adata,
     cat_key=cell_type_key)
-
+'''
 # Compute latent Leiden clustering
 sc.tl.leiden(adata=model.adata,
              resolution=latent_leiden_resolution,
@@ -275,7 +286,7 @@ latent_cluster_colors = create_new_color_dict(
     adata=model.adata,
     cat_key=latent_cluster_key)
 
-# Create plot of latent cluster / niche annotations in physical and latent space
+# Create plot of latent cluster/niche annotations in physical and latent space
 groups = None # set this to a specific cluster for easy visualization, e.g. ["17"]
 save_fig = True
 file_path = f"{figure_folder_path}/" \
@@ -298,6 +309,7 @@ spec2 = gridspec.GridSpec(ncols=len(samples),
                           height_ratios=[3, 2])
 axs = []
 axs.append(fig.add_subplot(spec1[0]))
+
 sc.pl.umap(adata=model.adata,
            color=[latent_cluster_key],
            groups=groups,
@@ -305,18 +317,21 @@ sc.pl.umap(adata=model.adata,
            title=f"Niches in Latent Space",
            ax=axs[0],
            show=False)
+
 for idx, sample in enumerate(samples):
+    print('hei')
     axs.append(fig.add_subplot(spec2[len(samples) + idx]))
     sc.pl.spatial(adata=model.adata[model.adata.obs[sample_key] == sample],
                   color=[latent_cluster_key],
                   groups=groups,
                   palette=latent_cluster_colors,
-                  spot_size=spot_size,
+                  spot_size=100,
                   title=f"Niches in Physical Space \n"
                         f"(Sample: {sample})",
                   legend_loc=None,
                   ax=axs[idx+1],
-                  show=False)
+                  show=False,
+                  save='tissue_plot.svg')
 
 # Create and position shared legend
 handles, labels = axs[0].get_legend_handles_labels()
@@ -333,3 +348,7 @@ if save_fig:
                 bbox_extra_artists=(lgd, title),
                 bbox_inches="tight")
 plt.show()
+plt.savefig('/cluster/home/t116508uhn/'+'tissue_plot.svg', dpi=400)
+plt.clf()
+ 
+
