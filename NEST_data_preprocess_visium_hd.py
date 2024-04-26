@@ -379,9 +379,9 @@ if __name__ == "__main__":
     edge_weight = [] # 3D edge features in the same order as row_col
     lig_rec = [] # ligand and receptors corresponding to the edges in the same order as row_col
     self_loop_found = defaultdict(dict) # to keep track of self-loops -- used later during visualization plotting
-    for i in range (0, len(cells_ligand_vs_receptor)):
+    for i in cells_ligand_vs_receptor.keys():
         #ccc_j = []
-        for j in range (0, len(cells_ligand_vs_receptor)):
+        for j in cells_ligand_vs_receptor[i].keys():
             if i in dist_X_dict and j in dist_X_dict[i]: #dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
                 count_local = 0
                 if len(cells_ligand_vs_receptor[i][j])>0:
