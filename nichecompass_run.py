@@ -24,7 +24,7 @@ from nichecompass.utils import (add_gps_from_gp_dict_to_adata,
                                 generate_enriched_gp_info_plots)
 
 ### Dataset ###
-dataset = "starmap_plus_mouse_cns"
+#dataset = "starmap_plus_mouse_cns"
 species = "human"
 spatial_key = "spatial"
 n_neighbors = 4
@@ -48,7 +48,7 @@ active_gp_thresh_ratio = 0.01
 # Trainer
 n_epochs = 400
 n_epochs_all_gps = 25
-lr = 0.001
+lr = 0.01
 lambda_edge_recon = 500000.
 lambda_gene_expr_recon = 300.
 lambda_l1_masked = 0. # increase if gene selection desired
@@ -59,7 +59,7 @@ use_cuda_if_available = True
 
 ### Analysis ###
 cell_type_key = "Main_molecular_cell_type"
-latent_leiden_resolution = 0.4
+latent_leiden_resolution = 0.01
 latent_cluster_key = f"latent_leiden_{str(latent_leiden_resolution)}"
 sample_key = "batch"
 spot_size = 0.2
@@ -158,9 +158,10 @@ print(f"Number of gene programs after filtering and combining: "
       f"{len(combined_new_gp_dict)}.")
 
 # Read data
+'''
 adata = sc.read_h5ad(
         f"{so_data_folder_path}/{dataset}_batch1.h5ad")
-
+'''
 ######### Human lymph #######################################
 adata = sc.read_visium("/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/")
 adata.layers['counts']=adata.X
@@ -220,6 +221,7 @@ model_folder_path = f"{artifacts_folder_path}/single_sample/{load_timestamp}/mod
 
 os.makedirs(figure_folder_path, exist_ok=True)
 # Train model
+'''
 # Initialize model
 model = NicheCompass(adata,
                      counts_key=counts_key,
@@ -249,17 +251,17 @@ model.train(n_epochs=n_epochs,
 sc.pp.neighbors(model.adata,
                 use_rep=latent_key,
                 key_added=latent_key)
-'''
+
 # Compute UMAP embedding
 sc.tl.umap(model.adata,
            neighbors_key=latent_key)
-'''
+
 # Save trained model
 model.save(dir_path=model_folder_path,
            overwrite=True,
            save_adata=True,
            adata_file_name="adata.h5ad")
-
+'''
 
 ###################################################################
 
@@ -351,4 +353,42 @@ plt.show()
 plt.savefig('/cluster/home/t116508uhn/'+'tissue_plot.svg', dpi=400)
 plt.clf()
  
+####################
+
+# Check number of active GPs
+active_gps = model.get_active_gps()
+print(f"Number of total gene programs: {len(model.adata.uns[gp_names_key])}.")
+print(f"Number of active gene programs: {len(active_gps)}.")
+
+# Display example active GPs
+gp_summary_df = model.get_gp_summary()
+gp_summary_df[gp_summary_df["gp_active"] == True].head()
+
+# Set parameters for differential gp testing
+selected_cats = ["1"]
+comparison_cats = "rest"
+title = f"NicheCompass Strongly Enriched Niche GPs"
+log_bayes_factor_thresh = 2.3
+save_fig = True
+file_path = f"{figure_folder_path}/" \
+            f"/log_bayes_factor_{log_bayes_factor_thresh}" \
+             "_niches_enriched_gps_heatmap.svg"
+
+# Run differential gp testing
+enriched_gps = model.run_differential_gp_tests(
+    cat_key=latent_cluster_key,
+    selected_cats=selected_cats,
+    comparison_cats=comparison_cats,
+    log_bayes_factor_thresh=log_bayes_factor_thresh)
+
+# Run differential gp testing
+enriched_gps = model.run_differential_gp_tests(
+    cat_key=latent_cluster_key,
+    selected_cats=selected_cats,
+    comparison_cats=comparison_cats,
+    log_bayes_factor_thresh=log_bayes_factor_thresh)
+
+# Results are stored in a df in the adata object
+model.adata.uns[differential_gp_test_results_key]
+
 
