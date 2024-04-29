@@ -11,7 +11,7 @@ import seaborn as sns
 import squidpy as sq
 from matplotlib import gridspec
 from sklearn.preprocessing import MinMaxScaler
-
+import altair as alt
 from nichecompass.models import NicheCompass
 from nichecompass.utils import (add_gps_from_gp_dict_to_adata,
                                 compute_communication_gp_network,
@@ -377,14 +377,47 @@ for i in range (0, len(gp_summary_df_active)):
         avg_importance = np.mean(gp_summary_df_active["gp_source_genes_importances"][index])
         source_gene_weight.append([gp_summary_df_active["gp_name"][index], avg_importance, gp_summary_df_active["gp_target_genes"][index], index])
     else:
-        source_gene_weight.append([gp_summary_df_active["gp_source_genes"][index], gp_summary_df_active["gp_source_genes_importances"][index],gp_summary_df_active["gp_target_genes"][index], index])
+        source_gene_weight.append([gp_summary_df_active["gp_source_genes"][index][0], gp_summary_df_active["gp_source_genes_importances"][index][0],gp_summary_df_active["gp_target_genes"][index], index])
 
 source_gene_weight = sorted(source_gene_weight, key = lambda x: x[1], reverse=True)
 for i in range (0, len(source_gene_weight)):
     if "CCR7" in source_gene_weight[i][2] and ("CCL19" in source_gene_weight[i][0] or "CCL21" in source_gene_weight[i][0]):
         print(i)
         
+#
+#CCL21 - CCR7 is found at position 32
+#CCL19 - CCR7 is found at position 245
+#
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[] 
+for i in range (0, 33 ): #len(source_gene_weight) 
+    if len(source_gene_weight[i][2]) > 1:
+        if "CCR7" in source_gene_weight[i][2] and  ("CCL19" in source_gene_weight[i][0] or "CCL21" in source_gene_weight[i][0]):
+            data_list['X'].append(source_gene_weight[i][0] + " - gene_group with " + "CCR7")
+        else:
+            data_list['X'].append(source_gene_weight[i][0] + " - " + "gene_group")
+        
+    else:
+        data_list['X'].append(source_gene_weight[i][0] + " - " + source_gene_weight[i][2][0])
+        
+    data_list['Y'].append(source_gene_weight[i][1])
     
+data_list_pd = pd.DataFrame({
+    'Source Gene': data_list['X'],
+    'Gene Importance by NicheCompass': data_list['Y']
+})
+
+chart = alt.Chart(data_list_pd).mark_bar().encode(
+    x=alt.X("Source Gene:N", axis=alt.Axis(labelAngle=45),sort='-y'),
+    y='Gene Importance by NicheCompass'
+)
+
+chart.save('/cluster/home/t116508uhn/nichecompass_lymph_source.html')
+
+
+
+###########################
 #    if "CCR7" in  gp_summary_df_active["gp_target_genes"][index] and ("CCL19" in  gp_summary_df_active["gp_source_genes"][index] or "CCL21" in  gp_summary_df_active["gp_source_genes"][index]): 
 #        print(gp_summary_df_active.loc[[index]])
 
@@ -393,9 +426,11 @@ for i in range (0, len(gp_summary_df_active)):
     index = gp_summary_df_active.index[i]
     if len(gp_summary_df_active["gp_source_genes"][index])>1:
         avg_importance_source = np.mean(gp_summary_df_active["gp_source_genes_importances"][index])
+        source_gene = gp_summary_df_active["gp_name"][index]
     else:
         avg_importance_source = gp_summary_df_active["gp_source_genes_importances"][index][0]
-
+        source_gene = gp_summary_df_active["gp_source_genes"][index][0]
+        
     if len(gp_summary_df_active["gp_target_genes"][index])>1:
         avg_importance_target = np.mean(gp_summary_df_active["gp_target_genes_importances"][index])
     else:
@@ -403,13 +438,43 @@ for i in range (0, len(gp_summary_df_active)):
 
     total_importance = avg_importance_source*avg_importance_target
     
-    source_target_gene_weight.append([gp_summary_df_active["gp_source_genes"][index], gp_summary_df_active["gp_target_genes"][index], total_importance, index])
+    source_target_gene_weight.append([source_gene, gp_summary_df_active["gp_target_genes"][index], total_importance, index])
 
     
 source_target_gene_weight = sorted(source_target_gene_weight, key = lambda x: x[2], reverse=True)
 for i in range (0, len(source_target_gene_weight)):
     if "CCR7" in source_target_gene_weight[i][1] and ("CCL19" in source_target_gene_weight[i][0] or "CCL21" in source_target_gene_weight[i][0]):
         print(i)
+
+#CCL21 - CCR7 is found at position 36
+#CCL19 - CCR7 is found at position 234
+
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[] 
+for i in range (0, 37 ): #len(source_target_gene_weight) 
+    if len(source_target_gene_weight[i][1]) > 1:
+        if "CCR7" in source_target_gene_weight[i][1] and ("CCL19" in source_target_gene_weight[i][0] or "CCL21" in source_target_gene_weight[i][0]):
+            data_list['X'].append(source_target_gene_weight[i][0] + " - gene_group with " + "CCR7")
+        else:
+            data_list['X'].append(source_target_gene_weight[i][0] + " - " + "gene_group")
+    else:
+        data_list['X'].append(source_target_gene_weight[i][0] + " - " + source_target_gene_weight[i][1][0])
+    
+    data_list['Y'].append(source_target_gene_weight[i][2])
+    
+data_list_pd = pd.DataFrame({
+    'Source Gene': data_list['X'],
+    'Gene Importance by NicheCompass': data_list['Y']
+})
+
+chart = alt.Chart(data_list_pd).mark_bar().encode(
+    x=alt.X("Source Gene:N", axis=alt.Axis(labelAngle=45),sort='-y'),
+    y='Gene Importance by NicheCompass'
+)
+
+chart.save('/cluster/home/t116508uhn/nichecompass_lymph_source_target.html')
+
 
 
 
