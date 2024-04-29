@@ -59,7 +59,7 @@ use_cuda_if_available = True
 
 ### Analysis ###
 cell_type_key = "Main_molecular_cell_type"
-latent_leiden_resolution = 0.01
+latent_leiden_resolution = 0.01  
 latent_cluster_key = f"latent_leiden_{str(latent_leiden_resolution)}"
 sample_key = "batch"
 spot_size = 0.2
@@ -272,6 +272,10 @@ model = NicheCompass.load(dir_path=model_folder_path,
                           adata_file_name="adata.h5ad",
                           gp_names_key=gp_names_key)
 
+# Compute UMAP embedding
+sc.tl.umap(model.adata,
+           neighbors_key=latent_key)
+
 samples = model.adata.obs[sample_key].unique().tolist()
 '''
 cell_type_colors = create_new_color_dict(
@@ -363,6 +367,51 @@ print(f"Number of active gene programs: {len(active_gps)}.")
 # Display example active GPs
 gp_summary_df = model.get_gp_summary()
 gp_summary_df[gp_summary_df["gp_active"] == True].head()
+gp_summary_df_active = gp_summary_df[gp_summary_df["gp_active"] == True]
+gp_summary_df_active.to_csv('lymph_gp_summary_df_active.csv')
+
+source_gene_weight = []
+for i in range (0, len(gp_summary_df_active)):
+    index = gp_summary_df_active.index[i]
+    if len(gp_summary_df_active["gp_source_genes"][index])>1:
+        avg_importance = np.mean(gp_summary_df_active["gp_source_genes_importances"][index])
+        source_gene_weight.append([gp_summary_df_active["gp_name"][index], avg_importance, gp_summary_df_active["gp_target_genes"][index], index])
+    else:
+        source_gene_weight.append([gp_summary_df_active["gp_source_genes"][index], gp_summary_df_active["gp_source_genes_importances"][index],gp_summary_df_active["gp_target_genes"][index], index])
+
+source_gene_weight = sorted(source_gene_weight, key = lambda x: x[1], reverse=True)
+for i in range (0, len(source_gene_weight)):
+    if "CCR7" in source_gene_weight[i][2] and ("CCL19" in source_gene_weight[i][0] or "CCL21" in source_gene_weight[i][0]):
+        print(i)
+        
+    
+#    if "CCR7" in  gp_summary_df_active["gp_target_genes"][index] and ("CCL19" in  gp_summary_df_active["gp_source_genes"][index] or "CCL21" in  gp_summary_df_active["gp_source_genes"][index]): 
+#        print(gp_summary_df_active.loc[[index]])
+
+source_target_gene_weight = []
+for i in range (0, len(gp_summary_df_active)):
+    index = gp_summary_df_active.index[i]
+    if len(gp_summary_df_active["gp_source_genes"][index])>1:
+        avg_importance_source = np.mean(gp_summary_df_active["gp_source_genes_importances"][index])
+    else:
+        avg_importance_source = gp_summary_df_active["gp_source_genes_importances"][index][0]
+
+    if len(gp_summary_df_active["gp_target_genes"][index])>1:
+        avg_importance_target = np.mean(gp_summary_df_active["gp_target_genes_importances"][index])
+    else:
+        avg_importance_target = gp_summary_df_active["gp_target_genes_importances"][index][0]
+
+    total_importance = avg_importance_source*avg_importance_target
+    
+    source_target_gene_weight.append([gp_summary_df_active["gp_source_genes"][index], gp_summary_df_active["gp_target_genes"][index], total_importance, index])
+
+    
+source_target_gene_weight = sorted(source_target_gene_weight, key = lambda x: x[2], reverse=True)
+for i in range (0, len(source_target_gene_weight)):
+    if "CCR7" in source_target_gene_weight[i][1] and ("CCL19" in source_target_gene_weight[i][0] or "CCL21" in source_target_gene_weight[i][0]):
+        print(i)
+
+
 
 # Set parameters for differential gp testing
 selected_cats = ["1"]
@@ -373,13 +422,6 @@ save_fig = True
 file_path = f"{figure_folder_path}/" \
             f"/log_bayes_factor_{log_bayes_factor_thresh}" \
              "_niches_enriched_gps_heatmap.svg"
-
-# Run differential gp testing
-enriched_gps = model.run_differential_gp_tests(
-    cat_key=latent_cluster_key,
-    selected_cats=selected_cats,
-    comparison_cats=comparison_cats,
-    log_bayes_factor_thresh=log_bayes_factor_thresh)
 
 # Run differential gp testing
 enriched_gps = model.run_differential_gp_tests(
