@@ -1,4 +1,4 @@
-import python as np
+import numpy as np
 import pickle
 from collections import defaultdict
 import gzip
@@ -7,15 +7,25 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='input_graph/' , help='The path to the directory having input graph') 
 parser.add_argument( '--data_name', type=str, default='Visium_HD_Human_Colon_Cancer_square_002um_outputs', help='The name of dataset')
-parser.add_argument( '--slice_count', type=int, default=6, help='starting index of ligand')
+parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
+parser.add_argument( '--total_subgraphs', type=int, default=6, help='starting index of ligand')
 args = parser.parse_args()
 
-total_subgraphs = args.slice_count
+total_subgraphs = args.total_subgraphs
 
-fp = gzip.open(args.data_path + args.data_name + '_adjacency_records', 'rb')  
+if args.data_path == 'input_graph/':
+    args.data_path = args.data_path + args.data_name + '/'
+
+if args.metadata_to == 'metadata/':
+    args.metadata_to = args.metadata_to + args.data_name + '/'
+
+fp = gzip.open(args.data_path + args.data_name + '_adjacency_records', 'rb')
 row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
 
 datapoint_size = total_num_cell
+
+fp = gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'rb')
+node_id_sorted_xy = pickle.load(fp)
 
 ##################################################################################################################
 # one hot vector used as node feature vector
@@ -51,15 +61,16 @@ for i in range (0, total_subgraphs+1):
 set_id=-1
 for indx in range (0, len(start_index)-1):
     set_id = set_id + 1
-    print('start index is %d'%start_index[indx])
+    print('graph id %d, node %d to %d'%(set_id,start_index[indx],start_index[indx+1]))
     set1_nodes = []
     set1_edges_index = []
     node_limit_set1 = start_index[indx+1]
     set1_direct_edges = []
-    print('set has nodes upto: %d'%node_limit_set1)
+    
     for i in range (start_index[indx], node_limit_set1):
         set1_nodes.append(node_id_sorted_xy[i][0])
         # add it's edges - first hop
+        
         for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
             set1_edges_index.append(edge_index) # has both row_col and edge_weight
             set1_direct_edges.append(edge_index)
@@ -71,8 +82,11 @@ for indx in range (0, len(start_index)-1):
                 set1_edges_index.append(edge_index) # has both row_col and edge_weight
 
     set1_edges_index = list(set(set1_edges_index))
-    print('amount of edges in set is: %d'%len(set1_edges_index))
-
+    
+    print('len of set1_edges_index %d'%len(set1_edges_index))
+    if len(set1_edges_index)==0:
+        break
+        
     # old to new mapping of the nodes
     # make an index array, so that existing node ids are mapped to new ids
     new_id = 0
@@ -93,7 +107,7 @@ for indx in range (0, len(start_index)-1):
             new_id = new_id + 1
 
 
-    print('new id: %d'%new_id)
+    #print('new id: %d'%new_id)
     set1_edges = []
     for i in set1_direct_edges:  #set1_edges_index:
         set1_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
@@ -115,6 +129,7 @@ for indx in range (0, len(start_index)-1):
         row_col_temp.append(set1_edges[i][0])
         edge_weight_temp.append(set1_edges[i][1])
 
+    print("number of nodes %d, number of edges %d"%(num_cell, len(row_col_temp)))
     graph_bag.append([X_data, row_col_temp, edge_weight_temp])
     gc.collect()
     
