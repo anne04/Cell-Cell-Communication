@@ -26,25 +26,7 @@ def get_graph(training_data):
     # split it into N set of edges
     ###########
 
-    edge_list = []
-    for i in range (0, len(graph_bag)):  
-        print("subgraph: %d"%i)
-        X_data = graph_bag[i][0]
-        row_col_temp = graph_bag[i][1]
-        edge_weight_temp = graph_bag[i][2]
-        
-        edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
-        edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
-        edge_list.append([X_data, edge_index, edge_attr])
-        
-        print('Node feature matrix: X has dimension ', X_data.shape)
-        print("Total number of edges in the input graph is %d"%len(row_col_temp))
-        
-        gc.collect()
-
-
-    print('Input graph generation done')
-    return edge_list, num_feature #graph_bags
+    return graph_bag, num_feature #graph_bags
 
 
 class Encoder(nn.Module):
@@ -123,7 +105,7 @@ def corruption(data):
     return my_data(x, data.edge_index, data.edge_attr)
 
 
-def train_NEST(args, data_loader, in_channels):
+def train_NEST(args, graph_bag, in_channels):
     """Add Statement of Purpose
     Args: [to be]
            
@@ -148,96 +130,121 @@ def train_NEST(args, data_loader, in_channels):
         DGI_model.load_state_dict(torch.load(DGI_load_path))
         DGI_optimizer.load_state_dict(torch.load(args.model_path+'DGI_optimizer_'+ args.load_model_name  +'.pth.tar'))
 
+    import datetime
+    start_time = datetime.datetime.now()
+    min_loss=10000
+    print('Saving init model state ...')
+    torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
+    torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
+    #print('training starts ...')
+    for epoch in range(args.num_epoch):
+        DGI_model.train()
+        DGI_optimizer.zero_grad()
+        DGI_all_loss = []
 
-    else:
-        import datetime
-        start_time = datetime.datetime.now()
-        min_loss=10000
-        print('Saving init model state ...')
-        torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
-        torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
-        #print('training starts ...')
-        for epoch in range(args.num_epoch):
-            DGI_model.train()
-            DGI_optimizer.zero_grad()
-            DGI_all_loss = []
-
+        for subgraph in range (0, len(graph_bag)):
+            
+            X_data = graph_bag[subgraph][0]
+            row_col_temp = graph_bag[subgraph][1]
+            edge_weight_temp = graph_bag[subgraph][2]
+            
+            X = torch.tensor(X_data, dtype=torch.float)
+            edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+            edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+            
+            data = Data(x=X, edge_index=edge_index, edge_attr=edge_attr)
+            data_loader = DataLoader([data], batch_size=1)
             for data in data_loader:
                 data = data.to(device)
                 pos_z, neg_z, summary = DGI_model(data=data)
                 DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
                 DGI_loss.backward()
                 DGI_all_loss.append(DGI_loss.item())
-                DGI_optimizer.step()
+                
+        DGI_optimizer.step()
 
-            if ((epoch)%500) == 0:
-                print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
-                loss_curve[loss_curve_counter] = np.mean(DGI_all_loss)
-                loss_curve_counter = loss_curve_counter + 1
+        if ((epoch)%500) == 0:
+            print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
+            loss_curve[loss_curve_counter] = np.mean(DGI_all_loss)
+            loss_curve_counter = loss_curve_counter + 1
 
-                if np.mean(DGI_all_loss)<min_loss:
+            if np.mean(DGI_all_loss)<min_loss:
 
-                    min_loss=np.mean(DGI_all_loss)
+                min_loss=np.mean(DGI_all_loss)
 
-                    # save the current model state
-                    torch.save(DGI_model.state_dict(), DGI_filename)
-                    torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar')
-                    save_tupple=[pos_z, neg_z, summary] 
-
+                # save the current model state
+                torch.save(DGI_model.state_dict(), DGI_filename)
+                torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar')
+                save_tupple=[pos_z, neg_z, summary] 
+                ############################################################################################################
+                for subgraph in range (0, len(graph_bag)):
+                
+                    X_data = graph_bag[subgraph][0]
+                    row_col_temp = graph_bag[subgraph][1]
+                    edge_weight_temp = graph_bag[subgraph][2]
+                    
+                    X = torch.tensor(X_data, dtype=torch.float)
+                    edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+                    edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+                    
+                    data = Data(x=X, edge_index=edge_index, edge_attr=edge_attr)
+                    data_loader = DataLoader([data], batch_size=1)
+                    for data in data_loader:
+                        data = data.to(device)
+                        pos_z, neg_z, summary = DGI_model(data=data)              
+               
                     # save the node embedding
                     X_embedding = pos_z
                     X_embedding = X_embedding.cpu().detach().numpy()
                     X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
-                    with gzip.open(X_embedding_filename, 'wb') as fp:  
+                    with gzip.open(X_embedding_filename+'_subgraph'+str(subgraph), 'wb') as fp:  
                         pickle.dump(X_embedding, fp)
                         
-                    #np.save(X_embedding_filename, X_embedding) #/cluster/home/t116508uhn/.local/lib/python3.7/site-packages/numpy/lib/npyio.py:528: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
-                    
-                    # save the attention scores
 
+                    # save the attention scores
+    
                     X_attention_index = DGI_model.encoder.attention_scores_mine[0]
                     X_attention_index = X_attention_index.cpu().detach().numpy()
-
+    
                     # layer 1
                     X_attention_score_normalized_l1 = DGI_model.encoder.attention_scores_mine_l1[1]
                     X_attention_score_normalized_l1 = X_attention_score_normalized_l1.cpu().detach().numpy()
                     # layer 1 unnormalized
                     X_attention_score_unnormalized_l1 = DGI_model.encoder.attention_scores_mine_unnormalized_l1
                     X_attention_score_unnormalized_l1 = X_attention_score_unnormalized_l1.cpu().detach().numpy()
-
+    
                     # layer 2
                     X_attention_score_normalized = DGI_model.encoder.attention_scores_mine[1]
                     X_attention_score_normalized = X_attention_score_normalized.cpu().detach().numpy()
                     # layer 2 unnormalized
                     X_attention_score_unnormalized = DGI_model.encoder.attention_scores_mine_unnormalized
                     X_attention_score_unnormalized = X_attention_score_unnormalized.cpu().detach().numpy()
-
+    
                     print('making the bundle to save')
                     X_attention_bundle = [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-                    X_attention_filename =  args.embedding_path + args.model_name + '_attention' #.npy
-                    # np.save(X_attention_filename, X_attention_bundle) # this is deprecated
+                    X_attention_filename =  args.embedding_path + args.model_name + '_attention'+'_subgraph'+str(subgraph)
                     with gzip.open(X_attention_filename, 'wb') as fp:  
                         pickle.dump(X_attention_bundle, fp)
+                ############################################################################################################################
+                logfile=open(args.model_path+'DGI_'+ args.model_name+'_loss_curve.csv', 'wb')
+                np.savetxt(logfile,loss_curve, delimiter=',')
+                logfile.close()
 
-                    logfile=open(args.model_path+'DGI_'+ args.model_name+'_loss_curve.csv', 'wb')
-                    np.savetxt(logfile,loss_curve, delimiter=',')
-                    logfile.close()
-
-                    #print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
+                #print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
 
 #            if ((epoch)%60000) == 0:
 #                DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6)  #5 #6
 
-        end_time = datetime.datetime.now()
+    end_time = datetime.datetime.now()
 
 #        torch.save(DGI_model.state_dict(), DGI_filename)
-        print('Training time in seconds: ', (end_time-start_time).seconds)
-        DGI_model.load_state_dict(torch.load(DGI_filename))
-        print("debug loss")
-        DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
-        print("debug loss latest tupple %g"%DGI_loss.item())
-        DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
-        print("debug loss min loss tupple %g"%DGI_loss.item())
+    print('Training time in seconds: ', (end_time-start_time).seconds)
+    DGI_model.load_state_dict(torch.load(DGI_filename))
+    print("debug loss")
+    DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
+    print("debug loss latest tupple %g"%DGI_loss.item())
+    DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
+    print("debug loss min loss tupple %g"%DGI_loss.item())
 
     return DGI_model
 
