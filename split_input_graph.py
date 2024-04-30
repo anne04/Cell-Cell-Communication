@@ -17,20 +17,12 @@ row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
 
 datapoint_size = total_num_cell
 
-lig_rec_dict = []
-for i in range (0, datapoint_size):
-    lig_rec_dict.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
-
-total_type = np.zeros((2))        
-for index in range (0, len(row_col)):
-        i = row_col[index][0]
-        j = row_col[index][1]
-        lig_rec_dict[i][j].append(lig_rec[index])  
 ##################################################################################################################
-
+# one hot vector used as node feature vector
+X = np.eye(datapoint_size, datapoint_size)
+np.random.shuffle(X)
+X_data = X # node feature vector
+num_feature = X_data.shape[0]
 
 # split it into N set of edges
 dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
@@ -45,6 +37,7 @@ for i in range (0, datapoint_size):
     dict_cell_neighbors[i] = neighbor_list
 
 edge_list = []
+graph_bag = []
 start_index = []
 id_map_old_new = [] # make an index array, so that existing node ids are mapped to new ids
 id_map_new_old = []
@@ -107,7 +100,7 @@ for indx in range (0, len(start_index)-1):
         #set1_edges.append([row_col[i], edge_weight[i]])
         
     edge_list.append(set1_edges)
-    '''
+    
     # create new X matrix
     num_cell = new_id
     X_data = np.zeros((num_cell, datapoint_size))
@@ -122,12 +115,11 @@ for indx in range (0, len(start_index)-1):
         row_col_temp.append(set1_edges[i][0])
         edge_weight_temp.append(set1_edges[i][1])
 
-    edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
-    edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
-    edge_list.append([X_data, edge_index, edge_attr])
+    graph_bag.append([X_data, row_col_temp, edge_weight_temp])
     gc.collect()
-    '''
+    
 
-
+with gzip.open(args.data_path+args.data_name+'_graph_bag', 'wb') as fp:  #b, a:[0:5]   
+	pickle.dump([graph_bag, datapoint_size], fp)
 
 
