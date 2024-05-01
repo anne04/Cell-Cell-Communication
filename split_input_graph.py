@@ -9,10 +9,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='input_graph/' , help='The path to the directory having input graph') 
 parser.add_argument( '--data_name', type=str, default='Visium_HD_Human_Colon_Cancer_square_002um_outputs', help='The name of dataset')
 parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
-parser.add_argument( '--total_subgraphs', type=int, default=6, help='starting index of ligand')
+parser.add_argument( '--total_subgraphs', type=int, default=10, help='starting index of ligand')
 args = parser.parse_args()
 
-total_subgraphs = args.total_subgraphs
 
 if args.data_path == 'input_graph/':
     args.data_path = args.data_path + args.data_name + '/'
@@ -59,12 +58,14 @@ X_data = X # node feature vector
 num_feature = X_data.shape[0]
 
 # split it into N set of edges
+
+total_subgraphs = args.total_subgraphs
+
 edge_list = []
 graph_bag = []
 start_index = []
 id_map_old_new = [] # make an index array, so that existing node ids are mapped to new ids
 id_map_new_old = []
-
 
 for i in range (0, total_subgraphs+1):
     start_index.append((datapoint_size//total_subgraphs)*i)
@@ -74,7 +75,7 @@ for i in range (0, total_subgraphs+1):
 set_id=-1
 for indx in range (0, len(start_index)-1):
     set_id = set_id + 1
-    print('graph id %d, node %d to %d'%(set_id,start_index[indx],start_index[indx+1]))
+    #print('graph id %d, node %d to %d'%(set_id,start_index[indx],start_index[indx+1]))
     set1_nodes = []
     set1_edges_index = []
     node_limit_set1 = start_index[indx+1]
@@ -96,9 +97,9 @@ for indx in range (0, len(start_index)-1):
 
     set1_edges_index = list(set(set1_edges_index))
     
-    print('len of set1_edges_index %d'%len(set1_edges_index))
-    if len(set1_edges_index)==0:
-        break
+    #print('len of set1_edges_index %d'%len(set1_edges_index))
+    #if len(set1_edges_index)==0:
+    #    break
         
     # old to new mapping of the nodes
     # make an index array, so that existing node ids are mapped to new ids
