@@ -1140,6 +1140,9 @@ data_list_pd[' ']=gene_name
 data_list_pd = data_list_pd.set_index(' ')    
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
 
+fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'rb')  # at least one of lig or rec has exp > respective knee point          
+lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
+
 data_list=dict()
 data_list['ligand']=[]
 data_list['receptor']=[]
