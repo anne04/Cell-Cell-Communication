@@ -2,7 +2,8 @@ library(MASS)
 library(data.table)
 
 ## The RDS file will be loaded into a ready-to-use object
-dge <- readRDS("SCP2170_annotated_dgCMatrix.rds")
+dge <- readRDS("SCP2170_annotated_dgCMatrix.rds") # rows are genes, columns are cells. gene x cell sparse matrix
+
 
 ## The cluster annotation need to be presented as a factor object
 cluster <- read.csv("SCP2170_cluster.csv")
