@@ -5,7 +5,7 @@ library(cytosignal)
 
 options = 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
 ## The RDS file will be loaded into a ready-to-use object
-dge_raw <- readRDS(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep="")) # rows are genes, columns are cells. gene x cell sparse matrix
+#dge_raw <- readRDS(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep="")) # rows are genes, columns are cells. gene x cell sparse matrix
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
 
@@ -20,3 +20,4 @@ spatialData <- as.matrix(read.csv(paste('/cluster/projects/schwartzgroup/fatema/
 #colnames(spatial) <- c("x", "y")
 
 csData <- createCytoSignal(raw.data = countsData, cells.loc = spatialData)
+
