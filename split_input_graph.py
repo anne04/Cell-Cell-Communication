@@ -3,6 +3,7 @@ import pickle
 from collections import defaultdict
 import gzip
 import argparse
+import gc
 
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='input_graph/' , help='The path to the directory having input graph') 
@@ -22,10 +23,33 @@ if args.metadata_to == 'metadata/':
 fp = gzip.open(args.data_path + args.data_name + '_adjacency_records', 'rb')
 row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
 
-datapoint_size = total_num_cell
+dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
+dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
+nodes_active = dict()
+for i in range(0, len(row_col)): 
+    dict_cell_edge[row_col[i][1]].append(i) # index of the edges
+    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0]) # neighbor id
+    nodes_active[row_col[i][1]] = '' # to 
+    nodes_active[row_col[i][0]] = '' # from
+
+
+datapoint_size = len(nodes_active.keys())
+
+for i in range (0, datapoint_size):
+    neighbor_list = dict_cell_neighbors[i]
+    neighbor_list = list(set(neighbor_list))
+    dict_cell_neighbors[i] = neighbor_list
+
 
 fp = gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'rb')
 node_id_sorted_xy = pickle.load(fp)
+
+node_id_sorted_xy_temp = []
+for i in range(0, len(node_id_sorted_xy)):
+    if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
+        node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
+
+node_id_sorted_xy = node_id_sorted_xy_temp
 
 ##################################################################################################################
 # one hot vector used as node feature vector
@@ -35,17 +59,6 @@ X_data = X # node feature vector
 num_feature = X_data.shape[0]
 
 # split it into N set of edges
-dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
-dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
-for i in range(0, len(row_col)): 
-    dict_cell_edge[row_col[i][1]].append(i) # index of the edges
-    dict_cell_neighbors[row_col[i][1]].append(row_col[i][0]) # neighbor id
-
-for i in range (0, datapoint_size):
-    neighbor_list = dict_cell_neighbors[i]
-    neighbor_list = list(set(neighbor_list))
-    dict_cell_neighbors[i] = neighbor_list
-
 edge_list = []
 graph_bag = []
 start_index = []
