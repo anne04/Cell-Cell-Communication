@@ -139,9 +139,27 @@ seg.up.y <- cells.loc[senders, "y"]
 
 
 
-
-
 plotSignif2(cs, intr = intr.use, slot.use = "GauEps-Raw", return.plot = FALSE, edge = TRUE, pt.size = 0.2)
+
+
+> a <- c(1, 1, 2, 4, 7, 1, 2, 1)
+
+> f <- factor(a)
+> f
+[1] 1 1 2 4 7 1 2 1
+Levels: 1 2 4 7
+
+> f[1]
+[1] 1
+Levels: 1 2 4 7
+> f[2]
+[1] 1
+Levels: 1 2 4 7
+> f[3]
+[1] 2
+Levels: 1 2 4 7
+
+
 
 
 
