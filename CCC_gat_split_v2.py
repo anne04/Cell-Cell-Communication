@@ -283,21 +283,8 @@ def train_NEST(args, graph_bag, in_channels):
         DGI_optimizer.zero_grad()
         DGI_all_loss = []
 
-        for subgraph in range (0, len(graph_bag)):
-            
-            X_data = graph_bag[subgraph][0]
-            row_col_temp = graph_bag[subgraph][1]
-            edge_weight_temp = graph_bag[subgraph][2]
-            
-            X = torch.tensor(X_data, dtype=torch.float)
-            edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
-            edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
-            
-            data = Data(x=X, edge_index=edge_index, edge_attr=edge_attr)
-            data_loader = DataLoader([data], batch_size=1)
-
-            
-            for data in data_loader:
+        for subgraph in range (0, len(graph_bag)):            
+            for data in subgraph:
                 data = data.to(device)
                 pos_z, neg_z, summary = DGI_model(data=data)
                 DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
