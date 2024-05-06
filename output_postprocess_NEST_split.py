@@ -95,7 +95,7 @@ if __name__ == "__main__":
         dict_cell_neighbors[i] = neighbor_list
 
     
-    node_id_sorted = args.metadata_to + args.data_name + '/'+ args.data_name+'_'+'node_id_sorted_xy'
+    node_id_sorted = args.metadata_from + args.data_name+'_'+'node_id_sorted_xy'
     fp = gzip.open(node_id_sorted, 'rb')
     node_id_sorted_xy = pickle.load(fp)
 
