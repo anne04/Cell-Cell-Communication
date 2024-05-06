@@ -100,14 +100,14 @@ if __name__ == "__main__":
     node_id_sorted_xy = pickle.load(fp)
 
     node_id_sorted_xy_temp = []
-    unsplit_index_to_split_index = dict()
-    split_index_to_unsplit_index = dict()
+    unfiltered_index_to_filtered_serial = dict() # not the serial. We do not need to know the serial
+    filtered_serial_to_unfiltered_index = dict()
     active_node_count = 0
     for i in range(0, len(node_id_sorted_xy)):
         if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
             node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
-            unsplit_index_to_split_index[i] =  active_node_count
-            split_index_to_unsplit_index[active_node_count] =  i
+            unfiltered_index_to_filtered_serial[node_id_sorted_xy[i][0]] =  active_node_count
+            filtered_serial_to_unfiltered_index[active_node_count] =  node_id_sorted_xy[i][0]
             active_node_count = active_node_count + 1
             
     node_id_sorted_xy = node_id_sorted_xy_temp
@@ -161,10 +161,10 @@ if __name__ == "__main__":
         new_id = 0
         spot_list = []
         for k in set1_edges_index:
-            i = row_col[k][0]
-            j = row_col[k][1]
+            i = row_col[k][0] # unfiltered node index
+            j = row_col[k][1] # unfiltered node index
             if i not in id_map_old_new[set_id]:
-                id_map_old_new[set_id][i] = new_id
+                id_map_old_new[set_id][i] = new_id # old = unfiltered, new = filtered + subgraph specific
                 id_map_new_old[set_id][new_id] = i
                 spot_list.append(new_id)
                 new_id = new_id + 1
@@ -230,10 +230,10 @@ if __name__ == "__main__":
                 set1_exist_dict = defaultdict(dict)        
                 for edge in edge_list[set_id]:
                     row_col = edge[0]
-                    new_i = row_col[0]
+                    new_i = row_col[0] 
                     new_j = row_col[1]
-                    i = id_map_new_old[set_id][new_i] 
-                    j = id_map_new_old[set_id][new_j] 
+                    i = id_map_new_old[set_id][new_i] # unfiltered
+                    j = id_map_new_old[set_id][new_j] # unfiltered
                     set1_exist_dict[i][j] = 1
                 
                 ############
@@ -247,13 +247,13 @@ if __name__ == "__main__":
                     new_i = X_attention_bundle[0][0][index]
                     new_j = X_attention_bundle[0][1][index] 
                     # these returned i and j are new
-                    i = id_map_new_old[set_id][new_i] 
-                    j = id_map_new_old[set_id][new_j]           
+                    i = id_map_new_old[set_id][new_i] # unfiltered index
+                    j = id_map_new_old[set_id][new_j] # unfiltered index          
                                 
                     if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
                     ###################################
-                        split_i = unsplit_index_to_split_index[i]
-                        split_j = unsplit_index_to_split_index[j]
+                        split_i = unfiltered_index_to_filtered_serial[i] 
+                        split_j = unfiltered_index_to_filtered_serial[j]
                         attention_scores[split_i][split_j].append(X_attention_bundle[l][index][0]) 
                         distribution.append(X_attention_bundle[l][index][0])
                         edge_found = edge_found + 1
@@ -322,7 +322,7 @@ if __name__ == "__main__":
         
         
             for i in range (0, len(barcode_info)): 
-                split_i = unsplit_index_to_split_index[i]
+                split_i = unfiltered_index_to_filtered_serial[i]
                 if count_points_component[labels[split_i]] > 1:
                     barcode_info[i][3] = index_dict[labels[split_i]] #2
                 elif connecting_edges[split_i][split_i] == 1 and (i in lig_rec_dict and i in lig_rec_dict[i][i] and len(lig_rec_dict[i][i])>0): 
@@ -343,8 +343,8 @@ if __name__ == "__main__":
                         if (i not in lig_rec_dict or j not in lig_rec_dict[i]):
                             continue
                             
-                    split_i = unsplit_index_to_split_index[i] 
-                    split_j = unsplit_index_to_split_index[j]
+                    split_i = unfiltered_index_to_filtered_serial[i] 
+                    split_j = unfiltered_index_to_filtered_serial[j]
                     atn_score_list = attention_scores[split_i][split_j]
                     for k in range (0, len(atn_score_list)):
                         if attention_scores[split_i][split_j][k] >= threshold_down and attention_scores[split_i][split_j][k] <= threshold_up: 
