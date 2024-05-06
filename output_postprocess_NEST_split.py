@@ -29,9 +29,9 @@ import os
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, help='The name of dataset') # default='PDAC_64630', required=True
-    parser.add_argument( '--model_name', type=str, help='Name of the trained model') #, required=True
-    parser.add_argument( '--total_runs', type=int, help='How many runs for ensemble (at least 2 are preferred)') #, required=True
+    parser.add_argument( '--data_name', type=str, default='Visium_HD_Human_Colon_Cancer_square_002um_outputs', help='The name of dataset') #  required=True
+    parser.add_argument( '--model_name', type=str, default='NEST_Visium_HD_Human_Colon_Cancer_square_002um_outputs', help='Name of the trained model') #, required=True
+    parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
@@ -59,25 +59,23 @@ if __name__ == "__main__":
     
     
     datapoint_size = total_num_cell
-    lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        lig_rec_dict.append([])  
-        for j in range (0, datapoint_size):	
-            lig_rec_dict[i].append([])   
-            lig_rec_dict[i][j] = []
-    
+    lig_rec_dict = defaultdict(dict)    
     for index in range (0, len(row_col)):
             i = row_col[index][0]
             j = row_col[index][1]
-            lig_rec_dict[i][j].append(lig_rec[index])  
-    
-    row_col = 0
-    edge_weight = 0
-    lig_rec = 0
-    total_num_cell = 0
-    
-    gc.collect()
+            if i in lig_rec_dict:
+                if j in lig_rec_dict[i]:
+                    lig_rec_dict[i][j].append(lig_rec[index]) 
+                else:
+                    lig_rec_dict[i][j] = []
+                    lig_rec_dict[i][j].append(lig_rec[index])
+            else:
+                lig_rec_dict[i][j] = []
+                lig_rec_dict[i][j].append(lig_rec[index])                
 
+        
+             
+    
     ################################################################################################################
     dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
     dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
@@ -322,7 +320,7 @@ if __name__ == "__main__":
             #    if barcode_info[i][0] in barcode_label:
                 if count_points_component[labels[i]] > 1:
                     barcode_info[i][3] = index_dict[labels[i]] #2
-                elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
+                elif connecting_edges[i][i] == 1 and (i in lig_rec_dict and j in lig_rec_dict[i][j] and len(lig_rec_dict[i][i])>0): 
                     barcode_info[i][3] = 1
                 else:
                     barcode_info[i][3] = 0
@@ -338,7 +336,7 @@ if __name__ == "__main__":
                 for i in range (0, len(barcode_info)):
                     
                     if i==j:
-                        if len(lig_rec_dict[i][j])==0:
+                        if (i not in lig_rec_dict or j not in lig_rec_dict[i]):
                             continue
                      
                     atn_score_list = attention_scores[i][j]
