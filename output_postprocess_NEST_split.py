@@ -58,7 +58,7 @@ if __name__ == "__main__":
         row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
     
     
-    datapoint_size = total_num_cell
+    
     lig_rec_dict = defaultdict(dict)    
     for index in range (0, len(row_col)):
             i = row_col[index][0]
@@ -100,10 +100,16 @@ if __name__ == "__main__":
     node_id_sorted_xy = pickle.load(fp)
 
     node_id_sorted_xy_temp = []
+    unsplit_index_to_split_index = dict()
+    split_index_to_unsplit_index = dict()
+    active_node_count = 0
     for i in range(0, len(node_id_sorted_xy)):
         if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
             node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
-
+            unsplit_index_to_split_index[i] =  active_node_count
+            split_index_to_unsplit_index[active_node_count] =  i
+            active_node_count = active_node_count + 1
+            
     node_id_sorted_xy = node_id_sorted_xy_temp
     ##################################################################################################################
     # split it into N set of edges
@@ -200,7 +206,7 @@ if __name__ == "__main__":
         layer = layer + 1
         print('layer %d'%layer)
         csv_record_dict = defaultdict(list)
-        for run_time in [2, 4, 5]: #range (start_index, start_index+total_runs):
+        for run_time in [1]: #range (start_index, start_index+total_runs):
             filename_suffix = '_'+ 'r'+str(run_time) +'_' #str(run_time+1) +'_'
             gc.collect()
             run = run_time
@@ -221,11 +227,7 @@ if __name__ == "__main__":
             for set_id in range(0, len(edge_list)):
                 print('subgraph %d'%set_id)
                 ##############
-                set1_exist_dict = defaultdict(dict)
-                for i in range (0, datapoint_size):  
-                    for j in range (0, datapoint_size):	
-                        set1_exist_dict[i][j]=-1
-        
+                set1_exist_dict = defaultdict(dict)        
                 for edge in edge_list[set_id]:
                     row_col = edge[0]
                     new_i = row_col[0]
@@ -240,7 +242,7 @@ if __name__ == "__main__":
                 fp = gzip.open(X_attention_filename, 'rb')  
                 X_attention_bundle = pickle.load(fp)
                 print(X_attention_filename)  
-        
+                edge_found = 0
                 for index in range (0, X_attention_bundle[0].shape[1]):
                     new_i = X_attention_bundle[0][0][index]
                     new_j = X_attention_bundle[0][1][index] 
@@ -250,26 +252,33 @@ if __name__ == "__main__":
                                 
                     if i in set1_exist_dict and j in set1_exist_dict[i] and set1_exist_dict[i][j]==1:
                     ###################################
-                        attention_scores[i][j].append(X_attention_bundle[l][index][0]) 
+                        split_i = unsplit_index_to_split_index[i]
+                        split_j = unsplit_index_to_split_index[j]
+                        attention_scores[split_i][split_j].append(X_attention_bundle[l][index][0]) 
                         distribution.append(X_attention_bundle[l][index][0])
-        
+                        edge_found = edge_found + 1
+                print('Edge found %d out of %d'%(edge_found, X_attention_bundle[0].shape[1]))
+                        
+            gc.collect()
             #######################    
             print('All subgraph load done')
-    
+            
             ################# scaling the attention scores so that layer 1 and 2 will be comparable ##############################        
             min_attention_score = 1000
             max_value = np.max(distribution)
             min_value = np.min(distribution)
             distribution = []
-            for index in range (0, X_attention_bundle[0].shape[1]):
-                i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index]
-                scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
-                attention_scores[i][j].append(scaled_score) 
-                if min_attention_score > scaled_score:
-                    min_attention_score = scaled_score
-                distribution.append(scaled_score)
-                
+            
+            for i in range (0, datapoint_size):
+                for j in range (0, datapoint_size):
+                    for k in range (0, len(attention_scores[i][j])):
+                        attention_scores[i][j][k] = (attention_scores[i][j][k]-min_value)/(max_value-min_value)
+                        scaled_score = attention_scores[i][j][k]
+                        if min_attention_score > scaled_score:
+                            min_attention_score = scaled_score
+                            
+                        distribution.append(scaled_score)
+                        
                 
             if min_attention_score<0:
                 min_attention_score = -min_attention_score
@@ -277,17 +286,13 @@ if __name__ == "__main__":
                 min_attention_score = 0
             
             print('min attention score %g, total edges %d'%(min_attention_score, len(distribution)))
-            
             ccc_index_dict = dict()
             threshold_down =  np.percentile(sorted(distribution), 0)
             threshold_up =  np.percentile(sorted(distribution), 100)
-            connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
+            connecting_edges = np.zeros((len(datapoint_size),len(datapoint_size)))
             for j in range (0, datapoint_size):
-                #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
                 for i in range (0, datapoint_size):
                     atn_score_list = attention_scores[i][j]
-                    #print(len(atn_score_list))
-                    #s = min(0,len(atn_score_list)-1)
                     for k in range (0, len(atn_score_list)):
                         if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                             connecting_edges[i][j] = 1
@@ -316,11 +321,11 @@ if __name__ == "__main__":
             print('number of components with multiple datapoints is %d'%id_label)
         
         
-            for i in range (0, len(barcode_info)):
-            #    if barcode_info[i][0] in barcode_label:
-                if count_points_component[labels[i]] > 1:
-                    barcode_info[i][3] = index_dict[labels[i]] #2
-                elif connecting_edges[i][i] == 1 and (i in lig_rec_dict and j in lig_rec_dict[i][j] and len(lig_rec_dict[i][i])>0): 
+            for i in range (0, len(barcode_info)): 
+                split_i = unsplit_index_to_split_index[i]
+                if count_points_component[labels[split_i]] > 1:
+                    barcode_info[i][3] = index_dict[labels[split_i]] #2
+                elif connecting_edges[split_i][split_i] == 1 and (i in lig_rec_dict and i in lig_rec_dict[i][i] and len(lig_rec_dict[i][i])>0): 
                     barcode_info[i][3] = 1
                 else:
                     barcode_info[i][3] = 0
@@ -334,20 +339,21 @@ if __name__ == "__main__":
             csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
             for j in range (0, len(barcode_info)):
                 for i in range (0, len(barcode_info)):
-                    
                     if i==j:
                         if (i not in lig_rec_dict or j not in lig_rec_dict[i]):
                             continue
-                     
-                    atn_score_list = attention_scores[i][j]
+                            
+                    split_i = unsplit_index_to_split_index[i] 
+                    split_j = unsplit_index_to_split_index[j]
+                    atn_score_list = attention_scores[split_i][split_j]
                     for k in range (0, len(atn_score_list)):
-                        if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
+                        if attention_scores[split_i][split_j][k] >= threshold_down and attention_scores[split_i][split_j][k] <= threshold_up: 
                             if barcode_info[i][3]==0:
                                 print('error')
                             elif barcode_info[i][3]==1:
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
+                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[split_i][split_j][k], '0-single', i, j])
                             else:
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
+                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[split_i][split_j][k], barcode_info[i][3], i, j])
      
             ###########	
           
