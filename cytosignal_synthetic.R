@@ -21,3 +21,32 @@ spatialData <- as.matrix(read.csv(paste('/cluster/projects/schwartzgroup/fatema/
 
 csData <- createCytoSignal(raw.data = countsData, cells.loc = spatialData)
 
+g_to_u <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/gene_to_u_',options,'.csv',sep="")) #, row.names = 1
+
+
+protein_name_ligand <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/protein_name_ligand_',options,'.csv',sep=""))
+protein_name_ligand <- as.character(protein_name_ligand[,1])
+
+interaction_id_ligand <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/interaction_id_ligand_',options,'.csv',sep=""))
+interaction_id_ligand <- as.character(interaction_id_ligand[,1])
+
+# Create factor
+ligand_factor <- factor(interaction_id_ligand)
+# Set names for the factor
+names(ligand_factor) <- protein_name_ligand
+
+protein_name_receptor <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/protein_name_receptor_',options,'.csv',sep=""))
+protein_name_receptor <- as.character(protein_name_receptor[,1])
+
+interaction_id_receptor <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/interaction_id_receptor_',options,'.csv',sep=""))
+interaction_id_receptor <- as.character(interaction_id_receptor[,1])
+
+# Create factor
+receptor_factor <- factor(interaction_id_receptor)
+# Set names for the factor
+names(receptor_factor) <- protein_name_receptor
+
+combined_factor <- c(ligand_factor, receptor_factor)
+
+diff.cont <- list(combined = combined_factor, ligands = ligand_factor, receptors=receptor_factor)
+
