@@ -206,7 +206,7 @@ if __name__ == "__main__":
         layer = layer + 1
         print('layer %d'%layer)
         csv_record_dict = defaultdict(list)
-        for run_time in [1]: #range (start_index, start_index+total_runs):
+        for run_time in [1,3]: #range (start_index, start_index+total_runs):
             filename_suffix = '_'+ 'r'+str(run_time) +'_' #str(run_time+1) +'_'
             gc.collect()
             run = run_time
@@ -289,7 +289,7 @@ if __name__ == "__main__":
             ccc_index_dict = dict()
             threshold_down =  np.percentile(sorted(distribution), 0)
             threshold_up =  np.percentile(sorted(distribution), 100)
-            connecting_edges = np.zeros((len(datapoint_size),len(datapoint_size)))
+            connecting_edges = np.zeros((datapoint_size,datapoint_size))
             for j in range (0, datapoint_size):
                 for i in range (0, datapoint_size):
                     atn_score_list = attention_scores[i][j]
@@ -322,6 +322,8 @@ if __name__ == "__main__":
         
         
             for i in range (0, len(barcode_info)): 
+                if i not in nodes_active:
+                    continue
                 split_i = unfiltered_index_to_filtered_serial[i]
                 if count_points_component[labels[split_i]] > 1:
                     barcode_info[i][3] = index_dict[labels[split_i]] #2
@@ -330,15 +332,14 @@ if __name__ == "__main__":
                 else:
                     barcode_info[i][3] = 0
         
-            #######################
-        
-        
      
             ###############
             csv_record = []
             csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
             for j in range (0, len(barcode_info)):
                 for i in range (0, len(barcode_info)):
+                    if i not in nodes_active or j not in nodes_active:
+                        continue
                     if i==j:
                         if (i not in lig_rec_dict or j not in lig_rec_dict[i]):
                             continue
@@ -361,6 +362,8 @@ if __name__ == "__main__":
             for i in range (1, len(csv_record)): 
                 key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]
                 csv_record_dict[key_value].append([csv_record[i][4], run])
+
+            ##### one run completes #####
         '''    
         for key_value in csv_record_dict.keys():
             run_dict = defaultdict(list)
