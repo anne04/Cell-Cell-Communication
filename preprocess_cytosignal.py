@@ -55,13 +55,8 @@ for op_index in range (0, len(options_list)):
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'rb')  # at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
 
-    data_list=dict()
-    data_list['ligand']=[]
-    data_list['receptor']=[]
     unique_gene_name = dict()
     for i in range (0, len(lr_database)):
-        data_list['ligand'].append('g'+str(lr_database[i][0]))
-        data_list['receptor'].append('g'+str(lr_database[i][1]))
         unique_gene_name['g'+str(lr_database[i][0])] = ''
         unique_gene_name['g'+str(lr_database[i][1])] = ''
 
@@ -75,7 +70,62 @@ for op_index in range (0, len(options_list)):
         data_list['uniprot'].append(gene)
         data_list['hgnc_symbol'].append(gene)
             
-    data_list_pd = pd.DataFrame(data_list)        
-    data_list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/gene_to_u_'+options+'.csv') #, index=False
+    data_list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/gene_to_u_'+options+'.csv', index=False) 
 
+
+    data_list=dict()
+    data_list['id_cp_interaction']=[] # this is also used as index
+    data_list['partner_a']=[]
+    data_list['partner_b']=[]
+    data_list['protein_name_a']=[]
+    data_list['protein_name_b']=[]
+    data_list['annotation_strategy']=[]
+    data_list['source']=[]
+    data_list['partner_a_is_recep']=[] #TRUE or FALSE
+    data_list['partner_b_is_recep']=[] #TRUE or FALSE
+    data_list['recep_flag']=[] # = 1 if one of a or b is receptor. if both, then 2. if none then 0.
+    data_list['order_flag']=[] # =0 if a is receptor, else 1
+    
+
+    
+    for i in range (0, len(lr_database)):
+        data_list['id_cp_interaction'].append(str(i)) # this is also used as index
+        data_list['partner_a'].append('g'+str(lr_database[i][0]))
+        data_list['partner_b'].append('g'+str(lr_database[i][1]))
+        data_list['protein_name_a'].append('g'+str(lr_database[i][0]))
+        data_list['protein_name_b'].append('g'+str(lr_database[i][1]))
+        data_list['annotation_strategy'].append('curated')
+        data_list['source'].append('synthetic')
+        data_list['partner_a_is_recep'].append(False)
+        data_list['partner_b_is_recep'].append(True)
+        data_list['recep_flag'].append(1) # = 1 if one of a or b is receptor. if both, then 2. if none then 0.
+        data_list['order_flag'].append(1) # =0 if a is receptor, else 1
+          
+    data_list_pd = pd.DataFrame(data_list)   
+    data_list_pd[' '] = data_list['id_cp_interaction']
+    data_list_pd = data_list_pd.set_index(' ')  
+    data_list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/inter.index_'+options+'.csv', index=False) 
+
+    protein_name_ligand = []
+    interaction_id_ligand = []
+    protein_name_receptor = []
+    interaction_id_receptor = []
+
+    for i in range (0, len(lr_database)):
+        protein_name_ligand.append('g'+str(lr_database[i][0]))
+        interaction_id_ligand.append(data_list['id_cp_interaction'][i])
+        protein_name_receptor.append('g'+str(lr_database[i][1]))
+        interaction_id_receptor.append(data_list['id_cp_interaction'][i])
+
+    list_pd = pd.DataFrame(protein_name_ligand) 
+    list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/protein_name_ligand_'+options+'.csv', header=False, index=False) 
+
+    list_pd = pd.DataFrame(interaction_id_ligand) 
+    list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/interaction_id_ligand_'+options+'.csv', header=False, index=False) 
+
+    list_pd = pd.DataFrame(protein_name_receptor) 
+    list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/protein_name_receptor_'+options+'.csv', header=False, index=False) 
+
+    list_pd = pd.DataFrame(interaction_id_receptor) 
+    list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/interaction_id_receptor_'+options+'.csv', header=False, index=False) 
 
