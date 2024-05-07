@@ -51,17 +51,31 @@ for op_index in range (0, len(options_list)):
     data_list_pd[' ']=gene_name   
     data_list_pd = data_list_pd.set_index(' ')    
     data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_'+options+'.csv')
-    '''
+
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'rb')  # at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
-    
+
     data_list=dict()
     data_list['ligand']=[]
     data_list['receptor']=[]
+    unique_gene_name = dict()
     for i in range (0, len(lr_database)):
         data_list['ligand'].append('g'+str(lr_database[i][0]))
         data_list['receptor'].append('g'+str(lr_database[i][1]))
-        
+        unique_gene_name['g'+str(lr_database[i][0])] = ''
+        unique_gene_name['g'+str(lr_database[i][1])] = ''
+
+
+    data_list=dict()
+    data_list['gene_name']=[]
+    data_list['uniprot']=[]
+    data_list['hgnc_symbol']=[]
+    for gene in unique_gene_name.keys():
+        data_list['gene_name'].append(gene)
+        data_list['uniprot'].append(gene)
+        data_list['hgnc_symbol'].append(gene)
+            
     data_list_pd = pd.DataFrame(data_list)        
-    data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_lr_'+options+'.csv', index=False)
-    '''
+    data_list_pd.to_csv('/cluster/home/t116508uhn/cytosignal/gene_to_u_'+options+'.csv') #, index=False
+
+
