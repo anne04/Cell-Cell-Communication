@@ -202,11 +202,11 @@ if __name__ == "__main__":
         all_edge_sorted_by_rank.append([])
     
     layer = -1
-    for l in [1,3,6]: #, 3]: # 2 = layer 2, 3 = layer 1 
+    for l in [2, 3]: #, 3]: # 2 = layer 2, 3 = layer 1 
         layer = layer + 1
         print('layer %d'%layer)
         csv_record_dict = defaultdict(list)
-        for run_time in [2,4]: #range (start_index, start_index+total_runs):
+        for run_time in [1, 3, 6]: #range (start_index, start_index+total_runs):
             filename_suffix = '_'+ 'r'+str(run_time) +'_' #str(run_time+1) +'_'
             gc.collect()
             run = run_time
