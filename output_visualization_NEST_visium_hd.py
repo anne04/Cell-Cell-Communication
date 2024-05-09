@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import pickle
 import matplotlib
-matplotlib.use('Agg') 
+matplotlib.use('Agg') https://github.com/anne04/Cell-Cell-Communication/edit/main/output_visualization_NEST_visium_hd.py
 import matplotlib.pyplot as plt
 from matplotlib.colors import  rgb2hex # LinearSegmentedColormap, to_hex,
 from scipy.sparse import csr_matrix
@@ -145,8 +145,14 @@ if __name__ == "__main__":
         csv_record_final = [df_column_names] + csv_record[0:min(args.top_edge_count, len(csv_record))]
 
     ## add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
-    i=0
-    j=0
+    in_region_node = -1
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][1] <= 54000 :
+            in_region_node = i
+            break
+  
+    i = in_region_node
+    j = in_region_node
     csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j, 0]) # dummy for histogram
 
     csv_record = 0
