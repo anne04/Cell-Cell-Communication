@@ -57,8 +57,8 @@ def plot(df):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, help='The name of dataset', required=True) # 
-    parser.add_argument( '--model_name', type=str, help='Name of the trained model', required=True)
+    parser.add_argument( '--data_name', type=str, help='The name of dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs") # , required=True
+    parser.add_argument( '--model_name', type=str, help='Name of the trained model', default='NEST_Visium_HD_Human_Colon_Cancer_square_002um_outputs') #, required=True
     parser.add_argument( '--top_edge_count', type=int, default=1500 ,help='Number of the top communications to plot. To plot all insert -1') # 
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')    
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
