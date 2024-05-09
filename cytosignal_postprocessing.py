@@ -27,8 +27,22 @@ for op_index in range (0, len(options_list)):
 
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'rb')  # at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
+      
+    datapoint_size = 3000       
+    total_type = np.zeros((len(lr_database)))
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):
+            if i==j: 
+                continue
+            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j]) > 0:
+                for k in range (0, len(lig_rec_dict_TP[i][j])):
+                    total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
 
-######################################################## cytosignal #########################################################################
+
+    		
+    positive_class = np.sum(total_type)
+    #negative_class = count - positive_class 
+  ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
     list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv')
     '''
@@ -42,7 +56,7 @@ for op_index in range (0, len(options_list)):
     #negative_class=len(distribution)-confusion_matrix[0][0]
     attention_scores= []
     lig_rec_dict = []
-    datapoint_size = 3000
+    
     for i in range (0, datapoint_size):
         attention_scores.append([])   
         lig_rec_dict.append([])   
