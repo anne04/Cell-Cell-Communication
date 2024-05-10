@@ -38,8 +38,17 @@ for op_index in range (0, len(options_list)):
                 for k in range (0, len(lig_rec_dict_TP[i][j])):
                     total_type[lig_rec_dict_TP[i][j][k]] = total_type[lig_rec_dict_TP[i][j][k]] + 1
 
-
-    		
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+        row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
+        
+  
+    count = 0
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        if i!=j:
+            count = count +1     
+            
     positive_class = np.sum(total_type)
     #negative_class = count - positive_class 
   ######################################################## cytosignal #########################################################################
