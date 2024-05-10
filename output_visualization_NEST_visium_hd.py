@@ -3,7 +3,6 @@ import numpy as np
 import csv
 import pickle
 import matplotlib
-matplotlib.use('Agg') https://github.com/anne04/Cell-Cell-Communication/edit/main/output_visualization_NEST_visium_hd.py
 import matplotlib.pyplot as plt
 from matplotlib.colors import  rgb2hex # LinearSegmentedColormap, to_hex,
 from scipy.sparse import csr_matrix
@@ -290,7 +289,9 @@ if __name__ == "__main__":
     data_list['Y']=[]   
     data_list['opacity']=[]  
 
-    for i in range (0, len(barcode_info)):        
+    for i in range (0, len(barcode_info)):  
+        if barcode_info[i][1] > 54000:
+            continue
         if i in active_spot:
             data_list['pathology_label'].append(active_spot[i][0])
             data_list['component_label'].append(active_spot[i][1])
