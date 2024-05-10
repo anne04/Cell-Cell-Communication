@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')
     parser.add_argument( '--total_subgraphs', type=int, default=15)
     args = parser.parse_args()
-
+ 
     args.metadata_from = args.metadata_from + args.data_name + '/'
     args.data_from = args.data_from + args.data_name + '/'
     args.embedding_path  = args.embedding_path + args.data_name + '/'
