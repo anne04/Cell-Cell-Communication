@@ -86,8 +86,8 @@ csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 10, sig.thresh = 10
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result.spx") #, return.name = TRUE
 
-print(head(allIntrs))
-intr.use <- allIntrs[1] #names(allIntrs)[1]
+#print(head(allIntrs))
+#intr.use <- allIntrs[1] #names(allIntrs)[1]
 
 i_list <- list()
 j_list <- list()
@@ -138,7 +138,7 @@ for(intr.use in allIntrs){ #names(allIntrs)
 x <- data.table(i=i_list, j=j_list, score=score_list, ccc=ccc_list)
 fwrite(x, file=paste('sender_vs_rec_',options,'.csv',sep=""))
 
-
+cat('write done', '\n')
 
 
 
