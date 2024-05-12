@@ -312,7 +312,8 @@ if __name__ == "__main__":
     # converting to pandas dataframe
 
     data_list_pd = pd.DataFrame(data_list)
-    id_label = len(list(set(data_list['component_label']))) # unique_component_count
+    id_label = len(list(set(data_list['component_label']))) # 
+    unique_component_count = id_label
     set1 = altairThemes.get_colour_scheme("Set1", id_label)
     set1[0] = '#000000'
     chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
@@ -350,10 +351,14 @@ if __name__ == "__main__":
     x_index=[]
     y_index=[]
     colors_point = []
-    for i in range (0, len(barcode_info)):    
+    barcode_to_serial = dict()
+    for i in range (0, len(barcode_info)): 
+        if barcode_info[i][1] > 54000:
+            continue
         ids.append(i)
         x_index.append(barcode_info[i][1])
         y_index.append(barcode_info[i][2])    
+        barcode_to_serial[i] = len(colors_point)
         colors_point.append(colors[barcode_info[i][3]]) 
     
     max_x = np.max(x_index)
@@ -362,14 +367,15 @@ if __name__ == "__main__":
 
 
     g = nx.MultiDiGraph(directed=True) 
-    for i in range (0, len(barcode_info)):
+    list_index = 0
+    for i in ids:
         marker_size = 'circle'
         label_str =  str(i)+'_c:'+str(barcode_info[i][3]) #  label of the node or spot is consists of: spot id, component number
         if args.annotation_file_path != '':
             label_str = label_str +'_'+ barcode_type[barcode_info[i][0]] # also add the type of the spot to the label if annotation is available 
         
-        g.add_node(int(ids[i]), x=int(x_index[i]), y=int(y_index[i]), label = label_str, pos = str(x_index[i])+","+str(-y_index[i])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[i]))    
-
+        g.add_node(int(i), x=int(x_index[list_index]), y=int(y_index[list_index]), label = label_str, pos = str(x_index[list_index])+","+str(-y_index[list_index])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[list_index]))    
+        list_index = list_index + 1
 
 
     # scale the edge scores [0 to 1] to make plot work
@@ -394,7 +400,7 @@ if __name__ == "__main__":
         edge_score = csv_record_final[k][8]
         edge_score = (edge_score-min_score)/(max_score-min_score)   
         title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
-        g.add_edge(int(i), int(j), label = title_str, color=colors_point[i], value=np.float64(edge_score)) #
+        g.add_edge(int(i), int(j), label = title_str, color=colors_point[barcode_to_serial[i]], value=np.float64(edge_score)) #
         count_edges = count_edges + 1
 
     print("total edges plotted: %d"%count_edges)
