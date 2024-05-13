@@ -24,18 +24,19 @@ options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_thre
 for op_index in range (0, len(options_list)):
     print('%d'%op_index)
     options = options_list[op_index]
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
         cell_vs_gene = pickle.load(fp)
-        
+
+    #cell_vs_gene = cell_vs_gene*100
     min_gene_expr = np.min(cell_vs_gene)
     min_gene_expr = min_gene_expr*(-1)
     # scale the gene values from 0 to 1    
     data_list = defaultdict(list)
     for i in range (0, cell_vs_gene.shape[0]):
         for j in range (0, cell_vs_gene.shape[1]):
-            data_list['a'+str(i)].append(int(np.round(min_gene_expr+cell_vs_gene[i][j])))
-
+            #data_list['a'+str(i)].append(int(np.round(min_gene_expr+cell_vs_gene[i][j])))
+            data_list['a'+str(i)].append(int(np.round(cell_vs_gene[i][j])))
     
     data_list_pd = pd.DataFrame(data_list)        
     gene_name = []
