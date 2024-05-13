@@ -3,7 +3,7 @@ import pandas as pd
 import pickle
 from collections import defaultdict
 import numpy as np
-
+datapoint_size_list = [3000, 3000, 3000, 5000, 5000, 5000, 5000, 5000, 5000, 3000, 3000, 3000]
 options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
                'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
                'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
@@ -28,7 +28,7 @@ for op_index in range (0, len(options_list)):
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'rb')  # at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
       
-    datapoint_size = 3000       
+    datapoint_size = datapoint_size_list[op_index]
     total_type = np.zeros((len(lr_database)))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
@@ -54,6 +54,7 @@ for op_index in range (0, len(options_list)):
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
     list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv')
+  
     '''
     In [6]: list_ccc
     Out[6]: 
