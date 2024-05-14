@@ -91,8 +91,8 @@ for i in range (0, len(lr_database)):
     data_list['protein_name_b'].append(lr_database['Receptor'][i]) 
     data_list['annotation_strategy'].append('database')
     data_list['source'].append(lr_database['Reference'][i])
-    data_list['partner_a_is_recep'].append(False)
-    data_list['partner_b_is_recep'].append(True)
+    data_list['partner_a_is_recep'].append('FALSE')
+    data_list['partner_b_is_recep'].append('TRUE')
     data_list['recep_flag'].append(1) # = 1 if one of a or b is receptor. if both, then 2. if none then 0.
     data_list['order_flag'].append(1) # =0 if a is receptor, else 1
       
