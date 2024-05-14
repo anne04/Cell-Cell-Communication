@@ -27,8 +27,9 @@ for op_index in range (0, len(options_list)):
 #    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
         cell_vs_gene = pickle.load(fp)
-
-    #cell_vs_gene = cell_vs_gene*100
+      
+    print(np.min(cell_vs_gene))
+    cell_vs_gene = cell_vs_gene*100
     min_gene_expr = np.min(cell_vs_gene)
     min_gene_expr = min_gene_expr*(-1)
     # scale the gene values from 0 to 1    
