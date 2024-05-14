@@ -116,8 +116,12 @@ allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result.spx",
 
 print(head(allIntrs))
 intr.use <- names(allIntrs)[1]
-
 plotEdge(csData, intr.use, slot.use = "GauEps-Raw", pt.size = 0.3, plot.fmt = "svg", return.plot = FALSE, plot_dir = "/cluster/projects/schwartzgroup/fatema/cytosignal/", filename = 'cytosignal_human_lymph_WNT2B-FZD7.svg')
+
+allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) 
+intr.use <- names(allIntrs)[288]
+plotEdge(csData, intr.use, slot.use = "GauEps-Raw", signif.use = "result", pt.size = 0.3, plot.fmt = "svg", return.plot = FALSE, plot_dir = "/cluster/projects/schwartzgroup/fatema/cytosignal/", filename = 'cytosignal_human_lymph_ccl20_ccr6.svg')
+
 
 
 
