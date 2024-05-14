@@ -82,7 +82,7 @@ csData <- inferIntrScore(csData)
 
 csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 10, sig.thresh = 10)
 csData <- rankIntrSpatialVar(csData)
-allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result.spx", return.name = TRUE) #
+allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
 #print(head(allIntrs))
 #intr.use <- allIntrs[1] #names(allIntrs)[1]
@@ -109,28 +109,29 @@ for(intr.use in names(allIntrs)){
     sender_vs_rec <- as.matrix(sender_vs_rec) # 0 = no ccc, > 0 = yes CCC
     #write.matrix(sender_vs_rec, file="sender_vs_rec.csv")
     mat <- sender_vs_rec
-    
-    for (i in 1:nrow(mat)){
-     
-        # looping through columns
-        for(j in 1:ncol(mat)){
+    if (nrow(mat)>0)
+    {
+        for (i in 1:nrow(mat)){
          
-            # check if element is non 
-              # zero
-            if(mat[i,j]>0){
+            # looping through columns
+            for(j in 1:ncol(mat)){
              
-                # display the row and column
-                  # index
-                #cat(i, j, mat[i,j], "\n")   
-                i_list <- append(i_list, i)
-                j_list <- append(j_list, j)
-                score_list <- append(score_list, mat[i,j])
-                ccc_list <- append(ccc_list, intrx)
-                
+                # check if element is non 
+                  # zero
+                if(mat[i,j]>0){
+                 
+                    # display the row and column
+                      # index
+                    #cat(i, j, mat[i,j], "\n")   
+                    i_list <- append(i_list, i)
+                    j_list <- append(j_list, j)
+                    score_list <- append(score_list, mat[i,j])
+                    ccc_list <- append(ccc_list, intrx)
+                    
+                }
             }
         }
     }
-    
     
     }
 x <- data.table(i=i_list, j=j_list, score=score_list, ccc=ccc_list)
