@@ -3,9 +3,9 @@ library(data.table)
 library(cytosignal)
 library(Matrix)
 
-options = 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
-## The RDS file will be loaded into a ready-to-use object
-#dge_raw <- readRDS(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep="")) # rows are genes, columns are cells. gene x cell sparse matrix
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
+#options = 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
 
@@ -16,22 +16,20 @@ countsData <- as.matrix(countsData)
 
 ## The spatial coordinates need to be presented as a matrix object
 spatialData <- as.matrix(read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_cell_',options,'_spatial.csv',sep=""), row.names = 1))
-## Please make sure that the dimension names are lower case "x" and "y"
-#colnames(spatial) <- c("x", "y")
 
 
-g_to_u <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/gene_to_u_',options,'.csv',sep="")) #, row.names = 1
+g_to_u <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/gene_to_u_',options,'.csv',sep="")) #, row.names = 1
 
-inter.index <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/inter.index_',options,'.csv',sep=""), row.names = 1)
+inter.index <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/inter.index_',options,'.csv',sep=""), row.names = 1)
 ###############################################################################################################################
-protein_name_ligand <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/protein_name_ligand_',options,'.csv',sep=""))
+protein_name_ligand <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/protein_name_ligand_',options,'.csv',sep=""))
 protein_name_ligand <- as.character(protein_name_ligand[,1])
-interaction_id_ligand <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/interaction_id_ligand_',options,'.csv',sep=""))
+interaction_id_ligand <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/interaction_id_ligand_',options,'.csv',sep=""))
 interaction_id_ligand <- as.character(interaction_id_ligand[,1])
 
-protein_name_receptor <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/protein_name_receptor_',options,'.csv',sep=""))
+protein_name_receptor <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/protein_name_receptor_',options,'.csv',sep=""))
 protein_name_receptor <- as.character(protein_name_receptor[,1])
-interaction_id_receptor <- read.csv(paste('/cluster/home/t116508uhn/cytosignal/interaction_id_receptor_',options,'.csv',sep=""))
+interaction_id_receptor <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/interaction_id_receptor_',options,'.csv',sep=""))
 interaction_id_receptor <- as.character(interaction_id_receptor[,1])
 
 # Create factor
@@ -75,7 +73,7 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 50)
+csData <- inferEpsParams(csData, scale.factor = 20)
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
@@ -84,7 +82,7 @@ csData <- inferIntrScore(csData)
 
 csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 10, sig.thresh = 10)
 csData <- rankIntrSpatialVar(csData)
-allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result.spx") #, return.name = TRUE
+allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result.spx", return.name = TRUE) #
 
 #print(head(allIntrs))
 #intr.use <- allIntrs[1] #names(allIntrs)[1]
@@ -94,13 +92,13 @@ j_list <- list()
 score_list <- list()
 ccc_list <- list()
 
-for(intr.use in allIntrs){ #names(allIntrs)
+for(intr.use in names(allIntrs)){ 
     cat(intr.use, '\n')
     res.list <- csData@lrscore[["GauEps-Raw"]]@res.list[["result.spx"]]
     lig.slot <- csData@lrscore[["GauEps-Raw"]]@lig.slot
     cells.loc <- as.data.frame(csData@cells.loc) #row=cell id, columns = x,y coordinate
     nn.graph <- csData@imputation[[lig.slot]]@nn.graph #4623 x 4623 sparse Matrix of class "dgCMatrix"
-    intrx <- intr.use #[1]
+    intrx <- intr.use[1]
     receiver.cells <- res.list[[intrx]] # cell ids
     receiver.idx <- sort(match(receiver.cells, rownames(cells.loc))) # index of those ids in the cell.loc so that you retrieve their x, y
     nn.graph.sig <- nn.graph[, receiver.idx] #4623 x 494 sparse Matrix of class "dgCMatrix"
