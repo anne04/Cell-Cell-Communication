@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     parser.add_argument( '--data_name', type=str, help='The name of dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs") # , required=True
     parser.add_argument( '--model_name', type=str, help='Name of the trained model', default='NEST_Visium_HD_Human_Colon_Cancer_square_002um_outputs') #, required=True
-    parser.add_argument( '--top_edge_count', type=int, default=1500 ,help='Number of the top communications to plot. To plot all insert -1') # 
+    parser.add_argument( '--top_edge_count', type=int, default=135000 ,help='Number of the top communications to plot. To plot all insert -1') # 
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')    
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--output_path', type=str, default='output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
@@ -244,6 +244,71 @@ if __name__ == "__main__":
     component_list[0] = ''
     unique_component_count = max(len(component_list.keys()), id_label)
 
+    ####################### pattern finding ##########################################################################
+    # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
+    each_node_outgoing = defaultdict(list)
+    for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
+        i = csv_record_final[k][6]
+        j = csv_record_final[k][7]
+        if i == j:
+            continue        
+        ligand = csv_record_final[k][2]
+        receptor = csv_record_final[k][3]
+        each_node_outgoing[i].append([j, ligand, receptor, k]) 
+    
+    # all possible 2-hop pattern count
+    pattern_distribution = defaultdict(list)
+    # pattern_distribution['ligand-receptor to ligand-receptor']=[1,1,1,1, ...]
+    edge_list_2hop = []
+    target_relay = 'C3-CXCR4 to C3-LRP1'
+    for i in each_node_outgoing:
+        for tupple in each_node_outgoing[i]: # first hop
+            j = tupple[0]
+            lig_rec_1 = tupple[1]+'-'+tupple[2]
+            record_id_1 = tupple[3]
+            if j in each_node_outgoing:
+                for tupple_next in each_node_outgoing[j]: # second hop
+                    k = tupple_next[0]
+                    if k == i or k == j:
+                        continue
+                    lig_rec_2 = tupple_next[1]+'-'+tupple_next[2]
+                    record_id_2 = tupple_next[3]
+                    pattern_distribution[lig_rec_1 + ' to ' + lig_rec_2].append(1)
+                    relay = lig_rec_1 + ' to ' + lig_rec_2
+                    if relay == target_relay:
+                        edge_list_2hop.append([record_id_1,record_id_2])
+    
+    
+
+    two_hop_pattern_distribution = []
+    same_count = 0
+    for key in pattern_distribution:
+        count = len(pattern_distribution[key])
+        two_hop_pattern_distribution.append([key, count]) 
+        #if lig_rec_1 == lig_rec_2:
+        #    same_count = same_count + 1
+    
+    two_hop_pattern_distribution = sorted(two_hop_pattern_distribution, key = lambda x: x[1], reverse=True) # high to low
+    
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
+    for i in range (0, 15): #len(two_hop_pattern_distribution)):
+        data_list['X'].append(two_hop_pattern_distribution[i][0])
+        data_list['Y'].append(two_hop_pattern_distribution[i][1])
+        
+    data_list_pd = pd.DataFrame({
+        'Relay Patterns': data_list['X'],
+        'Pattern Abundance (#)': data_list['Y']
+    })
+
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Relay Patterns:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Pattern Abundance (#)'
+    )
+
+    chart.save(output_name + '_pattern_distribution.html')
+
 
     ##################################### Altair Plot ##################################################################
     ## dictionary of those spots who are participating in CCC ##
@@ -374,7 +439,7 @@ if __name__ == "__main__":
         if args.annotation_file_path != '':
             label_str = label_str +'_'+ barcode_type[barcode_info[i][0]] # also add the type of the spot to the label if annotation is available 
         
-        g.add_node(int(i), x=int(x_index[list_index]), y=int(y_index[list_index]), label = label_str, pos = str(x_index[list_index])+","+str(-y_index[list_index])+" !", physics=False, shape = marker_size, color=matplotlib.colors.rgb2hex(colors_point[list_index]))    
+        g.add_node(int(i), x=int(x_index[list_index]), y=int(y_index[list_index]), label = label_str, pos = str(x_index[list_index])+","+str(-y_index[list_index])+" !", physics=False, shape = marker_size, color="#808080") #=matplotlib.colors.rgb2hex(colors_point[list_index])    
         list_index = list_index + 1
 
 
@@ -385,7 +450,7 @@ if __name__ == "__main__":
 
     min_score = np.min(score_list)
     max_score = np.max(score_list)
-
+    ###################################################################
     count_edges = 0
     for k in range (1, len(csv_record_final)-1):
         i = csv_record_final[k][6]
@@ -404,7 +469,6 @@ if __name__ == "__main__":
         count_edges = count_edges + 1
 
     print("total edges plotted: %d"%count_edges)
-
     nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True     
     nt.from_nx(g)
     nt.save_graph(output_name +'_mygraph.html')
@@ -412,5 +476,35 @@ if __name__ == "__main__":
     ########################################################################
     # convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
     write_dot(g, output_name + "_test_interactive.dot")
+    print('dot file generation done')
+    print('All done')
+    ############################ or Relay plot ########################################
+
+    count_edges = 0
+    for relay in edge_list_2hop:
+        print(relay)
+        for hop in range (0, len(relay)):
+            k = relay[hop] # record id for the hops
+            i = csv_record_final[k][6]
+            j = csv_record_final[k][7] 
+            print('%d %d'%(i, j))
+            ligand = csv_record_final[k][2]
+            receptor = csv_record_final[k][3]            
+            edge_score = csv_record_final[k][8]
+            edge_score = (edge_score-min_score)/(max_score-min_score)   
+            title_str =  "L:" + ligand + ", R:" + receptor+ ", "+ str(edge_score) #+
+            g.add_edge(int(i), int(j), label = title_str, color="#FF0000", value=np.float64(edge_score)) #
+            count_edges = count_edges + 1
+
+    print("total edges plotted: %d"%count_edges)
+
+  
+    nt = Network( directed=True, height='1000px', width='100%') #"500px", "500px",, filter_menu=True     
+    nt.from_nx(g)
+    nt.save_graph(output_name +'_relay_mygraph.html')
+    print('Edge graph plot generation done')
+    ########################################################################
+    # convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
+    write_dot(g, output_name + "_relay_test_interactive.dot")
     print('dot file generation done')
     print('All done')
