@@ -53,7 +53,7 @@ for op_index in range (0, len(options_list)):
     #negative_class = count - positive_class 
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
-    list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv')
+    list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
   
     '''
     In [6]: list_ccc
