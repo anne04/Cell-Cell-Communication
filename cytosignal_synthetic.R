@@ -73,14 +73,14 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 20)
+csData <- inferEpsParams(csData, scale.factor = 50)
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
 csData <- imputeLR(csData)
 csData <- inferIntrScore(csData)
 
-csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 10, sig.thresh = 10)
+csData <- inferSignif(csData, p.value = 0.10, reads.thresh = 100, sig.thresh = 100)
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
@@ -92,19 +92,26 @@ j_list <- list()
 score_list <- list()
 ccc_list <- list()
 
+res.list <- csData@lrscore[["GauEps-Raw"]]@res.list[["result"]] #.spx
+lig.slot <- csData@lrscore[["GauEps-Raw"]]@lig.slot # what type of ligands? Diffuse or contact. It is a string type. 
+cells.loc <- as.data.frame(csData@cells.loc) #row=cell id, columns = x,y coordinate
+
+nn.graph <- csData@imputation[[lig.slot]]@nn.graph #4623 x 4623 sparse Matrix of class "dgCMatrix" -- cell vs cell -- for the provided ligand type (lig.slot) -- here we use diffuse
+
+
+write.csv(as.matrix(nn.graph), paste('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_',options,'.csv',sep=""))
+
+
+# if there are multiple lr pairs between two cells: from cell a to cell b --> they are combined into one "imputation" score and ONE score/value is assigned to the slot [a][b] --> a to b  
 for(intr.use in names(allIntrs)){ 
     cat(intr.use, '\n')
-    res.list <- csData@lrscore[["GauEps-Raw"]]@res.list[["result.spx"]]
-    lig.slot <- csData@lrscore[["GauEps-Raw"]]@lig.slot
-    cells.loc <- as.data.frame(csData@cells.loc) #row=cell id, columns = x,y coordinate
-    nn.graph <- csData@imputation[[lig.slot]]@nn.graph #4623 x 4623 sparse Matrix of class "dgCMatrix"
     intrx <- intr.use[1]
     receiver.cells <- res.list[[intrx]] # cell ids
     receiver.idx <- sort(match(receiver.cells, rownames(cells.loc))) # index of those ids in the cell.loc so that you retrieve their x, y
-    nn.graph.sig <- nn.graph[, receiver.idx] #4623 x 494 sparse Matrix of class "dgCMatrix"
+    nn.graph.sig <- nn.graph[, receiver.idx] #4623 x 494 sparse Matrix of class "dgCMatrix" # seperate the columns having those receiver.cells 
     # row: from, col:receiver
     # columns/rec are found for a given pair. Now need rows/senders only.
-    senders <- unique(nn.graph.sig@i) + 1
+    senders <- unique(nn.graph.sig@i) + 1 #
     sender_vs_rec <- nn.graph.sig[senders,] # 1901 x 494
     sender_vs_rec <- as.matrix(sender_vs_rec) # 0 = no ccc, > 0 = yes CCC
     #write.matrix(sender_vs_rec, file="sender_vs_rec.csv")
