@@ -55,7 +55,7 @@ for op_index in range (0, len(options_list)):
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
     list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
-  
+    cell_vs_cell = ...
     '''
     In [6]: list_ccc
     Out[6]: 
@@ -76,23 +76,22 @@ for op_index in range (0, len(options_list)):
             attention_scores[i][j] = []
             lig_rec_dict[i].append([])   
             lig_rec_dict[i][j] = []
-    
-    distribution = []
-    for index in range (0, len(list_ccc.index)):
-        i = int(list_ccc['i'][index])
-        j = int(list_ccc['j'][index])
-        score = list_ccc['score'][index]
-        ccc_id = int(list_ccc['ccc'][index])
-        attention_scores[i][j].append(score)
-        lig_rec_dict[i][j].append(ccc_id)
-        distribution.append(score)
+            
 
+    distribution = []
+    for i in range (0, datapoint_size):
+        for j in range (0, datapoint_size):	
+            attention_scores[i][j].append(cell_vs_cell[i,j])
+            lig_rec_dict[i][j].append(1)
+            distribution.append(cell_vs_cell[i,j])
+            
     '''
     plot_dict = defaultdict(list)
     percentage_value = 100
     while percentage_value > 0:
         percentage_value = percentage_value - 10
     '''
+
 
    ###########################  
     percentage_value = 0
@@ -111,17 +110,15 @@ for op_index in range (0, len(options_list)):
     total_edges_count = 0
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-            #if i==j: 
-            #    continue
+            if i==j: 
+                continue
             atn_score_list = attention_scores[i][j]
-            #print(len(atn_score_list))
-            
-            for k in range (0, len(atn_score_list)):
+            for k in range (0, 1):
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                     connecting_edges[i][j] = 1
                     ccc_index_dict[i] = ''
                     ccc_index_dict[j] = ''
-                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                    existing_lig_rec_dict[i][j].append(1) #lig_rec_dict[i][j][k]
                     total_edges_count = total_edges_count + 1
                     
 
@@ -132,21 +129,11 @@ for op_index in range (0, len(options_list)):
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
-
-            #if i==j: 
-            #    continue
-            ''' 
-            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
-                for k in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    else:
-                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
-
-            '''
+            if i==j: 
+                continue
             if len(existing_lig_rec_dict[i][j])>0:
                 for k in existing_lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]: # and k in lig_rec_dict_TP[i][j]:
                         #print("i=%d j=%d k=%d"%(i, j, k))
                         confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                     else:
