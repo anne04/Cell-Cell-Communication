@@ -55,7 +55,9 @@ for op_index in range (0, len(options_list)):
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
     list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
-    cell_vs_cell = ...
+    cell_vs_cell = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp.csv', index_col=0)
+    # rows = senders
+    # cols = receivers
     '''
     In [6]: list_ccc
     Out[6]: 
@@ -81,9 +83,12 @@ for op_index in range (0, len(options_list)):
     distribution = []
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):	
-            attention_scores[i][j].append(cell_vs_cell[i,j])
-            lig_rec_dict[i][j].append(1)
-            distribution.append(cell_vs_cell[i,j])
+            if i==j:
+                continue
+            if cell_vs_cell['a'+str(j)][i+1] > 0:
+                attention_scores[i][j].append(cell_vs_cell['a'+str(j)][i+1])
+                lig_rec_dict[i][j].append(1)
+                distribution.append(cell_vs_cell['a'+str(j)][i+1])
             
     '''
     plot_dict = defaultdict(list)
@@ -113,6 +118,8 @@ for op_index in range (0, len(options_list)):
             if i==j: 
                 continue
             atn_score_list = attention_scores[i][j]
+            if len(atn_score_list)==0:
+                continue
             for k in range (0, 1):
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                     connecting_edges[i][j] = 1
@@ -133,7 +140,7 @@ for op_index in range (0, len(options_list)):
                 continue
             if len(existing_lig_rec_dict[i][j])>0:
                 for k in existing_lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]: # and k in lig_rec_dict_TP[i][j]:
+                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and len(lig_rec_dict_TP[i][j])>0:
                         #print("i=%d j=%d k=%d"%(i, j, k))
                         confusion_matrix[0][0] = confusion_matrix[0][0] + 1
                     else:
