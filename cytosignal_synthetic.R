@@ -67,20 +67,20 @@ combined_factor <- c(ligand_factor, receptor_factor)
 
 db.cont<- list(combined = combined_factor, ligands = ligand_factor, receptors=receptor_factor)
 ###########################################################################################################################
-
+#  scale.factor = 10 -- controls the TP finding, [pvalue, reads.thresh = 50, sig.thresh = 50 ]-- spatial variablitity
 csData <- createCytoSignal(raw.data = countsData, cells.loc = spatialData)
 db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 50)
+csData <- inferEpsParams(csData, scale.factor = 10)
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
 csData <- imputeLR(csData)
 csData <- inferIntrScore(csData)
 
-csData <- inferSignif(csData, p.value = 0.10, reads.thresh = 100, sig.thresh = 100)
+csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 200, sig.thresh = 200)
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
