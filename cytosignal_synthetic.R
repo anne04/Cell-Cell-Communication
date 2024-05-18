@@ -73,14 +73,14 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 10)
+csData <- inferEpsParams(csData, scale.factor = 1)
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
 csData <- imputeLR(csData)
 csData <- inferIntrScore(csData)
 
-csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 200, sig.thresh = 200)
+csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 100, sig.thresh = 100)
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
