@@ -57,8 +57,8 @@ for op_index in range (0, len(options_list)):
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
     #list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
-    cell_vs_cell = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp.csv', index_col=0)
-    ccc_list = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/ccc_name_dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp.csv', index_col=0)
+    cell_vs_cell = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_'+ options +'.csv', index_col=0)
+    ccc_list = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/ccc_name_'+ options +'.csv', index_col=0)
     ccc_list = list(ccc_list['x'])
   
     # rows = senders
@@ -97,7 +97,7 @@ for op_index in range (0, len(options_list)):
             
     
     plot_dict = defaultdict(list)
-    percentage_value = 100
+    percentage_value = 10
     while percentage_value > 0:
         percentage_value = percentage_value - 10
     
@@ -171,3 +171,7 @@ for op_index in range (0, len(options_list)):
     
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'CytoSignal', 'wb') as fp: #b, b_1, a  11to20runs
         pickle.dump(plot_dict, fp) #a - [0:5]
+
+
+
+# op = 3,  1163.0, op 4 = 1400, op 5 = 
