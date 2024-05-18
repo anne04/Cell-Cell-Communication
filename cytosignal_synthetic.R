@@ -80,7 +80,7 @@ csData <- findNN(csData)
 csData <- imputeLR(csData)
 csData <- inferIntrScore(csData)
 
-csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 100, sig.thresh = 100)
+csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 100, sig.thresh = 100) #0.50
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
