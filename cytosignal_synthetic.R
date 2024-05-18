@@ -3,8 +3,10 @@ library(data.table)
 library(cytosignal)
 library(Matrix)
 
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
-#options = 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+#options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
+#options = 'dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
+options = 'dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2'
+
 
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
@@ -73,24 +75,20 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 1)
+csData <- inferEpsParams(csData, scale.factor = 10)
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
 csData <- imputeLR(csData)
 csData <- inferIntrScore(csData)
 
-csData <- inferSignif(csData, p.value = 0.05, reads.thresh = 100, sig.thresh = 100) #0.50
+csData <- inferSignif(csData, p.value = 0.10, reads.thresh = 100, sig.thresh = 100) #0.50
 csData <- rankIntrSpatialVar(csData)
 allIntrs <- showIntr(csData, slot.use = "GauEps-Raw", signif.use = "result", return.name = TRUE) #
 
 #print(head(allIntrs))
 #intr.use <- allIntrs[1] #names(allIntrs)[1]
 
-i_list <- list()
-j_list <- list()
-score_list <- list()
-ccc_list <- list()
 
 res.list <- csData@lrscore[["GauEps-Raw"]]@res.list[["result"]] #.spx
 lig.slot <- csData@lrscore[["GauEps-Raw"]]@lig.slot # what type of ligands? Diffuse or contact. It is a string type. 
@@ -100,8 +98,13 @@ nn.graph <- csData@imputation[[lig.slot]]@nn.graph #4623 x 4623 sparse Matrix of
 
 
 write.csv(as.matrix(nn.graph), paste('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_',options,'.csv',sep=""))
+write.csv(names(allIntrs), paste('/cluster/projects/schwartzgroup/fatema/cytosignal/ccc_name_',options,'.csv',sep=""))
 
 
+i_list <- list()
+j_list <- list()
+score_list <- list()
+ccc_list <- list()
 # if there are multiple lr pairs between two cells: from cell a to cell b --> they are combined into one "imputation" score and ONE score/value is assigned to the slot [a][b] --> a to b  
 for(intr.use in names(allIntrs)){ 
     cat(intr.use, '\n')
