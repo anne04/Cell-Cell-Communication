@@ -54,7 +54,7 @@ for op_index in range (0, len(options_list)):
     #negative_class = count - positive_class 
   ######################################################## cytosignal #########################################################################
     # get all the edges and their scaled scores that they use for plotting the heatmap
-    list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
+    #list_ccc = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/sender_vs_rec_'+options+'.csv') 
     cell_vs_cell = pd.read_csv('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp.csv', index_col=0)
     # rows = senders
     # cols = receivers
