@@ -3,10 +3,21 @@ library(data.table)
 library(cytosignal)
 library(Matrix)
 
+#options = 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+#options =  'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+#options = 'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+
 #options = 'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
 #options = 'dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp'
-options = 'dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2'
+#options = 'dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2'
 
+#options = 'dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overlap_knn_cellCount5000_3dim_3patterns_temp'
+#options = 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp'
+#options = 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp'
+# -- done #
+options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
+#options = 'dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000'
+#options = 'dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000'
 
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
@@ -75,7 +86,11 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 10)
+csData <- inferEpsParams(csData, scale.factor = 20) 
+# 10 for op: 3, 4, 5 which caused diffuse dist = 20 whereas we had just 4. 
+# 5 for op = 6, 7, 8 which caused diffusion 40, whereas we had 10nn. 
+# 20 for op 0, 1, 2 which caused diffusion = 10, whereas we had 1.2. 
+# 5 for op 9, 10, 11 
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
