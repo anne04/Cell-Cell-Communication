@@ -15,11 +15,11 @@ library(Matrix)
 #options = 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp'
 #options = 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp'
 # -- done #
-options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
+#options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
 #options = 'dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000'
 #options = 'dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000'
 
-countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
+countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
 
 ## The cluster annotation need to be presented as a factor object
@@ -28,7 +28,7 @@ countsData <- as.matrix(countsData)
 #names(cluster) <- colnames(dge)
 
 ## The spatial coordinates need to be presented as a matrix object
-spatialData <- as.matrix(read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_cell_',options,'_spatial.csv',sep=""), row.names = 1))
+spatialData <- as.matrix(read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_cell_',options,'_spatial.csv',sep=""), row.names = 1))
 
 
 g_to_u <- read.csv(paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/gene_to_u_',options,'.csv',sep="")) #, row.names = 1
@@ -87,7 +87,7 @@ csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
 csData <- inferEpsParams(csData, scale.factor = 5) 
-# 10 for op: 3, 4, 5 which caused diffuse dist = 20 whereas we had just 4. 
+# 10 for op: 3, 4, 5, which caused diffuse dist = 20, whereas we had just 4. 
 # 5 for op = 6, 7, 8 which caused diffusion 40, whereas we had 10nn. 
 # 20 for op 0, 1, 2 which caused diffusion = 10, whereas we had 1.2. 
 # 5 for op 9, 10, 11 - 40 diffuse
