@@ -86,11 +86,11 @@ db.cont <- db.diff
 csData <- addIntrDB(csData, g_to_u, db.diff, db.cont, inter.index)
 csData <- removeLowQuality(csData, counts.thresh = 1, gene.thresh = 1)
 csData <- changeUniprot(csData)
-csData <- inferEpsParams(csData, scale.factor = 20) 
+csData <- inferEpsParams(csData, scale.factor = 5) 
 # 10 for op: 3, 4, 5 which caused diffuse dist = 20 whereas we had just 4. 
 # 5 for op = 6, 7, 8 which caused diffusion 40, whereas we had 10nn. 
 # 20 for op 0, 1, 2 which caused diffusion = 10, whereas we had 1.2. 
-# 5 for op 9, 10, 11 
+# 5 for op 9, 10, 11 - 40 diffuse
 csData@parameters$r.diffuse.scale
 csData@parameters$sigma.scale
 csData <- findNN(csData)
