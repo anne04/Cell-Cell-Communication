@@ -3,7 +3,7 @@ import pandas as pd
 import pickle
 from collections import defaultdict
 import numpy as np
-datapoint_size_list = [3000, 3000, 3000, 5000, 5000, 5000, 5000, 5000, 5000, 3000, 3000, 3000]
+datapoint_size_list = [3000, 3000, 3000, 5000, 5000, 5000, 5000, 5000, 5000, 3000, 5000, 5000]
 options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
                'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
                'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
@@ -11,7 +11,7 @@ options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_thre
                'dt-path_uniform_distribution_lrc112_cp100_noise0_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp',
                'dt-path_uniform_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp',
                'dt-path_uniform_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount5000_3dim_3patterns_temp_v2',
-               
+               # -- done -- #
                'dt-path_mixture_of_distribution_lrc112_cp100_noise0_random_overlap_knn_cellCount5000_3dim_3patterns_temp',
                 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_lowNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp',
                 'dt-path_mixture_of_distribution_lrc112_cp100_noise30_heavyNoise_random_overlap_knn_cellCount5000_3dim_3patterns_temp',
