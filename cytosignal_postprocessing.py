@@ -247,9 +247,6 @@ for t in range (0, len(options_list)):
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'CytoSignal', 'rb') 
     plot_dict_temp = pickle.load(fp)
 
-    plot_dict_temp['FPR'].append(1.0)
-    plot_dict_temp['TPR'].append(1.0)
-    plot_dict_temp['Type'].append("cytosignal_"+sample_type[t])
   
     plot_dict = defaultdict(list)
     plot_dict['FPR'].append(0)
