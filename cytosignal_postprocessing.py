@@ -3,6 +3,9 @@ import pandas as pd
 import pickle
 from collections import defaultdict
 import numpy as np
+import altair as alt
+
+
 datapoint_size_list = [3000, 3000, 3000, 5000, 5000, 5000, 5000, 5000, 5000, 3000, 5000, 5000]
 options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
                'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
@@ -236,10 +239,10 @@ for op_index in range (0, len(options_list)):
 
 ###########################################################
 
-for op_index in range (0, len(options_list)):
-    print('%d'%op_index)
+for t in range (0, len(options_list)):
+    print('%d'%t)
   
-    options = options_list[op_index]
+    options = options_list[t]
 
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'CytoSignal', 'rb') 
     plot_dict_temp = pickle.load(fp)
@@ -263,5 +266,5 @@ for op_index in range (0, len(options_list)):
         y='TPR:Q',
         color='Type:N',
     )	
-    chart.save('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal/'+"cytosignal_"+sample_type[t]+'.html')
+    chart.save('/cluster/projects/schwartzgroup/fatema/cytosignal/'+"cytosignal_"+sample_type[t]+'.html')
 # op = 3,  1163.0, op 4 = 1400, op 5 = 
