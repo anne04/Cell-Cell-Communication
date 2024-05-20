@@ -20,7 +20,7 @@ options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_thre
                 'dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000',
                 'dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000'
                ] 
-
+sample_type = ['equidistant_path', 'equidistant_path_lowNoise', 'equidistant_path_highNoise', 'uniform', 'uniform_lowNoise', 'uniform_highNoise', 'mixed', 'mixed_low', 'mixed_high', 'random_equi', 'random_unifrom', 'random_mixed']
 for op_index in range (0, len(options_list)):
     print('%d'%op_index)
   
@@ -234,5 +234,34 @@ for op_index in range (0, len(options_list)):
         pickle.dump(plot_dict, fp) #a - [0:5]
 
 
+###########################################################
 
+for op_index in range (0, len(options_list)):
+    print('%d'%op_index)
+  
+    options = options_list[op_index]
+
+    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'CytoSignal', 'rb') 
+    plot_dict_temp = pickle.load(fp)
+
+    plot_dict_temp['FPR'].append(1.0)
+    plot_dict_temp['TPR'].append(1.0)
+    plot_dict_temp['Type'].append("cytosignal_"+sample_type[t])
+  
+    plot_dict = defaultdict(list)
+    plot_dict['FPR'].append(0)
+    plot_dict['TPR'].append(0)
+    plot_dict['Type'].append("cytosignal_"+sample_type[t]) #(plot_dict_temp['Type'][0])
+    for i in range (0, len(plot_dict_temp['Type'])):
+        plot_dict['FPR'].append(plot_dict_temp['FPR'][i])
+        plot_dict['TPR'].append(plot_dict_temp['TPR'][i])
+        plot_dict['Type'].append("cytosignal_"+sample_type[t]) #(plot_dict_temp['Type'][i])
+    
+    data_list_pd = pd.DataFrame(plot_dict)    
+    chart = alt.Chart(data_list_pd).mark_line().encode(
+        x='FPR:Q',
+        y='TPR:Q',
+        color='Type:N',
+    )	
+    chart.save('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal/'+"cytosignal_"+sample_type[t]+'.html')
 # op = 3,  1163.0, op 4 = 1400, op 5 = 
