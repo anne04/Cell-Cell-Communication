@@ -123,7 +123,15 @@ if __name__ == "__main__":
     for cell_code in cell_id:
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
+    ###################### filter it to keep only the cells that are inside the region of interest ##################
+    # filter barcode info
 
+
+    # filter the cell_id
+
+
+    # filter cell_vs_gene as well
+    
     
     ############################ Now plot it to see how does it look ###################
     '''
