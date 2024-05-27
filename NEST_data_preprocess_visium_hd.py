@@ -70,14 +70,15 @@ if __name__ == "__main__":
 
     ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
     # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
-    adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
-    barcode_list = list(adata.obs.index)
-    barcode_coord = dict()
-    for i in range(0, len(barcode_list)):
-        barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
+    fp = gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'rb') 
+    barcode_list, barcode_coord = pickle.load(fp)
 
+    #adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
+    #barcode_list = list(adata.obs.index)
+    #barcode_coord = dict()
+    #for i in range(0, len(barcode_list)):
+    #    barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
 
-    
     # following will give barcode vs id for segmented+grouped data p75
     barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
 
@@ -133,6 +134,7 @@ if __name__ == "__main__":
     # filter cell_vs_gene as well
     
     
+
     ############################ Now plot it to see how does it look ###################
     '''
     data_list=dict()
@@ -451,5 +453,6 @@ if __name__ == "__main__":
     
         
     print('write data done')
+    
     
 # nohup python -u data_preprocess_NEST.py --data_name='PDAC_64630_mincell3_th98p5' --data_from='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' --filter_min_cell=3 --threshold_gene_exp=98.5 > output_data_preprocess_PDAC_64630_min_cell_3_th98p5.log &
