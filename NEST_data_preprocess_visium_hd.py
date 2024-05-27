@@ -129,19 +129,31 @@ if __name__ == "__main__":
     x_max = 54000
     #y_max = 234225
     temp_barcode_info = []
+    cell_code_active = dict()
+    cell_index_active = []
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] <= 54000 and  barcode_info[i][2] <= y_max:
             # keep it
             temp_barcode_info.append(barcode_info[i])
-        
+            cell_code_active[barcode_info[i][0]] = ''
+            cell_index_active.append(i)
+            
     barcode_info = temp_barcode_info
+    
     # filter the cell_id
+    temp_cell_id = []
+    for cell_code in cell_id:
+        if cell_code in cell_code_active:
+            temp_cell_id.append(cell_code)
+            
+    cell_id = temp_cell_id
     
-
     # filter cell_vs_gene as well
+    cell_vs_gene = cell_vs_gene[cell_index_active, :]
     
-    
+    # now print to see if dimensions are good to proceed. 
 
+    
     ############################ Now plot it to see how does it look ###################
     '''
     data_list=dict()
