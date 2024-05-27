@@ -126,10 +126,17 @@ if __name__ == "__main__":
         i=i+1
     ###################### filter it to keep only the cells that are inside the region of interest ##################
     # filter barcode info
-
-
+    x_max = 54000
+    #y_max = 234225
+    temp_barcode_info = []
+    for i in range (0, len(barcode_info)):
+        if barcode_info[i][1] <= 54000 and  barcode_info[i][2] <= y_max:
+            # keep it
+            temp_barcode_info.append(barcode_info[i])
+        
+    barcode_info = temp_barcode_info
     # filter the cell_id
-
+    
 
     # filter cell_vs_gene as well
     
