@@ -260,7 +260,7 @@ for i in range(0, len(barcode_list)):
 
 with gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'wb') as fp: 
     pickle.dump([barcode_list, barcode_coord], fp)
-
+ 
 
 
 
