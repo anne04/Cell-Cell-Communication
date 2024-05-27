@@ -67,10 +67,10 @@ if __name__ == "__main__":
     parser.add_argument( '--selfloop_info_file', type=str, default='', help='Path to load the selfloop information file produced during data preprocessing step')
     parser.add_argument( '--top_ccc_file', type=str, default='', help='Path to load the selected top CCC file produced during data postprocessing step')
     parser.add_argument( '--output_name', type=str, default='', help='Output file name prefix according to user\'s choice')
-    parser.add_argument( '--filter', type=int, default=0, help='Set --filter=-1 if you want to filter the CCC')
+    parser.add_argument( '--filter', type=int, default=1, help='Set --filter=-1 if you want to filter the CCC')
     parser.add_argument( '--filter_by_ligand_receptor', type=str, default='', help='Set ligand-receptor pair, e.g., --filter_by_ligand_receptor="CCL19-CCR7" if you want to filter the CCC by LR pair')
     parser.add_argument( '--filter_by_annotation', type=str, default='', help='Set cell or spot type, e.g., --filter_by_annotation="T-cell" if you want to filter the CCC')
-    parser.add_argument( '--filter_by_component', type=int, default=-1, help='Set component id, e.g., --filter_by_component=9 if you want to filter by component id')
+    parser.add_argument( '--filter_by_component', type=int, default=32, help='Set component id, e.g., --filter_by_component=9 if you want to filter by component id')
     
     
     args = parser.parse_args()
@@ -207,7 +207,10 @@ if __name__ == "__main__":
             if args.filter_by_component!=-1:
                 if csv_record_final[record_idx][5] == int(args.filter_by_component):
                     csv_record_final_temp.append(csv_record_final[record_idx])
-                    pair = csv_record_final[record_idx][2] + "-" + csv_record_final[record_idx][3]
+                    if csv_record_final[record_idx][2]=='APP' and (csv_record_final[record_idx][3]=='ITGA6' or csv_record_final[record_idx][3]=='TGFBR2'):
+                        pair = csv_record_final[record_idx][2] + "-" + 'ITGA6/TGFBR2'
+                    else:  
+                        pair = csv_record_final[record_idx][2] + "-" + csv_record_final[record_idx][3]
                     ligand_receptor_pair[pair].append('')                
         
         csv_record_final_temp.append(csv_record_final[len(csv_record_final)-1])
@@ -224,7 +227,7 @@ if __name__ == "__main__":
     for pair in ligand_receptor_pair.keys():
         f_obs.append(len(ligand_receptor_pair[pair]))
         occurance_percentage.append(len(ligand_receptor_pair[pair])/total_count)
-        if pair=='PLXNB2-MET':
+        if pair=='APP-ITGA6/TGFBR2': #or pair=='APP-TGFBR2':
             position_target = count
             print('position_target %d'%position_target)
         count = count+1
@@ -248,8 +251,8 @@ if __name__ == "__main__":
     n_data = sample_size # total draw = 100
     x_data = occurance_percentage # expected count of draw from each lr-pair. For PLXNB2-MET = 20%  
     # Null hypothesis: Out of 100 draw, only PLXNB2-MET is chosen 20% of the time (the rest 80% are distributed among the rest 217 pairs), just by chance. 
-    # Alternative hypothesis: Out of 100 draw, only PLXNB2-MET is chosen 20% of the time NOT by chance, but because it is biased. 
-    print('hypergeometric probability of null hypothesis: PLXNB2-MET wil be selected most of the time out of %d draws just by chance is: %g' % (n_data, multivariate_hypergeom.pmf(x=x_data, m=m_data, n=n_data)))
+    # Alternative hypothesis: Out of 100 draw, only APP-ITGA6/TGFBR2 is chosen 20% of the time NOT by chance, but because it is biased. 
+    print('hypergeometric probability of null hypothesis: APP-ITGA6/TGFBR2 wil be selected most of the time out of %d draws just by chance is: %g' % (n_data, multivariate_hypergeom.pmf(x=x_data, m=m_data, n=n_data)))
     # p-value < 0.05 -- so reject the null hypothesis and accept the alternative hypothesis.
     # the null hypothesis that there is nothing special about the jar. If this probability (also called the p-value) is sufficiently low, then we can decide to reject the null hypothesis as too unlikely 
     # — something must be going on with this jar.    
