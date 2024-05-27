@@ -252,14 +252,14 @@ plot_mask_and_save_image(title="Region full",gdf=gdf,cmap=cmap,img=img,output_na
 raw_h5_file = dir_base+'filtered_feature_bc_matrix.h5'
 adata = sc.read_10x_h5(raw_h5_file)
 
-# save the barcode coordinates for later use
+# save the barcode index and coordinates for later use
 barcode_list = list(adata.obs.index)
 barcode_coord = dict()
 for i in range(0, len(barcode_list)):
     barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
 
 with gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'wb') as fp: 
-    pickle.dump(barcode_coord, fp)
+    pickle.dump([barcode_list, barcode_coord], fp)
 
 
 
