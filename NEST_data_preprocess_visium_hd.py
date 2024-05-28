@@ -279,18 +279,11 @@ if __name__ == "__main__":
         cell_percentile.append(np.percentile(y, args.threshold_gene_exp)) 
     
     ##############################################################################
+    if args.ROI == 1:
+        
+
+    ##############################################################################
     # some preprocessing before making the input graph
-    
-    '''
-    cells_ligand_vs_receptor = []
-    for i in range (0, cell_vs_gene.shape[0]):
-        cells_ligand_vs_receptor.append([])
-      
-    for i in range (0, cell_vs_gene.shape[0]):
-        for j in range (0, cell_vs_gene.shape[0]):
-            cells_ligand_vs_receptor[i].append([])
-            cells_ligand_vs_receptor[i][j] = []
-    '''
     cells_ligand_vs_receptor = defaultdict(dict)
     ligand_list =  list(ligand_dict_dataset.keys())            
     start_index = 0 #args.slice
