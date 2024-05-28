@@ -327,10 +327,8 @@ summed_counts = summed_counts.tocsr()
 grouped_filtered_adata = anndata.AnnData(X=summed_counts,obs=pd.DataFrame(polygon_id,columns=['id'],index=polygon_id),var=filtered_adata.var)
 
 %store grouped_filtered_adata
-grouped_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p7.h5ad', compression='gzip')
+#grouped_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p7.h5ad', compression='gzip')
 #grouped_filtered_adata = anndata.read_h5ad('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/grouped_filtered_adata_p75.h5ad')
-barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
-barcode_vs_id.to_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv',header=None)
 
 # Store the area of each nucleus in the GeoDataframe
 gdf['area'] = gdf['geometry'].area
@@ -353,6 +351,12 @@ count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 sc.pp.calculate_qc_metrics(count_area_filtered_adata, inplace=True)
 
 count_area_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/count_area_filtered_adata_p75.h5ad', compression='gzip')
+barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
+barcode_vs_id.to_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv',header=None)
+
+
+
+
 # Plot and save the clustering results
 # plot_clusters_and_save_image(title="Region of interest 1", gdf=gdf, img=img, adata=count_area_filtered_adata, bbox=(12844,7700,13760,8664), color_by_obs='clusters', output_name=dir_base+"image_clustering.ROI1.tiff")
 # Plot Lyz1 gene expression
@@ -360,4 +364,52 @@ plot_gene_and_save_image(title="Region of interest 1", gdf=gdf, gene='TGFBI', im
 plot_gene_and_save_image(title="Region full", gdf=gdf, gene='TGFBI', img=img, adata=count_area_filtered_adata,output_name=dir_base+"image_full_TGFBI.tiff")
 
 
+    ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
+    # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
+    fp = gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'rb') 
+    barcode_list, barcode_coord = pickle.load(fp)
 
+    #adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
+    #barcode_list = list(adata.obs.index)
+    #barcode_coord = dict()
+    #for i in range(0, len(barcode_list)):
+    #    barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
+
+    # following will give barcode vs id for segmented+grouped data p75
+    barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
+
+    
+    # combine above two to get: id = list of (barcodes, coordinates) assigned to that id
+    id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
+    for i in range(0, len(barcode_vs_id)):
+        id_barcode_coord[barcode_vs_id[1][i]].append([barcode_vs_id[0][i], barcode_coord[barcode_vs_id[0][i]]])
+
+    # filter it to keep only those who are in the final area+UMI filtered data
+    id_barcode_coord_temp = defaultdict(list) # key=id, value=[[barcode, [coord]]]
+    for i in range(0, len(cell_id)):
+        id_barcode_coord_temp[cell_id[i]] = id_barcode_coord[cell_id[i]]
+
+    id_barcode_coord = id_barcode_coord_temp
+
+        
+    # intersect barcode_id_coord with adata_h5.obs['id'] --> to get coordinates of cells in adata_h5
+    coordinates = np.zeros((cell_id.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
+    cell_barcode = []
+    for i in range (0, cell_id.shape[0]):    
+        list_barcodes_coord = id_barcode_coord[cell_id[i]]
+        cell_barcode.append([])
+        list_coords = []
+        for j in range (0, len(list_barcodes_coord)):
+            cell_barcode[i].append(list_barcodes_coord[j][0])
+            list_coords.append((list_barcodes_coord[j][1]))
+
+        #coordinates[i,0] = list_coords[0][0]
+        #coordinates[i,1] = list_coords[0][1]
+        #if len(list_coords) < 4:
+        point = MultiPoint(list_coords)
+        #else:
+        #    point = Polygon(list_coords)  
+            
+        coordinates[i,0] = point.centroid.coords[0][0]
+        coordinates[i,1] = point.centroid.coords[0][1]
+        
