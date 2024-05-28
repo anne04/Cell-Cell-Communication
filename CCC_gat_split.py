@@ -1,47 +1,43 @@
 from scipy import sparse
 import pickle
 import numpy as np
+from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import DeepGraphInfomax #Linear, 
 from torch_geometric.data import Data, DataLoader
 import gzip
-
+import gc
 from GATv2Conv_NEST import GATv2Conv
 
-def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this if you don't want to save the split graph into disk due to space issue
-    
+
+
+def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this if you don't want to save the split graph into disk due to space issue    
     fp = gzip.open(training_data, 'rb')  
     row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
     
     dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
     dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
-    nodes_active = dict()
     for i in range(0, len(row_col)): 
         dict_cell_edge[row_col[i][1]].append(i) # index of the edges
         dict_cell_neighbors[row_col[i][1]].append(row_col[i][0]) # neighbor id
-        nodes_active[row_col[i][1]] = '' # to 
-        nodes_active[row_col[i][0]] = '' # from
-    
-    
+
+
+
+    fp = gzip.open(node_id_sorted, 'rb')
+    node_id_sorted_xy = pickle.load(fp)
+    nodes_active = dict()
+    for i in range(0, len(node_id_sorted_xy)): 
+        nodes_active[node_id_sorted_xy[i][0]]
+
+
     datapoint_size = len(nodes_active.keys())
-    
     for i in range (0, datapoint_size):
         neighbor_list = dict_cell_neighbors[i]
         neighbor_list = list(set(neighbor_list))
         dict_cell_neighbors[i] = neighbor_list
     
-    
-    fp = gzip.open(node_id_sorted, 'rb')
-    node_id_sorted_xy = pickle.load(fp)
-    
-    node_id_sorted_xy_temp = []
-    for i in range(0, len(node_id_sorted_xy)):
-        if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
-            node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
-    
-    node_id_sorted_xy = node_id_sorted_xy_temp
     
     ##################################################################################################################
     # one hot vector used as node feature vector
@@ -52,7 +48,7 @@ def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this 
     
     # split it into N set of edges
     
-    total_subgraphs = args.total_subgraphs
+    total_subgraphs = total_subgraphs
     
     #edge_list = []
     graph_bag = []
@@ -137,7 +133,15 @@ def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this 
             edge_weight_temp.append(set1_edges[i][1])
     
         print("subgraph %d: number of nodes %d, each having feature dimension %d. Total number of edges %d"%(set_id, num_cell, num_feature, len(row_col_temp)))
-        graph_bag.append([X_data, row_col_temp, edge_weight_temp])
+
+        X_data = torch.tensor(X_data, dtype=torch.float)
+        edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+        edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+        
+        data = Data(x=X_data, edge_index=edge_index, edge_attr=edge_attr)
+        data_loader = DataLoader([data], batch_size=1)
+      
+        graph_bag.append(data_loader)
         gc.collect()
         
     return graph_bag, num_feature    
@@ -275,19 +279,8 @@ def train_NEST(args, graph_bag, in_channels):
         DGI_optimizer.zero_grad()
         DGI_all_loss = []
 
-        for subgraph in range (0, len(graph_bag)):
-            
-            X_data = graph_bag[subgraph][0]
-            row_col_temp = graph_bag[subgraph][1]
-            edge_weight_temp = graph_bag[subgraph][2]
-            
-            X = torch.tensor(X_data, dtype=torch.float)
-            edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
-            edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
-            
-            data = Data(x=X, edge_index=edge_index, edge_attr=edge_attr)
-            data_loader = DataLoader([data], batch_size=1)
-            for data in data_loader:
+        for subgraph in graph_bag:
+            for data in subgraph:
                 data = data.to(device)
                 pos_z, neg_z, summary = DGI_model(data=data)
                 DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
@@ -310,19 +303,10 @@ def train_NEST(args, graph_bag, in_channels):
                 torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar')
                 save_tupple=[pos_z, neg_z, summary] 
                 ############################################################################################################
-                for subgraph in range (0, len(graph_bag)):
-                
-                    X_data = graph_bag[subgraph][0]
-                    row_col_temp = graph_bag[subgraph][1]
-                    edge_weight_temp = graph_bag[subgraph][2]
-                    
-                    X = torch.tensor(X_data, dtype=torch.float)
-                    edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
-                    edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
-                    
-                    data = Data(x=X, edge_index=edge_index, edge_attr=edge_attr)
-                    data_loader = DataLoader([data], batch_size=1)
-                    for data in data_loader:
+                subgraph_id = -1
+                for subgraph in graph_bag:
+                    subgraph_id = subgraph_id + 1
+                    for data in subgraph:
                         data = data.to(device)
                         pos_z, neg_z, summary = DGI_model(data=data)              
                
@@ -330,7 +314,7 @@ def train_NEST(args, graph_bag, in_channels):
                     X_embedding = pos_z
                     X_embedding = X_embedding.cpu().detach().numpy()
                     X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
-                    with gzip.open(X_embedding_filename+'_subgraph'+str(subgraph), 'wb') as fp:  
+                    with gzip.open(X_embedding_filename+'_subgraph'+str(subgraph_id), 'wb') as fp:  
                         pickle.dump(X_embedding, fp)
                         
 
@@ -355,7 +339,7 @@ def train_NEST(args, graph_bag, in_channels):
     
                     print('making the bundle to save')
                     X_attention_bundle = [X_attention_index, X_attention_score_normalized_l1, X_attention_score_unnormalized, X_attention_score_unnormalized_l1, X_attention_score_normalized]
-                    X_attention_filename =  args.embedding_path + args.model_name + '_attention'+'_subgraph'+str(subgraph)
+                    X_attention_filename =  args.embedding_path + args.model_name + '_attention'+'_subgraph'+str(subgraph_id)
                     with gzip.open(X_attention_filename, 'wb') as fp:  
                         pickle.dump(X_attention_bundle, fp)
                 ############################################################################################################################
@@ -365,8 +349,8 @@ def train_NEST(args, graph_bag, in_channels):
 
                 #print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
 
-#            if ((epoch)%60000) == 0:
-#                DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6)  #5 #6
+#        if ((epoch)%40000) == 0:
+#            DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=0.00001)  #5 #6
 
     end_time = datetime.datetime.now()
 
