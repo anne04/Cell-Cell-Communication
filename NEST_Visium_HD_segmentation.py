@@ -333,7 +333,7 @@ count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 # Calculate quality control metrics for the filtered AnnData object
 sc.pp.calculate_qc_metrics(count_area_filtered_adata, inplace=True)
 
-count_area_filtered_adata.write_h5ad(filename='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/count_area_filtered_adata_p75.h5ad', compression='gzip')
+count_area_filtered_adata.write_h5ad(filename=args.data_to+'count_area_filtered_adata_p75.h5ad', compression='gzip')
 
 barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
 
