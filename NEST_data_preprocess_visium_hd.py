@@ -34,6 +34,14 @@ if __name__ == "__main__":
     parser.add_argument( '--k', type=int, default=50 , help='Set neighborhood cutoff number')    
     parser.add_argument( '--neighborhood_threshold', type=float, default=0, help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
+    #######################################
+    parser.add_argument( '--ROI', type=int, default=0 , help='Do you have a ROI')
+    parser.add_argument( '--x_min', type=int, default=0 , help='Set x_min')  
+    parser.add_argument( '--x_max', type=int, default=54000 , help='Set x_max')  
+    parser.add_argument( '--y_min', type=int, default=0 , help='Set y_min')  
+    parser.add_argument( '--y_max', type=int, default=24000 , help='Set y_max')  
+    
+    
     args = parser.parse_args()
     k_nn = args.k
     
