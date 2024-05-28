@@ -79,7 +79,7 @@ if __name__ == "__main__":
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
 
-    
+    '''
     ###################### filter it to keep only the cells that are inside the region of interest ##################
     # filter barcode info
     x_max = 54000
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     cell_vs_gene = cell_vs_gene[cell_index_active, :]
     
     # Now print to see if the dimensions are good to proceed. 
-
+    '''
     
     ############################ Now plot it to see how does it look ###################
     '''
@@ -279,67 +279,130 @@ if __name__ == "__main__":
         cell_percentile.append(np.percentile(y, args.threshold_gene_exp)) 
     
     ##############################################################################
+    active_nodes = dict()
     if args.ROI == 1:
-        
+        for i in range (0, len(barcode_info)):
+            if (x_min <= barcode_info[i][1] and barcode_info[i][1] <= x_max) and  (y_min <= barcode_info[i][2] and barcode_info[i][2] <= y_max):
+                active_nodes[i] = ''        
 
     ##############################################################################
     # some preprocessing before making the input graph
-    cells_ligand_vs_receptor = defaultdict(dict)
-    ligand_list =  list(ligand_dict_dataset.keys())            
-    start_index = 0 #args.slice
-    end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
-    cell_contact_found = 0
-    count_total_edges = 0
-    for g in range(start_index, end_index): 
-        gene = ligand_list[g]
-        for i in range (0, cell_vs_gene.shape[0]): # ligand
-              
-            if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
-                continue
-            
-            for j in range (0, cell_vs_gene.shape[0]): # receptor
-                if i not in dist_X_dict or j not in dist_X_dict[i]: #dist_X[i,j]==0: 
+    if args.ROI == 1:
+        cells_ligand_vs_receptor = defaultdict(dict)
+        ligand_list =  list(ligand_dict_dataset.keys())            
+        start_index = 0 #args.slice
+        end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
+        cell_contact_found = 0
+        count_total_edges = 0
+        for g in range(start_index, end_index): 
+            gene = ligand_list[g]
+            for i in range (0, cell_vs_gene.shape[0]): # ligand
+                if i not in active_nodes:
                     continue
-
-                if coordinates[i][0] > 54000 or coordinates[j][0] > 54000: # if the x coordinate of cell i or j is above 54000, skip
+                if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
                     continue
-
-                #print('%d, %d'%(i, j))
                 
-                for gene_rec in ligand_dict_dataset[gene]:
-                    if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
-                        #print('i and j are both high')
-                        if gene_rec in cell_cell_contact:
-                            if distance_matrix[i,j] > args.spot_diameter:
-                                continue
-                            else:
-                                cell_contact_found = cell_contact_found + 1
+                for j in range (0, cell_vs_gene.shape[0]): # receptor
+                    if j not in active_nodes:
+                        continue
+                        
+                    if i not in dist_X_dict or j not in dist_X_dict[i]: #dist_X[i,j]==0: 
+                        continue
     
-                        communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
-                        relation_id = l_r_pair[gene][gene_rec]
+                    if coordinates[i][0] > 54000 or coordinates[j][0] > 54000: # if the x coordinate of cell i or j is above 54000, skip
+                        continue
     
-                        if communication_score<=0:
-                            print('zero valued ccc score found. Might be a potential ERROR!! ')
-                            continue	
-
-                        #cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
-                        if i in cells_ligand_vs_receptor:
-                            if j in cells_ligand_vs_receptor[i]:
-                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                    #print('%d, %d'%(i, j))
+                    
+                    for gene_rec in ligand_dict_dataset[gene]:
+                        if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                            #print('i and j are both high')
+                            if gene_rec in cell_cell_contact:
+                                if distance_matrix[i,j] > args.spot_diameter:
+                                    continue
+                                else:
+                                    cell_contact_found = cell_contact_found + 1
+        
+                            communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                            relation_id = l_r_pair[gene][gene_rec]
+        
+                            if communication_score<=0:
+                                print('zero valued ccc score found. Might be a potential ERROR!! ')
+                                continue	
+    
+                            #cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            if i in cells_ligand_vs_receptor:
+                                if j in cells_ligand_vs_receptor[i]:
+                                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                                else:
+                                    cells_ligand_vs_receptor[i][j] = []
+                                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
                             else:
                                 cells_ligand_vs_receptor[i][j] = []
                                 cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
-                        else:
-                            cells_ligand_vs_receptor[i][j] = []
-                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
-
-                        
-                        count_total_edges = count_total_edges + 1
-                        
-        print('%d genes done out of %d ligand genes count_total_edges %d'%(g+1, len(ligand_list),count_total_edges))
     
+                            
+                            count_total_edges = count_total_edges + 1
+                            
+            print('%d genes done out of %d ligand genes count_total_edges %d'%(g+1, len(ligand_list),count_total_edges))        
+        print('total number of edges in the input graph %d with cell_contact_found %d'%(count_total_edges,cell_contact_found))
+    else:
+        # some preprocessing before making the input graph
+        cells_ligand_vs_receptor = defaultdict(dict)
+        ligand_list =  list(ligand_dict_dataset.keys())            
+        start_index = 0 #args.slice
+        end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
+        cell_contact_found = 0
+        count_total_edges = 0
+        for g in range(start_index, end_index): 
+            gene = ligand_list[g]
+            for i in range (0, cell_vs_gene.shape[0]): # ligand
+                if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
+                    continue
+                
+                for j in range (0, cell_vs_gene.shape[0]): # receptor
+                    if i not in dist_X_dict or j not in dist_X_dict[i]: #dist_X[i,j]==0: 
+                        continue
     
-    print('total number of edges in the input graph %d with cell_contact_found %d'%(count_total_edges,cell_contact_found))
+                    if coordinates[i][0] > 54000 or coordinates[j][0] > 54000: # if the x coordinate of cell i or j is above 54000, skip
+                        continue
+    
+                    #print('%d, %d'%(i, j))
+                    
+                    for gene_rec in ligand_dict_dataset[gene]:
+                        if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+                            #print('i and j are both high')
+                            if gene_rec in cell_cell_contact:
+                                if distance_matrix[i,j] > args.spot_diameter:
+                                    continue
+                                else:
+                                    cell_contact_found = cell_contact_found + 1
+        
+                            communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                            relation_id = l_r_pair[gene][gene_rec]
+        
+                            if communication_score<=0:
+                                print('zero valued ccc score found. Might be a potential ERROR!! ')
+                                continue	
+    
+                            #cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            if i in cells_ligand_vs_receptor:
+                                if j in cells_ligand_vs_receptor[i]:
+                                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                                else:
+                                    cells_ligand_vs_receptor[i][j] = []
+                                    cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                            else:
+                                cells_ligand_vs_receptor[i][j] = []
+                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+    
+                            
+                            count_total_edges = count_total_edges + 1
+                            
+            print('%d genes done out of %d ligand genes count_total_edges %d'%(g+1, len(ligand_list),count_total_edges))
+        
+        
+        print('total number of edges in the input graph %d with cell_contact_found %d'%(count_total_edges,cell_contact_found))
     ################################################################################
     # input graph generation
     ccc_index_dict = dict()
@@ -364,8 +427,11 @@ if __name__ == "__main__":
                         if i==j: # self-loop
                             self_loop_found[i][j] = ''
     
-
-    total_num_cell = cell_vs_gene.shape[0]
+    if args.ROI == 1:
+        total_num_cell = len(active_nodes.keys())
+    else:
+        total_num_cell = cell_vs_gene.shape[0]
+        
     print('total number of nodes is %d, and edges is %d in the input graph'%(total_num_cell, len(row_col)))
     print('preprocess done.')
     print('writing data ...')
@@ -386,17 +452,30 @@ if __name__ == "__main__":
 
     #### needed if split data is used ##############
     if args.split>0:
-        i=0
-        node_id_sorted_xy=[]
-        for cell_code in cell_id: # it has ROI if filtered for ROI
-            if cell_code in cell_code_active:
+        if args.ROI == 1:
+            i=0
+            node_id_sorted_xy=[]
+            for j in range (0, len(barcode_info)):  
+                if j in active_nodes:
+                    node_id_sorted_xy.append([j, coordinates[j,0],coordinates[j,1]]) # 
+                    i=i+1
+            	
+            node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
+            with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+            	pickle.dump(node_id_sorted_xy, fp)
+        else:
+            i=0
+            node_id_sorted_xy=[]
+            for cell_code in cell_id: 
                 node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
                 i=i+1
-        	
-        node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-        with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
-        	pickle.dump(node_id_sorted_xy, fp)
-     
+            	
+            node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
+            with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+            	pickle.dump(node_id_sorted_xy, fp)
+
+
+    print("active nodes %d"%len(node_id_sorted_xy))
     ################## required for the nest interactive version ###################
     df = pd.DataFrame(gene_ids)
     df.to_csv(args.metadata_to + 'gene_ids_'+args.data_name+'.csv', index=False, header=False)
