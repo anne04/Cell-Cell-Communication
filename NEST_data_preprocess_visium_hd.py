@@ -131,6 +131,7 @@ if __name__ == "__main__":
     temp_barcode_info = []
     cell_code_active = dict()
     cell_index_active = []
+    
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] <= 54000 and  barcode_info[i][2] <= y_max:
             # keep it
@@ -139,6 +140,13 @@ if __name__ == "__main__":
             cell_index_active.append(i)
             
     barcode_info = temp_barcode_info
+    
+    # filter the coordinate
+    coordinates = np.zeros((len(barcode_info), 2)) 
+    for i in range (0, len(barcode_info)):
+        coordinates[i,0] = barcode_info[i][1]
+        coordinates[i,1] = barcode_info[i][2]
+                
     
     # filter the cell_id
     temp_cell_id = []
@@ -151,7 +159,7 @@ if __name__ == "__main__":
     # filter cell_vs_gene as well
     cell_vs_gene = cell_vs_gene[cell_index_active, :]
     
-    # now print to see if dimensions are good to proceed. 
+    # Now print to see if the dimensions are good to proceed. 
 
     
     ############################ Now plot it to see how does it look ###################
@@ -162,23 +170,15 @@ if __name__ == "__main__":
     data_list['Y']=[]     
 
     for i in range (0, len(barcode_info)):        
-        #data_list['pathology_label'].append(barcode_type[barcode_info[i][0]])
         data_list['X'].append(barcode_info[i][1])
         data_list['Y'].append(barcode_info[i][2])
 
    
     data_list_pd = pd.DataFrame(data_list)
-    #category_count = len(list(set(data_list['pathology_label']))) 
-    #set1 = altairThemes.get_colour_scheme("Set1",category_count)
-    #set1[0] = '#000000'
     chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
         alt.X('X', scale=alt.Scale(zero=False)),
         alt.Y('Y', scale=alt.Scale(zero=False)),
-        #shape = alt.Shape('pathology_label:N'), #shape = "pathology_label",
-        #color=alt.Color('pathology_label:N', scale=alt.Scale(range=set1)), 
-        #tooltip=['pathology_label'] #,'opacity'
     )
-
     chart.save('/cluster/home/t116508uhn/' + args.data_name +'_tissue_altair_plot.html')
     print('Altair plot generation done')    
     '''
@@ -194,18 +194,7 @@ if __name__ == "__main__":
         gene_index[gene] = i
         i = i+1
         
-    #### needed if split data is used ##############
-    if args.split>0:
-        i=0
-        node_id_sorted_xy=[]
-        for cell_code in cell_barcode:
-            node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
-            i=i+1
-        	
-        node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-        with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
-        	pickle.dump(node_id_sorted_xy, fp)
-    
+   
     ###################################### Neighborhood Cutoff ###########################################
     # build physical distance matrix
     from sklearn.metrics.pairwise import euclidean_distances
@@ -451,7 +440,19 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'wb') as fp: # mapping between unsegmented and segmented data
         pickle.dump(id_barcode_coord, fp)
 
-    
+    #### needed if split data is used ##############
+    if args.split>0:
+        i=0
+        node_id_sorted_xy=[]
+        for cell_code in cell_barcode: # it has ROI if filtered for ROI
+            if cell_code in cell_code_active:
+                node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
+                i=i+1
+        	
+        node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
+        with gzip.open(args.metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+        	pickle.dump(node_id_sorted_xy, fp)
+     
     ################## required for the nest interactive version ###################
     df = pd.DataFrame(gene_ids)
     df.to_csv(args.metadata_to + 'gene_ids_'+args.data_name+'.csv', index=False, header=False)
