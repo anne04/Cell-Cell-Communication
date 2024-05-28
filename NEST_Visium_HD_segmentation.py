@@ -376,5 +376,22 @@ for i in range (0, cell_id.shape[0]):
 with gzip.open(args.data_to + args.data_name + '_coordinate_barcode', 'wb') as fp: 
     pickle.dump([coordinates, cell_barcode], fp)
  
+print('Coordinate generation done') 
+############################ Now plot it to see how does it look ###################
 
+data_list=dict()
+data_list['X']=[]
+data_list['Y']=[]     
+for i in range (0, coordinates.shape[0]):        
+    data_list['X'].append(coordinates[i, 0])
+    data_list['Y'].append(coordinates[i, 1])
+
+
+data_list_pd = pd.DataFrame(data_list)
+chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
+    alt.X('X', scale=alt.Scale(zero=False)),
+    alt.Y('Y', scale=alt.Scale(zero=False)),
+)
+chart.save(args.data_to + args.data_name +'_tissue_altair_plot.html')
+print('Altair plot generation done')    
 
