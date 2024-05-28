@@ -61,7 +61,7 @@ if __name__ == "__main__":
     if args.data_from = 'data/':
         data_path = args.data_from + args.data_name+ '/' + 'count_area_filtered_adata_p75.h5ad'
     else:
-        data_path = args.data_from
+        data_path = args.data_from + '/' + 'count_area_filtered_adata_p75.h5ad'
     ####### get the gene id, cell barcode, cell coordinates ######
     print('input data reading')
 
