@@ -68,55 +68,9 @@ if __name__ == "__main__":
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
     cell_vs_gene = np.transpose(temp)      
 
-    ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
-    # following will give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
-    fp = gzip.open(args.metadata_to + args.data_name + '_id_barcode_coord', 'rb') 
-    barcode_list, barcode_coord = pickle.load(fp)
-
-    #adata = sc.read_visium(path='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', count_file='filtered_feature_bc_matrix.h5')    
-    #barcode_list = list(adata.obs.index)
-    #barcode_coord = dict()
-    #for i in range(0, len(barcode_list)):
-    #    barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
-
-    # following will give barcode vs id for segmented+grouped data p75
-    barcode_vs_id = pd.read_csv('/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/spatial/barcode_vs_id_p75.csv', sep=",", header=None)   
-
-    
-    # combine above two to get: id = list of (barcodes, coordinates) assigned to that id
-    id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
-    for i in range(0, len(barcode_vs_id)):
-        id_barcode_coord[barcode_vs_id[1][i]].append([barcode_vs_id[0][i], barcode_coord[barcode_vs_id[0][i]]])
-
-    # filter it to keep only those who are in the final area+UMI filtered data
-    id_barcode_coord_temp = defaultdict(list) # key=id, value=[[barcode, [coord]]]
-    for i in range(0, len(cell_id)):
-        id_barcode_coord_temp[cell_id[i]] = id_barcode_coord[cell_id[i]]
-
-    id_barcode_coord = id_barcode_coord_temp
-
-        
-    # intersect barcode_id_coord with adata_h5.obs['id'] --> to get coordinates of cells in adata_h5
-    coordinates = np.zeros((cell_id.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
-    cell_barcode = []
-    for i in range (0, cell_id.shape[0]):    
-        list_barcodes_coord = id_barcode_coord[cell_id[i]]
-        cell_barcode.append([])
-        list_coords = []
-        for j in range (0, len(list_barcodes_coord)):
-            cell_barcode[i].append(list_barcodes_coord[j][0])
-            list_coords.append((list_barcodes_coord[j][1]))
-
-        #coordinates[i,0] = list_coords[0][0]
-        #coordinates[i,1] = list_coords[0][1]
-        #if len(list_coords) < 4:
-        point = MultiPoint(list_coords)
-        #else:
-        #    point = Polygon(list_coords)  
-            
-        coordinates[i,0] = point.centroid.coords[0][0]
-        coordinates[i,1] = point.centroid.coords[0][1]
-        
+    fp = gzip.open(args.metadata_to + args.data_name + '_coordinate_barcode', 'rb')
+    coordinates, cell_barcode = pickle.load(fp)
+     
     
     ##################### make metadata: barcode_info ###################################
     i=0
@@ -124,6 +78,8 @@ if __name__ == "__main__":
     for cell_code in cell_id:
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
+
+    
     ###################### filter it to keep only the cells that are inside the region of interest ##################
     # filter barcode info
     x_max = 54000
@@ -199,25 +155,20 @@ if __name__ == "__main__":
     # build physical distance matrix
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = np.zeros((len(cell_id), len(cell_id)))
-    distance_matrix[:,0:10000] = euclidean_distances(coordinates, coordinates[0:10000])
-    distance_matrix[:,10000:20000] = euclidean_distances(coordinates, coordinates[10000:20000])
-    distance_matrix[:,20000:30000] = euclidean_distances(coordinates, coordinates[20000:30000])
-    distance_matrix[:,30000:40000] = euclidean_distances(coordinates, coordinates[30000:40000])
-    distance_matrix[:,40000:50000] = euclidean_distances(coordinates, coordinates[40000:50000])
-    distance_matrix[:,50000:len(cell_id)] = euclidean_distances(coordinates, coordinates[50000:len(cell_id)])
-
-    '''
-    # assign weight to the neighborhood relations based on neighborhood distance 
+    print('calculating euclidean distance')
+    for partition_id in range (1, 6+1):
+        distance_matrix[:,(len(cell_id)*(partition_id-1))//6 :(len(cell_id)*partition_id)//6] = euclidean_distances(coordinates, coordinates[(len(cell_id)*(partition_id-1))//6 :(len(cell_id)*partition_id)//6])
+        print("%d to %d"%((len(cell_id)*(partition_id-1))//6, (len(cell_id)*partition_id)//6))
+    
+    
+    # assign weight to the neighborhood relations based on neighborhood distance ################
     dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
-    for j in range(49659, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
+    for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
         max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
         min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
         for i in range(distance_matrix.shape[0]):
             dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
             	
-        #list_indx = list(np.argsort(dist_X[:,j]))
-        #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-
         if args.distance_measure=='knn':
             list_indx = list(np.argsort(dist_X[:,j]))
             k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
@@ -236,12 +187,12 @@ if __name__ == "__main__":
             if dist_X[i,j]!=0:
                 dist_X_list.append([i, j, dist_X[i,j]])
                 
-    # len is 595,460
+    print('dist_X_list length is %d'%len(dist_X_list)) #len is 595,460
     #with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'wb') as fp:  
     #    pickle.dump(dist_X_list, fp)
-    '''
-    with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'rb') as fp:  
-        dist_X_list = pickle.load(fp)    
+    #############################################################################################
+    #with gzip.open(args.metadata_to + args.data_name + '_distance_weight', 'rb') as fp:  
+    #    dist_X_list = pickle.load(fp)    
 
     dist_X_dict = defaultdict(dict)
     for k in range (0, len(dist_X_list)):
@@ -444,7 +395,7 @@ if __name__ == "__main__":
     if args.split>0:
         i=0
         node_id_sorted_xy=[]
-        for cell_code in cell_barcode: # it has ROI if filtered for ROI
+        for cell_code in cell_id: # it has ROI if filtered for ROI
             if cell_code in cell_code_active:
                 node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
                 i=i+1
