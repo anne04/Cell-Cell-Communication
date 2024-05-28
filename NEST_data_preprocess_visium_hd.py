@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
     parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs")  
-    parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+    parser.add_argument( '--data_from', type=str, default='data/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
@@ -57,9 +57,11 @@ if __name__ == "__main__":
         args.metadata_to = args.metadata_to + args.data_name + '/'
     if not os.path.exists(args.metadata_to):
         os.makedirs(args.metadata_to)
-    
-    data_path = args.data_from + args.data_name+ '/' + 'count_area_filtered_adata_p75.h5ad'
-  
+
+    if args.data_from = 'data/':
+        data_path = args.data_from + args.data_name+ '/' + 'count_area_filtered_adata_p75.h5ad'
+    else:
+        data_path = args.data_from
     ####### get the gene id, cell barcode, cell coordinates ######
     print('input data reading')
 
@@ -75,10 +77,10 @@ if __name__ == "__main__":
     print('Applying quantile normalization')
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
     cell_vs_gene = np.transpose(temp)      
-
+    
+    ######################### read coordinate ##############################
     fp = gzip.open(args.metadata_to + args.data_name + '_coordinate_barcode', 'rb')
-    coordinates, cell_barcode = pickle.load(fp)
-     
+    coordinates, cell_barcode = pickle.load(fp) 
     
     ##################### make metadata: barcode_info ###################################
     i=0
