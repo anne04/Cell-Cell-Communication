@@ -1,4 +1,5 @@
 # adapted from the Visium 
+print('Package loading ...')
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -194,18 +195,25 @@ parser = argparse.ArgumentParser()
 parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs")  
 parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
 parser.add_argument( '--file_name', type=str, help='Name of the btf file', default='Visium_HD_Human_Colon_Cancer_tissue_image.btf')
-parser.add_argument( '--data_to', type=str, default='/cluster/projects/schwartzgroup/fatema/NEST/metadata/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', help='Path to save the input graph (to be passed to GAT)')
+parser.add_argument( '--data_to', type=str, default='/cluster/projects/schwartzgroup/fatema/NEST/data/segmented_visium_hd_CRC/', help='Path to save the input graph (to be passed to GAT)')
 args = parser.parse_args()
-  
+
+
+if not os.path.exists(args.data_to):
+    os.makedirs(args.data_to)
+
+
+
 # Load the image file
 # Change dir_base as needed to the directory where the downloaded example data is stored
 
 dir_base = args.data_from
 filename = args.file_name
-
+print('Img loading ...')
 img = imread(dir_base + filename)
 
 # Load the pretrained model
+print('StarDist loading ...')
 model = StarDist2D.from_pretrained('2D_versatile_he')
 
 # Percentile normalization of the image
@@ -218,6 +226,7 @@ img = normalize(img, min_percentile, max_percentile)
 # Adjust nms_thresh and prob_thresh as needed
 
 # prob_thresh=0.75
+print('Prediction running ...')
 labels, polys = model.predict_instances_big(img, axes='YXC', block_size=4096, prob_thresh=0.75,nms_thresh=0.001, min_overlap=128, context=128, normalizer=None, n_tiles=(4,4,1))
 
 
@@ -241,6 +250,7 @@ gdf['id'] = [f"ID_{i+1}" for i, _ in enumerate(gdf.index)]
 cmap=ListedColormap(['grey'])
 
 # Load Visium HD data
+print('filtered_feature_bc_matrix.h5 reading')
 raw_h5_file = dir_base+'filtered_feature_bc_matrix.h5'
 adata = sc.read_10x_h5(raw_h5_file)
 
@@ -252,6 +262,7 @@ for i in range(0, len(barcode_list)):
     barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
 #############################################################################################################
 # Load the Spatial Coordinates
+print('Load the spatial coordinates parquet file')
 tissue_position_file = dir_base+'spatial/'+'tissue_positions.parquet'
 df_tissue_positions=pd.read_parquet(tissue_position_file)
 
@@ -318,11 +329,13 @@ gdf['area'] = gdf['geometry'].area
 # Calculate quality control metrics for the original AnnData object
 sc.pp.calculate_qc_metrics(grouped_filtered_adata, inplace=True)
 
+########### IMP for parameter setting  for mask_area and mask_count #############
 # Plot the nuclei area distribution before and after filtering
-plot_nuclei_area(gdf=gdf,area_cut_off=1000,output_name=dir_base+"image_nuclei_area.tif")
+# plot_nuclei_area(gdf=gdf,area_cut_off=1000,output_name=dir_base+"image_nuclei_area.tif")
 # Plot total UMI distribution
-total_umi(grouped_filtered_adata, 100,output_name=dir_base+"image_umi.tif")
+# total_umi(grouped_filtered_adata, 100,output_name=dir_base+"image_umi.tif")
 
+print('Filtering based on predetermined mask_area and mask_count')
 # Create a mask based on the 'id' column for values present in 'gdf' with 'area' less than 1000
 mask_area = grouped_filtered_adata.obs['id'].isin(gdf[gdf['area'] < 1000].id)
 # Create a mask based on the 'total_counts' column for values greater than 100
@@ -333,12 +346,14 @@ count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 # Calculate quality control metrics for the filtered AnnData object
 sc.pp.calculate_qc_metrics(count_area_filtered_adata, inplace=True)
 
+print('Writing: '+args.data_to+'count_area_filtered_adata_p75.h5ad')
 count_area_filtered_adata.write_h5ad(filename=args.data_to+'count_area_filtered_adata_p75.h5ad', compression='gzip')
-
-barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
-
+print('Write done')
 
 ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
+print('Retrieving the coordinates for the segmented cells ...')
+barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
+
 # following give barcode and associated coordinates in adata.obs.index and adata.obsm['spatial'] respectively
 # barcode_list, barcode_coord 
 
@@ -376,7 +391,7 @@ for i in range (0, cell_id.shape[0]):
 with gzip.open(args.data_to + args.data_name + '_coordinate_barcode', 'wb') as fp: 
     pickle.dump([coordinates, cell_barcode], fp)
  
-print('Coordinate generation done') 
+print('Coordinate generation done: '+args.data_to + args.data_name + '_coordinate_barcode') 
 ############################ Now plot it to see how does it look ###################
 
 data_list=dict()
@@ -393,5 +408,5 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.Y('Y', scale=alt.Scale(zero=False)),
 )
 chart.save(args.data_to + args.data_name +'_tissue_altair_plot.html')
-print('Altair plot generation done')    
+print('Altair plot generation done: '+args.data_to + args.data_name +'_tissue_altair_plot.html')    
 
