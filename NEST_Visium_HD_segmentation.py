@@ -15,6 +15,7 @@ from scipy import sparse
 from matplotlib.colors import ListedColormap
 import argparse
 import os
+from collections import defaultdict
 
 %matplotlib inline
 %config InlineBackend.figure_format = 'retina'
@@ -360,7 +361,8 @@ count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 sc.pp.calculate_qc_metrics(count_area_filtered_adata, inplace=True)
 
 print('Writing: '+args.data_to+'count_area_filtered_adata_p75.h5ad')
-count_area_filtered_adata.write_h5ad(filename=args.data_to+'count_area_filtered_adata_p75.h5ad', compression='gzip')
+filename=args.data_to+'count_area_filtered_adata_p75.h5ad'
+count_area_filtered_adata.write_h5ad(filename=filename, compression='gzip')
 print('Write done')
 
 ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
@@ -376,7 +378,7 @@ barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
 # combine above two to get: id = list of (barcodes, coordinates) assigned to that id
 id_barcode_coord = defaultdict(list) # key=id, value=[[barcode, [coord]]]
 for i in range(0, len(barcode_vs_id)):
-    id_barcode_coord[barcode_vs_id[1][i]].append([barcode_vs_id[0][i], barcode_coord[barcode_vs_id[0][i]]])
+    id_barcode_coord[barcode_vs_id.id[i]].append([barcode_vs_id.index[i], barcode_coord[barcode_vs_id.index[i]]])
 
 # filter it to keep only those who are in the final area+UMI filtered data
 id_barcode_coord_temp = defaultdict(list) # key=id, value=[[barcode, [coord]]]
