@@ -16,6 +16,16 @@ from matplotlib.colors import ListedColormap
 import argparse
 import os
 from collections import defaultdict
+from shapely import MultiPoint, centroid
+import gzip
+import pickle
+import altair as alt
+import altairThemes 
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+
+
 
 %matplotlib inline
 %config InlineBackend.figure_format = 'retina'
@@ -366,6 +376,9 @@ count_area_filtered_adata.write_h5ad(filename=filename, compression='gzip')
 print('Write done')
 
 ################ now retrieve the coordinates by intersecting the original anndata with the segmented one ######################
+cell_id = np.array(count_area_filtered_adata.obs.index)
+
+
 print('Retrieving the coordinates for the segmented cells ...')
 barcode_vs_id = pd.DataFrame(filtered_adata.obs['id'])
 
