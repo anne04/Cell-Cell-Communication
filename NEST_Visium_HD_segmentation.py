@@ -13,6 +13,8 @@ from stardist.models import StarDist2D
 from shapely.geometry import Polygon, Point
 from scipy import sparse
 from matplotlib.colors import ListedColormap
+import argparse
+import os
 
 %matplotlib inline
 %config InlineBackend.figure_format = 'retina'
@@ -192,10 +194,17 @@ def total_umi(adata_, cut_off,output_name):
 
 parser = argparse.ArgumentParser()
 ################## Mandatory ####################################################################
-parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs")  
+parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs_full")  
 parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
 parser.add_argument( '--file_name', type=str, help='Name of the btf file', default='Visium_HD_Human_Colon_Cancer_tissue_image.btf')
 parser.add_argument( '--data_to', type=str, default='/cluster/projects/schwartzgroup/fatema/NEST/data/segmented_visium_hd_CRC/', help='Path to save the input graph (to be passed to GAT)')
+parser.add_argument( '--prob_thresh', type=float, default=0.75, help='Probability threshold for the StarDist segmentation algorithm')
+parser.add_argument( '--mask_area', type=int, default=1000, help='Parameter for post segmentation filtering: Nuclei area size')
+parser.add_argument( '--mask_count', type=int, default=100, help='Parameter for post segmentation filtering: UMI count')
+
+
+
+#prob_thresh=0.75
 args = parser.parse_args()
 
 
@@ -220,14 +229,15 @@ model = StarDist2D.from_pretrained('2D_versatile_he')
 # Adjust min_percentile and max_percentile as needed
 min_percentile = 5
 max_percentile = 95
+print('Normalizing the Img')
 img = normalize(img, min_percentile, max_percentile)
 
 # Predict cell nuclei using the normalized image
 # Adjust nms_thresh and prob_thresh as needed
 
 # prob_thresh=0.75
-print('Prediction running ...')
-labels, polys = model.predict_instances_big(img, axes='YXC', block_size=4096, prob_thresh=0.75,nms_thresh=0.001, min_overlap=128, context=128, normalizer=None, n_tiles=(4,4,1))
+print('Segmentation running ...with prob_thresh=%g'%args.prob_thresh)
+labels, polys = model.predict_instances_big(img, axes='YXC', block_size=4096, prob_thresh=args.prob_thresh, nms_thresh=0.001, min_overlap=128, context=128, normalizer=None, n_tiles=(4,4,1))
 
 
 # Creating a list to store Polygon geometries
@@ -252,15 +262,16 @@ cmap=ListedColormap(['grey'])
 # Load Visium HD data
 print('filtered_feature_bc_matrix.h5 reading')
 raw_h5_file = dir_base+'filtered_feature_bc_matrix.h5'
-adata = sc.read_10x_h5(raw_h5_file)
 
-# save the barcode index and coordinates for later use ####################################################
+###### save the barcode index and coordinates for later use ##############################################
+adata = sc.read_visium(path=dir_base, count_file='filtered_feature_bc_matrix.h5')
 barcode_list = list(adata.obs.index)
-
 barcode_coord = dict()
 for i in range(0, len(barcode_list)):
     barcode_coord[barcode_list[i]] = [adata.obsm['spatial'][i][0], adata.obsm['spatial'][i][1]]
+
 #############################################################################################################
+adata = sc.read_10x_h5(raw_h5_file)
 # Load the Spatial Coordinates
 print('Load the spatial coordinates parquet file')
 tissue_position_file = dir_base+'spatial/'+'tissue_positions.parquet'
@@ -274,6 +285,8 @@ df_tissue_positions['index']=df_tissue_positions.index
 
 # Adding the tissue positions to the meta data
 adata.obs =  pd.merge(adata.obs, df_tissue_positions, left_index=True, right_index=True)
+
+
 
 # Create a GeoDataFrame from the DataFrame of coordinates
 geometry = [Point(xy) for xy in zip(df_tissue_positions['pxl_col_in_fullres'], df_tissue_positions['pxl_row_in_fullres'])]
@@ -337,9 +350,9 @@ sc.pp.calculate_qc_metrics(grouped_filtered_adata, inplace=True)
 
 print('Filtering based on predetermined mask_area and mask_count')
 # Create a mask based on the 'id' column for values present in 'gdf' with 'area' less than 1000
-mask_area = grouped_filtered_adata.obs['id'].isin(gdf[gdf['area'] < 1000].id)
+mask_area = grouped_filtered_adata.obs['id'].isin(gdf[gdf['area'] < args.mask_area].id)
 # Create a mask based on the 'total_counts' column for values greater than 100
-mask_count = grouped_filtered_adata.obs['total_counts'] > 100
+mask_count = grouped_filtered_adata.obs['total_counts'] > args.mask_count 
 # Apply both masks to the original AnnData to create a new filtered AnnData object
 count_area_filtered_adata = grouped_filtered_adata[mask_area & mask_count, :]
 
