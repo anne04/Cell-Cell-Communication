@@ -148,11 +148,12 @@ def train_NEST(args, data_loader, in_channels):
     DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6
     #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
     DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
+    DGI_optimizer_filename = args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar'
 
     if args.load:
-        DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
-        DGI_model.load_state_dict(torch.load(DGI_load_path))
-        DGI_optimizer.load_state_dict(torch.load(args.model_path+'DGI_optimizer_'+ args.load_model_name  +'.pth.tar'))
+        #DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
+        DGI_model.load_state_dict(torch.load(DGI_filename))
+        DGI_optimizer.load_state_dict(torch.load(DGI_optimizer_filename)) 
         fp = gzip.open(args.embedding_path + args.model_name + '_min_loss', 'rb')
         min_loss = pickle.load(fp)
     else:
@@ -190,7 +191,7 @@ def train_NEST(args, data_loader, in_channels):
 
                 # save the current model state
                 torch.save(DGI_model.state_dict(), DGI_filename)
-                torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar')
+                torch.save(DGI_optimizer.state_dict(), DGI_optimizer_filename)
                 save_tupple=[pos_z, neg_z, summary] 
 
                 # save the node embedding
