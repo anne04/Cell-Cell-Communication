@@ -143,7 +143,8 @@ if __name__ == "__main__":
     if args.top_edge_count != -1:
         csv_record_final = [df_column_names] + csv_record[0:min(args.top_edge_count, len(csv_record))]
 
-    ## add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
+    ## Add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
+    '''
     in_region_node = -1
     for i in range (0, len(barcode_info)):
         if barcode_info[i][1] <= 54000 :
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     i = in_region_node
     j = in_region_node
     csv_record_final.append([barcode_info[i][0], barcode_info[j][0], 'no-ligand', 'no-receptor', 0, 0, i, j, 0]) # dummy for histogram
-
+    '' 
     csv_record = 0
     gc.collect()
 
@@ -245,6 +246,7 @@ if __name__ == "__main__":
     unique_component_count = max(len(component_list.keys()), id_label)
 
     ####################### pattern finding ##########################################################################
+    '''
     # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
     each_node_outgoing = defaultdict(list)
     for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
@@ -309,7 +311,7 @@ if __name__ == "__main__":
 
     chart.save(output_name + '_pattern_distribution.html')
 
-
+    '''
     ##################################### Altair Plot ##################################################################
     ## dictionary of those spots who are participating in CCC ##
     active_spot = defaultdict(list)
@@ -479,7 +481,7 @@ if __name__ == "__main__":
     print('dot file generation done')
     print('All done')
     ############################ or Relay plot ########################################
-
+    '''
     count_edges = 0
     for relay in edge_list_2hop:
         print(relay)
@@ -506,5 +508,6 @@ if __name__ == "__main__":
     ########################################################################
     # convert it to dot file to be able to convert it to pdf or svg format for inserting into the paper
     write_dot(g, output_name + "_relay_test_interactive.dot")
+    '''
     print('dot file generation done')
     print('All done')
