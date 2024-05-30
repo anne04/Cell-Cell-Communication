@@ -147,7 +147,6 @@ def train_NEST(args, data_loader, in_channels):
     #DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=0.005, weight_decay=5e-4)
     DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6 #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
     DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
-    DGI_optimizer_filename = args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar'
 
     if args.load == 1:
         print('loading model')
@@ -157,18 +156,15 @@ def train_NEST(args, data_loader, in_channels):
         DGI_optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         epoch_start = checkpoint['epoch']
         min_loss = checkpoint['loss']
-
-        
-        #DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
-        #DGI_model.load_state_dict(torch.load(DGI_filename))
-        #DGI_optimizer.load_state_dict(torch.load(DGI_optimizer_filename)) 
-        #fp = gzip.open(args.embedding_path + args.model_name + '_min_loss', 'rb')
-        #min_loss = pickle.load(fp)
+        '''
+        for state in DGI_optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
+        ''' 
         print('min_loss was %g'%min_loss)
     else:
         print('Saving init model state ...')
-        #torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
-        #torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
         torch.save({
             'epoch': 0,
             'model_state_dict': DGI_model.state_dict(),
@@ -182,7 +178,7 @@ def train_NEST(args, data_loader, in_channels):
     start_time = datetime.datetime.now()
 
     #print('training starts ...')
-    for epoch in range(args.num_epoch):
+    for epoch in range(epoch_start, args.num_epoch):
         DGI_model.train()
         DGI_optimizer.zero_grad()
         DGI_all_loss = []
@@ -204,7 +200,7 @@ def train_NEST(args, data_loader, in_channels):
 
                 min_loss=np.mean(DGI_all_loss)
 
-                # save the current model state
+                ######## save the current model state ########
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': DGI_model.state_dict(),
@@ -212,22 +208,15 @@ def train_NEST(args, data_loader, in_channels):
                     'loss': min_loss,
                     }, DGI_filename)
 
-                
-                #torch.save(DGI_model.state_dict(), DGI_filename)
-                #torch.save(DGI_optimizer.state_dict(), DGI_optimizer_filename)
-                #save_tupple=[pos_z, neg_z, summary] 
-
+                ##################################################
                 # save the node embedding
                 X_embedding = pos_z
                 X_embedding = X_embedding.cpu().detach().numpy()
                 X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
                 with gzip.open(X_embedding_filename, 'wb') as fp:  
                     pickle.dump(X_embedding, fp)
-                    
-                #np.save(X_embedding_filename, X_embedding) #/cluster/home/t116508uhn/.local/lib/python3.7/site-packages/numpy/lib/npyio.py:528: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
-                
+                                    
                 # save the attention scores
-
                 X_attention_index = DGI_model.encoder.attention_scores_mine[0]
                 X_attention_index = X_attention_index.cpu().detach().numpy()
 
@@ -252,10 +241,6 @@ def train_NEST(args, data_loader, in_channels):
                 with gzip.open(X_attention_filename, 'wb') as fp:  
                     pickle.dump(X_attention_bundle, fp)
 
-
-                #with gzip.open(args.embedding_path + args.model_name + '_min_loss', 'wb') as fp:  
-                #    pickle.dump(min_loss, fp)
-
                 logfile=open(args.model_path+'DGI_'+ args.model_name+'_loss_curve.csv', 'wb')
                 np.savetxt(logfile,loss_curve, delimiter=',')
                 logfile.close()
@@ -267,14 +252,15 @@ def train_NEST(args, data_loader, in_channels):
 
     end_time = datetime.datetime.now()
 
-#        torch.save(DGI_model.state_dict(), DGI_filename)
     print('Training time in seconds: ', (end_time-start_time).seconds)
-    DGI_model.load_state_dict(torch.load(DGI_filename))
+
+    checkpoint = torch.load(DGI_filename)
+    DGI_model.load_state_dict(checkpoint['model_state_dict'])
+    DGI_model.to(device)
+    DGI_model.eval()
     print("debug loss")
     DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
     print("debug loss latest tupple %g"%DGI_loss.item())
-    #DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
-    #print("debug loss min loss tupple %g"%DGI_loss.item())
 
     return DGI_model
 
