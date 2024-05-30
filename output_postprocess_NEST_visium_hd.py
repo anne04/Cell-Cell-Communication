@@ -91,7 +91,7 @@ if __name__ == "__main__":
     node_id_sorted_xy = pickle.load(fp)
     nodes_active = dict()
     for i in range(0, len(node_id_sorted_xy)): 
-        nodes_active[node_id_sorted_xy[i][0]]
+        nodes_active[node_id_sorted_xy[i][0]] = ''
 
     
     datapoint_size = len(nodes_active.keys())
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         layer = layer + 1
         print('layer %d'%layer)
         csv_record_dict = defaultdict(list)
-        for run_time in [1, 3, 6]: #range (start_index, start_index+total_runs):
+        for run_time in range (start_index, start_index+total_runs): #[1, 3, 6]: #
             filename_suffix = '_'+ 'r'+str(run_time) +'_' #str(run_time+1) +'_'
             gc.collect()
             run = run_time
