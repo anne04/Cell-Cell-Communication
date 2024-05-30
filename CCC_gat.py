@@ -150,12 +150,14 @@ def train_NEST(args, data_loader, in_channels):
     DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
     DGI_optimizer_filename = args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar'
 
-    if args.load:
+    if args.load == 1:
+        print('loading model')
         #DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
         DGI_model.load_state_dict(torch.load(DGI_filename))
         DGI_optimizer.load_state_dict(torch.load(DGI_optimizer_filename)) 
         fp = gzip.open(args.embedding_path + args.model_name + '_min_loss', 'rb')
         min_loss = pickle.load(fp)
+        print('min_loss was %g'%min_loss)
     else:
         min_loss=10000
         print('Saving init model state ...')
