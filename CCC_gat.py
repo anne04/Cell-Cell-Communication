@@ -142,29 +142,42 @@ def train_NEST(args, data_loader, in_channels):
         encoder=Encoder(in_channels=in_channels, hidden_channels=args.hidden, heads=args.heads, dropout = args.dropout),
         summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
         corruption=corruption).to(device)
+    
     #print('initialized DGI model')
-    #print(DGI_model.encoder.attention_scores_mine)
     #DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=0.005, weight_decay=5e-4)
-    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6
-    #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
+    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6 #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
     DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
     DGI_optimizer_filename = args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar'
 
     if args.load == 1:
         print('loading model')
+        checkpoint = torch.load(DGI_filename)
+        DGI_model.load_state_dict(checkpoint['model_state_dict'])
+        DGI_model.to(device)
+        DGI_optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch_start = checkpoint['epoch']
+        min_loss = checkpoint['loss']
+
+        
         #DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
-        DGI_model.load_state_dict(torch.load(DGI_filename))
-        DGI_optimizer.load_state_dict(torch.load(DGI_optimizer_filename)) 
-        fp = gzip.open(args.embedding_path + args.model_name + '_min_loss', 'rb')
-        min_loss = pickle.load(fp)
+        #DGI_model.load_state_dict(torch.load(DGI_filename))
+        #DGI_optimizer.load_state_dict(torch.load(DGI_optimizer_filename)) 
+        #fp = gzip.open(args.embedding_path + args.model_name + '_min_loss', 'rb')
+        #min_loss = pickle.load(fp)
         print('min_loss was %g'%min_loss)
     else:
-        min_loss=10000
         print('Saving init model state ...')
-        torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
-        torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
-
-    
+        #torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
+        #torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
+        torch.save({
+            'epoch': 0,
+            'model_state_dict': DGI_model.state_dict(),
+            'optimizer_state_dict': DGI_optimizer.state_dict(),
+            #'loss': loss,
+            }, args.model_path+'DGI_init_model_optimizer_'+ args.model_name  + '.pth.tar')
+        min_loss = 10000
+        epoch_start = 0
+        
     import datetime
     start_time = datetime.datetime.now()
 
@@ -192,9 +205,17 @@ def train_NEST(args, data_loader, in_channels):
                 min_loss=np.mean(DGI_all_loss)
 
                 # save the current model state
-                torch.save(DGI_model.state_dict(), DGI_filename)
-                torch.save(DGI_optimizer.state_dict(), DGI_optimizer_filename)
-                save_tupple=[pos_z, neg_z, summary] 
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': DGI_model.state_dict(),
+                    'optimizer_state_dict': DGI_optimizer.state_dict(),
+                    'loss': min_loss,
+                    }, DGI_filename)
+
+                
+                #torch.save(DGI_model.state_dict(), DGI_filename)
+                #torch.save(DGI_optimizer.state_dict(), DGI_optimizer_filename)
+                #save_tupple=[pos_z, neg_z, summary] 
 
                 # save the node embedding
                 X_embedding = pos_z
@@ -232,8 +253,8 @@ def train_NEST(args, data_loader, in_channels):
                     pickle.dump(X_attention_bundle, fp)
 
 
-                with gzip.open(args.embedding_path + args.model_name + '_min_loss', 'wb') as fp:  
-                    pickle.dump(min_loss, fp)
+                #with gzip.open(args.embedding_path + args.model_name + '_min_loss', 'wb') as fp:  
+                #    pickle.dump(min_loss, fp)
 
                 logfile=open(args.model_path+'DGI_'+ args.model_name+'_loss_curve.csv', 'wb')
                 np.savetxt(logfile,loss_curve, delimiter=',')
@@ -252,8 +273,8 @@ def train_NEST(args, data_loader, in_channels):
     print("debug loss")
     DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
     print("debug loss latest tupple %g"%DGI_loss.item())
-    DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
-    print("debug loss min loss tupple %g"%DGI_loss.item())
+    #DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
+    #print("debug loss min loss tupple %g"%DGI_loss.item())
 
     return DGI_model
 
