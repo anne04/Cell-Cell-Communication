@@ -143,7 +143,12 @@ if __name__ == "__main__":
     if args.top_edge_count != -1:
         csv_record_final = [df_column_names] + csv_record[0:min(args.top_edge_count, len(csv_record))]
 
+
+
+    
+
     ## Add a dummy row at the end for the convenience of histogram preparation (to keep the color same as altair plot)
+    csv_record_final.append([csv_record_final[1][0], csv_record_final[1][0], 'no-ligand', 'no-receptor', 0, 0, csv_record_final[1][6], csv_record_final[1][6], 0]) # dummy for histogram
     '''
     in_region_node = -1
     for i in range (0, len(barcode_info)):
