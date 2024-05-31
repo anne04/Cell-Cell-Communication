@@ -27,8 +27,8 @@ alt.themes.enable("publishTheme")
 
 
 
-%matplotlib inline
-%config InlineBackend.figure_format = 'retina'
+#matplotlib inline
+#config InlineBackend.figure_format = 'retina'
 
 # General image plotting functions
 def plot_mask_and_save_image(title, gdf, img, cmap, output_name=None, bbox=None):
@@ -205,7 +205,7 @@ def total_umi(adata_, cut_off,output_name):
 
 parser = argparse.ArgumentParser()
 ################## Mandatory ####################################################################
-parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs_full")  
+#parser.add_argument( '--data_name', type=str, help='Name of the dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs_full")  
 parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/Visium_HD_Human_Colon_Cancer_square_002um_outputs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
 parser.add_argument( '--file_name', type=str, help='Name of the btf file', default='Visium_HD_Human_Colon_Cancer_tissue_image.btf')
 parser.add_argument( '--data_to', type=str, default='/cluster/projects/schwartzgroup/fatema/NEST/data/segmented_visium_hd_CRC/', help='Path to save the input graph (to be passed to GAT)')
@@ -416,10 +416,10 @@ for i in range (0, cell_id.shape[0]):
     coordinates[i,0] = point.centroid.coords[0][0]
     coordinates[i,1] = point.centroid.coords[0][1]
 
-with gzip.open(args.data_to + args.data_name + '_coordinate_barcode', 'wb') as fp: 
+with gzip.open(args.data_to + 'coordinate_barcode', 'wb') as fp: 
     pickle.dump([coordinates, cell_barcode], fp)
  
-print('Coordinate generation done: '+args.data_to + args.data_name + '_coordinate_barcode') 
+print('Coordinate generation done: '+args.data_to + 'coordinate_barcode') 
 ############################ Now plot it to see how does it look ###################
 
 data_list=dict()
@@ -435,6 +435,6 @@ chart = alt.Chart(data_list_pd).mark_point(filled=True, opacity = 1).encode(
     alt.X('X', scale=alt.Scale(zero=False)),
     alt.Y('Y', scale=alt.Scale(zero=False)),
 )
-chart.save(args.data_to + args.data_name +'_tissue_altair_plot.html')
-print('Altair plot generation done: '+args.data_to + args.data_name +'_tissue_altair_plot.html')    
+chart.save(args.data_to + 'tissue_altair_plot.html')
+print('Altair plot generation done: '+args.data_to + 'tissue_altair_plot.html')    
 
