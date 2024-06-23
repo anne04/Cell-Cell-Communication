@@ -259,39 +259,22 @@ def train_NEST(args, graph_bag, in_channels):
         summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
         corruption=corruption).to(device)
 
-    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6 #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
+    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6
     DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
 
-    if args.load == 1:
-        print('loading model')
-        checkpoint = torch.load(DGI_filename)
-        DGI_model.load_state_dict(checkpoint['model_state_dict'])
-        DGI_model.to(device)
-        DGI_optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        epoch_start = checkpoint['epoch']
-        min_loss = checkpoint['loss']
-        '''
-        for state in DGI_optimizer.state.values():
-            for k, v in state.items():
-                if isinstance(v, torch.Tensor):
-                    state[k] = v.to(device)
-        ''' 
-        print('min_loss was %g'%min_loss)
-    else:
-        print('Saving init model state ...')
-        torch.save({
-            'epoch': 0,
-            'model_state_dict': DGI_model.state_dict(),
-            'optimizer_state_dict': DGI_optimizer.state_dict(),
-            #'loss': loss,
-            }, args.model_path+'DGI_init_model_optimizer_'+ args.model_name  + '.pth.tar')
-        min_loss = 10000
-        epoch_start = 0
-        
+    if args.load:
+        DGI_load_path = args.model_path+'DGI_'+ args.load_model_name+'.pth.tar'
+        DGI_model.load_state_dict(torch.load(DGI_load_path))
+        DGI_optimizer.load_state_dict(torch.load(args.model_path+'DGI_optimizer_'+ args.load_model_name  +'.pth.tar'))
+
     import datetime
     start_time = datetime.datetime.now()
+    min_loss=10000
+    print('Saving init model state ...')
+    torch.save(DGI_model.state_dict(), args.model_path+'DGI_init'+ args.model_name  + '.pth.tar')
+    torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_init'+ args.model_name  + '.pth.tar')
     #print('training starts ...')
-    for epoch in range(epoch_start, args.num_epoch):
+    for epoch in range(args.num_epoch):
         DGI_model.train()
         DGI_optimizer.zero_grad()
         DGI_all_loss = []
@@ -314,16 +297,11 @@ def train_NEST(args, graph_bag, in_channels):
             if np.mean(DGI_all_loss)<min_loss:
 
                 min_loss=np.mean(DGI_all_loss)
-                ######## save the current model state ########
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': DGI_model.state_dict(),
-                    'optimizer_state_dict': DGI_optimizer.state_dict(),
-                    'loss': min_loss,
-                    }, DGI_filename)
 
-                ##################################################
-                #save_tupple=[pos_z, neg_z, summary] 
+                # save the current model state
+                torch.save(DGI_model.state_dict(), DGI_filename)
+                torch.save(DGI_optimizer.state_dict(), args.model_path+'DGI_optimizer_'+ args.model_name  +'.pth.tar')
+                save_tupple=[pos_z, neg_z, summary] 
                 ############################################################################################################
                 subgraph_id = -1
                 for subgraph in graph_bag:
@@ -376,15 +354,14 @@ def train_NEST(args, graph_bag, in_channels):
 
     end_time = datetime.datetime.now()
 
+#        torch.save(DGI_model.state_dict(), DGI_filename)
     print('Training time in seconds: ', (end_time-start_time).seconds)
-
-    checkpoint = torch.load(DGI_filename)
-    DGI_model.load_state_dict(checkpoint['model_state_dict'])
-    DGI_model.to(device)
-    DGI_model.eval()
+    DGI_model.load_state_dict(torch.load(DGI_filename))
     print("debug loss")
     DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
     print("debug loss latest tupple %g"%DGI_loss.item())
+    DGI_loss = DGI_model.loss(save_tupple[0], save_tupple[1], save_tupple[2])
+    print("debug loss min loss tupple %g"%DGI_loss.item())
 
     return DGI_model
 
