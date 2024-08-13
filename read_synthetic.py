@@ -1,13 +1,12 @@
-import os
-#import glob
+#import os
 import pandas as pd
-import copy
-import csv
+#import copy
+#import csv
 import numpy as np
 import sys
 from collections import defaultdict
-import stlearn as st
-import scipy
+#import stlearn as st
+#import scipy
 import pickle
 import gzip
 
@@ -24,15 +23,16 @@ for i in range (0, cell_vs_gene.shape[0]):
 with gzip.open('uniform_distribution_coordinate', 'rb') as fp:
     temp_x, temp_y, no_need  = pickle.load(fp)
 
+
+datapoint_size = temp_x.shape[0] 
 coordinates = np.zeros((temp_x.shape[0],2))
 for i in range (0, datapoint_size):
     coordinates[i][0] = temp_x[i]
     coordinates[i][1] = temp_y[i]
  
-datapoint_size = temp_x.shape[0] 
 #####################################################################################################################
 with gzip.open("uniform_distribution_ground_truth_ccc" , 'rb') as fp:            
-    no_need1, lig_rec_dict_TP, no_need2 = pickle.load( fp
+    no_need1, lig_rec_dict_TP, no_need2 = pickle.load(fp)
 
 # lig_rec_dict_TP is a dict(dict(list of integers))
 for i in range (0, datapoint_size):
@@ -56,6 +56,18 @@ for index in range (0, len(lig_rec)):
     
 #############################################################################################################
 
-data_list_pd = pd.read_csv('uniform_distribution_lrdb.csv', index=False)
-	
+data_list_pd = pd.read_csv('uniform_distribution_lrdb.csv')
+# id = 0, 1, 2, ... are used
+'''
+In [19]: data_list_pd
+Out[19]: 
+    ligand receptor
+0       g0      g22
+1       g1      g23
+2       g2      g24
+3       g3      g25
+4       g4      g26
+..   
+
+'''
 		
