@@ -55,4 +55,7 @@ for index in range (0, len(lig_rec)):
     lr_id = lig_rec[index] # between i to j when index = 0. between k to l when index = 1
     
 #############################################################################################################
+
+data_list_pd = pd.read_csv('uniform_distribution_lrdb.csv', index=False)
+	
 		
