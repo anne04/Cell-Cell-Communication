@@ -88,6 +88,8 @@ for pair_index in range(0, len(LR_pair)):
     print('%d, size %d, matrix %g'%(pair_index, len(distribution), np.max(adata.obsp[key_pair])))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
+            if barcode_type[barcode_info[i][0]] == 'T-cell' and barcode_type[barcode_info[j][0]] == 'T-cell':
+                
             if adata.obsp[key_pair][i,j]>0:
                 attention_scores[i][j].append(adata.obsp[key_pair][i,j])
                 lig_rec_dict[i][j].append(pairs[0] + '-' + pairs[1])
