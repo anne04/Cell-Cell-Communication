@@ -157,7 +157,7 @@ for i in each_node_outgoing:
 two_hop_pattern_distribution = []
 same_count = 0
 for key in pattern_distribution:
-    count = len(pattern_distribution[key])
+    count = len(pattern_distribution[key]) 
     two_hop_pattern_distribution.append([key, count]) 
     #if lig_rec_1 == lig_rec_2:
     #    same_count = same_count + 1
