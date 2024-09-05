@@ -34,7 +34,7 @@ args = parser.parse_args()
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/exp1_C1/outs/' , help='The path to dataset') 
 parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
-parser.add_argument( '--top_count', type=int, default=1300, help='The name of dataset')
+parser.add_argument( '--top_count', type=int, default=2000, help='The name of dataset')
 
 args = parser.parse_args()
 
@@ -47,6 +47,7 @@ print(adata)
 cell_barcode = np.array(adata.obs.index)
 datapoint_size = len(cell_barcode)
 ###################################################################################
+'''
 adata.var_names_make_unique()
 adata.raw = adata
 sc.pp.normalize_total(adata, inplace=True)
@@ -57,6 +58,7 @@ df_cellchat_filtered = ct.pp.filter_lr_database(df_cellchat, adata, min_cell_pct
 ct.tl.spatial_communication(adata, database_name='cellchat', df_ligrec=df_cellchat_filtered, dis_thr=threshold_distance, heteromeric=True, pathway_sum=True)
 print('data write')
 adata.write(path + args.data_name+"_commot_adata.h5ad")
+'''
 print('data read')
 adata = sc.read_h5ad(path + args.data_name+"_commot_adata.h5ad")
 
@@ -109,6 +111,8 @@ for i in range (0, datapoint_size):
             lr = lig_rec_dict[i][j][k]
             ligand = lr.split('-')[0]
             receptor = lr.split('-')[1]
+            if ligand == 'total':
+                continue
             if score >= top20:
                 csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
                 
@@ -117,7 +121,7 @@ csv_record_final = csv_record_final[0:args.top_count]
 ####################### pattern finding ##########################################################################
 # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
 each_node_outgoing = defaultdict(list)
-for k in range (1, len(csv_record_final)-1): # last record is a dummy for histogram preparation
+for k in range (0, len(csv_record_final)): # last record is a dummy for histogram preparation
     i = csv_record_final[k][6]
     j = csv_record_final[k][7]
     if i == j:
@@ -163,7 +167,7 @@ two_hop_pattern_distribution = sorted(two_hop_pattern_distribution, key = lambda
 data_list=dict()
 data_list['X']=[]
 data_list['Y']=[] 
-for i in range (0, 100): #len(two_hop_pattern_distribution)):
+for i in range (0, len(two_hop_pattern_distribution)):
     data_list['X'].append(two_hop_pattern_distribution[i][0])
     data_list['Y'].append(two_hop_pattern_distribution[i][1])
     
@@ -177,7 +181,7 @@ chart = alt.Chart(data_list_pd).mark_bar().encode(
     y='Pattern Abundance (#)'
 )
 
-chart.save(output_name + args.data_name +'_COMMOT_pattern_distribution.html')
+chart.save(args.data_name +'_COMMOT_pattern_distribution.html')
 ###############
 
 
