@@ -112,7 +112,7 @@ top20 = np.percentile(distribution, 80)
 top_hist = defaultdict(list)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if barcode_type[cell_barcode[i]]!='T-cell' or barcode_type[cell_barcode[j]]!='T-cell':
+        if barcode_type[cell_barcode[i]]!='T-cell' or barcode_type[cell_barcode[j]]!='T-cell': 
             continue        
         for k in range (0, len(attention_scores[i][j])):
             score = attention_scores[i][j][k]
