@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/' , help='The path to dataset') 
 parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='The name of dataset')
 #parser.add_argument( '--top_count', type=int, default=1300, help='The name of dataset')
-parser.add_argument( '--annotation_file_path', type=str, default='NEST_figures_input_human_lymph/V1_Human_Lymph_Node_spatial_annotation.csv', help='Path to load the annotation file in csv format (if available) ') 
+parser.add_argument( '--annotation_file_path', type=str, default='/cluster/home/t116508uhn/NEST_figures_input_human_lymph/V1_Human_Lymph_Node_spatial_annotation.csv', help='Path to load the annotation file in csv format (if available) ') 
 args = parser.parse_args()
 
 threshold_distance = 500
@@ -61,6 +61,8 @@ df_cellchat_filtered = ct.pp.filter_lr_database(df_cellchat, adata, min_cell_pct
 ct.tl.spatial_communication(adata, database_name='cellchat', df_ligrec=df_cellchat_filtered, dis_thr=threshold_distance, heteromeric=True, pathway_sum=True)
 print('data write')
 adata.write(path + args.data_name+"_commot_adata.h5ad")
+'''
+
 '''
 print('data read')
 adata = sc.read_h5ad('/cluster/home/t116508uhn/NEST_figures_input/NEST_figures_input_human_lymph/' + args.data_name+"_commot_adata.h5ad")
@@ -98,7 +100,7 @@ for pair_index in range(0, len(LR_pair)):
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name + '_commot_result', 'wb') as fp:
     pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
-
+'''
 ##################################################################################################################
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name + '_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
@@ -110,6 +112,8 @@ top20 = np.percentile(distribution, 80)
 top_hist = defaultdict(list)
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
+        if barcode_type[cell_barcode[i]]!='T-cell' or barcode_type[cell_barcode[j]]!='T-cell':
+            continue        
         for k in range (0, len(attention_scores[i][j])):
             score = attention_scores[i][j][k]
             lr = lig_rec_dict[i][j][k]
