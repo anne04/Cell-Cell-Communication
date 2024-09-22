@@ -61,8 +61,10 @@ for i in range (0, datapoint_size):
 negative_class = len(distribution) - confusion_matrix[0][0] # WE NEED THIS TO CALCULATE 'FALSE POSITIVE RATE'
 
 distribution = sorted(distribution, reverse=True) 
+
+# start roc plot here. select top 10% (90th), 20% (80th), 30% (70th), ... ccc and calculate TPR and FPR 
 plot_dict = defaultdict(list)
-for percentile_value in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+for percentile_value in [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]:
     threshold_percentile =  np.percentile(distribution, percentile_value)
     existing_lig_rec_dict = [] # record COMMOT detected edges that are above the threshold percentile attention score
     for i in range (0, datapoint_size):
@@ -71,7 +73,7 @@ for percentile_value in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []
 
-    connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
+    connecting_edges = np.zeros((datapoint_size, datapoint_size))
     existing_lig_rec_dict = defaultdict(dict)
     total_edges_count = 0
     for i in range (0, datapoint_size):
