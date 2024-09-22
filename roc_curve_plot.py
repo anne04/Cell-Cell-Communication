@@ -73,22 +73,22 @@ for percentile_value in [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]:
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []
 
-    connecting_edges = np.zeros((datapoint_size, datapoint_size))
-    existing_lig_rec_dict = defaultdict(dict)
+    # connecting_edges = np.zeros((datapoint_size, datapoint_size))
+    
     total_edges_count = 0
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
             atn_score_list = attention_scores[i][j]
             for k in range (0, len(atn_score_list)):
                 if attention_scores[i][j][k] >= threshold_percentile: 
-                    connecting_edges[i][j] = 1
+                    # connecting_edges[i][j] = 1
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
                     total_edges_count = total_edges_count + 1
                     
 
 
     ############# 
-    print('total edges %d'%total_edges_count)
+    #print('total edges %d'%total_edges_count)
     #negative_class = 0
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
