@@ -1,25 +1,13 @@
 import os
-#import glob
 import pandas as pd
-#import shutil 
 import copy
 import csv
 import numpy as np
 import sys
 from collections import defaultdict
-import stlearn as st
-import scanpy as sc
-import qnorm
-import scipy
 import pickle
 import gzip
 import matplotlib.pyplot as plt
-from scipy import sparse 
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
-from sklearn.metrics.pairwise import euclidean_distances
-from kneed import KneeLocator
-
 import altairThemes
 import altair as alt
 
