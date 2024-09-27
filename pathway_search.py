@@ -4,14 +4,35 @@ import pickle
 from scipy import sparse
 import pandas as pd
 from collections import defaultdict
+from collections import deque
+
+
 species = 'Human'
 receptor = ''
 max_hop = 3
 
-def get_bfs(adjacency_list):
+def get_bfs(adjacency_list, receptor):
     TF_scores = dict()
-    
+    q = deque()
+    total_TF = len(adjacency_list.keys())-1
 
+    hop_count = 1
+    for i in range (0, len(adjacency_list[receptor])):
+        dest = adjacency_list[receptor][i]
+        q.append(dest)
+        TF_scores[dest]=hop_count
+        
+    while( len(TF_scores.keys())!= total_TF):
+        source_gene = q.popleft()
+        for i in range (0, len(adjacency_list[source_gene])):
+            dest = adjacency_list[source_gene][i]
+            if dest in TF_scores:
+                continue
+                
+            q.append(dest)
+            TF_scores[dest] =  TF_scores[source_gene] + 1 
+        
+    return TF_scores
 
 
 # get_rows is a table, each row is info on source and target
@@ -26,6 +47,10 @@ def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop):
         get_KG(pathways_dict[receptor_name][i][0], pathways_dict, max_hop, get_rows, current_hop+1)
     
     return 
+
+def filter_pathway(table_info, gene_exist_list):
+    # update table_info based on gene_exist_list
+    return table_info
 
 def get_adjacency_list(table_info):
     adjacency_list = defaultdict(list)
