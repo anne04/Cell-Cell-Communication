@@ -8,6 +8,14 @@ species = 'Human'
 receptor = ''
 max_hop = 3
 
+def get_bfs(adjacency_list):
+    TF_scores = dict()
+    
+
+
+
+# get_rows is a table, each row is info on source and target
+# get_rows is updated in each call
 def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop):
     if current_hop == max_hop:
         return 
@@ -19,9 +27,15 @@ def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop):
     
     return 
 
+def get_adjacency_list(table_info):
+    adjacency_list = defaultdict(list)
+       
+    for i in range (0 , len(table_info)):
+        source = table_info[i][0]
+        dest = table_info[i][1][0]
+        adjacency_list[source].append(dest)
 
-
-
+    return adjacency_list
 
 pathways = pd.read_csv("pathways.csv")
 pathways = pathways.drop(columns=[pathways.columns[0], pathways.columns[3],pathways.columns[4],pathways.columns[5]])
