@@ -10,6 +10,12 @@ from collections import deque
 species = 'Human'
 receptor = ''
 max_hop = 3
+def pathway_expression(receptor, get_rows, gene_exist_list):
+    table_info = filter_pathway(get_rows, gene_exist_list)
+    adjacency_list = get_adjacency_list(table_info)
+    TF_scores = get_bfs(adjacency_list, receptor)
+    # take the weighted average of the TF
+    return score
 
 def get_bfs(adjacency_list, receptor):
     TF_scores = dict()
@@ -48,8 +54,12 @@ def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop):
     
     return 
 
-def filter_pathway(table_info, gene_exist_list):
+def filter_pathway(table_info, gene_exist_list): # gene_exist_list is a dictionary
     # update table_info based on gene_exist_list
+    get_rows = []
+    for i in range (0, len(table_info)):
+        if table_info[i][0] in gene_exist_list and table_info[i][1] in gene_exist_list:
+            get_rows.append([table_info[i][0], table_info[i][1]])
     return table_info
 
 def get_adjacency_list(table_info):
@@ -57,7 +67,7 @@ def get_adjacency_list(table_info):
        
     for i in range (0 , len(table_info)):
         source = table_info[i][0]
-        dest = table_info[i][1][0]
+        dest = table_info[i][1]
         adjacency_list[source].append(dest)
 
     return adjacency_list
@@ -70,5 +80,13 @@ for i in range (0, len(pathways)):
     if (pathways['species'][i]==species) and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
         pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
 
+# filter pathway based on common genes in data set
+# ...
+# then make a kg for each receptor and save it somewhere
 get_rows = []
-get_KG('ERF', pathways_dict, 2, get_rows, current_hop=0)
+get_KG('ERF', pathways_dict, 2, get_rows, current_hop=0) # save it
+
+# for each cell, for each receptor
+gene_exist_list = dict()
+# assign genes to gene exist list
+receptor_expression = pathway_expression(get_rows, gene_exist_list) 
