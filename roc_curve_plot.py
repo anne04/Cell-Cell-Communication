@@ -44,7 +44,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/t
 # attention_scores[i][j]=[...] # is a list of COMMOT assigned scores of the lr pairs (edges) between cell i and cell j
 # distribution=[...] is a combined list of COMMOT assigned scores of all edges. 
 
-# TP = 2800, NEST selected total edge = 21,659. But COMMOT reports total edge = . 
+# TP = 2800, NEST selected total edge = 21,659. But COMMOT reports total edge = 6,634,880. 
 # Since there is a big imbalance between total edge, it also causes a big  
 # imbalance between FP by NEST and COMMOT. To keep them compatible, we keep highly 
 # scored top 21,659 edges by COMMOT. 
