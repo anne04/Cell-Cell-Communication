@@ -16,10 +16,10 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 alt.themes.enable("publishTheme")
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_gaussian_distribution/no_noise/uniform_distribution_coordinate", 'rb') as fp: #datatype
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_coordinate", 'rb') as fp: #datatype
     x_index, y_index , no_need = pickle.load(fp) #
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_gaussian_distribution/no_noise/uniform_distribution_ground_truth_ccc" , 'rb') as fp:  
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_ground_truth_ccc" , 'rb') as fp:  
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
 # lig_rec_dict_TP has the true positive edge list. lig_rec_dict_TP[i][j] is a list of lr pairs between cell i and cell j
@@ -32,35 +32,41 @@ for i in lig_rec_dict_TP.keys():
 
 positive_class = tp # WE NEED THIS TO CALCULATE 'TRUE POSITIVE RATE'
 
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_gaussian_distribution/no_noise/uniform_distribution_input_graph" , 'rb') as fp:           
-#    row_col, edge_weight, lig_rec  = pickle.load(fp) 
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_input_graph" , 'rb') as fp:           
+    row_col, edge_weight, lig_rec  = pickle.load(fp) 
 
 ######################### COMMOT ###############################################################################################################
 options = 'uniform_distribution_no_noise'
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_gaussian_distribution/no_noise/" + options+'_commot_result', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/" + options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 # lig_rec_dict[i][j]=[...] # is a list of lr pairs (edges) between cell i and cell j 
-# attention_scores[i][j]=[...] # is a list of attention scores of the lr pairs (edges) between cell i and cell j
-# distribution=[...] is a combined list of attention scores of all edges. 
+# attention_scores[i][j]=[...] # is a list of COMMOT assigned scores of the lr pairs (edges) between cell i and cell j
+# distribution=[...] is a combined list of COMMOT assigned scores of all edges. 
 
-# let's first find the total count of negative classes in the COMMOT result. 
+# TP = 2800, NEST selected total edge = 21,659. But COMMOT reports total edge = . 
+# Since there is a big imbalance between total edge, it also causes a big  
+# imbalance between FP by NEST and COMMOT. To keep them compatible, we keep highly 
+# scored top 21,659 edges by COMMOT. 
+distribution = sorted(distribution, reverse=True) # large to small
+distribution = distribution[0:len(row_col)] # keep top 21,659 edges by COMMOT. Ignore the rest.
+min_limit =  distribution[len(distribution)-1] # min score to be considered
+
+# Find the total count of negative classes in the COMMOT result. 
 # We calculate the tp detected by COMMOT and then deduct it from total detection by COMMOT to get the negative classes. 
-confusion_matrix = np.zeros((2,2))
+detected_TP = 0
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         lr_pair_list = lig_rec_dict[i][j]
         if len(lr_pair_list)>0:
-            for k in lr_pair_list:   
+            for k in lr_pair_list:  
+                if attention_scores[i][j][k] < min_limit:
+                    continue # ignore                
                 if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
                     #print("i=%d j=%d k=%d"%(i, j, k))
-                    confusion_matrix[0][0] = confusion_matrix[0][0] + 1 # detected true positive by COMMOT
-                else:
-                    confusion_matrix[1][0] = confusion_matrix[1][0] + 1 #  detected false positive by COMMOT            
+                    detected_TP = detected_TP + 1 # detected true positive by COMMOT
     
-negative_class = len(distribution) - confusion_matrix[0][0] # WE NEED THIS TO CALCULATE 'FALSE POSITIVE RATE'
-
-distribution = sorted(distribution, reverse=True) 
+negative_class = len(distribution) - detected_TP # WE NEED THIS TO CALCULATE 'FALSE POSITIVE RATE'
 
 # start roc plot here. select top 10% (90th), 20% (80th), 30% (70th), ... ccc and calculate TPR and FPR 
 plot_dict = defaultdict(list)
@@ -80,7 +86,7 @@ for percentile_value in [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]:
         for j in range (0, datapoint_size):
             atn_score_list = attention_scores[i][j]
             for k in range (0, len(atn_score_list)):
-                if attention_scores[i][j][k] >= threshold_percentile: 
+                if attention_scores[i][j][k] >= threshold_percentile and attention_scores[i][j][k] <= max_limit: 
                     # connecting_edges[i][j] = 1
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
                     total_edges_count = total_edges_count + 1
@@ -108,7 +114,7 @@ for percentile_value in [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]:
     plot_dict['TPR'].append(TPR_value)
     plot_dict['Type'].append('COMMOT') # no noise
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_gaussian_distribution/no_noise/" + options +'_COMMOT_roc', 'wb') as fp: #b, b_1, a  11to20runs
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/" + options +'_COMMOT_roc', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 data_list_pd = pd.DataFrame(plot_dict)    
