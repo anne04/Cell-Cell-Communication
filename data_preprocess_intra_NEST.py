@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument( '--num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
     parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
         
-    args = parser.parse_args()
+    args = parser.parse_args()  
     
     if args.neighborhood_threshold == 0:
         args.neighborhood_threshold = args.spot_diameter*4
