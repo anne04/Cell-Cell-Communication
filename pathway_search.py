@@ -73,6 +73,15 @@ def get_adjacency_list(table_info):
     return adjacency_list
 
 pathways = pd.read_csv("pathways.csv")
+drop_row = []
+for i in range (0, len(pathways)):
+    if pathways['src_tf'][i]=='NO' and pathways['dest_tf'][i]=='NO':
+        drop_row.append(i)
+
+pathways = pathways.drop(drop_row)
+pathways.to_csv("pathways_NEST.csv") 
+
+        
 pathways = pathways.drop(columns=[pathways.columns[0], pathways.columns[3],pathways.columns[4],pathways.columns[5]])
 # keep only target species
 pathways_dict = defaultdict(list)
