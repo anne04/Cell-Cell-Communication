@@ -29,6 +29,10 @@ if __name__ == "__main__":
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
+    parser.add_argument( '--args.add_intra', type=int, default=-1 , help='Set it to 1 for intracellular signaling pathway')
+    parser.add_argument( '--args.num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
+
+    
     args = parser.parse_args()
     
     if args.neighborhood_threshold == 0:
@@ -139,6 +143,7 @@ if __name__ == "__main__":
     ligand_dict_dataset = defaultdict(list)
     cell_cell_contact = dict() 
     count_pair = 0
+    receptor_intra = dict()
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i]
         if ligand not in gene_info: # not found in the dataset
@@ -151,6 +156,7 @@ if __name__ == "__main__":
         ligand_dict_dataset[ligand].append(receptor)
         gene_info[ligand] = 'included'
         gene_info[receptor] = 'included'
+        receptor_intra[receptor] = ''
         count_pair = count_pair + 1
         
         if df["Annotation"][i] == 'Cell-Cell Contact':
@@ -177,7 +183,26 @@ if __name__ == "__main__":
             l_r_pair[gene][receptor_gene] = lr_id 
             lr_id  = lr_id  + 1
         
+    ##################################################################################
+    # load 'intra' database
+    if args.add_intra==1:
+        pathways = pd.read_csv("pathways.csv")
+        pathways = pathways.drop(columns=[pathways.columns[0], pathways.columns[3],pathways.columns[4],pathways.columns[5]])
+        # keep only target species
+        pathways_dict = defaultdict(list)
+        for i in range (0, len(pathways)):
+            if (pathways['species'][i]==species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
+                if gene_info[pathways['src'][i]] == 'included' and gene_info[pathways['dest'][i]]=='included': # filter pathway based on common genes in data set
+                    pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
+        
     
+        # then make a kg for each receptor and save it 
+        for receptor_gene in receptor_intra:
+            get_rows = []
+            get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop=0) # save it
+            receptor_intra[receptor_gene] =  get_rows
+        
+        
     ###################################################################################
     # build physical distance matrix
     from sklearn.metrics.pairwise import euclidean_distances
@@ -204,8 +229,19 @@ if __name__ == "__main__":
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
         cell_percentile.append(np.percentile(y, args.threshold_gene_exp)) 
-    
+        
     ##############################################################################
+    # for each cell, record the active genes
+    if args.add_intra==1:
+        active_genes = []
+        for cell in range (0, cell_vs_gene.shape[0]):
+            active_genes.append(dict())
+            for gene in range (0, cell_vs_gene.shape[1]):
+                if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
+                    active_genes[cell][gene_ids[gene]] = ""
+
+
+
     # some preprocessing before making the input graph
     count_total_edges = 0
     
@@ -238,11 +274,17 @@ if __name__ == "__main__":
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > args.spot_diameter:
                             continue
     
-                        communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
+                        communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]   
+                        if args.add_intra == 1:
+                            gene_exist_list = active_genes[cell]
+                            pathway_score = pathway_expression(receptor_intra[gene_rec], gene_exist_list)  
+                            communication_score = communication_score + pathway_score
+
+                        
                         relation_id = l_r_pair[gene][gene_rec]
     
                         if communication_score<=0:
-                            print('zero valued ccc score found. Might be a potential ERROR!! ')
+                            print('zero-valued ccc score found. Might be a potential ERROR!! ')
                             continue	
                             
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
