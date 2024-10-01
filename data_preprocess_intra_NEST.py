@@ -11,6 +11,7 @@ import gzip
 import argparse
 import os
 import scanpy as sc
+import pathway_search
 
 print('user input reading')
 #current_dir = 
@@ -29,10 +30,10 @@ if __name__ == "__main__":
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
-    parser.add_argument( '--args.add_intra', type=int, default=-1 , help='Set it to 1 for intracellular signaling pathway')
-    parser.add_argument( '--args.num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
-
-    
+    parser.add_argument( '--add_intra', type=int, default=-1 , help='Set it to 1 for intracellular signaling pathway')
+    parser.add_argument( '--num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
+    parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
+        
     args = parser.parse_args()
     
     if args.neighborhood_threshold == 0:
@@ -191,7 +192,7 @@ if __name__ == "__main__":
         # keep only target species
         pathways_dict = defaultdict(list)
         for i in range (0, len(pathways)):
-            if (pathways['species'][i]==species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
+            if (pathways['species'][i]==args.species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
                 if gene_info[pathways['src'][i]] == 'included' and gene_info[pathways['dest'][i]]=='included': # filter pathway based on common genes in data set
                     pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
         
