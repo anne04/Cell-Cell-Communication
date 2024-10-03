@@ -239,7 +239,7 @@ if __name__ == "__main__":
             active_genes.append(dict())
             for gene in range (0, cell_vs_gene.shape[1]):
                 if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
-                    active_genes[cell][gene_ids[gene]] = ""
+                    active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
 
 
 
