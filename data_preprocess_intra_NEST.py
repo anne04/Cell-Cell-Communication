@@ -164,7 +164,6 @@ if __name__ == "__main__":
     ligand_dict_dataset = defaultdict(list)
     cell_cell_contact = dict() 
     count_pair = 0
-    receptor_intra = dict()
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i]
         if ligand not in gene_info: # not found in the dataset
@@ -177,7 +176,6 @@ if __name__ == "__main__":
         ligand_dict_dataset[ligand].append(receptor)
         gene_info[ligand] = 'included'
         gene_info[receptor] = 'included'
-        receptor_intra[receptor] = ''
         count_pair = count_pair + 1
         
         if df["Annotation"][i] == 'Cell-Cell Contact':
@@ -207,6 +205,14 @@ if __name__ == "__main__":
     ##################################################################################
     # load 'intra' database
     if args.add_intra==1:
+        receptor_intra = dict()
+        for i in range (0, df["Receptor"].shape[0]):                
+            receptor = df["Receptor"][i]
+            if receptor not in gene_info: # not found in the dataset
+                continue   
+                
+            receptor_intra[receptor] = ''
+        
         pathways = pd.read_csv("pathways_NEST.csv")        
         pathways = pathways.drop(columns=[pathways.columns[2],pathways.columns[3],pathways.columns[4]])
         pathways = pathways.drop_duplicates(ignore_index=True)
@@ -214,9 +220,11 @@ if __name__ == "__main__":
         pathways_dict = defaultdict(list)
         for i in range (0, len(pathways)):
             if (pathways['species'][i]==args.species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
-                if pathways['src'][i] in gene_info and pathways['dest'][i] in gene_info:
-                    if gene_info[pathways['src'][i]] == 'included' and gene_info[pathways['dest'][i]]=='included': # filter pathway based on common genes in data set
-                        pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
+                source_gene = pathways['src'][i].upper()
+                dest_gene = pathways['dest'][i].upper()
+                if source_gene in gene_info and dest_gene in gene_info:
+                    if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # filter pathway based on common genes in data set
+                        pathways_dict[source_gene].append([dest_gene, pathways['src_tf'][i], pathways['dest_tf'][i]])
         
     
         # then make a kg for each receptor and save it 
@@ -302,6 +310,8 @@ if __name__ == "__main__":
                         if args.add_intra == 1:
                             gene_exist_list = active_genes[cell]
                             pathway_score = pathway_expression(receptor_intra[gene_rec], gene_exist_list)  
+                            if pathway_score>0:
+                                print('found intra!')
                             communication_score = communication_score + pathway_score
 
                         
