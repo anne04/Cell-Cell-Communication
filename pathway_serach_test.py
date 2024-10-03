@@ -79,14 +79,14 @@ for i in range (0, len(pathways)):
         drop_row.append(i)
 
 pathways = pathways.drop(drop_row)
-pathways.to_csv("pathways_NEST.csv") 
+#pathways.to_csv("pathways_NEST.csv") 
 
         
 pathways = pathways.drop(columns=[pathways.columns[0], pathways.columns[3],pathways.columns[4],pathways.columns[5]])
 # keep only target species
 pathways_dict = defaultdict(list)
 for i in range (0, len(pathways)):
-    if (pathways['species'][i]==species) and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
+    if (pathways['species'][i]==species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
         pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
 
 # filter pathway based on common genes in data set
