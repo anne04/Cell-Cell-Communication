@@ -11,13 +11,14 @@ import gzip
 import argparse
 import os
 import scanpy as sc
-import pathway_search
+import pathway_search_NEST
 
 print('user input reading')
 #current_dir = 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
+    '''
     parser.add_argument( '--data_name', type=str, help='Name of the dataset', required=True)  
     parser.add_argument( '--data_from', type=str, required=True, help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
     ################# default is set ################################################################
@@ -33,8 +34,27 @@ if __name__ == "__main__":
     parser.add_argument( '--add_intra', type=int, default=-1 , help='Set it to 1 for intracellular signaling pathway')
     parser.add_argument( '--num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
     parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
-        
     args = parser.parse_args()  
+    '''
+
+
+    parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial_intra', help='Name of the dataset')  
+    parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+    ################# default is set ################################################################
+    parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
+    parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
+    parser.add_argument( '--filter_min_cell', type=int, default=1 , help='Minimum number of cells for gene filtering') 
+    parser.add_argument( '--threshold_gene_exp', type=float, default=98, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--tissue_position_file', type=str, default='None', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
+    parser.add_argument( '--spot_diameter', type=float, default=89.43, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
+    parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
+    parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
+    parser.add_argument( '--add_intra', type=int, default=1 , help='Set it to 1 for intracellular signaling pathway')
+    parser.add_argument( '--num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
+    parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
+    args = parser.parse_args() 
+    
     
     if args.neighborhood_threshold == 0:
         args.neighborhood_threshold = args.spot_diameter*4
@@ -187,20 +207,23 @@ if __name__ == "__main__":
     ##################################################################################
     # load 'intra' database
     if args.add_intra==1:
-        pathways = pd.read_csv("pathways.csv")
-        pathways = pathways.drop(columns=[pathways.columns[0], pathways.columns[3],pathways.columns[4],pathways.columns[5]])
+        pathways = pd.read_csv("pathways_NEST.csv")        
+        pathways = pathways.drop(columns=[pathways.columns[2],pathways.columns[3],pathways.columns[4]])
+        pathways = pathways.drop_duplicates(ignore_index=True)
         # keep only target species
         pathways_dict = defaultdict(list)
         for i in range (0, len(pathways)):
             if (pathways['species'][i]==args.species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
-                if gene_info[pathways['src'][i]] == 'included' and gene_info[pathways['dest'][i]]=='included': # filter pathway based on common genes in data set
-                    pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
+                if pathways['src'][i] in gene_info and pathways['dest'][i] in gene_info:
+                    if gene_info[pathways['src'][i]] == 'included' and gene_info[pathways['dest'][i]]=='included': # filter pathway based on common genes in data set
+                        pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
         
     
         # then make a kg for each receptor and save it 
         for receptor_gene in receptor_intra:
+            print("####### %s ###########"%receptor_gene)
             get_rows = []
-            get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop=0) # save it
+            pathway_search_NEST.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop=0) # save it
             receptor_intra[receptor_gene] =  get_rows
         
         
