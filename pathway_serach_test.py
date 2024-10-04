@@ -22,7 +22,7 @@ def pathway_expression(receptor, get_rows, gene_exist_list):
         
     return score
 
-def get_bfs(adjacency_list, receptor):
+def get_bfs(adjacency_list, receptor, TF_genes):
     TF_scores = defaultdict(int)
     q = deque()
     total_TF = len(adjacency_list.keys())-1
@@ -42,9 +42,18 @@ def get_bfs(adjacency_list, receptor):
                 
             q.append(dest)
             TF_scores[dest] =  TF_scores[source_gene] + 1 
-        
-    return TF_scores
 
+
+    TF_found = 0
+    for gene in TR_scores:
+        if gene in TF_genes:
+            TF_found = 1
+            break
+            
+    if TF_found == 1:
+        return TF_scores
+    else:
+        return 0
 
 # get_rows is a table, each row is info on source and target
 # get_rows is updated in each call
