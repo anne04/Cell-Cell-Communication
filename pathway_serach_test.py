@@ -45,7 +45,7 @@ def get_bfs(adjacency_list, receptor, TF_genes):
 
 
     TF_found = 0
-    for gene in TR_scores:
+    for gene in TF_scores:
         if gene in TF_genes:
             TF_found = 1
             break
@@ -94,14 +94,8 @@ def get_adjacency_list(table_info):
 
 '''
 pathways = pd.read_csv("pathways.csv")
-drop_row = []
-for i in range (0, len(pathways)):
-    if pathways['src_tf'][i]=='NO' and pathways['dest_tf'][i]=='NO':
-        drop_row.append(i)
-
-pathways = pathways.drop(drop_row)
 pathways = pathways.drop(columns=[pathways.columns[0]])
-#pathways.to_csv("pathways_NEST.csv", index=False) 
+pathways.to_csv("pathways_NEST.csv", index=False) 
 '''
 pathways = pd.read_csv("pathways_NEST.csv")        
 pathways = pathways.drop(columns=[pathways.columns[2],pathways.columns[3],pathways.columns[4]])
@@ -109,7 +103,7 @@ pathways = pathways.drop_duplicates(ignore_index=True)
 # keep only target species
 pathways_dict = defaultdict(list)
 for i in range (0, len(pathways)):
-    if (pathways['species'][i]==species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
+    if (pathways['species'][i]==species):
         pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
 
 # filter pathway based on common genes in data set
