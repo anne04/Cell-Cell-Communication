@@ -218,6 +218,7 @@ if __name__ == "__main__":
         pathways = pathways.drop_duplicates(ignore_index=True)
         # keep only target species
         pathways_dict = defaultdict(list)
+        TF_genes = dict()
         for i in range (0, len(pathways)):
             if (pathways['species'][i]==args.species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
                 source_gene = pathways['src'][i].upper()
@@ -225,6 +226,10 @@ if __name__ == "__main__":
                 if source_gene in gene_info and dest_gene in gene_info:
                     if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # filter pathway based on common genes in data set
                         pathways_dict[source_gene].append([dest_gene, pathways['src_tf'][i], pathways['dest_tf'][i]])
+                        if pathways['src_tf'][i] == 'YES':
+                            TF_genes[source_gene] = ''
+                        if pathways['dest_tf'][i] == 'YES':
+                            TF_genes[dest_gene] = ''
         
     
         # then make a kg for each receptor and save it 
@@ -309,7 +314,7 @@ if __name__ == "__main__":
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]   
                         if args.add_intra == 1:
                             gene_exist_list = active_genes[cell]
-                            pathway_score = pathway_expression(receptor_intra[gene_rec], gene_exist_list)  
+                            pathway_score = pathway_expression(receptor_intra[gene_rec], gene_exist_list, TF_genes)  
                             if pathway_score>0:
                                 print('found intra!')
                             communication_score = communication_score + pathway_score
