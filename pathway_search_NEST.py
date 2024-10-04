@@ -13,11 +13,15 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes):
     intra_scores = get_bfs(adjacency_list, receptor, TF_genes)
     # take the weighted average of the TF
     score = 0
+    weight = 0
     for gene in intra_scores:
-        hop = intra_scores[gene] 
-        score = score + gene_exist_list[gene]*(1/hop)
+        if gene in TF_genes:
+            hop = intra_scores[gene] 
+            score = score + gene_exist_list[gene]*(1/hop)
+            weight = weight + (1/hop)
         
-    return score
+    return score/weight
+
 
 def get_bfs(adjacency_list, receptor, TF_genes):
     TF_scores = defaultdict(int)
@@ -28,8 +32,10 @@ def get_bfs(adjacency_list, receptor, TF_genes):
     for i in range (0, len(adjacency_list[receptor])):
         dest = adjacency_list[receptor][i][0]
         q.append(dest)
-        TF_scores[dest]=hop_count
-        
+        TF_scores[dest]=hop_count # [hop_count, score] -> use score if you have one
+
+    # Also print BFS paths to see which paths contain TF. 
+    # Keep nonTF genes of those paths only and ignore other nonTF genes
     while(len(TF_scores.keys())!= total_TF):
         source_gene = q.popleft()
         for i in range (0, len(adjacency_list[source_gene])):
@@ -38,7 +44,8 @@ def get_bfs(adjacency_list, receptor, TF_genes):
                 continue
                 
             q.append(dest)
-            TF_scores[dest] =  TF_scores[source_gene] + 1 
+            hop_count = TF_scores[source_gene] + 1
+            TF_scores[dest] =  hop_count # [hop_count, score] -> use score if you have one
             
     TF_found = 0
     for gene in TF_scores:
