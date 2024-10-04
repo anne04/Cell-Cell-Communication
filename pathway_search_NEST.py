@@ -7,19 +7,19 @@ from collections import defaultdict
 from collections import deque
 
 
-def pathway_expression(receptor, get_rows, gene_exist_list):
+def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes):
     table_info = filter_pathway(get_rows, gene_exist_list)
     adjacency_list = get_adjacency_list(table_info)
-    TF_scores = get_bfs(adjacency_list, receptor)
+    intra_scores = get_bfs(adjacency_list, receptor, TF_genes)
     # take the weighted average of the TF
     score = 0
-    for TF_gene in TF_scores:
-        hop = TF_scores[TF_gene] 
-        score = score + gene_exist_list[TF_gene]*(1/hop)
+    for gene in intra_scores:
+        hop = intra_scores[gene] 
+        score = score + gene_exist_list[gene]*(1/hop)
         
     return score
 
-def get_bfs(adjacency_list, receptor):
+def get_bfs(adjacency_list, receptor, TF_genes):
     TF_scores = defaultdict(int)
     q = deque()
     total_TF = len(adjacency_list.keys())-1
@@ -39,8 +39,17 @@ def get_bfs(adjacency_list, receptor):
                 
             q.append(dest)
             TF_scores[dest] =  TF_scores[source_gene] + 1 
-        
-    return TF_scores
+            
+    TF_found = 0
+    for gene in TF_scores:
+        if gene in TF_genes:
+            TF_found = 1
+            break
+            
+    if TF_found == 1:
+        return TF_scores
+    else:
+        return []    
 
 
 # get_rows is a table, each row is info on source and target
