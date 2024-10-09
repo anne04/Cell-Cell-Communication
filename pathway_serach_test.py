@@ -10,58 +10,78 @@ from collections import deque
 species = 'Human'
 receptor = '' 
 max_hop = 3
-def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF):
+def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, weighted):
     table_info = filter_pathway(get_rows, gene_exist_list)
     adjacency_list = get_adjacency_list(table_info)
-    TF_scores = get_bfs(adjacency_list, receptor, TF_genes)
-    # take the weighted average of the TF
-    score = 0
-
-
+    protein_scores = get_bfs(adjacency_list, receptor, TF_genes)
     
-    for gene in TF_scores:
-        hop = TF_scores[gene] 
-        if only_TF == 1:
-            if gene in TF_genes:
-                score = score + gene_exist_list[TF_gene] # scores multiplied if available
-                
-        else:
-            score = score + gene_exist_list[TF_gene] # scores multiplied if available
-            
+    if len(protein_score) == 0: # if no TFs are found
+        return 0
+        
+    score = 0
+    if only_TF == 1:
+        total_weight = 1
+        for gene in protein_scores:
+            if gene in TF_genes:                 
+                if weighted == 1:
+                    edge_score = protein_scores[gene][1] 
+                    total_weight = total_weight + edge_score
+                    score = score + gene_exist_list[TF_gene]*edge_score # scores multiplied if available
+                else:
+                    total_weight = total_weight + 1
+                    score = score + gene_exist_list[TF_gene]                   
+
+        score = score / total_weight
+    else:
+        total_weight = 1
+        for gene in protein_scores:             
+            if weighted == 1:
+                edge_score = protein_scores[gene][1] 
+                total_weight = total_weight + edge_score
+                score = score + gene_exist_list[TF_gene]*edge_score # scores multiplied if available
+            else:
+                total_weight = total_weight + 1
+                score = score + gene_exist_list[TF_gene]                   
+
+        score = score / total_weight
+              
     return score
 
 def get_bfs(adjacency_list, receptor, TF_genes):
-    TF_scores = defaultdict(int)
+    protein_scores = defaultdict(list)
     q = deque()
-    total_TF = len(adjacency_list.keys())-1
+    total_genes = len(adjacency_list.keys())-1
 
     hop_count = 1
     for i in range (0, len(adjacency_list[receptor])):
         dest = adjacency_list[receptor][i][0]
+        score = adjacency_list[receptor][i][1]
         q.append(dest)
-        TF_scores[dest]=hop_count
+        protein_scores[dest]= [hop_count, score] 
         
-    while(len(TF_scores.keys())!= total_TF):
+    while(len(protein_scores.keys())!= total_genes):
         source_gene = q.popleft()
         for i in range (0, len(adjacency_list[source_gene])):
             dest = adjacency_list[source_gene][i][0]
-            if dest in TF_scores: # path already visited so go back
+            score = adjacency_list[source_gene][i][1]
+            hop_count = protein_scores[source_gene][0] + 1
+            if dest in protein_scores: # path already visited so go back
                 continue
                 
             q.append(dest)
-            TF_scores[dest] =  TF_scores[source_gene] + 1 
+            protein_scores[dest] = [hop_count, score]  
 
 
     TF_found = 0
-    for gene in TF_scores:
+    for gene in protein_scores:
         if gene in TF_genes:
             TF_found = 1
             break
             
     if TF_found == 1:
-        return TF_scores
+        return protein_scores
     else:
-        return 0
+        return []
 
 # get_rows is a table, each row is info on source and target
 # get_rows is updated in each call
@@ -80,22 +100,23 @@ def filter_pathway(table_info, gene_exist_list): # gene_exist_list is a dictiona
     # update table_info based on gene_exist_list
     get_rows = []
     for i in range (0, len(table_info)):
-        if table_info[i][0] in gene_exist_list and table_info[i][1] in gene_exist_list:
-            get_rows.append([table_info[i][0], table_info[i][1]])
-    return table_info
+        if table_info[i][0] in gene_exist_list and table_info[i][1][0] in gene_exist_list:
+            get_rows.append([table_info[i][0], table_info[i][1][0], table_info[i][1][1], table_info[i][1][2], table_info[i][1][3]])
+    return get_rows
 
 def get_adjacency_list(table_info):
     adjacency_list = defaultdict(list)
     unique_gene_set = dict()   
     for i in range (0, len(table_info)):
         source = table_info[i][0]
-        dest = table_info[i][1][0]
-        adjacency_list[source].append(dest)
+        dest = table_info[i][1]
+        score = table_info[i][4]
+        adjacency_list[source].append([dest, score])
         unique_gene_set[source]=''
         unique_gene_set[dest]=''
     
     for gene in unique_gene_set:
-        if gene not in adjacency_list:
+        if gene not in adjacency_list: # if some gene has no outgoing edge
             adjacency_list[gene]=[]
             
     return adjacency_list
@@ -112,7 +133,7 @@ pathways = pathways.drop_duplicates(ignore_index=True)
 pathways_dict = defaultdict(list)
 for i in range (0, len(pathways)):
     if (pathways['species'][i]==species):
-        pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i]])
+        pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i], pathways['score'][i]])
 
 # filter pathway based on common genes in data set
 # ...
