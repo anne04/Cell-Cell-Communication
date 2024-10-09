@@ -10,16 +10,24 @@ from collections import deque
 species = 'Human'
 receptor = '' 
 max_hop = 3
-def pathway_expression(receptor, get_rows, gene_exist_list):
+def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF):
     table_info = filter_pathway(get_rows, gene_exist_list)
     adjacency_list = get_adjacency_list(table_info)
-    TF_scores = get_bfs(adjacency_list, receptor)
+    TF_scores = get_bfs(adjacency_list, receptor, TF_genes)
     # take the weighted average of the TF
     score = 0
-    for TF_gene in TF_scores:
-        hop = TF_scores[TF_gene] 
-        score = score + gene_exist_list[TF_gene]*(1/hop)
-        
+
+
+    
+    for gene in TF_scores:
+        hop = TF_scores[gene] 
+        if only_TF == 1:
+            if gene in TF_genes:
+                score = score + gene_exist_list[TF_gene] # scores multiplied if available
+                
+        else:
+            score = score + gene_exist_list[TF_gene] # scores multiplied if available
+            
     return score
 
 def get_bfs(adjacency_list, receptor, TF_genes):
@@ -37,7 +45,7 @@ def get_bfs(adjacency_list, receptor, TF_genes):
         source_gene = q.popleft()
         for i in range (0, len(adjacency_list[source_gene])):
             dest = adjacency_list[source_gene][i][0]
-            if dest in TF_scores:
+            if dest in TF_scores: # path already visited so go back
                 continue
                 
             q.append(dest)
@@ -58,7 +66,7 @@ def get_bfs(adjacency_list, receptor, TF_genes):
 # get_rows is a table, each row is info on source and target
 # get_rows is updated in each call
 def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop):
-    if current_hop == max_hop:
+    if  get_rows[len(get_rows)-1][1][2]== 'YES' or current_hop == max_hop: # run as long as you don't reach a TF or max_hop is reached. 
         return 
 
     for i in range (0, len(pathways_dict[receptor_name])):
