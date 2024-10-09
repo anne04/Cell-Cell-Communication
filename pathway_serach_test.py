@@ -26,10 +26,10 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, w
                 if weighted == 1:
                     edge_score = protein_scores[gene][1] 
                     total_weight = total_weight + edge_score
-                    score = score + gene_exist_list[TF_gene]*edge_score # scores multiplied if available
+                    score = score + gene_exist_list[gene]*edge_score # scores multiplied if available
                 else:
                     total_weight = total_weight + 1
-                    score = score + gene_exist_list[TF_gene]                   
+                    score = score + gene_exist_list[gene]                   
 
         score = score / total_weight
     else:
@@ -38,10 +38,10 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, w
             if weighted == 1:
                 edge_score = protein_scores[gene][1] 
                 total_weight = total_weight + edge_score
-                score = score + gene_exist_list[TF_gene]*edge_score # scores multiplied if available
+                score = score + gene_exist_list[gene]*edge_score # scores multiplied if available
             else:
                 total_weight = total_weight + 1
-                score = score + gene_exist_list[TF_gene]                   
+                score = score + gene_exist_list[gene]                   
 
         score = score / total_weight
               
