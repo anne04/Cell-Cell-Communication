@@ -143,6 +143,42 @@ get_KG('ERF', pathways_dict, 2, get_rows, current_hop=0) # save it
 
 # for each cell, for each receptor
 gene_exist_list = dict()
+
+
+
+'''
+pathways = pd.read_csv("signaling_network_human_21122021_stringdb_scored.csv")
+tf_target = pd.read_csv("dorothea_filtered.csv")
+tf_gene = dict()
+for i in range (0, len(tf_target)):
+    tf_gene[tf_target['source'][i]]=1
+
+source_is_tf = []
+target_is_tf = []
+for i in range (0, len(pathways)):
+    if pathways['source'][i] in tf_gene:
+        source_is_tf.append("YES")
+    else:
+        source_is_tf.append("NO")
+        
+    if pathways['target'][i] in tf_gene:
+        target_is_tf.append("YES")
+    else:
+        target_is_tf.append("NO")
+
+
+pathways = pathways.assign(source_is_tf=source_is_tf)
+pathways = pathways.assign(target_is_tf=target_is_tf)
+pathways.to_csv("nichenet_pathways_NEST.csv", index=False) 
+
+
+
+
+        
+
+
+
+'''
 gene_exist_list[]=
 # assign genes to gene exist list
 receptor_expression = pathway_expression(get_rows, gene_exist_list) 
