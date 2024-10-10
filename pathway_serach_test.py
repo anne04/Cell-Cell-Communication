@@ -54,22 +54,22 @@ def get_bfs(adjacency_list, receptor, TF_genes):
 
     hop_count = 1
     for i in range (0, len(adjacency_list[receptor])):
-        dest = adjacency_list[receptor][i][0]
+        target = adjacency_list[receptor][i][0]
         score = adjacency_list[receptor][i][1]
-        q.append(dest)
-        protein_scores[dest]= [hop_count, score] 
+        q.append(target)
+        protein_scores[target]= [hop_count, score] 
         
     while(len(protein_scores.keys())!= total_genes):
         source_gene = q.popleft()
         for i in range (0, len(adjacency_list[source_gene])):
-            dest = adjacency_list[source_gene][i][0]
+            target = adjacency_list[source_gene][i][0]
             score = adjacency_list[source_gene][i][1]
             hop_count = protein_scores[source_gene][0] + 1
-            if dest in protein_scores: # path already visited so go back
+            if target in protein_scores: # path already visited so go back
                 continue
                 
-            q.append(dest)
-            protein_scores[dest] = [hop_count, score]  
+            q.append(target)
+            protein_scores[target] = [hop_count, score]  
 
 
     TF_found = 0
@@ -109,11 +109,11 @@ def get_adjacency_list(table_info):
     unique_gene_set = dict()   
     for i in range (0, len(table_info)):
         source = table_info[i][0]
-        dest = table_info[i][1]
+        target = table_info[i][1]
         score = table_info[i][4]
-        adjacency_list[source].append([dest, score])
+        adjacency_list[source].append([target, score])
         unique_gene_set[source]=''
-        unique_gene_set[dest]=''
+        unique_gene_set[target]=''
     
     for gene in unique_gene_set:
         if gene not in adjacency_list: # if some gene has no outgoing edge
@@ -133,7 +133,7 @@ pathways = pathways.drop_duplicates(ignore_index=True)
 pathways_dict = defaultdict(list)
 for i in range (0, len(pathways)):
     if (pathways['species'][i]==species):
-        pathways_dict[pathways['src'][i]].append([pathways['dest'][i], pathways['src_tf'][i], pathways['dest_tf'][i], pathways['score'][i]])
+        pathways_dict[pathways['source'][i]].append([pathways['target'][i], pathways['source_is_tf'][i], pathways['target_is_tf'][i], pathways['score'][i]])
 
 # filter pathway based on common genes in data set
 # ...
