@@ -239,7 +239,7 @@ if __name__ == "__main__":
             print("####### %s ###########"%receptor_gene)
             get_rows = []
             gene_visited = dict()
-            gene_visited[receptor_gene] = ''
+            #gene_visited[receptor_gene] = ''
             current_hop = 0
             pathway.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop, gene_visited) # save it
             receptor_intra[receptor_gene] =  get_rows
@@ -247,6 +247,14 @@ if __name__ == "__main__":
                 count_kg = count_kg +1
         
         print('Total %d receptors have knowledge graph'%count_kg) 
+
+        # debug purpose
+        receptor_gene = 'CCR7'
+        get_rows = []
+        gene_visited = dict()
+        current_hop = 0
+        pathway.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop, gene_visited) # save it
+        receptor_intra[receptor_gene] =  get_rows    
     ###################################################################################
 
     # build physical distance matrix
@@ -285,13 +293,27 @@ if __name__ == "__main__":
                 if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
                     active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
 
+
     ## debug purpose ###
+    dummy_gene_list = ['CCR7', 'CD247', 'LCK', 'AR']
+    for cell in range (0, cell_vs_gene.shape[0]):
+        gene_found_count = 0
+        for gene in dummy_gene_list:
+            if len(active_genes[cell])>0 and gene in active_genes[cell]:
+                gene_found_count = gene_found_count + 1
+
+        if gene_found_count == len(dummy_gene_list):
+            print(cell_barcode[cell])
+                
     # GCACTAGTCGCGCTAT-1	GATAAATCGGTGGATG-1	CCL19	CCR7	192409	-1	2300	2206	0.985612225042701
-    rcv_cell_id = 'GATAAATCGGTGGATG-1'
-    active_genes[cell_id_index[rcv_cell_id]]
+    rcv_cell_id = 'AAACTTAATTGCACGC-1'
+    #active_genes[cell_id_index[rcv_cell_id]]
     gene_exist_list = active_genes[cell_id_index[rcv_cell_id]]
     gene_rec = 'CCR7'
-    pathway_score = pathway.pathway_expression(receptor_intra[gene_rec], gene_exist_list, TF_genes)
+    only_TF = 1
+    weighted = 1
+    get_rows = receptor_intra[gene_rec]
+    pathway_score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted )   
     ############ some preprocessing before making the input graph
     count_total_edges = 0
     
