@@ -296,9 +296,11 @@ if __name__ == "__main__":
         y = sorted(cell_vs_gene[i])
         ## intra ##
         active_cutoff = np.percentile(y, args.threshold_gene_exp_intra) 
+        '''
         if active_cutoff == min(cell_vs_gene[i][:]):
             active_cutoff = max(cell_vs_gene[i][:])  
             all_deactive_count = all_deactive_count + 1
+        '''
         intra_active.append(active_cutoff)
         
         
