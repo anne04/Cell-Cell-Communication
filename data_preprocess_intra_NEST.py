@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser.add_argument( '--intra_database_path', type=str, default='database/nichenet_pathways_NEST.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--add_intra', type=int, default=1 , help='Set it to 1 for intracellular signaling pathway')
     parser.add_argument( '--num_hops', type=int, default=5 , help='Maximum number of hops for intra signaling pathway')
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=50, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     #parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
     args = parser.parse_args() 
     
@@ -281,10 +282,25 @@ if __name__ == "__main__":
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
+        ## inter ##
         active_cutoff = np.percentile(y, args.threshold_gene_exp)
-        if active_cutoff == min(cell_vs_gene[i]):
-            active_cutoff = max(cell_vs_gene[i])
+        if active_cutoff == min(cell_vs_gene[i][:]):
+            active_cutoff = max(cell_vs_gene[i][:])
+            #all_deactive_count = all_deactive_count + 1
         cell_percentile.append(active_cutoff) 
+
+    ######################
+    intra_active = []
+    all_deactive_count = 0
+    for i in range (0, cell_vs_gene.shape[0]):
+        y = sorted(cell_vs_gene[i])
+        ## intra ##
+        active_cutoff = np.percentile(y, args.threshold_gene_exp_intra) 
+        if active_cutoff == min(cell_vs_gene[i][:]):
+            active_cutoff = max(cell_vs_gene[i][:])  
+            all_deactive_count = all_deactive_count + 1
+        intra_active.append(active_cutoff)
+        
         
     ##############################################################################
     # for each cell, record the active genes
@@ -293,19 +309,19 @@ if __name__ == "__main__":
         for cell in range (0, cell_vs_gene.shape[0]):
             active_genes.append(dict())
             for gene in range (0, cell_vs_gene.shape[1]):
-                if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
+                if cell_vs_gene[cell][gene] >= intra_active[cell]:
                     active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
             
             print(cell)
 
 
-    ## debug purpose ############3
-    dummy_gene_list = ['CCR7'] #, 'CD247', 'LCK', 'AR']
+    ## debug purpose ############
+    dummy_gene_list = ['CCR7'] # , 'CD247', 'LCK', 'AR']
     cell_interst = []
     for cell in range (0, cell_vs_gene.shape[0]):
         gene_found_count = 0
         for gene in dummy_gene_list:
-            if len(active_genes[cell])>0 and gene in active_genes[cell]:
+            if len(active_genes[cell])>0 and gene in active_genes[cell]: # and cell_vs_gene[cell][gene_index[gene]]>min(cell_vs_gene[cell][:]):
                 gene_found_count = gene_found_count + 1
 
         if gene_found_count == len(dummy_gene_list):
@@ -314,16 +330,20 @@ if __name__ == "__main__":
                 
     # GCACTAGTCGCGCTAT-1	GATAAATCGGTGGATG-1	CCL19	CCR7	192409	-1	2300	2206	0.985612225042701
     for cell in cell_interst:
-        rcv_cell_id = cell_barcode[cell]
-        #active_genes[cell_id_index[rcv_cell_id]]
-        gene_exist_list = active_genes[cell_id_index[rcv_cell_id]]
+        gene_exist_list = active_genes[cell]
         gene_rec = 'CCR7'
         only_TF = 1
         weighted = 1
-        get_rows = receptor_intra[gene_rec]
-        table_info = filter_pathway(get_rows, gene_exist_list)
-        print(len(table_info))
         
+        #get_rows = receptor_intra[gene_rec]
+        #table_info = filter_pathway(get_rows, gene_exist_list)
+        #print(len(table_info))
+        #adjacency_list = get_adjacency_list(table_info)
+        #receptor = 'CCR7'
+        #protein_scores = get_bfs(adjacency_list, receptor, TF_genes)
+        
+        score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted)
+        print(score)
         #pathway_score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted )   
     ############ some preprocessing before making the input graph
     count_total_edges = 0
