@@ -86,17 +86,19 @@ def get_bfs(adjacency_list, receptor, TF_genes):
 # get_rows is a table, each row is info on source and target
 # get_rows is updated in each call
 def get_KG(receptor_name, pathways_dict, max_hop, get_rows, current_hop, gene_visited):
-    if  current_hop == max_hop: # run as long as you don't reach a TF or max_hop is reached. 
+    if  receptor_name in gene_visited or current_hop == max_hop: # run as long as you don't reach a TF or max_hop is reached. 
         return 
 
+
+    gene_visited[receptor_name] = ''
     for i in range (0, len(pathways_dict[receptor_name])):
-        target_gene = pathways_dict[receptor_name][i][0]
-        target_gene_is_TF = pathways_dict[receptor_name][i][2]
-        if target_gene in gene_visited: # then ignore
-            continue
         get_rows.append([receptor_name, pathways_dict[receptor_name][i]]) 
         print(pathways_dict[receptor_name][i])
-        gene_visited[target_gene] = '' 
+        target_gene = pathways_dict[receptor_name][i][0]
+        if target_gene in gene_visited: # then ignore as we have downstream branches of target already
+            continue
+        
+        target_gene_is_TF = pathways_dict[receptor_name][i][2] 
         if target_gene_is_TF == 'NO': # if target is NOT a TF then proceed further
             # target will become the new source
             get_KG(target_gene, pathways_dict, max_hop, get_rows, current_hop+1, gene_visited)
