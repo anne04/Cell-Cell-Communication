@@ -281,7 +281,10 @@ if __name__ == "__main__":
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-        cell_percentile.append(np.percentile(y, args.threshold_gene_exp)) 
+        active_cutoff = np.percentile(y, args.threshold_gene_exp)
+        if active_cutoff == min(cell_vs_gene[i]):
+            active_cutoff = max(cell_vs_gene[i])
+        cell_percentile.append(active_cutoff) 
         
     ##############################################################################
     # for each cell, record the active genes
@@ -292,10 +295,13 @@ if __name__ == "__main__":
             for gene in range (0, cell_vs_gene.shape[1]):
                 if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
                     active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
+            
+            print(cell)
 
 
-    ## debug purpose ###
-    dummy_gene_list = ['CCR7', 'CD247', 'LCK', 'AR']
+    ## debug purpose ############3
+    dummy_gene_list = ['CCR7'] #, 'CD247', 'LCK', 'AR']
+    cell_interst = []
     for cell in range (0, cell_vs_gene.shape[0]):
         gene_found_count = 0
         for gene in dummy_gene_list:
@@ -304,16 +310,21 @@ if __name__ == "__main__":
 
         if gene_found_count == len(dummy_gene_list):
             print(cell_barcode[cell])
+            cell_interst.append(cell)
                 
     # GCACTAGTCGCGCTAT-1	GATAAATCGGTGGATG-1	CCL19	CCR7	192409	-1	2300	2206	0.985612225042701
-    rcv_cell_id = 'AAACTTAATTGCACGC-1'
-    #active_genes[cell_id_index[rcv_cell_id]]
-    gene_exist_list = active_genes[cell_id_index[rcv_cell_id]]
-    gene_rec = 'CCR7'
-    only_TF = 1
-    weighted = 1
-    get_rows = receptor_intra[gene_rec]
-    pathway_score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted )   
+    for cell in cell_interst:
+        rcv_cell_id = cell_barcode[cell]
+        #active_genes[cell_id_index[rcv_cell_id]]
+        gene_exist_list = active_genes[cell_id_index[rcv_cell_id]]
+        gene_rec = 'CCR7'
+        only_TF = 1
+        weighted = 1
+        get_rows = receptor_intra[gene_rec]
+        table_info = filter_pathway(get_rows, gene_exist_list)
+        print(len(table_info))
+        
+        #pathway_score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted )   
     ############ some preprocessing before making the input graph
     count_total_edges = 0
     
