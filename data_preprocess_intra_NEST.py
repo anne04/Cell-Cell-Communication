@@ -11,7 +11,7 @@ import gzip
 import argparse
 import os
 import scanpy as sc
-import pathway_search_NEST
+import pathway_search_NEST_v2 as pathway
 
 print('user input reading')
 #current_dir = 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     args = parser.parse_args()  
     '''
 
-
+    parser = argparse.ArgumentParser()
     parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial_intra', help='Name of the dataset')  
     parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
     ################# default is set ################################################################
@@ -50,9 +50,10 @@ if __name__ == "__main__":
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
+    parser.add_argument( '--intra_database_path', type=str, default='database/nichenet_pathways_NEST.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--add_intra', type=int, default=1 , help='Set it to 1 for intracellular signaling pathway')
-    parser.add_argument( '--num_hops', type=int, default=3 , help='Maximum number of hops for intra signaling pathway')
-    parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
+    parser.add_argument( '--num_hops', type=int, default=5 , help='Maximum number of hops for intra signaling pathway')
+    #parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
     args = parser.parse_args() 
     
     
@@ -121,8 +122,10 @@ if __name__ == "__main__":
     ##################### make metadata: barcode_info ###################################
     i=0
     barcode_info=[]
+    cell_id_index = dict()
     for cell_code in cell_barcode:
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
+        cell_id_index[cell_code] = i
         i=i+1
     ################################################
     
@@ -213,34 +216,39 @@ if __name__ == "__main__":
                 
             receptor_intra[receptor] = ''
         
-        pathways = pd.read_csv("pathways_NEST.csv")        
-        pathways = pathways.drop(columns=[pathways.columns[2],pathways.columns[3],pathways.columns[4]])
+        pathways = pd.read_csv(args.intra_database_path)        
         pathways = pathways.drop_duplicates(ignore_index=True)
         # keep only target species
         pathways_dict = defaultdict(list)
         TF_genes = dict()
         for i in range (0, len(pathways)):
-            if (pathways['species'][i]==args.species): # and (pathways['src_tf'][i]=='YES' or pathways['dest_tf'][i]=='YES'):
-                source_gene = pathways['src'][i].upper()
-                dest_gene = pathways['dest'][i].upper()
-                if source_gene in gene_info and dest_gene in gene_info:
-                    if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # filter pathway based on common genes in data set
-                        pathways_dict[source_gene].append([dest_gene, pathways['src_tf'][i], pathways['dest_tf'][i]])
-                        if pathways['src_tf'][i] == 'YES':
-                            TF_genes[source_gene] = ''
-                        if pathways['dest_tf'][i] == 'YES':
-                            TF_genes[dest_gene] = ''
+            source_gene = pathways['source'][i].upper()
+            dest_gene = pathways['target'][i].upper()
+            if source_gene in gene_info and dest_gene in gene_info:
+                if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # filter pathway based on common genes in data set
+                    pathways_dict[source_gene].append([dest_gene, pathways['source_is_tf'][i], pathways['target_is_tf'][i], pathways['experimental_score'][i]])
+                    if pathways['source_is_tf'][i] == 'YES':
+                        TF_genes[source_gene] = ''
+                    if pathways['target_is_tf'][i] == 'YES':
+                        TF_genes[dest_gene] = ''
         
     
-        # then make a kg for each receptor and save it 
+        # then make a kg for each receptor and save it
+        count_kg = 0
         for receptor_gene in receptor_intra:
             print("####### %s ###########"%receptor_gene)
             get_rows = []
-            pathway_search_NEST.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop=0) # save it
+            gene_visited = dict()
+            gene_visited[receptor_gene] = ''
+            current_hop = 0
+            pathway.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop, gene_visited) # save it
             receptor_intra[receptor_gene] =  get_rows
+            if len(get_rows)>0:
+                count_kg = count_kg +1
         
-        
+        print('Total %d receptors have knowledge graph'%count_kg) 
     ###################################################################################
+
     # build physical distance matrix
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
@@ -277,9 +285,14 @@ if __name__ == "__main__":
                 if cell_vs_gene[cell][gene] >= cell_percentile[cell]:
                     active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
 
-
-
-    # some preprocessing before making the input graph
+    ## debug purpose ###
+    # GCACTAGTCGCGCTAT-1	GATAAATCGGTGGATG-1	CCL19	CCR7	192409	-1	2300	2206	0.985612225042701
+    rcv_cell_id = 'GATAAATCGGTGGATG-1'
+    active_genes[cell_id_index[rcv_cell_id]]
+    gene_exist_list = active_genes[cell_id_index[rcv_cell_id]]
+    gene_rec = 'CCR7'
+    pathway_score = pathway.pathway_expression(receptor_intra[gene_rec], gene_exist_list, TF_genes)
+    ############ some preprocessing before making the input graph
     count_total_edges = 0
     
     cells_ligand_vs_receptor = []
