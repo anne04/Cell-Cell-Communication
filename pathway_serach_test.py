@@ -15,10 +15,11 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, w
     adjacency_list = get_adjacency_list(table_info)
     protein_scores = get_bfs(adjacency_list, receptor, TF_genes)
     
-    if len(protein_score) == 0: # if no TFs are found
+    if len(protein_scores) == 0: # if no TFs are found
         return 0
         
     score = 0
+    score_log = []
     if only_TF == 1:
         total_weight = 1
         for gene in protein_scores:
@@ -27,9 +28,11 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, w
                     edge_score = protein_scores[gene][1] 
                     total_weight = total_weight + edge_score
                     score = score + gene_exist_list[gene]*edge_score # scores multiplied if available
+                    score_log.append([gene, gene_exist_list[gene], edge_score])
                 else:
                     total_weight = total_weight + 1
-                    score = score + gene_exist_list[gene]                   
+                    score = score + gene_exist_list[gene]  
+                    score_log.append([gene, gene_exist_list[gene], 1])
 
         score = score / total_weight
     else:
@@ -39,9 +42,11 @@ def pathway_expression(receptor, get_rows, gene_exist_list, TF_genes, only_TF, w
                 edge_score = protein_scores[gene][1] 
                 total_weight = total_weight + edge_score
                 score = score + gene_exist_list[gene]*edge_score # scores multiplied if available
+                score_log.append([gene, gene_exist_list[gene], edge_score])
             else:
                 total_weight = total_weight + 1
-                score = score + gene_exist_list[gene]                   
+                score = score + gene_exist_list[gene]    
+                score_log.append([gene, gene_exist_list[gene], 1])
 
         score = score / total_weight
               
@@ -59,7 +64,7 @@ def get_bfs(adjacency_list, receptor, TF_genes):
         q.append(target)
         protein_scores[target]= [hop_count, score] 
         
-    while(len(protein_scores.keys())!= total_genes):
+    while(len(protein_scores.keys())!= total_genes and len(q)>0):
         source_gene = q.popleft()
         for i in range (0, len(adjacency_list[source_gene])):
             target = adjacency_list[source_gene][i][0]
