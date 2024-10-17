@@ -23,12 +23,89 @@ import gc
 import ot
 import anndata
 import argparse
+import datetime
+start_time = datetime.datetime.now()
 
+
+options = 'PDAC' #'lymph'
+top_count = 2000 #40000
+datapoint_size = 1406 #4035
+parser = argparse.ArgumentParser()
+parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/data/notta_pdac_visium_spaceranger_outputs/exp2_D1/outs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+args = parser.parse_args()  
+
+'''parser = argparse.ArgumentParser()
+parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='Name of the dataset')  
+parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+args = parser.parse_args()  '''
+
+adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5')
+print('input data read done')
+'''gene_count_before = len(list(adata_h5.var_names) )    
+sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
+gene_count_after = len(list(adata_h5.var_names) )  
+print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+gene_ids = list(adata_h5.var_names)
+coordinates = adata_h5.obsm['spatial']'''
+cell_barcode = np.array(adata_h5.obs.index)
+
+cell_id_index = dict()
+i=0
+for cell_code in cell_barcode:
+    cell_id_index[cell_code] = i
+    i=i+1
+
+# get all the edges and their scaled scores that they use for plotting the heatmap
+df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
+edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
+coexpression_scores = []
+lig_rec_dict_all = []
+for i in range (0, datapoint_size):
+    coexpression_scores.append([])   
+    lig_rec_dict_all.append([])   
+    for j in range (0, datapoint_size):	
+        coexpression_scores[i].append([])   
+        coexpression_scores[i][j] = []
+        lig_rec_dict_all[i].append([])   
+        lig_rec_dict_all[i][j] = []
+
+distribution_all = []
+for col in range (1, len(df_pair_vs_cells.columns)):
+    print(col)
+    col_name = df_pair_vs_cells.columns[col]
+    l_c = df_pair_vs_cells.columns[col].split("—")[0]
+    r_c = df_pair_vs_cells.columns[col].split("—")[1]
+    #l_c = l_c.split('.')[1]
+    #r_c = r_c.split('.')[1]
+    i = int(cell_id_index[l_c])
+    j = int(cell_id_index[r_c])
+    
+    for index in range (0, len(df_pair_vs_cells.index)):
+        lig_rec_dict_all[i][j].append(df_pair_vs_cells.index[index])
+        coexpression_scores[i][j].append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        distribution_all.append(df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]])
+        edge_pair_dictionary[str(i)+'-'+str(j)][df_pair_vs_cells.index[index]]=df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]]
+
+
+######### read which edge belongs to which cluster type #############################
+vector_type = pd.read_csv('/cluster/home/t116508uhn/niches_VectorType_'+options+'.csv')
+clusterType_edge_dictionary = defaultdict(list)
+for index in range (0, len(vector_type.index)):
+    cell_cell_pair = vector_type['Unnamed: 0'][index]
+    l_c = cell_cell_pair.split("—")[0]
+    r_c = cell_cell_pair.split("—")[1]
+    l_c = l_c.split('.')[1]
+    r_c = r_c.split('.')[1]
+    i = int(l_c)
+    j = int(r_c)
+
+    cluster_type = vector_type['VectorType'][index]
+    clusterType_edge_dictionary[cluster_type].append(str(i)+'-'+str(j))
+    
 ######## read the top5 edges (ccc) by Niches ########################################
-datapoint_size = 
+
 attention_scores_temp = []
 lig_rec_dict_temp = []
-datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
     attention_scores_temp.append([])   
     lig_rec_dict_temp.append([])   
@@ -60,20 +137,20 @@ for index in range (0, len(marker_list.index)):
         i = int(edge.split('-')[0])
         j = int(edge.split('-')[1])
         total_edge_count = total_edge_count + 1
-        if total_edge_count > len(row_col):
-            flag_break = 1
-            break
+        #if total_edge_count > len(row_col):
+        #    flag_break = 1
+        #    break
 
         lig_rec_dict_temp[i][j].append(lr_pair_id)
         attention_scores_temp[i][j].append(ccc_score_scaled)
         distribution_temp.append(ccc_score_scaled)
 	    
  
-    if flag_break == 1:
-        break
+    #if flag_break == 1:
+    #    break
 
             
-\
+
 csv_record_final = []
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id, attention_score
 # keep only top 20% connections
@@ -89,10 +166,11 @@ for i in range (0, datapoint_size):
             if ligand == 'total':
                 continue
             if score >= top20:
+		        csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
                 csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
                 
 csv_record_final = sorted(csv_record_final, key = lambda x: x[8], reverse=True) # high to low based on 'score'
-csv_record_final = csv_record_final[0:args.top_count]
+csv_record_final = csv_record_final[0:top_count]
 ####################### pattern finding ##########################################################################
 # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
 each_node_outgoing = defaultdict(list)
@@ -156,7 +234,12 @@ chart = alt.Chart(data_list_pd).mark_bar().encode(
     y='Pattern Abundance (#)'
 )
 
-chart.save(args.data_name +'_COMMOT_pattern_distribution.html')
+chart.save(options +'_Niches_pattern_distribution.html')
+end_time = datetime.datetime.now()
+
+print('time in seconds: ', (end_time-start_time).seconds)
+
+
 ###############
 
 
