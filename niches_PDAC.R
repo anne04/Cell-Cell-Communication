@@ -9,6 +9,9 @@ library(dplyr)
 library(SeuratWrappers)
 library(NICHES)
 library(viridis)
+
+options = 'PDAC'
+
 # data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
 # data_dir <- '/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 list.files(data_dir)
@@ -68,7 +71,7 @@ mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
 
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+#write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
 
 #p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
@@ -235,6 +238,7 @@ write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_
 
 
 ############## Niches on Lymph Node #######################
+options = 'lymph'
 data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
 list.files(data_dir)
 seurat_object <- Load10X_Spatial(data.dir = data_dir)
@@ -293,7 +297,7 @@ mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
 
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+#write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
 
 
 p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
