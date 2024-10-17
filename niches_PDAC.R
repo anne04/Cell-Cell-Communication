@@ -67,6 +67,9 @@ mark.ec <- FindAllMarkers(ec.network,
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
 
+write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+
 #p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 #ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
@@ -288,6 +291,11 @@ mark.ec <- FindAllMarkers(ec.network,
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+
+write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+
+
 p <- DoHeatmap(ec.network,features = marker.list.ec$gene,cells = WhichCells(ec.network,downsample = 100))
 ggsave("/cluster/home/t116508uhn/64630/myplot.png", plot = p)
 
