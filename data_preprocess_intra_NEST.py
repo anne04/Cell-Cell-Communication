@@ -52,8 +52,8 @@ if __name__ == "__main__":
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--intra_database_path', type=str, default='database/nichenet_pathways_NEST.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--add_intra', type=int, default=1 , help='Set it to 1 for intracellular signaling pathway')
-    parser.add_argument( '--num_hops', type=int, default=5 , help='Maximum number of hops for intra signaling pathway')
-    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=50, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--num_hops', type=int, default=10 , help='Maximum number of hops for intra signaling pathway')
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=20, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     #parser.add_argument( '--species', type=str, default='Human', help='Species of the input sample')
     args = parser.parse_args() 
     
@@ -250,12 +250,14 @@ if __name__ == "__main__":
         print('Total %d receptors have knowledge graph'%count_kg) 
 
         # debug purpose
+        '''
         receptor_gene = 'CCR7'
         get_rows = []
         gene_visited = dict()
         current_hop = 0
         pathway.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop, gene_visited) # save it
         receptor_intra[receptor_gene] =  get_rows    
+        '''
     ###################################################################################
 
     # build physical distance matrix
@@ -314,10 +316,11 @@ if __name__ == "__main__":
                 if cell_vs_gene[cell][gene] >= intra_active[cell]:
                     active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
             
-            print(cell)
+            #print(cell)
 
 
     ## debug purpose ############
+    '''
     dummy_gene_list = ['CCR7'] # , 'CD247', 'LCK', 'AR']
     cell_interst = []
     for cell in range (0, cell_vs_gene.shape[0]):
@@ -347,6 +350,7 @@ if __name__ == "__main__":
         score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted)
         print(score)
         #pathway_score = pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted )   
+    '''
     ############ some preprocessing before making the input graph
     count_total_edges = 0
     
@@ -382,9 +386,12 @@ if __name__ == "__main__":
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]   
                         if args.add_intra == 1:
                             gene_exist_list = active_genes[cell]
-                            pathway_score = pathway_expression(receptor_intra[gene_rec], gene_exist_list, TF_genes)  
-                            if pathway_score>0:
-                                print('found intra!')
+                            only_TF = 1
+                            weighted = 1
+                            pathway_score = pathway.pathway_expression(gene_rec, receptor_intra[gene_rec], gene_exist_list, TF_genes, only_TF, weighted) 
+                            
+                            #if pathway_score>0:
+                            #    print('found intra!')
                             communication_score = communication_score + pathway_score
 
                         
