@@ -10,6 +10,7 @@ library(SeuratWrappers)
 library(NICHES)
 library(viridis)
 
+a = Sys.time()
 options = 'PDAC'
 
 # data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
@@ -69,6 +70,8 @@ mark.ec <- FindAllMarkers(ec.network,
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+b = Sys.time()    
+paste0(round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " Seconds")
 
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 #write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
@@ -238,6 +241,7 @@ write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_
 
 
 ############## Niches on Lymph Node #######################
+a = Sys.time()
 options = 'lymph'
 data_dir <- '/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/'
 list.files(data_dir)
@@ -295,6 +299,8 @@ mark.ec <- FindAllMarkers(ec.network,
 # Pull markers of interest to plot
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC)
+b = Sys.time()    
+paste0(round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " Seconds")
 
 write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 #write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
