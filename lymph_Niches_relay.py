@@ -24,81 +24,56 @@ import ot
 import anndata
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' , help='The path to dataset') 
-parser.add_argument( '--data_name', type=str, default='PDAC_64630', help='The name of dataset')
-parser.add_argument( '--top_count', type=int, default=1300, help='The name of dataset')
-
-args = parser.parse_args()
-
-parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/exp1_C1/outs/' , help='The path to dataset') 
-parser.add_argument( '--data_name', type=str, default='PDAC_140694', help='The name of dataset')
-parser.add_argument( '--top_count', type=int, default=2000, help='The name of dataset')
-
-args = parser.parse_args()
-
-threshold_distance = 500
-path = '/cluster/projects/schwartzgroup/fatema/CCC_project/'
-
-adata = st.Read10X(path=args.data_path, count_file='filtered_feature_bc_matrix.h5') 
-print(adata)
-
-cell_barcode = np.array(adata.obs.index)
-datapoint_size = len(cell_barcode)
-###################################################################################
-'''
-adata.var_names_make_unique()
-adata.raw = adata
-sc.pp.normalize_total(adata, inplace=True)
-sc.pp.log1p(adata)
-
-df_cellchat = ct.pp.ligand_receptor_database(species='human', signaling_type='Secreted Signaling', database='CellChat')
-df_cellchat_filtered = ct.pp.filter_lr_database(df_cellchat, adata, min_cell_pct=0.05)
-ct.tl.spatial_communication(adata, database_name='cellchat', df_ligrec=df_cellchat_filtered, dis_thr=threshold_distance, heteromeric=True, pathway_sum=True)
-print('data write')
-adata.write(path + args.data_name+"_commot_adata.h5ad")
-'''
-print('data read')
-adata = sc.read_h5ad(path + args.data_name+"_commot_adata.h5ad")
-
-attention_scores = []
-lig_rec_dict = []
-
+######## read the top5 edges (ccc) by Niches ########################################
+datapoint_size = 
+attention_scores_temp = []
+lig_rec_dict_temp = []
+datapoint_size = temp_x.shape[0]
 for i in range (0, datapoint_size):
-    attention_scores.append([])   
-    lig_rec_dict.append([])   
+    attention_scores_temp.append([])   
+    lig_rec_dict_temp.append([])   
     for j in range (0, datapoint_size):	
-        attention_scores[i].append([])   
-        attention_scores[i][j] = []
-        lig_rec_dict[i].append([])   
-        lig_rec_dict[i][j] = []
+        attention_scores_temp[i].append([])   
+        attention_scores_temp[i][j] = []
+        lig_rec_dict_temp[i].append([])   
+        lig_rec_dict_temp[i][j] = []
+        
 
-distribution = []
-LR_pair = list(adata.obsp.keys())
-print('total pairs %d'%len(LR_pair))
-for pair_index in range(0, len(LR_pair)):
-    key_pair = LR_pair[pair_index]
-    pairs = key_pair.split('-')[2:]
-    if len(pairs) < 2: # it means it is a pathway, not a LR pair
-        continue
-    print('%d, size %d, matrix %g'%(pair_index, len(distribution), np.max(adata.obsp[key_pair])))
-    
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-            if adata.obsp[key_pair][i,j]>0:
-                attention_scores[i][j].append(adata.obsp[key_pair][i,j])
-                lig_rec_dict[i][j].append(pairs[0] + '-' + pairs[1])
-                distribution.append(adata.obsp[key_pair][i,j])
+marker_list = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
+marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
+positive_class_found = 0
+distribution_temp = []
+total_edge_count = 0
+flag_break = 0
+for index in range (0, len(marker_list.index)):
+    cluster_type = marker_list['cluster'][index]
+    pair_type = marker_list['gene'][index]
+    ligand_gene = pair_type.split('—')[0]
+    receptor_gene = pair_type.split('—')[1]
+    ligand_gene = int(ligand_gene.split('g')[1])
+    receptor_gene = int(receptor_gene.split('g')[1])
+    lr_pair_id = ligand_dict_dataset[ligand_gene][receptor_gene] 
+
+    edge_list = clusterType_edge_dictionary[cluster_type]
+    for edge in edge_list:
+        ccc_score_scaled = edge_pair_dictionary[edge][lr_pair_id]
+        i = int(edge.split('-')[0])
+        j = int(edge.split('-')[1])
+        total_edge_count = total_edge_count + 1
+        if total_edge_count > len(row_col):
+            flag_break = 1
+            break
+
+        lig_rec_dict_temp[i][j].append(lr_pair_id)
+        attention_scores_temp[i][j].append(ccc_score_scaled)
+        distribution_temp.append(ccc_score_scaled)
+	    
+ 
+    if flag_break == 1:
+        break
+
             
-
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name + '_commot_result', 'wb') as fp:
-#    pickle.dump([attention_scores, lig_rec_dict, distribution], fp)            
-
-##################################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + args.data_name + '_commot_result', 'rb') as fp:
-    attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
-
+\
 csv_record_final = []
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id, attention_score
 # keep only top 20% connections
