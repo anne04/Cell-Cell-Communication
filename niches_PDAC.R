@@ -420,7 +420,7 @@ niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 #### save scaled coexpression score matrix 
 temp_matrix = GetAssayData(object = niche, slot = "scale.data") #https://satijalab.org/seurat/articles/essential_commands.html#data-access
 temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+write.csv(temp_matrix, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 ############################## print marker genes #######################################
 Idents(niche) <- niche[['ReceivingType']]
 ec.network <- niche
@@ -437,5 +437,5 @@ marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC) #
 b = Sys.time()    
 paste0(round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " Seconds") # "865.105 Seconds"
 
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_VectorType_',options,'.csv',sep=""))
