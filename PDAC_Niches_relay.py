@@ -56,7 +56,7 @@ for cell_code in cell_barcode:
     i=i+1
 
 # get all the edges and their scaled scores that they use for plotting the heatmap
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
+df_pair_vs_cells = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_output_pair_vs_cells_'+options+'.csv')
 edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
 coexpression_scores = []
 lig_rec_dict_all = []
@@ -88,7 +88,7 @@ for col in range (1, len(df_pair_vs_cells.columns)):
 
 
 ######### read which edge belongs to which cluster type #############################
-vector_type = pd.read_csv('/cluster/home/t116508uhn/niches_VectorType_'+options+'.csv')
+vector_type = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_VectorType_'+options+'.csv')
 clusterType_edge_dictionary = defaultdict(list)
 for index in range (0, len(vector_type.index)):
     cell_cell_pair = vector_type['Unnamed: 0'][index]
@@ -116,7 +116,7 @@ for i in range (0, datapoint_size):
         lig_rec_dict_temp[i][j] = []
         
 
-marker_list = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
+marker_list = pd.read_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
 marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
 positive_class_found = 0
 distribution_temp = []
@@ -234,7 +234,7 @@ chart = alt.Chart(data_list_pd).mark_bar().encode(
     y='Pattern Abundance (#)'
 )
 
-chart.save(options +'_Niches_pattern_distribution.html')
+chart.save('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/'+options +'_Niches_pattern_distribution.html')
 end_time = datetime.datetime.now()
 
 print('time in seconds: ', (end_time-start_time).seconds)
