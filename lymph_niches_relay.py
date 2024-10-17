@@ -162,8 +162,7 @@ for i in range (0, datapoint_size):
             if ligand == 'total':
                 continue
             if score >= top20:
-		        csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
-                csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
+		csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
                 
 csv_record_final = sorted(csv_record_final, key = lambda x: x[8], reverse=True) # high to low based on 'score'
 csv_record_final = csv_record_final[0:top_count]
