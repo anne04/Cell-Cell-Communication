@@ -26,14 +26,31 @@ import argparse
 import datetime
 start_time = datetime.datetime.now()
 
+lr_database = []
+lr_database_csv = pd.read_csv("/cluster/home/t116508uhn/64630/lr_cellchat_nichenet.csv", header=None)
+for index in range (0, len(lr_database_csv.index)):
+    ligand = lr_database_csv[0][index]
+    receptor = lr_database_csv[1][index]
+    lr_database.append([ligand, receptor])
+
+ligand_dict_dataset = defaultdict(dict)
+for i in range (0, len(lr_database)):
+    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+ligand_list = list(ligand_dict_dataset.keys())  
+
+
 
 options = 'lymph'
-top_count = 40000
+#top_count = 40000
 datapoint_size = 4035
-
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/data/notta_pdac_visium_spaceranger_outputs/exp2_D1/outs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
 args = parser.parse_args()  
+
+'''parser = argparse.ArgumentParser()
+parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='Name of the dataset')  
+parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+args = parser.parse_args()  '''
 
 adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5')
 print('input data read done')
@@ -90,10 +107,10 @@ for index in range (0, len(vector_type.index)):
     cell_cell_pair = vector_type['Unnamed: 0'][index]
     l_c = cell_cell_pair.split("—")[0]
     r_c = cell_cell_pair.split("—")[1]
-    l_c = l_c.split('.')[1]
-    r_c = r_c.split('.')[1]
-    i = int(l_c)
-    j = int(r_c)
+    #l_c = l_c.split('.')[1]
+    #r_c = r_c.split('.')[1]
+    i = int(cell_id_index[l_c])
+    j = int(cell_id_index[r_c])
 
     cluster_type = vector_type['VectorType'][index]
     clusterType_edge_dictionary[cluster_type].append(str(i)+'-'+str(j))
@@ -119,12 +136,13 @@ distribution_temp = []
 total_edge_count = 0
 flag_break = 0
 for index in range (0, len(marker_list.index)):
+    print(index)
     cluster_type = marker_list['cluster'][index]
     pair_type = marker_list['gene'][index]
     ligand_gene = pair_type.split('—')[0]
     receptor_gene = pair_type.split('—')[1]
-    ligand_gene = int(ligand_gene.split('g')[1])
-    receptor_gene = int(receptor_gene.split('g')[1])
+    #ligand_gene = int(ligand_gene.split('g')[1])
+    #receptor_gene = int(receptor_gene.split('g')[1])
     lr_pair_id = ligand_dict_dataset[ligand_gene][receptor_gene] 
 
     edge_list = clusterType_edge_dictionary[cluster_type]
@@ -145,7 +163,10 @@ for index in range (0, len(marker_list.index)):
     #if flag_break == 1:
     #    break
 
-            
+lig_rec_dict = lig_rec_dict_temp
+attention_scores = attention_scores_temp
+distribution = distribution_temp
+         
 
 csv_record_final = []
 # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id, attention_score
@@ -157,15 +178,15 @@ for i in range (0, datapoint_size):
         for k in range (0, len(attention_scores[i][j])):
             score = attention_scores[i][j][k]
             lr = lig_rec_dict[i][j][k]
-            ligand = lr.split('-')[0]
-            receptor = lr.split('-')[1]
+            ligand = lr_database[lr][0] # lr.split('-')[0]
+            receptor = lr_database[lr][1] #lr.split('-')[1]
             if ligand == 'total':
                 continue
             if score >= top20:
-		csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
+                csv_record_final.append([cell_barcode[i], cell_barcode[j], ligand, receptor, -1, -1, i, j, score])
                 
 csv_record_final = sorted(csv_record_final, key = lambda x: x[8], reverse=True) # high to low based on 'score'
-csv_record_final = csv_record_final[0:top_count]
+#csv_record_final = csv_record_final[0:top_count]
 ####################### pattern finding ##########################################################################
 # make a dictionary to keep record of all the outgoing edges [to_node, ligand, receptor] for each node
 each_node_outgoing = defaultdict(list)
@@ -231,6 +252,7 @@ chart = alt.Chart(data_list_pd).mark_bar().encode(
 
 chart.save('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/'+options +'_Niches_pattern_distribution.html')
 end_time = datetime.datetime.now()
+
 print('time in seconds: ', (end_time-start_time).seconds)
 
 
