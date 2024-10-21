@@ -43,14 +43,11 @@ ligand_list = list(ligand_dict_dataset.keys())
 options = 'lymph'
 #top_count = 40000
 datapoint_size = 4035
-parser = argparse.ArgumentParser()
-parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/data/notta_pdac_visium_spaceranger_outputs/exp2_D1/outs/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
-args = parser.parse_args()  
 
-'''parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
 parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='Name of the dataset')  
 parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
-args = parser.parse_args()  '''
+args = parser.parse_args()  
 
 adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5')
 print('input data read done')
