@@ -998,6 +998,8 @@ print('max local %d'%max_local)
 #print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
+if true class cells have more than N incoming, keep trues and remove others. 
+
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)#'_close'
 if noise_add == 1:
     options = options + '_lowNoise'
