@@ -348,13 +348,17 @@ for cell in range (0, len(cell_neighborhood)):
     # draw 10 cells from gaussian
     gaussian_dist = [] + np.min(distance_list)
     i = cell
+    cell_neighborhood_temp = []
     for dist_cell in gaussian_dist:
         abs_dist_cell = no.abs(dist_cell)
         for k in range(0, len(distance_list)):
             if distance_list[k]>abs_dist_cell:
                 break
-        j = dict_distVScell[distance_list[k]]
-        cell_neighborhood_temp.append([j, dist_X[i,j]])    
+
+        if k<=len(distance_list):
+            j = dict_distVScell[distance_list[k]]
+            cell_neighborhood_temp.append([j, dist_X[i,j]])    
+            pop from distance_list
 
     ############################
     
