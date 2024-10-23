@@ -423,7 +423,7 @@ temp_matrix = as.matrix(temp_matrix)
 write.csv(temp_matrix, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_relay/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 ############################## print marker genes #######################################
 Idents(niche) <- niche[['ReceivingType']]
-ec.network <- niche
+ec.network <- subset(niche,idents ='3')
 Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,
                           logfc.threshold = 1,
