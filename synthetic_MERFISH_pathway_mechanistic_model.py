@@ -332,6 +332,13 @@ for j in range(0, distance_matrix.shape[1]):
 
 	
 ################# sort the neighboring cells based distance #######################
+mu, sigma = 0, 2 # mean and standard deviation
+s = np.random.normal(mu, sigma, 1000)
+min_s = np.min(s)
+max_s = np.max(s)
+for i in s:
+    print((i-min_s)/(max_s-min_s))
+	
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
     cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance, big to small.
@@ -346,7 +353,7 @@ for cell in range (0, len(cell_neighborhood)):
         dict_distVScell[distance_matrix[i,j]].append(j)
 
     # draw 10 cells from gaussian
-    gaussian_dist = [] + np.min(distance_list)
+    gaussian_dist = np.random.normal(mu, sigma, 10) + np.min(distance_list)
     i = cell
     cell_neighborhood_temp = []
     for dist_cell in gaussian_dist:
@@ -358,7 +365,7 @@ for cell in range (0, len(cell_neighborhood)):
         if k<=len(distance_list):
             j = dict_distVScell[distance_list[k]]
             cell_neighborhood_temp.append([j, dist_X[i,j]])    
-            pop from distance_list
+            distance_list.pop(k) #pop from distance_list
 
     ############################
     
