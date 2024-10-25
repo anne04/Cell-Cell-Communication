@@ -353,13 +353,19 @@ for cell in range (0, len(cell_neighborhood)):
         dict_distVScell[distance_matrix[i,j]].append(j)
 
     # draw 10 cells from gaussian
-    gaussian_dist = np.random.normal(mu, sigma, 10) + np.min(distance_list)
+    gaussian_dist = np.random.normal(mu, sigma, 10)
+    gaussian_dist = np.abs(gaussian_dist)
+    max_dist = np.max(gaussian_dist)
+    min_dist = np.min(gaussian_dist)
+    a = min(distance_list)
+    b = max(distance_list)
+    
     i = cell
     cell_neighborhood_temp = []
     for dist_cell in gaussian_dist:
-        abs_dist_cell = no.abs(dist_cell)
+        current_dist = a + ((dist_cell-min_dist)/(max_dist-min_dist))*b
         for k in range(0, len(distance_list)):
-            if distance_list[k]>abs_dist_cell:
+            if distance_list[k]>current_dist:
                 break
 
         if k<=len(distance_list):
