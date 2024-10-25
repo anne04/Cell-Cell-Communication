@@ -910,17 +910,27 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i][j] = []
  
 count = 0
+################################
+max_incoming = 10
 available_edges_to_drop = []
+incoming_j =[]
+for i in range (0, cell_vs_gene.shape[0]):
+    incoming_j.append(0)
+###############################
+
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
         #if i in neighbour_of_actives or j in neighbour_of_actives:
         #    continue
-                
+        if incoming_j[j] > max_incoming:
+            continue
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
-            for gene_rec in rec_list:   
+            for gene_rec in rec_list: 
+                if incoming_j[j] > max_incoming:
+                    continue
                 '''
                 if i in noise_cells:
                     cell_vs_gene[i][gene_index[gene]] = cell_vs_gene[i][gene_index[gene]] + gene_distribution_noise[i]
@@ -933,6 +943,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
+                        incoming_j[j] = incoming_j[j] + 1
                         #key = str(i)+'-'+str(j)+str(gene)+'-'+str(gene_rec)
                         #if ligand_dict_dataset[gene][gene_rec] not in lig_rec_dict_TP[i][j]:
                         #    available_edges_to_drop.append([key, communication_scores])
@@ -944,6 +955,7 @@ min_score = 1000
 max_score = -1000
 count = 0
 dist = []
+  
 for i in range (0, len(lig_rec_dict_TP)):
     flag_debug = 0
     for j in range (0, len(lig_rec_dict_TP)):
@@ -963,7 +975,23 @@ for i in range (0, len(lig_rec_dict_TP)):
                 
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
+##################
+#if true class cells have more than N incoming, keep trues and remove others. 
 
+above_max_incoming_count = 0
+for j in range (0, cell_vs_gene.shape[0]):
+    incoming_j = 0
+    for i in range (0, cell_vs_gene.shape[0]):
+        #if len(lig_rec_dict_TP[i][j])==0: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                incoming_j = incoming_j + len(cells_ligand_vs_receptor[i][j])
+        
+    if incoming_j > max_incoming:
+        above_max_incoming_count = above_max_incoming_count + 1
+
+
+print(above_max_incoming_count)
+	
 #################
 
 ccc_index_dict = dict()
@@ -1012,7 +1040,6 @@ print('max local %d'%max_local)
 #print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-#if true class cells have more than N incoming, keep trues and remove others. 
 
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)+'_mechanistic'
 if noise_add == 1:
@@ -1047,6 +1074,7 @@ for i in range (0, len(lig_rec_dict_TP)):
 lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
 
+options = 'uniform_mechanistic_noise'+str(noise_percent)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
