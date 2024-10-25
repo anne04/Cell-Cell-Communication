@@ -333,12 +333,13 @@ for j in range(0, distance_matrix.shape[1]):
 	
 ################# sort the neighboring cells based distance #######################
 mu, sigma = 0, 2 # mean and standard deviation
-s = np.random.normal(mu, sigma, 1000)
+'''s = np.random.normal(mu, sigma, 1000)
 min_s = np.min(s)
 max_s = np.max(s)
+
 for i in s:
     print((i-min_s)/(max_s-min_s))
-	
+'''	
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
     cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance, big to small.
@@ -363,13 +364,13 @@ for cell in range (0, len(cell_neighborhood)):
     i = cell
     cell_neighborhood_temp = []
     for dist_cell in gaussian_dist:
-        current_dist = a + ((dist_cell-min_dist)/(max_dist-min_dist))*b
+        current_dist = a + ((dist_cell-min_dist)/(max_dist-min_dist))*(b-a)
         for k in range(0, len(distance_list)):
             if distance_list[k]>current_dist:
                 break
 
-        if k<=len(distance_list):
-            j = dict_distVScell[distance_list[k]]
+        if k<len(distance_list):
+            j = dict_distVScell[distance_list[k]][0]
             cell_neighborhood_temp.append([j, dist_X[i,j]])    
             distance_list.pop(k) #pop from distance_list
 
@@ -1011,9 +1012,9 @@ print('max local %d'%max_local)
 #print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-if true class cells have more than N incoming, keep trues and remove others. 
+#if true class cells have more than N incoming, keep trues and remove others. 
 
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)#'_close'
+options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)+'_mechanistic'
 if noise_add == 1:
     options = options + '_lowNoise'
 if noise_add == 2:
