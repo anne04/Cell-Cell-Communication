@@ -924,12 +924,12 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
             continue
         #if i in neighbour_of_actives or j in neighbour_of_actives:
         #    continue
-        if incoming_j[j] > max_incoming:
+        if incoming_j[j] >= max_incoming:
             continue
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
             for gene_rec in rec_list: 
-                if incoming_j[j] > max_incoming:
+                if incoming_j[j] >= max_incoming:
                     continue
                 '''
                 if i in noise_cells:
@@ -1040,7 +1040,7 @@ print('max local %d'%max_local)
 #print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-
+'''
 options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)+'_mechanistic'
 if noise_add == 1:
     options = options + '_lowNoise'
@@ -1054,7 +1054,7 @@ options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + 
 #options = options + '_f'
 options = options + '_3dim' + '_3patterns'+'_temp'+'_sample'+str(sample_no)
 #options = options + '_scaled'
-
+'''
 
 save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
 #lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
@@ -1503,7 +1503,7 @@ while percentage_value > 0:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('naive_model_HeavyNoise')
+    plot_dict['Type'].append('naive_model') #_HeavyNoise')
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'naive_model', 'wb') as fp: #b, b_1, a
     pickle.dump(plot_dict, fp) #a - [0:5]
