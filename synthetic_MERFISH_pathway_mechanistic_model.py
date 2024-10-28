@@ -33,7 +33,7 @@ alt.themes.enable("publishTheme")
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='synthetic_data_uniform_mechanistic_noise0', help='The name of dataset')
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
@@ -2065,9 +2065,9 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 ######### rank product ####
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
 
-for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+#for sample_name in [1, 4, 10]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
     filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-    total_runs = 10
+    total_runs = 3
     plot_dict = defaultdict(list)
     distribution_rank = []
     all_edge_sorted_by_avgrank = []
@@ -2081,11 +2081,11 @@ for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
     for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         layer = layer + 1
         csv_record_dict = defaultdict(list)
-        for run_time in range (0,total_runs):
+        for run_time in [0, 3, 9]: #range (0,total_runs):
             run = run_time
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy'
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy'
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample'+str(sample_name)+'_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+            X_attention_filename = args.embedding_data_path + args.data_name + '/synthetic_data_' + options+'_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
             distribution = []
@@ -2163,7 +2163,7 @@ for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
                         if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                             connecting_edges[i][j] = 1
                             ccc_index_dict[i] = ''
-                            c10830cc_index_dict[j] = ''
+                            ccc_index_dict[j] = ''
                             existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
                             key_value = str(i) +'-'+ str(j) + '-' + str(lig_rec_dict[i][j][k])
                             csv_record_dict[key_value].append([attention_scores[i][j][k], run])
