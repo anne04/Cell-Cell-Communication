@@ -1488,7 +1488,7 @@ while percentage_value > 0:
                         #    confusion_matrix[0][1] = confusion_matrix[0][1] + 1                 
                     else:
                         confusion_matrix[1][0] = confusion_matrix[1][0] + 1
-                        #else:
+                        #else: 
                         #    confusion_matrix[1][1] = confusion_matrix[1][1] + 1      
 
     print('%d, %g, %g'%(percentage_value, (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
