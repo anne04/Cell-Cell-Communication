@@ -182,7 +182,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 ########################################################################################
 
 noise_add = 0  #2 #1
-noise_percent = 30 # 0 #30
+noise_percent = 0 # 0 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -373,15 +373,49 @@ for j in range(0, distance_matrix.shape[1]):
                 cell_neighborhood[i].append([j, dist_X[i,j]])
 		
 	
-
+################# sort the neighboring cells based distance #######################
+mu, sigma = 0, 2 # mean and standard deviation
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
-    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance
+    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance, big to small.
+
+    ############################
+    distance_list = [] #small to high
+    dict_distVScell= defaultdict(list)
+    i = cell 
+    for items in cell_neighborhood_temp:
+        j = items[0]
+        distance_list.append(distance_matrix[i,j])
+        dict_distVScell[distance_matrix[i,j]].append(j)
+
+    # draw 10 cells from gaussian
+    gaussian_dist = np.random.normal(mu, sigma, 10)
+    gaussian_dist = np.abs(gaussian_dist)
+    max_dist = np.max(gaussian_dist)
+    min_dist = np.min(gaussian_dist)
+    a = min(distance_list)
+    b = max(distance_list)
+    
+    i = cell
+    cell_neighborhood_temp = []
+    for dist_cell in gaussian_dist:
+        current_dist = a + ((dist_cell-min_dist)/(max_dist-min_dist))*(b-a)
+        for k in range(0, len(distance_list)):
+            if distance_list[k]>current_dist:
+                break
+
+        if k<len(distance_list):
+            j = dict_distVScell[distance_list[k]][0]
+            cell_neighborhood_temp.append([j, dist_X[i,j]])    
+            distance_list.pop(k) #pop from distance_list
+
+    ############################
     
     cell_neighborhood[cell] = [] # to record the neighbor cells in that order
     for items in cell_neighborhood_temp:
         cell_neighborhood[cell].append(items[0])
     #np.random.shuffle(cell_neighborhood[cell]) 
+####################################################################################            
 ####################################################################################            
 # take lr_gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
@@ -912,6 +946,13 @@ for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor[i][j] = []
  
 count = 0
+################################
+max_incoming = 10
+available_edges_to_drop = []
+incoming_j =[]
+for i in range (0, cell_vs_gene.shape[0]):
+    incoming_j.append(0)
+###############################
 available_edges_to_drop = []
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
@@ -919,10 +960,13 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
             continue
         #if i in neighbour_of_actives or j in neighbour_of_actives:
         #    continue
-                
+        if incoming_j[j] >= max_incoming:
+            continue                
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
-            for gene_rec in rec_list:   
+            for gene_rec in rec_list: 
+                if incoming_j[j] >= max_incoming:
+                    continue
                 '''
                 if i in noise_cells:
                     cell_vs_gene[i][gene_index[gene]] = cell_vs_gene[i][gene_index[gene]] + gene_distribution_noise[i]
@@ -935,6 +979,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
+                        incoming_j[j] = incoming_j[j] + 1
                         #key = str(i)+'-'+str(j)+str(gene)+'-'+str(gene_rec)
                         #if ligand_dict_dataset[gene][gene_rec] not in lig_rec_dict_TP[i][j]:
                         #    available_edges_to_drop.append([key, communication_scores])
@@ -965,7 +1010,22 @@ for i in range (0, len(lig_rec_dict_TP)):
                 
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
+##################
+#if true class cells have more than N incoming, keep trues and remove others. 
 
+above_max_incoming_count = 0
+for j in range (0, cell_vs_gene.shape[0]):
+    incoming_j = 0
+    for i in range (0, cell_vs_gene.shape[0]):
+        #if len(lig_rec_dict_TP[i][j])==0: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                incoming_j = incoming_j + len(cells_ligand_vs_receptor[i][j])
+        
+    if incoming_j > max_incoming:
+        above_max_incoming_count = above_max_incoming_count + 1
+
+
+print(above_max_incoming_count)
 #################
 
 ccc_index_dict = dict()
@@ -1048,6 +1108,10 @@ lig_rec_dict_TP = 0
 lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 
+options = 'mixture_mechanistic_noise'+str(noise_percent)
+
+
+
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
@@ -1070,126 +1134,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     pickle.dump(cell_vs_lrgene, fp)
 
 
-#options = options+ '_' + 'wFeature'
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec, lr_database, lig_rec_dict_TP], fp)
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'quantileTransformed_communication_scores', 'wb') as fp: #b, b_1, a
-    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-    
-    
-'''   
-
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
-    pickle.dump(cell_vs_gene_notNormalized, fp)
-
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_communication_scores', 'wb') as fp: #b, b_1, a
-#    pickle.dump(cells_ligand_vs_receptor, fp) #a - [0:5]
-    
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-
-
-edge_list = []
-lig_rec_list = []
-row_col_list = []
-for index in range (0, len(row_col)):
-    i = row_col[index][0]
-    j = row_col[index][1]
-    k = lig_rec[index]
-    if edge_weight[index][1] > 0:
-        edge_list.append([edge_weight[index][0], edge_weight[index][1], k])
-        lig_rec_list.append(k)
-        row_col_list.append([i,j])
-    
-edge_weight = edge_list
-row_col = row_col_list
-lig_rec = lig_rec_list
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options+'_3dim', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)
-
-random_activation = []
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
-
-############################################################
-lig_rec_dict_TP_new = []
-datapoint_size = temp_x.shape[0]
-for i in range (0, datapoint_size): 
-    lig_rec_dict_TP_new.append([])  
-    for j in range (0, datapoint_size):	
-        lig_rec_dict_TP_new[i].append([])   
-        lig_rec_dict_TP_new[i][j] = []
-
-for i in lig_rec_dict_TP:
-    for j in lig_rec_dict_TP[i]:
-        for k in range (0, len(lig_rec_dict_TP[i][j])):
-            lig_rec_dict_TP_new[i][j].append(lig_rec_dict_TP[i][j][k])
-
-
-lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP_new)
-lig_rec_dict_TP_new = 0
-############################################################## 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
-    pickle.dump([temp_x, temp_y, ccc_region], fp)
-
-cell_vs_gene = cell_vs_gene[:,0:lr_gene_count]
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
-    pickle.dump(cell_vs_gene, fp)
-
-''' 
-
-'''
-for index in range (0, len(row_col)):
-    if lig_rec[index] == 1:
-        lig_rec[index] = 5
-        
-    elif lig_rec[index] == 5:
-        lig_rec[index] = 1
-        
-    elif lig_rec[index] == 3:
-        lig_rec[index] = 6
-        
-    elif lig_rec[index] == 6:
-        lig_rec[index] = 3
-        
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options+'_swappedLRid', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([row_col, edge_weight, lig_rec], fp)        
-        
-for i in lig_rec_dict_TP:
-    for j in lig_rec_dict_TP[i]:
-        for k in range (0, len(lig_rec_dict_TP[i][j])):
-            if lig_rec_dict_TP[i][j][k] == 1:
-                lig_rec_dict_TP[i][j][k] = 5
-            elif lig_rec_dict_TP[i][j][k] == 5:
-                lig_rec_dict_TP[i][j][k] = 1
-            elif lig_rec_dict_TP[i][j][k] == 3:
-                lig_rec_dict_TP[i][j][k] = 6
-            elif lig_rec_dict_TP[i][j][k] == 6:
-                lig_rec_dict_TP[i][j][k] = 3
-                
-a = lr_database[1]
-lr_database[1] = lr_database[5]
-lr_database[5] = a
-
-a = lr_database[3]
-lr_database[3] = lr_database[6]
-lr_database[6] = a 
-
-
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options+'_swappedLRid', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
-    pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
-                        
-'''
+################################################################################
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
@@ -1228,25 +1176,7 @@ data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_'+options+'.csv', ind
 	
 	
 ###############
-'''
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'notQuantileTransformed', 'rb') as fp:
-    cell_vs_gene = pickle.load(fp
-'''
-###########################################################
 
-'''
-2000
-gene 0, min: 0, max:13.7769 
-gene 1, min: 0, max:13.4894 
-gene 2, min: 0, max:13.7656 
-gene 3, min: 0, max:13.8944 
-gene 0, min: 22.5465, max:37.0469 
-gene 1, min: 28.4818, max:41.517 
-gene 2, min: 34.072, max:45.9164 
-gene 3, min: 38.2734, max:53.4325 
-len row col 177016
-count local 2
-'''
 
 
 ###############################################Visualization starts###################################################################################################
