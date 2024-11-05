@@ -12,8 +12,8 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 
-
+options = 'mix'
+savepath = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/'
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
@@ -68,7 +68,7 @@ niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 #### save scaled coexpression score matrix 
 temp_matrix = GetAssayData(object = niche, slot = "scale.data") #https://satijalab.org/seurat/articles/essential_commands.html#data-access
 temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+write.csv(temp_matrix, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
 ############################## print marker genes #######################################
 Idents(niche) <- niche[['ReceivingType']]
@@ -84,9 +84,9 @@ mark.ec <- FindAllMarkers(ec.network,
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC) #
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_VectorType_',options,'.csv',sep=""))
 
 #features = unique(marker.list.ec$gene)
 #write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
@@ -104,10 +104,10 @@ Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,min.pct = 0.25,only.pos = T,test.use = "roc") 
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,myAUC) #
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 # write.csv(mark.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_VectorType_',options,'.csv',sep=""))
 
 #features = unique(marker.list.ec$gene)
 #write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
@@ -133,4 +133,4 @@ mark <- FindAllMarkers(niche,min.pct = 0.25,only.pos = T,test.use = "roc")
 GOI_niche <- mark %>% group_by(cluster) %>% top_n(5,myAUC)
 
 temp_matrix = niche[['seurat_clusters.Joint_clusters']]
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
+write.csv(temp_matrix, paste('/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/niches_output_cluster_vs_cells_',options,'.csv',sep=""))
