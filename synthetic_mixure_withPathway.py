@@ -34,7 +34,7 @@ alt.themes.enable("publishTheme")
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
+parser.add_argument( '--data_name', type=str, default='synthetic_data_mixture_mechanistic_noise0', help='The name of dataset')
 parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
@@ -184,7 +184,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 noise_add = 0  #2 #1
 noise_percent = 0 # 0 #30
 random_active_percent = 0
-active_type = 'random_overlap' #'highrange_overlap' #
+active_type = 'random_overlap' #'highrange_overlap' 
 
 
 def get_data(datatype):
@@ -2056,7 +2056,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 ######### rank product ####
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
 filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 10
+total_runs = 6
 plot_dict = defaultdict(list)
 distribution_rank = []
 all_edge_sorted_by_avgrank = []
@@ -2069,9 +2069,10 @@ percentage_value = 0
 for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
-    for run_time in range (0,total_runs):
+    for run_time in [0, 3, 4, 6, 8, 9]: #range (0,total_runs):
         run = run_time
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+        X_attention_filename = args.embedding_data_path + args.data_name + '/synthetic_data_' + options+'_'+filename[run]+'_attention_l1.npy'
+	   # args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_mixture_path_knn10_lrc112_cell5000_tanh_3d_highNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
         X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
@@ -2267,7 +2268,7 @@ for percentage_value in percentage_threshold:
     TPR_value = (confusion_matrix[0][0]/positive_class)#*100
     plot_dict['FPR'].append(FPR_value)
     plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('rank_product_relu') #_lowNoise #_heavyNoise
+    plot_dict['Type'].append('rank_product') #_lowNoise #_heavyNoise
 
 #plt.hist(distribution_partial, color = 'blue', bins = int(len(distribution_partial)/5))
 #save_path = '/cluster/home/t116508uhn/64630/'
@@ -2276,7 +2277,7 @@ for percentage_value in percentage_threshold:
 #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
 #plt.clf()
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_relu_10runs', 'wb') as fp: #b, b_1, a  11to20runs
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ########### z score ################################################################
