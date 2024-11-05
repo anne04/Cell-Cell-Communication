@@ -12,7 +12,7 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
+options = 
 
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
