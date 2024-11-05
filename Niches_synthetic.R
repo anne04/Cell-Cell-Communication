@@ -12,20 +12,20 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 'mix'
+options = 'uniform_mechanistic_noise0'
 savepath = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/'
-df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
+df=read.csv(file = paste("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
   cell_x[[i]] <- df[ , i]    
 }
-df=read.csv(file = paste('/cluster/home/t116508uhn/synthetic_cell_',options,'_y.csv',sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
+df=read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_cell_',options,'_y.csv',sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
 cell_y=list()  
 for(i in 1:ncol(df)) {      
   cell_y[[i]] <- df[ , i]    
 }
 
-countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
 #temp <- SCTransform(pdac_sample)
 temp <- ScaleData(pdac_sample)
@@ -43,7 +43,7 @@ temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
 
-lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
+lr_db <- read.csv(paste("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_lr_",options,".csv",sep=""))
 NICHES_output <- RunNICHES(object = temp,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
