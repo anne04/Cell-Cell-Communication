@@ -12,7 +12,7 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 'equidistant_mechanistic_noise0' #'mixture_mechanistic_noise0' #'uniform_mechanistic_noise0'
+options = 'uniform_mechanistic_noise0' #'equidistant_mechanistic_noise0' #'mixture_mechanistic_noise0' #'uniform_mechanistic_noise0'
 savepath = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/'
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
