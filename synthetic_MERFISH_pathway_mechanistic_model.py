@@ -2060,7 +2060,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 #for sample_name in [1, 4, 10]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
     filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-    total_runs = 3
+    total_runs = 7
     plot_dict = defaultdict(list)
     distribution_rank = []
     all_edge_sorted_by_avgrank = []
@@ -2074,7 +2074,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     for l in [2, 3]: # 2 = layer 2, 3 = layer 1
         layer = layer + 1
         csv_record_dict = defaultdict(list)
-        for run_time in [0, 3, 9]: #range (0,total_runs):
+        for run_time in [0, 3, 4, 5, 6, 8, 9]: #range (0,total_runs):
             run = run_time
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy'
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy'
@@ -2283,7 +2283,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     #plt.savefig(save_path+'distribution_e_3d_tanh_'+filename[run]+'.svg', dpi=400)
     #plt.clf()
 
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs'+'_sample'+str(sample_name), 'wb') as fp: #_relu
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'rank_product_10runs', 'wb') as fp: #_relu
         pickle.dump(plot_dict, fp) #a - [0:5]
 
 ########### z score ################################################################
