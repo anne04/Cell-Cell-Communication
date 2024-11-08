@@ -181,7 +181,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 1 #0  #2 #1
+noise_add = 2 #0  #2 #1
 noise_percent = 30 # 0 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' 
@@ -1136,7 +1136,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +  options +'_
 
 ################################################################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
