@@ -2,7 +2,7 @@ import os
 #import glob
 import pandas as pd
 #import shutil
-import copy
+import copy 
 import csv
 import numpy as np
 import sys
