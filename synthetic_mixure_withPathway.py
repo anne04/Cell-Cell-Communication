@@ -2207,7 +2207,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     all_edge_sorted_by_avgrank[layer] = sorted(all_edge_avg_rank, key = lambda x: x[1]) # small rank being high attention 
 
 # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
-
+percentage_value = 100
 percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 for percentage_value in percentage_threshold:
     csv_record_intersect_dict = defaultdict(list)
@@ -2225,7 +2225,7 @@ for percentage_value in percentage_threshold:
     ###### this small block does not have any impact now ###########
     for key_value in csv_record_intersect_dict.keys():  
        if len(csv_record_intersect_dict[key_value])>1:
-           csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
+           csv_record_intersect_dict[key_value] = [np.min(csv_record_intersect_dict[key_value])]
     #######################################################
     
     existing_lig_rec_dict = []
