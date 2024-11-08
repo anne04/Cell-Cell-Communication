@@ -2189,8 +2189,8 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
 
 # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
 
-percentage_value = 10
-percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+percentage_value = 100
+percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90] # start from 10, as low rank --> high attention
 for percentage_value in percentage_threshold:
     csv_record_intersect_dict = defaultdict(list)
     for layer in range (0, 2):
@@ -2207,7 +2207,7 @@ for percentage_value in percentage_threshold:
     ###### this small block does not have any impact now ###########
     for key_value in csv_record_intersect_dict.keys():  
        if len(csv_record_intersect_dict[key_value])>1:
-           csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
+           csv_record_intersect_dict[key_value] = [np.min(csv_record_intersect_dict[key_value])] #as low is considered high rank
     #######################################################
     
     existing_lig_rec_dict = []
@@ -2216,14 +2216,19 @@ for percentage_value in percentage_threshold:
         for j in range (0, datapoint_size):	
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []    
-            
+    ccc_csv_record = []
+    ccc_csv_record.append(['from', 'to', 'lr pair', 'rank'])
     for key_value in csv_record_intersect_dict.keys():
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
         LR_pair_id = int(item[2])
         existing_lig_rec_dict[i][j].append(LR_pair_id)
+        ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
     #######################################
+    df = pd.DataFrame(ccc_csv_record) # output 4
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'.csv', index=False, header=False)
+    
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
