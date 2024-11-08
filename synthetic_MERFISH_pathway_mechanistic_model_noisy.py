@@ -141,7 +141,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 
 ########################################################################################
 
-noise_add = 1 #0  #2 #1
+noise_add = 2 #0  #2 #1
 noise_percent = 30 #30
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
@@ -963,7 +963,7 @@ for i in range (0, len(lig_rec_dict_TP)):
 lig_rec_dict_TP = 0            
 lig_rec_dict_TP = lig_rec_dict_TP_temp
 
-options = 'uniform_mechanistic_noise'+str(noise_percent)
+options = 'uniform_mechanistic_noise'+str(noise_percent)+'level'+str(noise_add)
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
@@ -988,11 +988,11 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 ###########################################################################################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +  options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" +  options +'_coordinate', 'rb') as fp:
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
 data_list_pd = pd.DataFrame(temp_x)        
