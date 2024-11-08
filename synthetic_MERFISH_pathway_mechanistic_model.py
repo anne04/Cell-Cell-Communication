@@ -2792,7 +2792,19 @@ lig_rec_dict = lig_rec_dict_temp
 attention_scores = attention_scores_temp
 distribution = distribution_temp
 negative_class = len(distribution) - positive_class_found
+###################
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(lig_rec_dict[i][j])>0:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'_Niches.csv', index=False, header=False)
+
+##################
 plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
@@ -2871,6 +2883,20 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_d
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
+###################
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(lig_rec_dict[i][j])>0:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
+
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'_COMMOT.csv', index=False, header=False)
+
+
+
 distribution = sorted(distribution, reverse=True)
 #distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
 #negative_class=len(distribution)-confusion_matrix[0][0]
@@ -2918,15 +2944,6 @@ while percentage_value > 0:
 
             #if i==j: 
             #    continue
-            ''' 
-            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
-                for k in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    else:
-                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
-
-            '''
             if len(existing_lig_rec_dict[i][j])>0:
                 for k in existing_lig_rec_dict[i][j]:   
                     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
