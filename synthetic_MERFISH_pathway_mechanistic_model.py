@@ -2887,10 +2887,10 @@ df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+option
 
 distribution = sorted(distribution, reverse=True)
 distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
-#negative_class=len(distribution)-confusion_matrix[0][0]
+negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
-percentage_value = 10
+percentage_value = 100
 while percentage_value > 0:
     percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
