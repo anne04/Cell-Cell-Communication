@@ -1033,21 +1033,6 @@ print('max local %d'%max_local)
 #print('ligand_cells %d'%len(ligand_cells))
 print('P_class %d'%P_class) 
 
-'''
-options = 'dt-'+datatype+'_lrc'+str(len(lr_database))+'_cp'+str(cell_percent)+'_noise'+str(noise_percent)+'_mechanistic'
-if noise_add == 1:
-    options = options + '_lowNoise'
-if noise_add == 2:
-    options = options + '_heavyNoise'
-
-total_cells = len(temp_x)
-
-options = options+ '_' + active_type + '_' + distance_measure  + '_cellCount' + str(total_cells)
-
-#options = options + '_f'
-options = options + '_3dim' + '_3patterns'+'_temp'+'_sample'+str(sample_no)
-#options = options + '_scaled'
-'''
 
 save_lig_rec_dict_TP = copy.deepcopy(lig_rec_dict_TP)
 #lig_rec_dict_TP = copy.deepcopy(save_lig_rec_dict_TP)
@@ -2899,7 +2884,7 @@ df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+option
 
 
 distribution = sorted(distribution, reverse=True)
-#distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
 #negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
@@ -2961,8 +2946,8 @@ while percentage_value > 0:
     plot_dict['Type'].append('COMMOT') #_lowNoise
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
-    pickle.dump(plot_dict_temp, fp) #a - [0:5]
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution_mechanistic/no_noise/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
+    pickle.dump(plot_dict, fp) #a - [0:5]
 
 
 ######################### PLOTS ################################################################################################################
