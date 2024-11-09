@@ -2871,22 +2871,23 @@ with gzip.open(path + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
-###################
+
+distribution = sorted(distribution, reverse=True)
+distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+
 ccc_csv_record = []
 ccc_csv_record.append(['from', 'to', 'lr', 'score'])
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
         if len(attention_scores[i][j])>0:
             for k in range (0, len(attention_scores[i][j])):
-                ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
+                if attention_scores[i][j][k] >= distribution[len(distribution)-1]:
+                    ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
 df = pd.DataFrame(ccc_csv_record) # output 4
-df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'_COMMOT.csv', index=False, header=False)
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution_mechanistic/no_noise/ccc_list_all_'+options+'_COMMOT.csv', index=False, header=False)
 
 
-
-distribution = sorted(distribution, reverse=True)
-distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
 negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
