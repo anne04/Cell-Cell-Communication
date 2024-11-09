@@ -2679,9 +2679,9 @@ nt.show('mygraph.html')
 #g.show('mygraph.html')
 cp mygraph.html /cluster/home/t116508uhn/64630/mygraph.html
 ######################################################## Niches ######################################################################################################################################
-
+path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/' #'/cluster/home/t116508uhn/
 # get all the edges and their scaled scores that they use for plotting the heatmap
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
+df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+options+'.csv')
 
 edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
 coexpression_scores = []
@@ -2714,7 +2714,7 @@ for col in range (1, len(df_pair_vs_cells.columns)):
 
 
 ######### read which edge belongs to which cluster type #############################
-vector_type = pd.read_csv('/cluster/home/t116508uhn/niches_VectorType_'+options+'.csv')
+vector_type = pd.read_csv(path + 'niches_VectorType_'+options+'.csv')
 clusterType_edge_dictionary = defaultdict(list)
 for index in range (0, len(vector_type.index)):
     cell_cell_pair = vector_type['Unnamed: 0'][index]
@@ -2742,7 +2742,7 @@ for i in range (0, datapoint_size):
         lig_rec_dict_temp[i][j] = []
         
 
-marker_list = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
+marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
 marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
 positive_class_found = 0
 distribution_temp = []
@@ -2760,6 +2760,8 @@ for index in range (0, len(marker_list.index)):
     #    continue
     edge_list = clusterType_edge_dictionary[cluster_type]
     for edge in edge_list:
+        if lr_pair_id not in edge_pair_dictionary[edge]:
+            continue
         ccc_score_scaled = edge_pair_dictionary[edge][lr_pair_id]
         i = int(edge.split('-')[0])
         j = int(edge.split('-')[1])
@@ -2783,7 +2785,19 @@ lig_rec_dict = lig_rec_dict_temp
 attention_scores = attention_scores_temp
 distribution = distribution_temp
 negative_class = len(distribution) - positive_class_found
+###################
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(lig_rec_dict[i][j])>0:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'_Niches.csv', index=False, header=False)
+
+##################
 plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
@@ -2858,12 +2872,31 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######################### COMMOT ###############################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
+path = '/cluster/home/t116508uhn/commot_result/' #'/cluster/projects/schwartzgroup/fatema/find_ccc/'
+with gzip.open(path + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
+
+
 distribution = sorted(distribution, reverse=True)
-#distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+
+###################
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(attention_scores[i][j])>0:
+            for k in range (0, len(attention_scores[i][j])):
+                if attention_scores[i][j][k] >= distribution[len(distribution)-1]:
+                    ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
+
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_mixed_distribution_mechanistic/no_noise/ccc_list_all_'+options+'_COMMOT.csv', index=False, header=False)
+
+
+
 negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
@@ -2880,8 +2913,8 @@ while percentage_value > 0:
             existing_lig_rec_dict[i][j] = []
 
     ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), percentage_value)
-    threshold_up =  np.percentile(sorted(distribution), 100)
+    threshold_down =  np.percentile(distribution, percentage_value)
+    threshold_up =  np.percentile(distribution, 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
     rec_dict = defaultdict(dict)
     total_edges_count = 0
@@ -2909,15 +2942,6 @@ while percentage_value > 0:
 
             #if i==j: 
             #    continue
-            ''' 
-            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
-                for k in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    else:
-                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
-
-            '''
             if len(existing_lig_rec_dict[i][j])>0:
                 for k in existing_lig_rec_dict[i][j]:   
                     if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
@@ -2934,8 +2958,9 @@ while percentage_value > 0:
     plot_dict['Type'].append('COMMOT') #_lowNoise
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_mixed_distribution_mechanistic/no_noise/" + options +'_'+'COMMOT', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
+
 
 ######################### PLOTS ################################################################################################################
 datapoint_label = []
