@@ -2890,7 +2890,7 @@ distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(r
 #negative_class=len(distribution)-confusion_matrix[0][0]
 
 plot_dict = defaultdict(list)
-percentage_value = 100
+percentage_value = 10
 while percentage_value > 0:
     percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
