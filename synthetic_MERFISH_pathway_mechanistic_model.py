@@ -2879,7 +2879,8 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######################### COMMOT ###############################################################################################################
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
+path = '/cluster/home/t116508uhn/commot_result/' #'/cluster/projects/schwartzgroup/fatema/find_ccc/'
+with gzip.open(path + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
     attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
 
 
@@ -2888,8 +2889,8 @@ ccc_csv_record = []
 ccc_csv_record.append(['from', 'to', 'lr', 'score'])
 for i in range (0, datapoint_size):
     for j in range (0, datapoint_size):
-        if len(lig_rec_dict[i][j])>0:
-            for k in range (0, len(lig_rec_dict[i][j])):
+        if len(attention_scores[i][j])>0:
+            for k in range (0, len(attention_scores[i][j])):
                 ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
 df = pd.DataFrame(ccc_csv_record) # output 4
