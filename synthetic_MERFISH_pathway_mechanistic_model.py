@@ -2754,6 +2754,8 @@ for index in range (0, len(marker_list.index)):
     #    continue
     edge_list = clusterType_edge_dictionary[cluster_type]
     for edge in edge_list:
+        if lr_pair_id not in edge_pair_dictionary[edge]:
+            continue
         ccc_score_scaled = edge_pair_dictionary[edge][lr_pair_id]
         i = int(edge.split('-')[0])
         j = int(edge.split('-')[1])
