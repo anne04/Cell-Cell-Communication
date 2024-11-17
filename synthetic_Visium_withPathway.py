@@ -171,7 +171,7 @@ ligand_list = list(ligand_dict_dataset.keys())
 ########################################################################################
 
 noise_add = 0 #2  #2 #1
-noise_percent = 30
+noise_percent = 0
 random_active_percent = 0
 active_type = 'random_overlap' #'highrange_overlap' #
 
@@ -1200,8 +1200,9 @@ count local 2
 
 
 ###############################################Visualization starts###################################################################################################
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
+noise_type = 'high_noise' #'low_noise' #'no_noise'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_" + noise_type + "_coordinate" , 'rb') as fp: #datatype
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
@@ -1214,11 +1215,11 @@ for i in range (0, datapoint_size):
 from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_"+noise_type+"_ground_truth_ccc" , 'rb') as fp:            
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+noise_type+"/equidistant_"+noise_type+"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
 
@@ -1367,7 +1368,7 @@ for i in lig_rec_dict_TP:
 ############
 
 plot_dict = defaultdict(list)
-percentage_value = 100
+percentage_value = 10 #100, 10 for ccc_list, otherwise 100
 while percentage_value > 0:
     percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
@@ -1384,6 +1385,9 @@ while percentage_value > 0:
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
     rec_dict = defaultdict(dict)
+    ccc_csv_record = []
+    ccc_csv_record.append(['from', 'to', 'lr pair', 'rank'])
+    
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
             if i==j: 
@@ -1394,9 +1398,13 @@ while percentage_value > 0:
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                     connecting_edges[i][j] = 1
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                    ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
 
     #############
+    df = pd.DataFrame(ccc_csv_record) # output 4
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type +'/ccc_list_all_'+noise_type+'_naive.csv', index=False, header=False)
+
     #positive_class = 0  
     #negative_class = 0
     confusion_matrix = np.zeros((2,2))
@@ -1981,8 +1989,10 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
 
 ######### rank product ####
-filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-total_runs = 10
+option = 'noise30level2' #'noise30level1' #'noise0'
+noise_type = 'high_noise'
+filename = ["r1", "r2", "r3", "r4", "r5"] #, "r6", "r7", "r8", "r9", "r10"]
+total_runs = 5 #10
 plot_dict = defaultdict(list)
 distribution_rank = []
 all_edge_sorted_by_avgrank = []
@@ -1998,9 +2008,13 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     csv_record_dict = defaultdict(list)
     for run_time in range (0,total_runs):
         run = run_time
-        X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_knn10_cellCount3000_3dim_3patterns_temp_' + filename[run]+'_attention_l1.npy' #split_ #dropout
+        X_attention_filename = '/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_equidistant_'+option+'_'+filename[run]+'_attention_l1'
+        with gzip.open(X_attention_filename, 'rb') as fp: 
+            X_attention_bundle = pickle.load(fp) 
+                
+        #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_knn10_cellCount3000_3dim_3patterns_temp_' + filename[run]+'_attention_l1.npy' #split_ #dropout
         #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_tanh_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-        X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
+        #X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) 
 
         distribution = []
         for index in range (0, X_attention_bundle[0].shape[1]):
@@ -2134,7 +2148,7 @@ for l in [2, 3]: # 2 = layer 2, 3 = layer 1
 
 # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
 
-percentage_value = 10
+percentage_value = 100 # for ccc list
 percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 for percentage_value in percentage_threshold:
     csv_record_intersect_dict = defaultdict(list)
@@ -2148,11 +2162,11 @@ for percentage_value in percentage_threshold:
     for i in range (0, len(all_edge_sorted_by_avgrank_layer2)):
         if all_edge_sorted_by_avgrank_layer2[i][1] <= threshold_up:
             csv_record_intersect_dict[all_edge_sorted_by_avgrank_layer2[i][0]].append(all_edge_sorted_by_avgrank_layer2[i][1])
-    '''
+'''
     ###### this small block does not have any impact now ###########
     for key_value in csv_record_intersect_dict.keys():  
-       if len(csv_record_intersect_dict[key_value])>1:
-           csv_record_intersect_dict[key_value] = [np.mean(csv_record_intersect_dict[key_value])]
+        if len(csv_record_intersect_dict[key_value])>1:
+            csv_record_intersect_dict[key_value] = [np.min(csv_record_intersect_dict[key_value])]
     #######################################################
     
     existing_lig_rec_dict = []
@@ -2161,13 +2175,22 @@ for percentage_value in percentage_threshold:
         for j in range (0, datapoint_size):	
             existing_lig_rec_dict[i].append([])   
             existing_lig_rec_dict[i][j] = []    
-            
+    
+    ccc_csv_record = []
+    ccc_csv_record.append(['from', 'to', 'lr pair', 'rank'])
+
     for key_value in csv_record_intersect_dict.keys():
         item = key_value.split('-')
         i = int(item[0])
         j = int(item[1])
         LR_pair_id = int(item[2])
         existing_lig_rec_dict[i][j].append(LR_pair_id)
+        ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
+#######################################
+    df = pd.DataFrame(ccc_csv_record) # output 4
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type +'/ccc_list_all_'+noise_type+'.csv', index=False, header=False)
+
+
     #######################################
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
