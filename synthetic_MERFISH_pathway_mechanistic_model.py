@@ -2198,7 +2198,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
 
     # now you can start roc curve by selecting top 90%, 80%, 70% edges ...so on
 
-    percentage_value = 100
+    percentage_value = 100 # when creating ccc list 
     percentage_threshold = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     for percentage_value in percentage_threshold:
         csv_record_intersect_dict = defaultdict(list)
