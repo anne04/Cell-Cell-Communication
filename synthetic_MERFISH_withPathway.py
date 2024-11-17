@@ -1235,7 +1235,9 @@ count local 2
 
 ###############################################Visualization starts###################################################################################################
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
+noise_type = 'high_noise' #'low_noise' #'no_noise'
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/" + noise_type+'/uniform_distribution_'+ noise_type +'_coordinate', 'rb') as fp: #datatype
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
@@ -1249,12 +1251,12 @@ from sklearn.metrics.pairwise import euclidean_distances
 distance_matrix = euclidean_distances(coordinates, coordinates)
 
 #####################################, random_activation
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/" + noise_type +'/uniform_distribution_'+ noise_type +'_ground_truth_ccc' , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/" + noise_type + '/uniform_distribution_'+ noise_type +'_input_graph' , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
 
@@ -1403,7 +1405,7 @@ for i in lig_rec_dict_TP:
 ############
 
 plot_dict = defaultdict(list)
-percentage_value = 100
+percentage_value = 10 #100. 10 for CCC list. Otherwise 100.
 while percentage_value > 0:
     percentage_value = percentage_value - 10
 #for percentage_value in [79, 85, 90, 93, 95, 97]:
@@ -1420,6 +1422,10 @@ while percentage_value > 0:
     threshold_up =  np.percentile(sorted(distribution), 100)
     connecting_edges = np.zeros((temp_x.shape[0],temp_x.shape[0]))
     rec_dict = defaultdict(dict)
+    #############
+    ccc_csv_record = []
+    ccc_csv_record.append(['from', 'to', 'lr pair', 'rank'])
+    #############
     for i in range (0, datapoint_size):
         for j in range (0, datapoint_size):
             if i==j: 
@@ -1430,9 +1436,12 @@ while percentage_value > 0:
                 if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                     connecting_edges[i][j] = 1
                     existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
+                    ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
 
-    #############
+#######################################
+    df = pd.DataFrame(ccc_csv_record) # output 4
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/'+ noise_type +'/ccc_list_all_'+noise_type+'_naive.csv', index=False, header=False)
     #positive_class = 0  
     #negative_class = 0
     confusion_matrix = np.zeros((2,2))
@@ -2019,11 +2028,13 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######### rank product ####
+option = 'noise30level2' #'noise30level1' #'noise0'
+noise_type = 'high_noise' #'low_noise' #'no_noise'
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
 
-for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-    filename = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"]
-    total_runs = 10
+#for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+    filename = ["r1", "r2", "r3", "r4", "r5"] #, "r6", "r7", "r8", "r9", "r10"]
+    total_runs = 5
     plot_dict = defaultdict(list)
     distribution_rank = []
     all_edge_sorted_by_avgrank = []
@@ -2039,10 +2050,14 @@ for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
+            X_attention_filename = '/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_uniform_'+option+'_'+filename[run]+'_attention_l1'
+            with gzip.open(X_attention_filename, 'rb') as fp: 
+                X_attention_bundle = pickle.load(fp) 
+            		    
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_lowNoise_temp_'+filename[run]+'_attention_l1.npy'
             #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_temp_'+filename[run]+'_attention_l1.npy'
-            X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample'+str(sample_name)+'_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
-            X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
+            #X_attention_filename = args.embedding_data_path + args.data_name + '/' + 'synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_tanh_3d_temp_sample'+str(sample_name)+'_'+filename[run]+'_attention_l1.npy' #split_ #dropout_
+            #X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
 
             distribution = []
             for index in range (0, X_attention_bundle[0].shape[1]):
@@ -2119,7 +2134,7 @@ for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
                         if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
                             connecting_edges[i][j] = 1
                             ccc_index_dict[i] = ''
-                            c10830cc_index_dict[j] = ''
+                            ccc_index_dict[j] = ''
                             existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
                             key_value = str(i) +'-'+ str(j) + '-' + str(lig_rec_dict[i][j][k])
                             csv_record_dict[key_value].append([attention_scores[i][j][k], run])
@@ -2216,7 +2231,7 @@ for sample_name in [3]: #, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
             ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
     #######################################
         df = pd.DataFrame(ccc_csv_record) # output 4
-        df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'.csv', index=False, header=False)
+        df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/'+ noise_type +'/ccc_list_all_'+noise_type+'.csv', index=False, header=False)
     
 
         #######################################
