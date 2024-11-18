@@ -1201,8 +1201,8 @@ count local 2
 
 ###############################################Visualization starts###################################################################################################
 noise_type = 'high_noise' #'low_noise' #'no_noise'
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_" + noise_type + "_coordinate" , 'rb') as fp: #datatype
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_" + noise_type + "_coordinate" , 'rb') as fp: #datatype
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
@@ -2423,9 +2423,9 @@ for index in range (0, len(list_ccc.index)):
     distribution.append(score)
 
 ######################################################## Niches ######################################################################################################################################
-
+path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/' #'/cluster/home/t116508uhn/
 # get all the edges and their scaled scores that they use for plotting the heatmap
-df_pair_vs_cells = pd.read_csv('/cluster/home/t116508uhn/niches_output_pair_vs_cells_'+options+'.csv')
+df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+options+'.csv')
 
 edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
 coexpression_scores = []
@@ -2457,79 +2457,8 @@ for col in range (1, len(df_pair_vs_cells.columns)):
         edge_pair_dictionary[str(i)+'-'+str(j)][df_pair_vs_cells.index[index]]=df_pair_vs_cells[col_name][df_pair_vs_cells.index[index]]
 
 
-
-plot_dict = defaultdict(list)
-percentage_value = 100
-while percentage_value > 0:
-    percentage_value = percentage_value - 10
-    existing_lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        existing_lig_rec_dict.append([])   
-        for j in range (0, datapoint_size):	
-            existing_lig_rec_dict[i].append([])   
-            existing_lig_rec_dict[i][j] = []
-
-    ccc_index_dict = dict()
-    threshold_down =  np.percentile(sorted(distribution), percentage_value)
-    threshold_up =  np.percentile(sorted(distribution), 100)
-    connecting_edges = np.zeros((datapoint_size, datapoint_size))
-    rec_dict = defaultdict(dict)
-    total_edges_count = 0
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-            #if i==j: 
-            #    continue
-            atn_score_list = attention_scores[i][j]
-            #print(len(atn_score_list))
-            
-            for k in range (0, len(atn_score_list)):
-                if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                    connecting_edges[i][j] = 1
-                    ccc_index_dict[i] = ''
-                    ccc_index_dict[j] = ''
-                    existing_lig_rec_dict[i][j].append(lig_rec_dict[i][j][k])
-                    total_edges_count = total_edges_count + 1
-                    
-
-
-    ############# 
-    print('total edges %d'%total_edges_count)
-    #negative_class = 0
-    confusion_matrix = np.zeros((2,2))
-    for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):
-
-            #if i==j: 
-            #    continue
-            ''' 
-            if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i]:
-                for k in range (0, len(lig_rec_dict_TP[i][j])):
-                    if lig_rec_dict_TP[i][j][k] in existing_lig_rec_dict[i][j]: #
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    else:
-                        confusion_matrix[0][1] = confusion_matrix[0][1] + 1 
-
-            '''
-            if len(existing_lig_rec_dict[i][j])>0:
-                for k in existing_lig_rec_dict[i][j]:   
-                    if i in lig_rec_dict_TP and j in lig_rec_dict_TP[i] and k in lig_rec_dict_TP[i][j]:
-                        #print("i=%d j=%d k=%d"%(i, j, k))
-                        confusion_matrix[0][0] = confusion_matrix[0][0] + 1
-                    else:
-                        confusion_matrix[1][0] = confusion_matrix[1][0] + 1                 
-             
-    print('%d, %g, %g'%(percentage_value,  (confusion_matrix[1][0]/negative_class)*100, (confusion_matrix[0][0]/positive_class)*100))    
-    FPR_value = (confusion_matrix[1][0]/negative_class)#*100
-    TPR_value = (confusion_matrix[0][0]/positive_class)#*100
-    plot_dict['FPR'].append(FPR_value)
-    plot_dict['TPR'].append(TPR_value)
-    plot_dict['Type'].append('CytoSignal') #_lowNoise
-
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'CytoSignal', 'wb') as fp: #b, b_1, a  11to20runs
-    pickle.dump(plot_dict, fp) #a - [0:5]
 ######### read which edge belongs to which cluster type #############################
-vector_type = pd.read_csv('/cluster/home/t116508uhn/niches_VectorType_'+options+'.csv')
+vector_type = pd.read_csv(path + 'niches_VectorType_'+options+'.csv')
 clusterType_edge_dictionary = defaultdict(list)
 for index in range (0, len(vector_type.index)):
     cell_cell_pair = vector_type['Unnamed: 0'][index]
@@ -2557,8 +2486,8 @@ for i in range (0, datapoint_size):
         lig_rec_dict_temp[i][j] = []
         
 
-marker_list = pd.read_csv('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
-marker_list = marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
+marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+options+'.csv')
+marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
 positive_class_found = 0
 distribution_temp = []
 total_edge_count = 0
@@ -2575,6 +2504,8 @@ for index in range (0, len(marker_list.index)):
     #    continue
     edge_list = clusterType_edge_dictionary[cluster_type]
     for edge in edge_list:
+        if lr_pair_id not in edge_pair_dictionary[edge]:
+            continue
         ccc_score_scaled = edge_pair_dictionary[edge][lr_pair_id]
         i = int(edge.split('-')[0])
         j = int(edge.split('-')[1])
@@ -2592,12 +2523,25 @@ for index in range (0, len(marker_list.index)):
 	
     if flag_break == 1:
         break
-    
+
+print('positive_class_found %d'%positive_class_found)    
 lig_rec_dict = lig_rec_dict_temp
 attention_scores = attention_scores_temp
 distribution = distribution_temp
 negative_class = len(distribution) - positive_class_found
+###################
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(lig_rec_dict[i][j])>0:
+            for k in range (0, len(lig_rec_dict[i][j])):
+                ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
 
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'_Niches.csv', index=False, header=False)
+
+##################
 plot_dict = defaultdict(list)
 percentage_value = 100
 while percentage_value > 0:
@@ -2670,7 +2614,6 @@ while percentage_value > 0:
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
     pickle.dump(plot_dict, fp) #a - [0:5]
-
 
 ######################### COMMOT ###############################################################################################################
 with gzip.open("/cluster/home/t116508uhn/commot_result/" + 'synthetic_data_'+options+'_commot_result', 'rb') as fp:
