@@ -19,166 +19,21 @@ from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
-from kneed import KneeLocator
 
 
- 
 
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument( '--data_path', type=str, default='/cluster/home/t116508uhn/64630/cellrangere/' , help='The path to dataset') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
-parser.add_argument( '--data_name', type=str, default='V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new', help='The name of dataset')
-parser.add_argument( '--generated_data_path', type=str, default='generated_data/', help='The folder to store the generated data')
 parser.add_argument( '--embedding_data_path', type=str, default='new_alignment/Embedding_data_ccc_rgcn/' , help='The path to attention') #'/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/'
 args = parser.parse_args()
 
-threshold_distance = 1.6 #2 = path equally spaced
-k_nn = 10 # #5 = h
-distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'path_equally_spaced' #'path_uniform_distribution' #
-
-'''
-distance_measure = 'knn'  #'threshold_dist' # <-----------
-datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
-'''
-cell_percent = 100 # choose at random N% ligand cells
-
-lr_gene_count = 1000 #24 #8 #100 #20 #100 #20 #50 # and 25 pairs
-rec_start = lr_gene_count//2 # 
-
-ligand_gene_list = []
-for i in range (0, rec_start):
-    ligand_gene_list.append(i)
-
-receptor_gene_list = []
-for i in range (rec_start, lr_gene_count):
-    receptor_gene_list.append(i)
-
-# ligand_gene_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-# receptor_gene_list = [22,23,24, 25, 26, 27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42, 43]
-
-
-non_lr_genes = 10000 - lr_gene_count
-# 1000/10000 = 10%
-gene_ids = []
-for i in range (0, lr_gene_count):
-    gene_ids.append(i) 
-
-gene_info=dict()
-for gene in gene_ids:
-    gene_info[gene]=''
-
-gene_index=dict()    
-i = 0
-for gene in gene_ids: 
-    gene_index[gene] = i
-    i = i+1
-
-###############################################
-lr_database = []
-for i in range (0, 12): #len(ligand_gene_list)):
-    lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
-
-ligand_dict_dataset = defaultdict(dict)
-for i in range (0, len(lr_database)):
-    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
-ligand_list = list(ligand_dict_dataset.keys())  
-
-
-# just print the lr_database
-TP_LR_genes = []
-for i in range (0, len(lr_database)):
-    print('%d: %d - %d'%(i, lr_database[i][0], lr_database[i][1]))
-    TP_LR_genes.append(lr_database[i][0])
-    TP_LR_genes.append(lr_database[i][1])
-    
-'''
-0: 0 - 22
-1: 1 - 23
-2: 2 - 24
-3: 3 - 25
-4: 4 - 26
-5: 5 - 27
-6: 6 - 28
-7: 7 - 29
-8: 8 - 30
-9: 9 - 31
-10: 10 - 32
-11: 11 - 33
-12: 12 - 34
-13: 13 - 35
-14: 14 - 36
-15: 15 - 37
-16: 16 - 38
-17: 17 - 39
-18: 18 - 40
-19: 19 - 41
-20: 20 - 42
-21: 21 - 43
-'''
-#pattern_list = [[[0, 1],[2, 3]], [[4, 5], [6, 7]]]
-
-max_lr_pair_id = 80 #len(lr_database)//2
-connection_count_max = 2 # for each pair of cells
-pattern_list = []
-i = 0
-stop_flag = 0
-while i < (len(lr_database)-connection_count_max*2):
-    pattern = []
-    j = i
-    connection_count = 0
-    while connection_count < connection_count_max:
-        pattern.append([j, j+1])
-        j = j + 2
-        connection_count = connection_count + 1
-        if j == max_lr_pair_id or j+1 == max_lr_pair_id:
-            stop_flag = 1
-            break
-            
-    i = j
-    if stop_flag==1:
-        continue
-    pattern_list.append(pattern)
-
-pattern_list = [[[0, 1], [2, 3]], [[4, 5], [6, 7]], [[8, 9], [10, 11]]]
-'''
-In [8]: pattern_list
-Out[8]: 
-[[[0, 1], [2, 3]],
- [[4, 5], [6, 7]],
- [[8, 9], [10, 11]],
- [[12, 13], [14, 15]],
- [[16, 17], [18, 19]]]
-'''
-################# Now create some arbitrary pairs that will be false positives #########
-
-for i in range (12, len(ligand_gene_list)-3):
-#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i]])
-#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+1]])
-#    lr_database.append([ligand_gene_list[i],receptor_gene_list[i+2]])
-    for j in range (0, 3):
-        lr_database.append([ligand_gene_list[i],receptor_gene_list[i+j]])
-
-ligand_dict_dataset = defaultdict(dict)
-for i in range (0, len(lr_database)):
-    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
-    
-ligand_list = list(ligand_dict_dataset.keys())  
-''''''
 
 
 ########################################################################################
-
-noise_add = 0 #2  #2 #1
-noise_percent = 0
-random_active_percent = 0
-active_type = 'random_overlap' #'highrange_overlap' #
-
-
-noise_type = 'high_noise' #'low_noise' #'no_noise'
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_" + noise_type + "_coordinate" , 'rb') as fp: #datatype
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
+noise_type = 'no_noise' #'high_noise' #'low_noise' #
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_" + noise_type + "_coordinate" , 'rb') as fp: #datatype
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
     temp_x, temp_y , ccc_region = pickle.load(fp) #
 
 datapoint_size = temp_x.shape[0]
@@ -194,6 +49,12 @@ distance_matrix = euclidean_distances(coordinates, coordinates)
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type +"/equidistant_"+noise_type+"_ground_truth_ccc" , 'rb') as fp:            
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
+
+ligand_dict_dataset = defaultdict(dict)
+for i in range (0, len(lr_database)):
+    ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
+    
+ligand_list = list(ligand_dict_dataset.keys())  
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+noise_type+"/equidistant_"+noise_type+"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
     row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
@@ -245,13 +106,12 @@ distribution = []
 for index in range (0, len(row_col)):
     i = row_col[index][0]
     j = row_col[index][1]
-    if 1==1: #lig_rec[index] in lig_rec_dict_TP[i][j]: # and lig_rec[index]==1:  
-        lig_rec_dict[i][j].append(lig_rec[index])
+    lig_rec_dict[i][j].append(lig_rec[index])
 
 
 #####################################################################################
 
-
+options = ''
 path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/' #'/cluster/home/t116508uhn/
 # get all the edges and their scaled scores that they use for plotting the heatmap
 df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+options+'.csv')
