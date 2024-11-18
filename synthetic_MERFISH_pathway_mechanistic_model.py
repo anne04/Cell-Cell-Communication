@@ -2685,7 +2685,7 @@ for i in range (0, datapoint_size):
     coexpression_scores.append([])   
     lig_rec_dict_all.append([])   
     for j in range (0, datapoint_size):	
-        coexpression_scores[i].append([])   
+        coexpression_scores[i].append([])    
         coexpression_scores[i][j] = []
         lig_rec_dict_all[i].append([])   
         lig_rec_dict_all[i][j] = []
