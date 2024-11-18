@@ -37,7 +37,7 @@ old_options = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_thres
 	      'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp']
 for sample_type in range (0, len(noise_type)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type[sample_type] +"/equidistant_" + noise_type[sample_type] + "_coordinate" , 'rb') as fp: #datatype
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
+    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ old_options  +'_xny', 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
     datapoint_size = temp_x.shape[0]
@@ -119,7 +119,7 @@ for sample_type in range (0, len(noise_type)):
 
     path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/' #'/cluster/home/t116508uhn/
     # get all the edges and their scaled scores that they use for plotting the heatmap
-    df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+options+'.csv')
+    df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+old_options[sample_type]+'.csv')
     
     edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
     coexpression_scores = []
@@ -152,7 +152,7 @@ for sample_type in range (0, len(noise_type)):
     
     
     ######### read which edge belongs to which cluster type #############################
-    vector_type = pd.read_csv(path + 'niches_VectorType_'+options[sample_type]+'.csv')
+    vector_type = pd.read_csv(path + 'niches_VectorType_'+old_options[sample_type]+'.csv')
     clusterType_edge_dictionary = defaultdict(list)
     for index in range (0, len(vector_type.index)):
         cell_cell_pair = vector_type['Unnamed: 0'][index]
@@ -180,7 +180,7 @@ for sample_type in range (0, len(noise_type)):
             lig_rec_dict_temp[i][j] = []
             
     
-    marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+options[sample_type]+'.csv')
+    marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+old_options[sample_type]+'.csv')
     marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
     positive_class_found = 0
     distribution_temp = []
@@ -295,6 +295,6 @@ for sample_type in range (0, len(noise_type)):
         plot_dict['Type'].append('Niches') #_lowNoise
     
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options[sample_type] +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + old_options[sample_type] +'_'+'Niches', 'wb') as fp: #b, b_1, a  11to20runs
         pickle.dump(plot_dict, fp) #a - [0:5]
     '''
