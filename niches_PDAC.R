@@ -184,20 +184,24 @@ write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_p
 write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
 
 ####################################### synthetic ###################################################
-options = 'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
-
-df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
+options = ''
+#'dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp'
+#'dt-randomCCC_equally_spaced_lrc105_cp100_noise0_threshold_dist_cellCount3000'
+path = '/cluster/projects/schwartzgroup/fatema/find_ccc/' #/cluster/home/t116508uhn/
+to_path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/'
+df=read.csv(file = paste(path, "synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
 cell_x=list()  
 for(i in 1:ncol(df)) {      
   cell_x[[i]] <- df[ , i]    
 }
-df=read.csv(file = paste('/cluster/home/t116508uhn/synthetic_cell_',options,'_y.csv',sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
+df=read.csv(file = paste(path, 'synthetic_cell_',options,'_y.csv',sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_y.csv', header = FALSE)
 cell_y=list()  
 for(i in 1:ncol(df)) {      
   cell_y[[i]] <- df[ , i]    
 }
+lr_db <- read.csv(paste(path, "synthetic_lr_",options,".csv",sep=""))
 
-countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+countsData <- read.csv(file = paste(path, 'synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 pdac_sample <- CreateSeuratObject(counts = countsData)
 #temp <- SCTransform(pdac_sample)
 temp <- ScaleData(pdac_sample)
@@ -215,7 +219,6 @@ temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
 
-lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
 NICHES_output <- RunNICHES(object = temp,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
@@ -240,7 +243,7 @@ niche <- RunUMAP(niche,dims = 1:10)   # same as number of pca
 #### save scaled coexpression score matrix 
 temp_matrix = GetAssayData(object = niche, slot = "scale.data") #https://satijalab.org/seurat/articles/essential_commands.html#data-access
 temp_matrix = as.matrix(temp_matrix)
-write.csv(temp_matrix, paste('/cluster/home/t116508uhn/niches_output_pair_vs_cells_',options,'.csv',sep=""))
+write.csv(temp_matrix, paste(to_path, 'niches_output_pair_vs_cells_',options,'.csv',sep=""))
 
 ############################## print marker genes #######################################
 Idents(niche) <- niche[['ReceivingType']]
@@ -256,9 +259,8 @@ mark.ec <- FindAllMarkers(ec.network,
 mark.ec$ratio <- mark.ec$pct.1/mark.ec$pct.2
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,avg_log2FC) #
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
-
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste(to_path, 'niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste(to_path,'niches_VectorType_',options,'.csv',sep=""))
 
 #features = unique(marker.list.ec$gene)
 #write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
@@ -276,10 +278,9 @@ Idents(ec.network) <- ec.network[['VectorType']]
 mark.ec <- FindAllMarkers(ec.network,min.pct = 0.25,only.pos = T,test.use = "roc") 
 
 marker.list.ec <- mark.ec %>% group_by(cluster) %>% top_n(5,myAUC) #
-write.csv(marker.list.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
+write.csv(marker.list.ec, paste(to_path, 'niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
 # write.csv(mark.ec, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_markerList_top5_',options,'.csv',sep=""))
-
-write.csv(ec.network[['VectorType']], paste('/cluster/home/t116508uhn/niches_VectorType_',options,'.csv',sep=""))
+write.csv(ec.network[['VectorType']], paste(to_path, 'niches_VectorType_',options,'.csv',sep=""))
 
 #features = unique(marker.list.ec$gene)
 #write.csv(features, paste('/cluster/home/t116508uhn/niches_output_ccc_lr_pairs_top5_',options,'.csv',sep=""))
