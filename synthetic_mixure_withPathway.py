@@ -1175,13 +1175,10 @@ data_list_pd = pd.DataFrame(data_list)
 data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_'+options+'.csv', index=False)
 	
 	
-###############
-
-
 
 ###############################################Visualization starts###################################################################################################
-option = 'noise0'
-noise_type = 'no_noise'
+option = 'noise30level2' #'noise30level1' #'noise0'
+noise_type = 'high_noise' # 'high_noise' #'low_noise' #'no_noise'
 
 with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_mixed_distribution/" + noise_type+'/mixed_distribution_'+ noise_type +'_coordinate', 'rb') as fp: #datatype
 #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options  +'_xny', 'rb') as fp: #datatype
@@ -2065,7 +2062,7 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + options +'_'
     pickle.dump(plot_dict, fp) #a - [0:5]
 
 ######### rank product ####
-
+option = 'distribution_noise30level2'
 #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
 filename = ["r1", "r2", "r3", "r4", "r5"] #, "r6", "r7", "r8", "r9", "r10"]
 total_runs = 5 #6
@@ -2081,7 +2078,7 @@ percentage_value = 0
 for l in [2, 3]: # 2 = layer 2, 3 = layer 1
     layer = layer + 1
     csv_record_dict = defaultdict(list)
-    for run_time in [0, 3, 4, 6, 8, 9]: #range (0,total_runs):
+    for run_time in range (0,total_runs):
         run = run_time
         X_attention_filename = '/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_mixed_'+option+'_'+filename[run]+'_attention_l1'
         with gzip.open(X_attention_filename, 'rb') as fp: 
@@ -2262,9 +2259,11 @@ for percentage_value in percentage_threshold:
         existing_lig_rec_dict[i][j].append(LR_pair_id)
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
     #######################################
+    '''
+    #if percentage_value == 100:
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/ccc_list_all_'+options+'.csv', index=False, header=False)
-        
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_mixed_distribution/'+ noise_type +'/ccc_list_all_'+noise_type+'.csv', index=False, header=False)
+    '''
     #######################################
     confusion_matrix = np.zeros((2,2))
     for i in range (0, datapoint_size):
