@@ -255,7 +255,7 @@ for sample_type in range (0, len(noise_type)):
     
         ## Find the rank of product
         edge_rank_dictionary = defaultdict(list)
-        # sort the all_edge_list by runs and record the rank
+        # sort the all_edge_list by runs and record the rank 
         print('total runs %d'%total_runs)
         for runs in range (0, total_runs):
             sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on score by current run and large to small
