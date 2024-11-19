@@ -87,6 +87,9 @@ for op_index in range (0, len(options_list)):
             lig_rec_dict[i].append([])   
             lig_rec_dict[i][j] = []
             
+    
+    ccc_csv_record = []
+    ccc_csv_record.append(['from', 'to', 'lr', 'score'])
 
     distribution = []
     for i in range (0, datapoint_size):
@@ -97,7 +100,12 @@ for op_index in range (0, len(options_list)):
                 attention_scores[i][j].append(cell_vs_cell['a'+str(j)][i+1])
                 lig_rec_dict[i][j].append(1)
                 distribution.append(cell_vs_cell['a'+str(j)][i+1])
+                ccc_csv_record.append([i, j, 1, cell_vs_cell['a'+str(j)][i+1]])
 
+
+    df = pd.DataFrame(ccc_csv_record) # output 4
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/ccc_list_all_'+options+'_cytoSignal.csv', index=False, header=False)
+    
 
   
     percentage_value = 10
