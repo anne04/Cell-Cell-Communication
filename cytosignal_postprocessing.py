@@ -24,7 +24,9 @@ options_list = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_thre
                 'dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000'
                ] 
 sample_type = ['equidistant_path', 'equidistant_path_lowNoise', 'equidistant_path_highNoise', 'uniform', 'uniform_lowNoise', 'uniform_highNoise', 'mixed', 'mixed_low', 'mixed_high', 'random_equi', 'random_unifrom', 'random_mixed']
-for op_index in range (0, len(options_list)):
+noise_type = ['no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise' ]
+location = ['equidistant/','equidistant/','equidistant/', 'uniform_distribution/', 'uniform_distribution/', 'uniform_distribution/', 'mixed_distribution/', 'mixed_distribution/', 'mixed_distribution/']
+for op_index in [1, 2, 6, 7, 8]: #len(options_list)):
     print('%d'%op_index)
   
     options = options_list[op_index]
@@ -104,7 +106,7 @@ for op_index in range (0, len(options_list)):
 
 
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/ccc_list_all_'+options+'_cytoSignal.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_'+location[op_index]+noise_type[op_index]+'/ccc_list_all_cytoSignal.csv', index=False, header=False)
     
 
   
