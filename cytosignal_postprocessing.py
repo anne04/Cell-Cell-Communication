@@ -95,7 +95,7 @@ for op_index in [1, 2, 6, 7, 8]: #len(options_list)):
 
     distribution = []
     for i in range (0, datapoint_size):
-        for j in range (0, datapoint_size):	 
+        for j in range (0, datapoint_size):	
             if i==j:
                 continue
             if cell_vs_cell['a'+str(j)][i+1] > 0:
