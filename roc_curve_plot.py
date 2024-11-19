@@ -16,10 +16,10 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 alt.themes.enable("publishTheme")
 
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_coordinate", 'rb') as fp: #datatype
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_no_noise_coordinate", 'rb') as fp: #datatype
     x_index, y_index , no_need = pickle.load(fp) #
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_ground_truth_ccc" , 'rb') as fp:  
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_no_noise_ground_truth_ccc" , 'rb') as fp:  
     lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
 
 # lig_rec_dict_TP has the true positive edge list. lig_rec_dict_TP[i][j] is a list of lr pairs between cell i and cell j
@@ -32,7 +32,7 @@ for i in lig_rec_dict_TP.keys():
 
 positive_class = tp # WE NEED THIS TO CALCULATE 'TRUE POSITIVE RATE'
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_input_graph" , 'rb') as fp:           
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/uniform_distribution_no_noise_input_graph" , 'rb') as fp:           
     row_col, edge_weight, lig_rec  = pickle.load(fp) 
 
 ######################### COMMOT ###############################################################################################################
@@ -51,6 +51,25 @@ with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/t
 distribution = sorted(distribution, reverse=True) # large to small
 distribution = distribution[0:len(row_col)] # keep top 21,659 edges by COMMOT. Ignore the rest.
 min_limit =  distribution[len(distribution)-1] # min score to be considered
+
+distribution = sorted(distribution, reverse=True)
+distribution = distribution[0:len(row_col)] # len(distribution) = 6634880, len(row_col)=21659
+
+ccc_csv_record = []
+ccc_csv_record.append(['from', 'to', 'lr', 'score'])
+for i in range (0, datapoint_size):
+    for j in range (0, datapoint_size):
+        if len(attention_scores[i][j])>0:
+            for k in range (0, len(attention_scores[i][j])):
+                if attention_scores[i][j][k] >= distribution[len(distribution)-1]:
+                    ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
+
+df = pd.DataFrame(ccc_csv_record) # output 4
+df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/no_noise/ccc_list_all_'+options+'_COMMOT.csv', index=False, header=False)
+
+
+
+
 
 # Find the total count of negative classes in the COMMOT result. 
 # We calculate the tp detected by COMMOT and then deduct it from total detection by COMMOT to get the negative classes. 
