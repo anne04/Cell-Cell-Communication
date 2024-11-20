@@ -21,6 +21,8 @@ from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
 
 
+#model_type = 'relu'
+model_type = 'alternative_cutoff'
 
 
 import argparse
@@ -31,10 +33,8 @@ args = parser.parse_args()
 
 
 ########################################################################################
+
 noise_type = ['no_noise', 'low_noise', 'high_noise']
-old_options = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
-	      'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
-	      'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp']
 nest_model_noise_type = ['', 'lowNoise_','heavyNoise_']
 
 for sample_type in range (0, len(noise_type)):
@@ -136,7 +136,11 @@ for sample_type in range (0, len(noise_type)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"
+            if model_type == 'relu':
+                X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"
+            elif model_type == 'alternative_cutoff':
+                X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_knn10_lrc1467_cell5000_tanh_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"
+                
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
     
             distribution = []
@@ -299,5 +303,5 @@ for sample_type in range (0, len(noise_type)):
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type[sample_type] +'/ccc_list_all_relu.csv', index=False, header=False)
-
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type[sample_type] +'/ccc_list_all_'+ model_type +'.csv', index=False, header=False)
+        
