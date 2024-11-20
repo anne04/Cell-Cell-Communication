@@ -37,8 +37,8 @@ noise_type = ['no_noise', 'low_noise', 'high_noise']
 nest_model_noise_type = ['temp', 'lowNoise_temp_v2','heavyNoise_temp_v2']
 # ls /cluster/projects/schwartzgroup/fatema/find_ccc/*synthetic_data_ccc_roc_control_model_dt-path*uni*random_overlap_knn10*
 
-for sample_type in range (2, len(noise_type)):
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+old_dataname[sample_type]+"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp_v2_xny" , 'rb') as fp: #datatype
+for sample_type in range (0, 1): #len(noise_type)):
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+old_dataname[sample_type]+"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp_xny" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
     datapoint_size = temp_x.shape[0]
@@ -51,7 +51,7 @@ for sample_type in range (2, len(noise_type)):
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/Tclass_synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+old_dataname[sample_type]+"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp_v2" , 'rb') as fp:            
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/Tclass_synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+old_dataname[sample_type]+"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp" , 'rb') as fp:            
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     
@@ -61,7 +61,7 @@ for sample_type in range (2, len(noise_type)):
         
     ligand_list = list(ligand_dict_dataset.keys())  
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/adjacency_records_synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+ old_dataname[sample_type] +"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp_v2" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/adjacency_records_synthetic_data_ccc_roc_control_model_dt-path_uniform_distribution_lrc112_cp100_"+ old_dataname[sample_type] +"_random_overlap_knn10_cellCount5000_3dim_3patterns_temp" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
         row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
         
     
@@ -136,8 +136,8 @@ for sample_type in range (2, len(noise_type)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-          
-            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_uniform_path_knn10_lrc112_cell5000_tanh_3d_"+ nest_model_noise_type[sample_type] +"_"+ filename[run]+"_attention_l1.npy"
+            #knn10 = for all. only no noise is knn
+            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_uniform_path_knn_lrc112_cell5000_tanh_3d_"+ nest_model_noise_type[sample_type] +"_"+ filename[run]+"_attention_l1.npy"
             
             #synthetic_data_ccc_roc_control_model_equiDistant_path_knn10_lrc1467_cell5000_tanh_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"   
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
