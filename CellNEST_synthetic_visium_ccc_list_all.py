@@ -118,9 +118,6 @@ for sample_type in range (0, len(noise_type)):
     
     print('read nest output %d'%sample_type)
 
-    option = 'noise30level2' #'noise30level1' #'noise0'
-    noise_type = 'high_noise' #'low_noise' #'no_noise'
-    #filename = ["r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20"]
     
     filename = ["r1", "r2", "r3", "r4", "r5"] #, "r6", "r7", "r8", "r9", "r10"]
     total_runs = 5
@@ -139,7 +136,7 @@ for sample_type in range (0, len(noise_type)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ nest_model_noise_type[index] +"temp_"+filename[run]+"_attention_l1.npy"
+            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
     
             distribution = []
