@@ -19,7 +19,7 @@ dirType = ['equidistant','uniform_distribution','mixed_distribution']
 dataType = ['equidistant','random_uniform','random_mixed']
 commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture' ]
 
-for index in range (0, len(dataType)):
+for index in range (1, len(dataType)):
     print(index)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_" +  dirType[index]  + "/" + dataType[index] + "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
@@ -69,7 +69,7 @@ for index in range (0, len(dataType)):
                         ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
     
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_'+ dataType[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_'+ dirType[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
 ########################################################################################################################################################################
 
 
