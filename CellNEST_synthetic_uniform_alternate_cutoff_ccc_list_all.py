@@ -34,7 +34,7 @@ args = parser.parse_args()
 ########################################################################################
 old_dataname = ['noise0',  'noise30_lowNoise' ,'noise30_heavyNoise']
 noise_type = ['no_noise', 'low_noise', 'high_noise']
-nest_model_noise_type = ['temp_', 'lowNoise_temp_','heavyNoise_temp_v2_']
+nest_model_noise_type = ['temp', 'lowNoise_temp_v2','heavyNoise_temp_v2']
 # ls /cluster/projects/schwartzgroup/fatema/find_ccc/*synthetic_data_ccc_roc_control_model_dt-path*uni*random_overlap_knn10*
 
 for sample_type in range (1, len(noise_type)):
