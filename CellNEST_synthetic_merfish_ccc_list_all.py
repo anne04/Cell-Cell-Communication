@@ -35,7 +35,7 @@ noise_type = ['no_noise', 'low_noise', 'high_noise']
 old_options = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
 	      'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
 	      'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp']
-nest_model_noise_type = ['', 'lowNoise_','heavyNoise_']
+nest_model_noise_type = ['temp_', 'lowNoise_temp_','heavyNoise_temp_v2_']
 
 for sample_type in range (0, len(noise_type)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_uniform_distribution/"+ noise_type[sample_type] +"/uniform_distribution_" + noise_type[sample_type] + "_coordinate" , 'rb') as fp: #datatype
@@ -136,7 +136,7 @@ for sample_type in range (0, len(noise_type)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            X_attention_filename = "synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_"+ nest_model_noise_type[sample_type] +"temp_"+filename[run]+"_attention_l1.npy"
+            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_uniform_path_th4_lrc112_cell5000_relu_3d_"+ nest_model_noise_type[sample_type]+filename[run]+"_attention_l1.npy"
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
     
             distribution = []
