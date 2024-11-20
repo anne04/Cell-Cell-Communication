@@ -35,7 +35,7 @@ args = parser.parse_args()
 old_dataname = ['noise0',  'noise30_lowNoise' ,'noise30_heavyNoise']
 noise_type = ['no_noise', 'low_noise', 'high_noise']
 nest_model_noise_type = ['', 'lowNoise_','heavyNoise_']
-# ls /cluster/projects/schwartzgroup/fatema/find_ccc/*synthetic_data_ccc_roc_control_model_dt-path_*mix*th*
+# ls /cluster/projects/schwartzgroup/fatema/find_ccc/adj*mix*th*
 for sample_type in range (0, len(noise_type)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data_ccc_roc_control_model_dt-path_mixture_of_distribution_lrc112_cp100_"+ old_dataname[sample_type] + "_random_overlap_threshold4_cellCount5000_3dim_3patterns_temp_xny" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
