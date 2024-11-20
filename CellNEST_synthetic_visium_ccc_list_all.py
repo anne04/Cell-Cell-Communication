@@ -140,7 +140,7 @@ for sample_type in range (0, len(noise_type)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ noise_type[index] +"temp_"+filename[run]+"_attention_l1.npy
+            X_attention_filename = "/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/synthetic_data_ccc_roc_control_model_equiDistant_path_th1p6_lrc1467_cell5000_relu_3d_"+ nest_model_noise_type[index] +"temp_"+filename[run]+"_attention_l1.npy
             X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # f_
     
             distribution = []
@@ -180,18 +180,7 @@ for sample_type in range (0, len(noise_type)):
     
     
             
-            #######################
-            plt.hist(distribution, color = 'blue', bins = int(len(distribution)/5))
-            save_path = '/cluster/home/t116508uhn/64630/'
-            #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_tanh_swappedLRid_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_relu_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_e_3d_gatconv_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_type6_f_3d_tanh_'+filename[run]+'.svg', dpi=400)
-            #plt.savefig(save_path+'distribution_type6_f_3d_'+filename[run]+'.svg', dpi=400)
-            plt.clf()
-    
-    
+
     
             datapoint_size = temp_x.shape[0]
     
@@ -314,5 +303,5 @@ for sample_type in range (0, len(noise_type)):
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ nest_model_noise_type[sample_type] +'/ccc_list_all.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type[sample_type] +'/ccc_list_all_relu.csv', index=False, header=False)
 
