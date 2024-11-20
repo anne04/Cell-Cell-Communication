@@ -15,16 +15,16 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
-dataType = ['equidistant','equidistant','equidistant','uniform_distribution','uniform_distribution','uniform_distribution','mixed_distribution', 'mixed_distribution', 'mixed_distribution']
-noise_type = ['no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise']
-commotResult_name = ['equidistant', 'equidistant', 'equidistant', 'uniform', 'uniform', 'uniform', 'mixture', 'mixture', 'mixture' ]
-noise_level= ['noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2']
+dirType = ['equidistant','uniform_distribution','mixed_distribution']
+dataType = ['equidistant','random_uniform','random_mixed']
+commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture' ]
+
 for index in range (6, len(dataType)):
     print(index)
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_" +  dataType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_type[index]+ "_coordinate", 'rb') as fp: #datatype
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_" +  dirType[index]  + "/" + dataType[index] + "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dataType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_type[index]+"_ground_truth_ccc" , 'rb') as fp:  
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+  dirType[index]  + "/" + dataType[index] +"_ground_truth_ccc" , 'rb') as fp:  
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     # lig_rec_dict_TP has the true positive edge list. lig_rec_dict_TP[i][j] is a list of lr pairs between cell i and cell j
@@ -37,11 +37,11 @@ for index in range (6, len(dataType)):
     
     positive_class = tp # WE NEED THIS TO CALCULATE 'TRUE POSITIVE RATE'
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dataType[index] +'/'+ noise_type[index] +"/"+ dataType[index] +"_"+noise_type[index]+"_input_graph" , 'rb') as fp:           
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+  dirType[index] +"/"+ dataType[index] +"_input_graph" , 'rb') as fp:           
         row_col, edge_weight, lig_rec  = pickle.load(fp) 
     
     ######################### COMMOT ###############################################################################################################
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/commot_result/synthetic_data_" + commotResult_name[index] + "_"+ noise_level[index]  +'_commot_result', 'rb') as fp:
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/commot_result/synthetic_data_" + commotResult_name[index]  +'_commot_result', 'rb') as fp:
         attention_scores, lig_rec_dict, distribution = pickle.load(fp)            
     
     # lig_rec_dict[i][j]=[...] # is a list of lr pairs (edges) between cell i and cell j 
@@ -69,7 +69,7 @@ for index in range (6, len(dataType)):
                         ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
     
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_'+ dataType[index] +'/'+ noise_type[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_'+ dataType[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
 ########################################################################################################################################################################
 
 
