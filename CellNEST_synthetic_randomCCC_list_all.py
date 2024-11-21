@@ -21,9 +21,6 @@ from scipy.sparse.csgraph import connected_components
 from sklearn.metrics.pairwise import euclidean_distances
 
 
-#model_type = 'relu'
-model_type = 'alternative_cutoff'
-
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -35,9 +32,9 @@ args = parser.parse_args()
 ########################################################################################
 
 nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed']
-dirType = ['type_equidistant/', 'type_mixed_distribution/', 'type_uniform_distribution/']
-dataType = ['equidistant', 'random_uniform', 'random_mixed']
-for sample_type in range (0, len(noise_type)):
+dirType = ['type_equidistant/', 'type_uniform_distribution/', 'type_mixed_distribution/', ]
+datatype = ['equidistant', 'random_uniform', 'random_mixed']
+for sample_type in range (1, len(datatype)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] + "_coordinate" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
@@ -60,7 +57,7 @@ for sample_type in range (0, len(noise_type)):
         ligand_dict_dataset[lr_database[i][0]][lr_database[i][1]] = i
         
     ligand_list = list(ligand_dict_dataset.keys())  
-    
+     
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] +"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
         row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
         
@@ -364,5 +361,5 @@ for sample_type in range (0, len(noise_type)):
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+ noise_type[sample_type] +'/ccc_list_all_'+ model_type +'.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/' + dirType[sample_type]  +datatype[sample_type]+'_ccc_list_all.csv', index=False, header=False)
         
