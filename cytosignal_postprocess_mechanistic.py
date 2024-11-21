@@ -6,7 +6,7 @@ import numpy as np
 import altair as alt
 
 
-datapoint_size_list = [3000, 3000, 5000]
+datapoint_size_list = [3000, -1, -1, 3000, -1, -1,  5000]
 options_list = ['equidistant_mechanistic_noise0', '', '', 'uniform_mechanistic_noise0', '', '', 'mixture_mechanistic_noise0', '', ''] 
 dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/' ]
 noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
@@ -22,7 +22,7 @@ for sample_type in [0, 3, 6]: #len(options_list)):
     fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth_ccc" , 'rb')  # at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
       
-    datapoint_size = datapoint_size_list[op_index]
+    datapoint_size = datapoint_size_list[sample_type]
     total_type = np.zeros((len(lr_database)))
     count = 0
     for i in range (0, datapoint_size):
