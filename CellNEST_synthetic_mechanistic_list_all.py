@@ -364,4 +364,4 @@ for sample_type in [0, 3, 6]: #range (0, len(datatype)):
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
     df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +'_ccc_list_all.csv', index=False, header=False)
-        
+         
