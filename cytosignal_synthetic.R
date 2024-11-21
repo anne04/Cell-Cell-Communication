@@ -19,6 +19,11 @@ library(Matrix)
 #options = 'dt-randomCCC_uniform_distribution_lrc105_cp100_noise0_threshold_dist_cellCount5000'
 #options = 'dt-randomCCC_mix_distribution_lrc105_cp100_noise0_knn_cellCount5000'
 
+#options = 'equidistant_mechanistic_noise0'
+#options = 'uniform_mechanistic_noise0'
+options = 'mixture_mechanistic_noise0'
+
+
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
 countsData <- as.matrix(countsData)
 
@@ -115,7 +120,7 @@ nn.graph <- csData@imputation[[lig.slot]]@nn.graph #4623 x 4623 sparse Matrix of
 write.csv(as.matrix(nn.graph), paste('/cluster/projects/schwartzgroup/fatema/cytosignal/cell_cell_score_',options,'.csv',sep=""))
 write.csv(names(allIntrs), paste('/cluster/projects/schwartzgroup/fatema/cytosignal/ccc_name_',options,'.csv',sep=""))
 
-
+### no need of below ###
 i_list <- list()
 j_list <- list()
 score_list <- list()
