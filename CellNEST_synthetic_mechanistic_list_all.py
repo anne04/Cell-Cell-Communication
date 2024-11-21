@@ -32,10 +32,12 @@ args = parser.parse_args()
 ########################################################################################
 
 nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed']
-dirType = ['type_equidistant/', 'type_uniform_distribution/', 'type_mixed_distribution/', ]
-datatype = ['equidistant', 'random_uniform', 'random_mixed']
+dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/' ]
+noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
+datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
+noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
 for sample_type in range (1, len(datatype)):
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] + "_coordinate" , 'rb') as fp: #datatype
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir+ datatype[sample_type] + +"_coordinate" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
     datapoint_size = temp_x.shape[0]
