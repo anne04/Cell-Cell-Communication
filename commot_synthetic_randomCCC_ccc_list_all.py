@@ -19,7 +19,7 @@ dirType = ['equidistant','uniform_distribution','mixed_distribution']
 dataType = ['equidistant','random_uniform','random_mixed']
 commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture' ]
 
-for index in range (1, len(dataType)):
+for index in range (2, len(dataType)):
     print(index)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_" +  dirType[index]  + "/" + dataType[index] + "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
