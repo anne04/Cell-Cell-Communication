@@ -73,6 +73,7 @@ if __name__ == "__main__":
     parser.add_argument( '--filter_by_annotation', type=str, default='', help='Set cell or spot type, e.g., --filter_by_annotation="T-cell" if you want to filter the CCC')
     parser.add_argument( '--filter_by_component', type=int, default=-1, help='Set component id, e.g., --filter_by_component=9 if you want to filter by component id')
     parser.add_argument( '--histogram_attention_score', type=int, default=-1, help='Set --histogram_attention_score=1 if you want to sort the histograms of CCC by attention score')
+    parser.add_argument( '--mad_score', type=float, default=-1, help='Set --mad_score to filter out only ccc that has deviation from median attention score = mad_score')
     
     
     
