@@ -2,6 +2,7 @@ print('package loading')
 import numpy as np
 import csv
 import pickle
+import statistics
 from scipy import sparse
 import scipy.io as sio
 import scanpy as sc 
@@ -303,6 +304,7 @@ if __name__ == "__main__":
     ################################################################################
     csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
     
+    ################################################################################
         
     combined_score_distribution = []
     csv_record = []
@@ -321,16 +323,17 @@ if __name__ == "__main__":
     
             
     print('common LR count %d'%len(csv_record))
-    ############################# p value generation #################################
-
     
     ##### scale the attention scores from 0 to 1 : high score representing higher attention ########
     score_distribution = []
     for k in range (1, len(csv_record)):
         score_distribution.append(csv_record[k][8])
 
+    
+    lowest_attention_score = np.min(score_distribution)
     skewness_distribution = skew(score_distribution)
-    median_distribution = median_abs_deviation(score_distribution)
+    MAD = median_abs_deviation(score_distribution)
+    median_distribution = statistics.median(data1)
     
     min_score = np.min(score_distribution)
     max_score = np.max(score_distribution)
@@ -350,11 +353,49 @@ if __name__ == "__main__":
         csv_record_final.append(csv_record[k])
     
     
-    
         
     df = pd.DataFrame(csv_record_final) # output 4
     df.to_csv(args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent.csv', index=False, header=False)
+   
+############### skewness plot ##############
+    percentage_value = 100 #20 ##100 #20 # top 20th percentile rank, low rank means higher attention score
+    csv_record_intersect_dict = defaultdict(list)
+    edge_score_intersect_dict = defaultdict(list)
+    for layer in range (0, 2):
+        threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
+        for i in range (0, len(all_edge_sorted_by_rank[layer])):
+            if all_edge_sorted_by_rank[layer][i][1] <= threshold_up: # because, lower rank means higher strength
+                csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i+1) # already sorted by rank. so just use i as the rank 
+                edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2]) # score
+    ###########################################################################################################################################
+    ## get the aggregated rank for all the edges ##
+    distribution_score = []
+    for key_value in csv_record_intersect_dict.keys():  
+        arg_index = np.argmin(csv_record_intersect_dict[key_value]) # layer 0 or 1, whose rank to use # should I take the avg rank instead, and scale the ranks (1 to count(total_edges)) later? 
+        csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # use that rank. smaller rank being the higher attention
+        edge_score_intersect_dict[key_value] = edge_score_intersect_dict[key_value][arg_index] # use that score
+        distribution_score.append(csv_record_intersect_dict[key_value]) 
+    
+    # plot the distribution    
+    df = pd.DataFrame(distribution_score)    
+    chart = alt.Chart(df).transform_density(
+            'attention_score',
+            as_=['attention_score', 'density'],
+        ).mark_area().encode(
+            x="attention_score:Q",
+            y='density:Q',
+        )
+
+    chart.save(args.output_path + args.model_name+'_attention_score_distribution.html')  
+
     # write the skewness and MAD value in a text file
+    # Opening a file
+    file1 = open(args.output_path + args.model_name+'_statistics.txt', 'w')
+    L = ["Median Absolute Deviation (MAD):"+str(MAD)+"\n", "Skewness: "+str(skewness_distribution) +" \n"]    
+    # Writing multiple strings
+    file1.writelines(L)
+    # Closing file
+    file1.close()
     
     
 
