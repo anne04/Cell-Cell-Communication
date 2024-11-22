@@ -428,7 +428,7 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
         pickle.dump(self_loop_found, fp)
 
-    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:  
+    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:   
         pickle.dump(barcode_info, fp)
     
     ################## required for the nest interactive version ###################
