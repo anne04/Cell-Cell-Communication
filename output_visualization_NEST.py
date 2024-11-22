@@ -217,7 +217,10 @@ if __name__ == "__main__":
                 ligand = (args.filter_by_ligand_receptor).split('-')[0]
                 receptor = (args.filter_by_ligand_receptor).split('-')[1]
                 if csv_record_final[record_idx][2] == ligand and csv_record_final[record_idx][3] == receptor:
-                    csv_record_final_temp.append(csv_record_final[record_idx])                  
+                    csv_record_final_temp.append(csv_record_final[record_idx]) 
+            elif args.mad_score!=-1:
+                if csv_record_final[record_idx][9] <= args.mad_score:
+                    csv_record_final_temp.append(csv_record_final[record_idx])
             else: # if no 'filter by' options are provided by mistake 
                 csv_record_final_temp.append(csv_record_final[record_idx])
             
