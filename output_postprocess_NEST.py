@@ -421,29 +421,35 @@ if __name__ == "__main__":
         )
 
     chart.save(args.output_path + args.model_name+'_attention_score_distribution.html')  
-  
     skewness_distribution = skew(score_distribution)
-    MAD = median_abs_deviation(score_distribution)
-    median_distribution = statistics.median(score_distribution)
-    for k in range (1, len(csv_record)):    
-        csv_record[k][9] = np.abs(median_distribution-csv_record[k][8])
-    
-    
-    ##### save the file for downstream analysis ########
-    csv_record_final = []
-    csv_record_final.append(csv_record[0])
-    for k in range (1, len(csv_record)):
-        if args.cutoff_z_score !=-1 and csv_record[k][8] has z score:       
-            csv_record_final.append(csv_record[k])
-        elif args.cutoff_MAD !=-1 and csv_record[k][8] is less than MAD score:       
-            csv_record_final.append(csv_record[k])
-    
+
+    ###########
+    if args.cutoff_MAD !=-1:
+        MAD = median_abs_deviation(score_distribution)
+        median_distribution = statistics.median(score_distribution)
+        for k in range (1, len(csv_record)):    
+            csv_record[k][9] = np.abs(median_distribution-csv_record[k][8])
         
-    df = pd.DataFrame(csv_record_final) # output 4
-    if args.cutoff_z_score !=-1
-        df.to_csv(args.output_path + args.model_name+'_z_score_cutoff.csv', index=False, header=False)
-    elif args.cutoff_MAD !=-1:
+        csv_record_final = []
+        csv_record_final.append(csv_record[0])
+        for k in range (1, len(csv_record)):
+            if csv_record[k][9] <= MAD:       
+                csv_record_final.append(csv_record[k])
+    
+        df = pd.DataFrame(csv_record_final) # output 4
         df.to_csv(args.output_path + args.model_name+'_MAD_cutoff.csv', index=False, header=False)
+        
+    ##### save the file for downstream analysis ########
+    if cutoff_z_score !=-1:
+        csv_record_final = []
+        csv_record_final.append(csv_record[0])
+        for k in range (1, len(csv_record)):
+            if args.cutoff_z_score !=-1 and csv_record[k][8] has z score:       
+                csv_record_final.append(csv_record[k])
+    
+        df = pd.DataFrame(csv_record_final) # output 4
+        df.to_csv(args.output_path + args.model_name+'_z_score_cutoff.csv', index=False, header=False)
+        
     ###########################################################################################################################################
     
     # plot the distribution    
