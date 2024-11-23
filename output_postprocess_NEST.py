@@ -441,10 +441,11 @@ if __name__ == "__main__":
         
     ##### save the file for downstream analysis ########
     if cutoff_z_score !=-1:
+        z_score_distribution = stats.zscore(score_distribution)
         csv_record_final = []
         csv_record_final.append(csv_record[0])
         for k in range (1, len(csv_record)):
-            if args.cutoff_z_score !=-1 and csv_record[k][8] has z score:       
+            if z_score_distribution[k-1] >= args.cutoff_z_score:       
                 csv_record_final.append(csv_record[k])
     
         df = pd.DataFrame(csv_record_final) # output 4
