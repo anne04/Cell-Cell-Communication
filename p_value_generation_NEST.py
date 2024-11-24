@@ -51,6 +51,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ######################### read the NEST output in csv format ####################################################
+    args.metadata_from = args.metadata_from + args.data_name + '/'
+    args.data_from = args.data_from + args.data_name + '/'
+    args.embedding_path  = args.embedding_path + args.data_name + '/'
+    args.output_path = args.output_path + args.data_name + '/'
+    if not os.path.exists(args.output_path):
+        os.makedirs(args.output_path)
+
+##################### get metadata: barcode_info ################################## 
+
+    with gzip.open(args.metadata_from +args.data_name+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
+        barcode_info = pickle.load(fp)
+    
+    with gzip.open(args.data_from + args.data_name + '_adjacency_records', 'rb') as fp:  #b, a:[0:5]  _filtered 
+        row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
+    
+    lig_rec_db = defaultdict(dict)
+    for i in range (0, len(edge_weight)):
+        lig_rec_db[lig_rec[i][0]][lig_rec[i][1]] =  edge_weight[i][2]   
+
+    
+
+
+    ##########################################
     if args.top_ccc_file == '':
         inFile = args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent.csv'
         df = pd.read_csv(inFile, sep=",")
@@ -60,13 +83,22 @@ if __name__ == "__main__":
 
     csv_record = df
     # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id,  attention_score 
+    cell_cell_lr_score = defaultdict(dict)
     for record in range (1, len(csv_record)-1):
         i = csv_record[record][6]
         j = csv_record[record][7]
         ligand_gene = csv_record[record][2]
         receptor_gene = csv_record[record][3]
-        lr_pair_id = 
-
+        lr_pair_id = lig_rec_db[ligand_gene][receptor_gene]
+        if i in cell_cell_lr_score:
+            if j in cell_cell_lr_score[i]: 
+                cell_cell_lr_score[i][j][lr_pair_id] = csv_record[record][8]
+            else:
+                cell_cell_lr_score[i][j] = dict()
+                cell_cell_lr_score[i][j][lr_pair_id] = csv_record[record][8]
+        else:
+            
+                
 
     
     ####################################################################
