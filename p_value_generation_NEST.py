@@ -102,9 +102,13 @@ if __name__ == "__main__":
     cell_cell_lr_score_shuffled = defaultdict(dict)
     for shuffle_time in range (0, args.N):
         ## permutate edge feature vector
-        random.shuffle(edge_weight)
+        edge_weight_temp = copy.deepcopy(edge_weight)
+        random.shuffle(edge_weight_temp)
         # reassign the first 2 dimensions = distance and coexpression. Not changing the 3rd dimension (lr pair) because we may not get any value
         # if that is not found between these two cells during edge shuffling
+        for i in range (0, len(row_col)):
+            edge_weight[i][0] = edge_weight_temp[i][0]
+            edge_weight[i][1] = edge_weight_temp[i][1]
         # save edge_weight as a temp
          with gzip.open(args.data_from + args.data_name + '_adjacency_records_shuffled', 'wb') as fp:  #b, a:[0:5]  _filtered 
             pickle.dump([row_col, edge_weight, lig_rec, total_num_cell],fp)
@@ -132,6 +136,10 @@ if __name__ == "__main__":
                 cell_cell_lr_score_shuffled[i][j] = dict()
                 cell_cell_lr_score_shuffled[i][j][lr_pair_id] = csv_record[record][8]
            
+    ######################## N times done. Now assign P values ##############################
+    # for each i and j cells, for each k lr_pair, find how many times the attention score was 
+    # above the original attention score recorded in cell_cell_lr_score
+    
     
     ####################################################################
     # ligand - receptor database 
