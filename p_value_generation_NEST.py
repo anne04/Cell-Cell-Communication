@@ -130,16 +130,27 @@ if __name__ == "__main__":
                 if j in cell_cell_lr_score_shuffled[i]: 
                     cell_cell_lr_score_shuffled[i][j][lr_pair_id] = csv_record[record][8]
                 else:
-                    cell_cell_lr_score_shuffled[i][j] = dict()
-                    cell_cell_lr_score_shuffled[i][j][lr_pair_id] = csv_record[record][8]
+                    cell_cell_lr_score_shuffled[i][j] = deafultdict(list)
+                    cell_cell_lr_score_shuffled[i][j][lr_pair_id].append(csv_record[record][8])
             else:
-                cell_cell_lr_score_shuffled[i][j] = dict()
-                cell_cell_lr_score_shuffled[i][j][lr_pair_id] = csv_record[record][8]
+                cell_cell_lr_score_shuffled[i][j] = defeaultdict(list)
+                cell_cell_lr_score_shuffled[i][j][lr_pair_id].append(csv_record[record][8])
            
     ######################## N times done. Now assign P values ##############################
     # for each i and j cells, for each k lr_pair, find how many times the attention score was 
     # above the original attention score recorded in cell_cell_lr_score
-    
+    for i in cell_cell_lr_score:
+        for j in cell_cell_lr_score[i]:
+            for lr_pair in cell_cell_lr_score[i][j]:
+                original_score = cell_cell_lr_score[i][j][lr_pair]
+                # how many times higher
+                count_higher
+                for atn_score in cell_cell_lr_score[i][j][lr_pair]:
+                    if atn_score > original_score:
+                        count_higher = count_higher + 1
+                        
+                cell_cell_lr_score[i][j][lr_pair] = count_higher/N # p value
+        
     
     ####################################################################
     # ligand - receptor database 
