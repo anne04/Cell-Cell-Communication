@@ -3,51 +3,28 @@ import numpy as np
 import csv
 import pickle
 import statistics
-from scipy import sparse
-import scipy.io as sio
-import scanpy as sc 
-import matplotlib
-matplotlib.use('Agg')
-#matplotlib.use('TkAgg') 
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
-#from typing import List
-import qnorm
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
-from scipy.stats import median_abs_deviation
-from scipy.stats import skew
 from collections import defaultdict
 import pandas as pd
 import gzip
-#from kneed import KneeLocator
 import copy 
 import argparse
 import gc
 import os
-
+import subprocess
 
 # load the NEST detected results
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--data_name', type=str, help='The name of dataset', required=True) # 
     parser.add_argument( '--model_name', type=str, help='Name of the trained model', required=True)
-    parser.add_argument( '--top_edge_count', type=int, default=1500 ,help='Number of the top communications to plot. To plot all insert -1') # 
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')    
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--output_path', type=str, default='output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--barcode_info_file', type=str, default='', help='Path to load the barcode information file produced during data preprocessing step')
-    parser.add_argument( '--annotation_file_path', type=str, default='', help='Path to load the annotation file in csv format (if available) ')
-    parser.add_argument( '--selfloop_info_file', type=str, default='', help='Path to load the selfloop information file produced during data preprocessing step')
     parser.add_argument( '--top_ccc_file', type=str, default='', help='Path to load the selected top CCC file produced during data postprocessing step')
     parser.add_argument( '--output_name', type=str, default='', help='Output file name prefix according to user\'s choice')
-    parser.add_argument( '--filter', type=int, default=0, help='Set --filter=-1 if you want to filter the CCC')
-    parser.add_argument( '--filter_by_ligand_receptor', type=str, default='', help='Set ligand-receptor pair, e.g., --filter_by_ligand_receptor="CCL19-CCR7" if you want to filter the CCC by LR pair')
-    parser.add_argument( '--filter_by_annotation', type=str, default='', help='Set cell or spot type, e.g., --filter_by_annotation="T-cell" if you want to filter the CCC')
-    parser.add_argument( '--filter_by_component', type=int, default=-1, help='Set component id, e.g., --filter_by_component=9 if you want to filter by component id')
-    parser.add_argument( '--histogram_attention_score', type=int, default=-1, help='Set --histogram_attention_score=1 if you want to sort the histograms of CCC by attention score')
-    parser.add_argument( '--mad_score', type=float, default=-1, help='Set --mad_score to filter out only ccc that has deviation from median attention score = mad_score')    
+    parser.add_argument( '--N', type=int, default=10000, help='Number of times to run the model for P-value generation')  
+    parser.add_argument( '--p_value_cutoff', type=float, default=0.05, help='P value cutoff for filtering the ccc')  
     args = parser.parse_args()
 
     ######################### read the NEST output in csv format ####################################################
@@ -67,9 +44,6 @@ if __name__ == "__main__":
     lig_rec_db = defaultdict(dict)
     for i in range (0, len(edge_weight)):
         lig_rec_db[lig_rec[i][0]][lig_rec[i][1]] =  edge_weight[i][2]   
-
-    
-
 
     ##########################################
     if args.top_ccc_file == '':
@@ -110,14 +84,19 @@ if __name__ == "__main__":
             edge_weight[i][0] = edge_weight_temp[i][0]
             edge_weight[i][1] = edge_weight_temp[i][1]
         # save edge_weight as a temp
-         with gzip.open(args.data_from + args.data_name + '_adjacency_records_shuffled', 'wb') as fp:  #b, a:[0:5]  _filtered 
+         with gzip.open(args.data_from + args.data_name+'_shuffled' + '_adjacency_records', 'wb') as fp:  #b, a:[0:5]  _filtered 
             pickle.dump([row_col, edge_weight, lig_rec, total_num_cell],fp)
-        # run the model 3 times
+             
+        # run the model 3 times, first two asynchronous and 3rd one synchronous
+        subprocess.Popen(["bash", "nest", "run", "--data_name="+args.data_name+'_shuffled', "--num_epoch=60000", "--model_name="+args.model_name+'_shuffled', "--run_id=1"], stdout="output_"+args.data_name+'_shuffled'+"_run1.log" )
+        subprocess.Popen(["bash", "nest", "run", "--data_name="+args.data_name+'_shuffled', "--num_epoch=60000", "--model_name="+args.model_name+'_shuffled', "--run_id=2"], stdout="output_"+args.data_name+'_shuffled'+"_run2.log" )
+        subprocess.run(["bash", "nest", "run", "--data_name="+args.data_name+'_shuffled', "--num_epoch=60000", "--model_name="+args.model_name+'_shuffled', "--run_id=3"], stdout="output_"+args.data_name+'_shuffled'+"_run3.log" )
        
         # postprocess results
+        subprocess.run(["bash", "nest", "postprocess", "--data_name="+args.data_name+'_shuffled', "--model_name="+args.model_name+'_shuffled', "--total_runs=3"], stdout="output_"+args.data_name+'_shuffled'+"_postproc.log" )
 
         # read it and get the values
-        inFile = args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent_temporary.csv'
+        inFile = args.output_path + args.model_name+'_shuffled'+'_top' + str(args.top_percent) + 'percent_temporary.csv'
         df = pd.read_csv(inFile, sep=",")    
         csv_record = df
         for record in range (1, len(csv_record)-1):
@@ -163,6 +142,13 @@ if __name__ == "__main__":
         receptor_gene = csv_record[record][3]
         lr_pair_id = lig_rec_db[ligand_gene][receptor_gene]
         csv_record[0].append(cell_cell_lr_score[i][j][lr_pair_id])
+
+    csv_record_final = []
+    csv_record_final.append(csv_record[0])
+    for record in range (1, len(csv_record)-1):
+        if csv_record[record][9] >= args.p_value_cutoff:
+            csv_record_final.append(csv_record[record])
+
     
-    df = pd.DataFrame(csv_record) 
-    df.to_csv(args.output_path + args.model_name+'_ccc_pvalue.csv', index=False, header=False)
+    df = pd.DataFrame(csv_record_final) 
+    df.to_csv(args.output_path + args.model_name+'_ccc_pvalue_filtered.csv', index=False, header=False)
