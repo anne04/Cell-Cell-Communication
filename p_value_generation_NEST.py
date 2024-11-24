@@ -74,12 +74,12 @@ if __name__ == "__main__":
     ##########################################
     if args.top_ccc_file == '':
         inFile = args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent.csv'
-        df = pd.read_csv(inFile, sep=",")
+        df_org = pd.read_csv(inFile, sep=",")
     else: 
         inFile = args.top_ccc_file
-        df = pd.read_csv(inFile, sep=",")
+        df_org = pd.read_csv(inFile, sep=",")
 
-    csv_record = df
+    csv_record = df_org
     # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id,  attention_score 
     cell_cell_lr_score = defaultdict(dict)
     for record in range (1, len(csv_record)-1):
@@ -144,64 +144,25 @@ if __name__ == "__main__":
             for lr_pair in cell_cell_lr_score[i][j]:
                 original_score = cell_cell_lr_score[i][j][lr_pair]
                 # how many times higher
-                count_higher
-                for atn_score in cell_cell_lr_score[i][j][lr_pair]:
+                count_higher = 0
+                for atn_score in cell_cell_lr_score_shuffled[i][j][lr_pair]:
                     if atn_score > original_score:
                         count_higher = count_higher + 1
                         
-                cell_cell_lr_score[i][j][lr_pair] = count_higher/N # p value
+                cell_cell_lr_score[i][j][lr_pair] = count_higher/N  # p-value
         
+    #########################################################################  
+    csv_record = df_org
+    # columns are: from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id,  attention_score 
+    cell_cell_lr_score = defaultdict(dict)
+    csv_record[0].append('p-value')
+    for record in range (1, len(csv_record)-1):
+        i = csv_record[record][6]
+        j = csv_record[record][7]
+        ligand_gene = csv_record[record][2]
+        receptor_gene = csv_record[record][3]
+        lr_pair_id = lig_rec_db[ligand_gene][receptor_gene]
+        csv_record[0].append(cell_cell_lr_score[i][j][lr_pair_id])
     
-    ####################################################################
-    # ligand - receptor database 
-    print('ligand-receptor database reading.')
-    df = pd.read_csv(args.database_path, sep=",")
-    
-    '''
-            Ligand   Receptor          Annotation           Reference
-    0        TGFB1     TGFBR1  Secreted Signaling      KEGG: hsa04350
-    1        TGFB1     TGFBR2  Secreted Signaling      KEGG: hsa04350
-    '''
-    print('ligand-receptor database reading done.')
-    print('Preprocess start.')
-    ligand_dict_dataset = defaultdict(list)
-    cell_cell_contact = dict() 
-    count_pair = 0
-    for i in range (0, df["Ligand"].shape[0]):
-        ligand = df["Ligand"][i]
-        if ligand not in gene_info: # not found in the dataset
-            continue    
-            
-        receptor = df["Receptor"][i]
-        if receptor not in gene_info: # not found in the dataset
-            continue   
-            
-        ligand_dict_dataset[ligand].append(receptor)
-        gene_info[ligand] = 'included'
-        gene_info[receptor] = 'included'
-        count_pair = count_pair + 1
-        
-        if df["Annotation"][i] == 'Cell-Cell Contact':
-            cell_cell_contact[receptor] = '' # keep track of which ccc are labeled as cell-cell-contact
-    
-    
-    print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
-    print('number of ligands %d '%len(ligand_dict_dataset.keys()))
-    
-    included_gene=[]
-    for gene in gene_info.keys(): 
-        if gene_info[gene] == 'included':
-            included_gene.append(gene)
-            
-    print('Total genes in this dataset: %d, number of genes working as ligand and/or receptor: %d '%(len(gene_ids),len(included_gene)))
-    
-    # assign id to each entry in the ligand-receptor database
-    l_r_pair = dict()
-    lr_id = 0
-    for gene in list(ligand_dict_dataset.keys()): 
-        ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
-        l_r_pair[gene] = dict()
-        for receptor_gene in ligand_dict_dataset[gene]:
-            l_r_pair[gene][receptor_gene] = lr_id 
-            lr_id  = lr_id  + 1
-        
+    df = pd.DataFrame(csv_record) 
+    df.to_csv(args.output_path + args.model_name+'_ccc_pvalue.csv', index=False, header=False)
