@@ -11,7 +11,7 @@ noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', '
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
 noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
 
-for op_index in [7]: #range (0, len(options_list)):
+for op_index in [8]: #range (0, len(options_list)):
     print('%d'%op_index)
     options = datatype[op_index] + '_' + noisetype[op_index]
     sample_type = op_index  
