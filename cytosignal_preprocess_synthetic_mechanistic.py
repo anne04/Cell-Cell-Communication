@@ -11,7 +11,7 @@ noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', '
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
 noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
 
-for op_index in [0, 3, 6]: #range (0, len(options_list)):
+for op_index in [7]: #range (0, len(options_list)):
     print('%d'%op_index)
     options = datatype[op_index] + '_' + noisetype[op_index]
     sample_type = op_index  
@@ -43,6 +43,25 @@ for op_index in [0, 3, 6]: #range (0, len(options_list)):
     data_list_pd[' ']=gene_name   
     data_list_pd = data_list_pd.set_index(' ')    
     data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_'+options+'.csv')
+    #######################################################################
+    data_list = defaultdict(list)
+    for i in range (0, cell_vs_gene.shape[0]):
+        for j in range (0, cell_vs_gene.shape[1]):
+            if toggle == 1:
+                cell_vs_gene[i][j] = min_gene_expr+cell_vs_gene[i][j]
+            
+            data_list['a-'+str(i)].append(int(np.round(cell_vs_gene[i][j])))
+          
+    print('min %d and max %d'%(np.min(cell_vs_gene), np.max(cell_vs_gene)))
+    data_list_pd = pd.DataFrame(data_list)        
+    gene_name = []
+    for i in range (0, cell_vs_gene.shape[1]):
+        gene_name.append('g'+str(i))
+        
+    data_list_pd[' ']=gene_name   
+    data_list_pd = data_list_pd.set_index(' ')    
+    data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
+
 
     ########################################################################
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_coordinate", 'rb') as fp:
@@ -55,7 +74,7 @@ for op_index in [0, 3, 6]: #range (0, len(options_list)):
     spatial_dict.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_cell_'+options+'_spatial.csv')
   
     ########################################################################
-    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth_ccc", 'rb')  # at least one of lig or rec has exp > respective knee point          
+    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth", 'rb')  # _ccc at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
 
     unique_gene_name = dict()
