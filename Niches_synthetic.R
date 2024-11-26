@@ -33,7 +33,10 @@ for(i in 1:ncol(df)) {
   cell_y[[i]] <- df[ , i]    
 }
 
+lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
+
 countsData <- read.csv(file = paste('//cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+
 pdac_sample <- CreateSeuratObject(counts = countsData)
 #temp <- SCTransform(pdac_sample)
 temp <- ScaleData(pdac_sample)
@@ -50,8 +53,6 @@ temp@meta.data$y <- cell_y[[1]]
 temp <- NormalizeData(temp)
 
 temp <- SeuratWrappers::RunALRA(temp)
-
-lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
 NICHES_output <- RunNICHES(object = temp,
                            LR.database = "custom",
                            custom_LR_database = lr_db,
