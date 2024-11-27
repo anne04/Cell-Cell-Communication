@@ -15,7 +15,7 @@ for op_index in range (0, len(datatype)):
     print('%d'%op_index)
     options = datatype[op_index] + '_' + noisetype[op_index]
     sample_type = op_index  
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_cellvsgene_not_normalized", 'rb') as fp: #'not_quantileTransformed'
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_cellvsgene", 'rb') as fp: #'_not_normalized'
         cell_vs_gene = pickle.load(fp)
       
     cell_vs_gene = cell_vs_gene*100
@@ -44,6 +44,7 @@ for op_index in range (0, len(datatype)):
     data_list_pd = data_list_pd.set_index(' ')    
     data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_'+options+'.csv')
     #######################################################################
+    '''
     data_list = defaultdict(list)
     for i in range (0, cell_vs_gene.shape[0]):
         for j in range (0, cell_vs_gene.shape[1]):
@@ -62,7 +63,7 @@ for op_index in range (0, len(datatype)):
     data_list_pd = data_list_pd.set_index(' ')    
     data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'_shifted.csv')
 
-
+    '''
     ########################################################################
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_coordinate", 'rb') as fp:
         temp_x, temp_y, ccc_region  = pickle.load(fp)
