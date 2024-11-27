@@ -12,8 +12,9 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 'uniform_mechanistic_noise30level1' 
+options = 'mixture_mechanistic_noise30level2' 
 # 'uniform_mechanistic_noise30level2' 
+# 'uniform_mechanistic_noise30level1' 
 #'uniform_mechanistic_noise0' # 
 #'equidistant_mechanistic_noise0' 
 #'mixture_mechanistic_noise0' 
@@ -35,7 +36,7 @@ for(i in 1:ncol(df)) {
 
 lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
 
-countsData <- read.csv(file = paste('//cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 
 pdac_sample <- CreateSeuratObject(counts = countsData)
 #temp <- SCTransform(pdac_sample)
