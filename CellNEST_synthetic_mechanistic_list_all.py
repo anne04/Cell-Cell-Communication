@@ -31,7 +31,7 @@ args = parser.parse_args()
 
 ########################################################################################
 
-nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed']
+#nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed']
 dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/' ]
 noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
