@@ -11,11 +11,11 @@ noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', '
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
 noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
 
-for op_index in [8]: #range (0, len(options_list)):
+for op_index in range (0, len(datatype)):
     print('%d'%op_index)
     options = datatype[op_index] + '_' + noisetype[op_index]
     sample_type = op_index  
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_cellvsgene", 'rb') as fp: #'not_quantileTransformed'
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_cellvsgene_not_normalized", 'rb') as fp: #'not_quantileTransformed'
         cell_vs_gene = pickle.load(fp)
       
     cell_vs_gene = cell_vs_gene*100
@@ -60,7 +60,7 @@ for op_index in [8]: #range (0, len(options_list)):
         
     data_list_pd[' ']=gene_name   
     data_list_pd = data_list_pd.set_index(' ')    
-    data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
+    data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'_shifted.csv')
 
 
     ########################################################################
