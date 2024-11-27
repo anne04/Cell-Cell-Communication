@@ -12,15 +12,19 @@ library(viridis)
 
 
 ####################################### synthetic ###################################################
-options = 'mixture_mechanistic_noise30level2' 
+options = 'mixture_mechanistic_noise30level2' # 
+
+#'equidistant_mechanistic_noise0'
+#'equidistant_mechanistic_noise30level1'
+#'equidistant_mechanistic_noise30level2'
+
 # 'uniform_mechanistic_noise30level2' 
 # 'uniform_mechanistic_noise30level1' 
 #'uniform_mechanistic_noise0' # 
-#'equidistant_mechanistic_noise0' 
+
 #'mixture_mechanistic_noise0' 
 # 'mixture_mechanistic_noise30level1'
 # 'mixture_mechanistic_noise30level2'
-#'uniform_mechanistic_noise0'
 
 savepath = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/'
 df=read.csv(file = paste("/cluster/home/t116508uhn/synthetic_cell_",options,"_x.csv",sep=""), header = FALSE) #read.csv(file = '/cluster/home/t116508uhn/synthetic_cell_type6_f_x.csv', header = FALSE)
@@ -36,10 +40,10 @@ for(i in 1:ncol(df)) {
 
 lr_db <- read.csv(paste("/cluster/home/t116508uhn/synthetic_lr_",options,".csv",sep=""))
 
-countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
+countsData <- read.csv(file = paste('/cluster/home/t116508uhn/synthetic_gene_vs_cell_',options,'_shifted.csv', sep=""),row.names = 1) # read.csv(file = '/cluster/home/t116508uhn/synthetic_gene_vs_cell_type6_f.csv',row.names = 1)
 
 pdac_sample <- CreateSeuratObject(counts = countsData)
-#temp <- SCTransform(pdac_sample)
+temp <- SCTransform(pdac_sample)
 temp <- ScaleData(pdac_sample)
 temp <- FindVariableFeatures(temp) 
 temp <- RunPCA(temp, verbose = FALSE)
