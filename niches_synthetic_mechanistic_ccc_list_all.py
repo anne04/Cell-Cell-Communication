@@ -31,14 +31,30 @@ args = parser.parse_args()
 
 
 ########################################################################################
-noise_type = ['no_noise', 'low_noise', 'high_noise']
+datapoint_size_list = [3000, 3000, 3000, 5000, 5000, 5000,  5000, 5000, 5000]
+options_list = ['equidistant_mechanistic_noise0', 'equidistant_mechanistic_noise0', 
+                'equidistant_mechanistic_noise0', 'uniform_mechanistic_noise0', 
+                'uniform_mechanistic_noise0', 'uniform_mechanistic_noise0', 
+                'mixture_mechanistic_noise0', 'mixture_mechanistic_noise0', 
+                'mixture_mechanistic_noise0'] 
+dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 
+           'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 
+           'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/' ]
+noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
+datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  
+            'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
+noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
+########################################################################33
+#noise_type = ['no_noise', 'low_noise', 'high_noise']
 old_options = ['dt-path_equally_spaced_lrc1467_cp100_noise0_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
 	      'dt-path_equally_spaced_lrc1467_cp100_noise30_lowNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp',
 	      'dt-path_equally_spaced_lrc1467_cp100_noise30_heavyNoise_random_overlap_threshold_dist_cellCount3000_3dim_3patterns_temp']
-for sample_type in range (0, len(noise_type)):
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type[sample_type] +"/equidistant_" + noise_type[sample_type] + "_coordinate" , 'rb') as fp: #datatype
-    #with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ old_options  +'_xny', 'rb') as fp: #datatype
-        temp_x, temp_y , ccc_region = pickle.load(fp) #
+for sample_type in [1,2, 4,5, 7,8]: #range (0, len(noise_type)):
+
+    option = datatype[sample_type] + '_' + noisetype[sample_type]
+    
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type]  +"_coordinate" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+        temp_x, temp_y , ccc_region  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
     
     datapoint_size = temp_x.shape[0]
     
@@ -50,8 +66,8 @@ for sample_type in range (0, len(noise_type)):
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+ noise_type[sample_type] +"/equidistant_"+noise_type[sample_type]+"_ground_truth_ccc" , 'rb') as fp:            
-        lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
+    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth" , 'rb')  # at least one of lig or rec has exp > respective knee point          
+    lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
     
     
     ligand_dict_dataset = defaultdict(dict)
@@ -60,7 +76,7 @@ for sample_type in range (0, len(noise_type)):
         
     ligand_list = list(ligand_dict_dataset.keys())  
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/"+noise_type[sample_type]+"/equidistant_"+noise_type[sample_type]+"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type]  +"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
         row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
         
     
@@ -119,7 +135,7 @@ for sample_type in range (0, len(noise_type)):
 
     path = '/cluster/projects/schwartzgroup/fatema/CCC_project/niches_output/' #'/cluster/home/t116508uhn/
     # get all the edges and their scaled scores that they use for plotting the heatmap
-    df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+old_options[sample_type]+'.csv')
+    df_pair_vs_cells = pd.read_csv(path + 'niches_output_pair_vs_cells_'+option+'.csv')
     
     edge_pair_dictionary = defaultdict(dict) # edge_pair_dictionary[edge[pair]]=score
     coexpression_scores = []
@@ -152,7 +168,7 @@ for sample_type in range (0, len(noise_type)):
     
     
     ######### read which edge belongs to which cluster type #############################
-    vector_type = pd.read_csv(path + 'niches_VectorType_'+old_options[sample_type]+'.csv')
+    vector_type = pd.read_csv(path + 'niches_VectorType_'+option+'.csv')
     clusterType_edge_dictionary = defaultdict(list)
     for index in range (0, len(vector_type.index)):
         cell_cell_pair = vector_type['Unnamed: 0'][index]
@@ -180,7 +196,7 @@ for sample_type in range (0, len(noise_type)):
             lig_rec_dict_temp[i][j] = []
             
     
-    marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+old_options[sample_type]+'.csv')
+    marker_list = pd.read_csv(path + 'niches_output_ccc_lr_pairs_markerList_top5_'+option+'.csv')
     marker_list = marker_list.sort_values(by=['myAUC'], ascending=False) #marker_list.sort_values(by=['avg_log2FC'], ascending=False) # high fc to low fc
     positive_class_found = 0
     distribution_temp = []
@@ -233,7 +249,7 @@ for sample_type in range (0, len(noise_type)):
                     ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
     
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_equidistant/'+noise_type[sample_type]+ '/' + 'ccc_list_all_'+noise_type[sample_type]+'_Niches.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+'ccc_list_all_'+option+'_Niches.csv', index=False, header=False)
     print('ccc list write done')
     ##################
     '''
