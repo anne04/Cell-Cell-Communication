@@ -36,7 +36,7 @@ dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type
 noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
 noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
-for sample_type in [0, 3, 6]: #range (0, len(datatype)):
+for sample_type in [1,2, 4,5, 7,8]: #range (0, len(datatype)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_coordinate" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
@@ -50,7 +50,7 @@ for sample_type in [0, 3, 6]: #range (0, len(datatype)):
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth_ccc" , 'rb') as fp:            
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth" , 'rb') as fp:            
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     
@@ -150,7 +150,7 @@ for sample_type in [0, 3, 6]: #range (0, len(datatype)):
 #######################################
 
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] + 'ccc_list_all_'+ 'naive' +'.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+ 'ccc_list_all_' + datatype[sample_type] + '_' + noisetype[sample_type] + '_'+ 'naive' +'.csv', index=False, header=False)
         
     
     #####################################################################################
@@ -200,7 +200,7 @@ for sample_type in [0, 3, 6]: #range (0, len(datatype)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_"+ +filename[run]+"_attention_l1", 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+            with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_"+ datatype[sample_type] + '_' + noisetype[sample_type] +'_' +filename[run]+"_attention_l1", 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
                 X_attention_bundle  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
                
             distribution = []
@@ -363,5 +363,5 @@ for sample_type in [0, 3, 6]: #range (0, len(datatype)):
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +'_ccc_list_all.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/'+ dirType[sample_type] + noise_dir[sample_type]+ 'ccc_list_all_' +datatype[sample_type] + '_' + noisetype[sample_type] +'_NEST.csv', index=False, header=False)
          
