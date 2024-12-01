@@ -15,16 +15,20 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
-dataType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_mechanistic','uniform_mechanistic','uniform_mechanistic','mixed_mechanistic', 'mixed_mechanistic', 'mixed_mechanistic']
+dataType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_mechanistic',
+            'uniform_mechanistic','uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
+dirType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_distribution_mechanistic',
+            'uniform_distribution_mechanistic','uniform_distribution_mechanistic','mixed_distribution_mechanistic', 'mixed_distribution_mechanistic', 'mixed_distribution_mechanistic']
 noise_type = ['no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise']
-commotResult_name = ['equidistant_mechanistic', 'equidistant_mechanistic', 'equidistant_mechanistic', 'uniform_mechanistic', 'uniform_mechanistic', 'uniform_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic' ]
+commotResult_name = ['equidistant_mechanistic', 'equidistant_mechanistic', 'equidistant_mechanistic', 'uniform_mechanistic', 
+                     'uniform_mechanistic', 'uniform_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic' ]
 noise_level= ['noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2']
-for index in [4, 5, 7, 8]: #range (0, len(dataType)):
+for index in [7]: #range (0, len(dataType)):
     print(index)
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_" +  dataType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_level[index]+ "_coordinate", 'rb') as fp: #datatype
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_" +  dirType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_level[index]+ "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dataType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_level[index]+"_ground_truth" , 'rb') as fp:  
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dirType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_level[index]+"_ground_truth" , 'rb') as fp:  
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     # lig_rec_dict_TP has the true positive edge list. lig_rec_dict_TP[i][j] is a list of lr pairs between cell i and cell j
@@ -37,7 +41,7 @@ for index in [4, 5, 7, 8]: #range (0, len(dataType)):
     
     positive_class = tp # WE NEED THIS TO CALCULATE 'TRUE POSITIVE RATE'
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dataType[index] +'/'+ noise_type[index] +"/"+ dataType[index] +"_"+noise_level[index]+"_input_graph" , 'rb') as fp:           
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_"+  dirType[index] +'/'+ noise_type[index] +"/"+ dataType[index] +"_"+noise_level[index]+"_input_graph" , 'rb') as fp:           
         row_col, edge_weight, lig_rec  = pickle.load(fp) 
     
     ######################### COMMOT ###############################################################################################################
@@ -69,7 +73,7 @@ for index in [4, 5, 7, 8]: #range (0, len(dataType)):
                         ccc_csv_record.append([i, j, lig_rec_dict[i][j][k], attention_scores[i][j][k]])
     
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_'+ dataType[index] +'/'+ noise_type[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_'+ dirType[index] +'/'+ noise_type[index] +'/ccc_list_all_COMMOT.csv', index=False, header=False)
 ########################################################################################################################################################################
 
 
