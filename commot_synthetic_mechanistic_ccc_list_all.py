@@ -15,11 +15,11 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
-dataType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_distribution_mechanistic','uniform_distribution_mechanistic','uniform_distribution_mechanistic','mixed_distribution_mechanistic', 'mixed_distribution_mechanistic', 'mixed_distribution_mechanistic']
+dataType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_mechanistic','uniform_mechanistic','uniform_mechanistic','mixed_mechanistic', 'mixed_mechanistic', 'mixed_mechanistic']
 noise_type = ['no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise']
 commotResult_name = ['equidistant_mechanistic', 'equidistant_mechanistic', 'equidistant_mechanistic', 'uniform_mechanistic', 'uniform_mechanistic', 'uniform_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic' ]
 noise_level= ['noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2']
-for index in range (6, len(dataType)):
+for index in [4, 5, 7, 8]: #range (0, len(dataType)):
     print(index)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/type_" +  dataType[index]  +"/"+ noise_type[index] + "/" + dataType[index] +"_"+noise_level[index]+ "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
