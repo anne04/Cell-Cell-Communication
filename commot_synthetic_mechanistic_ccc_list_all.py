@@ -15,8 +15,8 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
-dataType = ['equidistant_mechanistic','equidistant','equidistant','uniform_distribution','uniform_distribution','uniform_distribution','mixed_distribution', 'mixed_distribution', 'mixed_distribution']
-noise_type = ['no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise', 'no_noise', 'low_noise', 'high_noise']
+dataType = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic','uniform_distribution_mechanistic','uniform_distribution_mechanistic','uniform_distribution_mechanistic','mixed_distribution_mechanistic', 'mixed_distribution_mechanistic', 'mixed_distribution_mechanistic']
+noise_type = ['no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise', 'no_noise', 'lowNoise', 'highNoise']
 commotResult_name = ['equidistant', 'equidistant', 'equidistant', 'uniform', 'uniform', 'uniform', 'mixture', 'mixture', 'mixture' ]
 noise_level= ['noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2', 'noise0', 'noise30level1', 'noise30level2']
 for index in range (6, len(dataType)):
