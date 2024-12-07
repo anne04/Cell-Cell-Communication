@@ -39,7 +39,8 @@ threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
 distance_measure = 'threshold_dist' #'knn'  # <-----------
 datatype = 'randomCCC_equally_spaced'  #'randomCCC_mix_distribution' # 'randomCCC_uniform_distribution' #
-
+dirtype_index = 0
+dirtype = ['type_equidistant_mechanistic', 'type_uniform_distribution_mechanistic', 'type_mixed_distribution_mechanistic']
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
@@ -759,42 +760,40 @@ lig_rec_dict_TP = lig_rec_dict_TP_temp
 
 options = datatype + '_mechanistic'
 
-
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvsgene', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] + options +'_'+'cellvsgene', 'wb') as fp:
     pickle.dump(cell_vs_gene, fp)
     
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
-#    pickle.dump(cell_vs_gene_notNormalized, fp)
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] + options +'_cellvsgene_'+ 'not_quantileTransformed', 'wb') as fp:
+    pickle.dump(cell_vs_gene_notNormalized, fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'adjacency_records_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] + options + '_input_graph', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([row_col, edge_weight, lig_rec], fp)
 
 random_activation = []
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'Tclass_synthetic_data_ccc_roc_control_model_'+ options, 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] +  options + '_ground_truth', 'wb') as fp:  # at least one of lig or rec has exp > respective knee point          
     pickle.dump([lr_database, lig_rec_dict_TP, random_activation], fp)
 
 ccc_region = active_spot
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] +  options +'_coordinate', 'wb') as fp:
     pickle.dump([temp_x, temp_y, ccc_region], fp)
 
 cell_vs_lrgene = cell_vs_gene[:,0:lr_gene_count]
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'cellvslrgene', 'wb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirtype[dirtype_index] + options +'_'+'cellvslrgene', 'wb') as fp:
     pickle.dump(cell_vs_lrgene, fp)
 
 
-
-###########
-#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_'+'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
+#####################################
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/" + dirtype[dirtype_index]+ options +'_cellvsgene_'+ 'not_quantileTransformed', 'rb') as fp:
+#with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_cellvsgene', 'rb') as fp: #'not_quantileTransformed'
     cell_vs_gene = pickle.load(fp)
 
-with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/" + 'synthetic_data_ccc_roc_control_model_'+ options +'_xny', 'rb') as fp:
+with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/" + dirtype[dirtype_index]+  options +'_coordinate', 'rb') as fp:
     temp_x, temp_y, ccc_region  = pickle.load(fp)
 
 data_list_pd = pd.DataFrame(temp_x)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_x.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/files_for_otherTools/synthetic_cell_'+options+'_x.csv', index=False, header=False)
 data_list_pd = pd.DataFrame(temp_y)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_cell_'+options+'_y.csv', index=False, header=False)
+data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/files_for_otherTools/synthetic_cell_'+options+'_y.csv', index=False, header=False)
 
 
 data_list=defaultdict(list)
@@ -810,7 +809,10 @@ for i in range (0, cell_vs_gene.shape[1]):
     
 data_list_pd[' ']=gene_name   
 data_list_pd = data_list_pd.set_index(' ')    
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_gene_vs_cell_'+options+'.csv')
+data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/files_for_otherTools/synthetic_gene_vs_cell_'+options+'.csv')
+
+fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/" + dirtype[dirtype_index] + options + '_ground_truth', 'rb')  # at least one of lig or rec has exp > respective knee point          
+lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
 
 data_list=dict()
 data_list['ligand']=[]
@@ -820,8 +822,7 @@ for i in range (0, len(lr_database)):
     data_list['receptor'].append('g'+str(lr_database[i][1]))
     
 data_list_pd = pd.DataFrame(data_list)        
-data_list_pd.to_csv('/cluster/home/t116508uhn/synthetic_lr_'+options+'.csv', index=False)
-	
+data_list_pd.to_csv('/cluster/projects/schwartzgroup/fatema/CCC_project/files_for_otherTools/synthetic_lr_'+options+'.csv', index=False)
 	
 ###############
 '''
