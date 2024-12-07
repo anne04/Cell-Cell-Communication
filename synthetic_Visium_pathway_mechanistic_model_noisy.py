@@ -547,11 +547,12 @@ for i in range (0, cell_vs_gene.shape[0]):
 flag_stop = 0
 pattern_count = len(pattern_list)
 ################################
+'''
 max_incoming = 10
 incoming_j_tp =[]
 for i in range (0, cell_vs_gene.shape[0]):
     incoming_j_tp.append(0)
-	
+'''	
 for pattern_type in range (0, 3): #8): #pattern_count):	
     discard_cells = list(active_spot.keys()) # + list(neighbour_of_actives.keys())  
     ligand_cells = list(set(np.arange(cell_count)) - set(discard_cells))
@@ -751,11 +752,11 @@ for pattern_type in range (0, 3): #8): #pattern_count):
             #########
             communication_score = cell_vs_gene[c1,ligand_gene] * cell_vs_gene[c2,receptor_gene] 
             #communication_score = max(communication_score, 0)
-            if communication_score > 0 and incoming_j_tp[c2] < max_incoming:
+            if communication_score > 0: # and incoming_j_tp[c2] < max_incoming:
                 
                 lig_rec_dict_TP[c1][c2].append(ligand_dict_dataset[ligand_gene][receptor_gene])
                 P_class = P_class+1
-                incoming_j_tp[c2] = incoming_j_tp[c2] + 1
+                #incoming_j_tp[c2] = incoming_j_tp[c2] + 1
             else:
                 print('zero value found %g'%communication_score )
                 flag_stop = 1
