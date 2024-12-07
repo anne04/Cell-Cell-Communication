@@ -37,10 +37,10 @@ args = parser.parse_args()
 
 threshold_distance = 2.5 #2 = path equally spaced
 k_nn = 10 # #5 = h
-distance_measure = 'threshold_dist' #'knn'  # <-----------
-datatype = 'randomCCC_equally_spaced'  #'randomCCC_mix_distribution' # 'randomCCC_uniform_distribution' #
+distance_measure = 'threshold_dist' # 'knn'  # <-----------
+datatype =  'randomCCC_equally_spaced'  #'randomCCC_uniform_distribution' #'randomCCC_mix_distribution' #
 dirtype_index = 0
-dirtype = ['type_equidistant_mechanistic', 'type_uniform_distribution_mechanistic', 'type_mixed_distribution_mechanistic']
+dirtype = ['type_equidistant_mechanistic/', 'type_uniform_distribution_mechanistic/', 'type_mixed_distribution_mechanistic/']
 '''
 distance_measure = 'knn'  #'threshold_dist' # <-----------
 datatype = 'pattern_high_density_grid' #'pattern_equally_spaced' #'mixture_of_distribution' #'equally_spaced' #'high_density_grid' 'uniform_normal' # <-----------'dt-pattern_high_density_grid_lrc1_cp20_lrp1_randp0_all_same_midrange_overlap'
@@ -470,6 +470,13 @@ for i in range (0, datapoint_size):
 	
 P_class = 0
 #####################################################################
+# NEW MECHA
+max_incoming = 10
+incoming_j_tp =[]
+for i in range (0, cell_vs_gene.shape[0]):
+    incoming_j_tp.append(0)
+
+########################################################################
 available_cells = np.arange(cell_count)
 gene_id = ligand_list
 active_cell_gene_dict = defaultdict(list)
@@ -485,6 +492,7 @@ for i in range (0, len(available_cells)):
         continue        
     active_spot[cell] = ''
     active_spot[receptor_cell] = ''
+    
     np.random.shuffle(gene_id)
     for j in range (0, 1): #len(gene_id)//2): #
         ligand_gene = gene_id[j]
@@ -498,19 +506,24 @@ for i in range (0, len(available_cells)):
         receptor_gene_list = list(ligand_dict_dataset[ligand_gene].keys())
         #np.random.shuffle(receptor_gene_list)
         #receptor_gene_list = receptor_gene_list[0:5]
+
+        disable_gene_receptor = []
         for receptor_gene in receptor_gene_list:
-            cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
-            lig_rec_dict_TP[cell][receptor_cell].append(ligand_dict_dataset[ligand_gene][receptor_gene])
-            P_class = P_class + 1
+            if incoming_j_tp[receptor_cell] < max_incoming: # NEW MECHA
+                cell_vs_gene[receptor_cell, receptor_gene] = gene_distribution_active[receptor_gene, receptor_cell]  
+                lig_rec_dict_TP[cell][receptor_cell].append(ligand_dict_dataset[ligand_gene][receptor_gene])
+                P_class = P_class + 1
+                incoming_j_tp[receptor_cell] = incoming_j_tp[receptor_cell] + 1 # NEW MECHA
+            else:
+                disable_gene_receptor.append(receptor_gene)
 	    
         #################################################################
         
         # make other genes off so that it does not act in other communication
-        '''
-        for gene in range (0, lr_gene_count):
-            if gene not in receptor_gene_list:
-                cell_vs_gene[receptor_cell, gene] = min_lr_gene_count 
-        '''
+        # NEW MECHA
+#        for gene in disable_gene_receptor:
+#            cell_vs_gene[receptor_cell, gene] = 0 # min_lr_gene_count 
+        
         ###############################################################
         # now add all other neighbors of cell and receptor cell to the neighborhood list and discard them from available cell list next time
         used_gene_list = [ligand_gene] + receptor_gene_list
@@ -540,7 +553,7 @@ for i in range (0, len(available_cells)):
             
 ########################################################################
 cell_vs_gene_org = copy.deepcopy(cell_vs_gene)
-
+noise_percent = 0
 if noise_percent > 0:
     cell_count = cell_vs_gene.shape[0]
     if noise_add == 1:
@@ -570,7 +583,7 @@ if noise_percent > 0:
         cell = noise_cells[i]
         cell_vs_gene[cell, :] = cell_vs_gene[cell, :] + gene_distribution_noise[i,:]
       
-        
+  
 ##############################
 # to reduce number of conections
 #cell_vs_gene[:,7] = min_lr_gene_count #-10
@@ -624,7 +637,7 @@ for i in range (0, cell_vs_gene.shape[0]):
 count = 0
 ################################ 
 # NEW: MECHA
-max_incoming = 10
+max_incoming = 40
 available_edges_to_drop = []
 incoming_j =[]
 for i in range (0, cell_vs_gene.shape[0]):
@@ -644,7 +657,7 @@ for i in range (0, cell_vs_gene.shape[0]): # ligand
                 if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
                     communication_score = max(communication_score, 0)
-                    if communication_score>0:
+                    if communication_score>0 and incoming_j[j]<max_incoming:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
                         incoming_j[j] = incoming_j[j] + 1 # NEW: MECHA
@@ -675,7 +688,6 @@ for i in range (0, len(lig_rec_dict_TP)):
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
 ##################
-#if true class cells have more than N incoming, keep trues and remove others. 
 # NEW: MECHA
 above_max_incoming_count = 0
 for j in range (0, cell_vs_gene.shape[0]):
