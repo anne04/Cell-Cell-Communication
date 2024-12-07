@@ -300,15 +300,50 @@ for j in range(0, distance_matrix.shape[1]):
                 cell_neighborhood[i].append([j, dist_X[i,j]])
 		
 	
-
+################# sort the neighboring cells based distance #######################
+# NEW: MECHA
+mu, sigma = 0, 2 # mean and standard deviation
 for cell in range (0, len(cell_neighborhood)):
     cell_neighborhood_temp = cell_neighborhood[cell] 
-    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance
+    cell_neighborhood_temp = sorted(cell_neighborhood_temp, key = lambda x: x[1], reverse=True) # sort based on distance, big to small.
+
+    ############################
+    distance_list = [] #small to high
+    dict_distVScell= defaultdict(list)
+    i = cell 
+    for items in cell_neighborhood_temp:
+        j = items[0]
+        distance_list.append(distance_matrix[i,j])
+        dict_distVScell[distance_matrix[i,j]].append(j)
+
+    # draw 10 cells from gaussian
+    gaussian_dist = np.random.normal(mu, sigma, 10)
+    gaussian_dist = np.abs(gaussian_dist)
+    max_dist = np.max(gaussian_dist)
+    min_dist = np.min(gaussian_dist)
+    a = min(distance_list)
+    b = max(distance_list)
+    
+    i = cell
+    cell_neighborhood_temp = []
+    for dist_cell in gaussian_dist:
+        current_dist = a + ((dist_cell-min_dist)/(max_dist-min_dist))*(b-a)
+        for k in range(0, len(distance_list)):
+            if distance_list[k]>current_dist:
+                break
+
+        if k<len(distance_list):
+            j = dict_distVScell[distance_list[k]][0]
+            cell_neighborhood_temp.append([j, dist_X[i,j]])    
+            distance_list.pop(k) #pop from distance_list
+
+    ############################
     
     cell_neighborhood[cell] = [] # to record the neighbor cells in that order
     for items in cell_neighborhood_temp:
         cell_neighborhood[cell].append(items[0])
     #np.random.shuffle(cell_neighborhood[cell]) 
+####################################################################################            
 ####################################################################################            
 # take lr_gene_count normal distributions where each distribution has len(temp_x) datapoints.
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
@@ -586,20 +621,32 @@ for i in range (0, cell_vs_gene.shape[0]):
 
 
 count = 0
+################################ 
+# NEW: MECHA
+max_incoming = 10
+available_edges_to_drop = []
+incoming_j =[]
+for i in range (0, cell_vs_gene.shape[0]):
+    incoming_j.append(0)
+###############################
 for i in range (0, cell_vs_gene.shape[0]): # ligand                 
     for j in range (0, cell_vs_gene.shape[0]): # receptor
         if dist_X[i,j] <= 0: #distance_matrix[i,j] > threshold_distance:
             continue
-                
+        if incoming_j[j] >= max_incoming:
+            continue                
         for gene in ligand_list:
             rec_list = list(ligand_dict_dataset[gene].keys())
-            for gene_rec in rec_list:                
+            for gene_rec in rec_list:   
+                if incoming_j[j] >= max_incoming:
+                    continue
                 if cell_vs_gene[i][gene_index[gene]] > cell_percentile[i][2] and cell_vs_gene[j][gene_index[gene_rec]] > cell_percentile[j][2]:
                     communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]] #* dist_X[i,j]    
                     communication_score = max(communication_score, 0)
                     if communication_score>0:
                         cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, ligand_dict_dataset[gene][gene_rec]]) 
                         count = count + 1
+                        incoming_j[j] = incoming_j[j] + 1 # NEW: MECHA
 
 print('total edges %d'%count)
 #################
@@ -626,7 +673,23 @@ for i in range (0, len(lig_rec_dict_TP)):
                 
 print('P_class=%d, found=%d, %g, %g, %g'%(P_class, count, min_score, max_score, np.std(dist)))
 
+##################
+#if true class cells have more than N incoming, keep trues and remove others. 
+# NEW: MECHA
+above_max_incoming_count = 0
+for j in range (0, cell_vs_gene.shape[0]):
+    incoming_j = 0
+    for i in range (0, cell_vs_gene.shape[0]):
+        #if len(lig_rec_dict_TP[i][j])==0: 
+            if len(cells_ligand_vs_receptor[i][j])>0:
+                incoming_j = incoming_j + len(cells_ligand_vs_receptor[i][j])
+        
+    if incoming_j > max_incoming:
+        above_max_incoming_count = above_max_incoming_count + 1
 
+
+print(above_max_incoming_count)
+	
 #################
 
 ccc_index_dict = dict()
