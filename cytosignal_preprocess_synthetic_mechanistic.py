@@ -72,7 +72,7 @@ for op_index in range (9, 12):
 
     '''
     ########################################################################
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_coordinate", 'rb') as fp:
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] +  noisetype[sample_type] +"_coordinate", 'rb') as fp:
         temp_x, temp_y, ccc_region  = pickle.load(fp)
     
     cell_id = list(data_list.keys())    
@@ -82,7 +82,7 @@ for op_index in range (9, 12):
     spatial_dict.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_cell_'+options+'_spatial.csv')
   
     ########################################################################
-    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_ground_truth", 'rb')  # _ccc at least one of lig or rec has exp > respective knee point          
+    fp = gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + noisetype[sample_type] +"_ground_truth", 'rb')  # _ccc at least one of lig or rec has exp > respective knee point          
     lr_database, lig_rec_dict_TP, random_activation = pickle.load(fp)
 
     unique_gene_name = dict()
