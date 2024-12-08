@@ -15,9 +15,13 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
 
-dirType = ['equidistant','uniform_distribution','mixed_distribution']
-dataType = ['equidistant','random_uniform','random_mixed']
-commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture' ]
+dirType = ['equidistant','uniform_distribution','mixed_distribution', 
+          'equidistant_mechanistic', 'uniform_distribution_mechanistic', 
+           'mixed_distribution_mechanistic']
+dataType = ['equidistant','random_uniform','random_mixed', 
+            'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
+commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture',
+                    'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
 
 for index in range (2, len(dataType)):
     print(index)
