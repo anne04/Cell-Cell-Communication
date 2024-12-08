@@ -32,7 +32,7 @@ library(Matrix)
 
 #options = 'randomCCC_equally_spaced_mechanistic'
 #options = 'randomCCC_uniform_distribution_mechanistic'
-#options = 'randomCCC_mix_distribution_mechanistic'
+options = 'randomCCC_mix_distribution_mechanistic'
 
 
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
