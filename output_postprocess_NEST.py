@@ -444,8 +444,10 @@ if __name__ == "__main__":
         z_score_distribution = stats.zscore(score_distribution)
         csv_record_final = []
         csv_record_final.append(csv_record[0])
+        csv_record_final[0][9] = 'z-score'
         for k in range (1, len(csv_record)):
-            if z_score_distribution[k-1] >= 1.97: #args.cutoff_z_score:       
+            if z_score_distribution[k-1] >= 1.97: #args.cutoff_z_score:  
+                csv_record[k][9] = z_score_distribution[k-1]
                 csv_record_final.append(csv_record[k])
     
         df = pd.DataFrame(csv_record_final) # output 4
