@@ -39,8 +39,8 @@ dirType = ['type_equidistant/', 'type_uniform_distribution/', 'type_mixed_distri
            'mixed_distribution_mechanistic/' ]
 datatype = ['equidistant', 'random_uniform', 'random_mixed',
             'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
-for sample_type in range (1, len(datatype)):
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] + "_coordinate" , 'rb') as fp: #datatype
+for sample_type in range (3, len(datatype)):
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+ dirType[sample_type] + datatype[sample_type] + "_coordinate" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
     
     datapoint_size = temp_x.shape[0]
@@ -53,7 +53,7 @@ for sample_type in range (1, len(datatype)):
     from sklearn.metrics.pairwise import euclidean_distances
     distance_matrix = euclidean_distances(coordinates, coordinates)
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] +"_ground_truth_ccc" , 'rb') as fp:            
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+ dirType[sample_type] + datatype[sample_type] +"_ground_truth" , 'rb') as fp:            
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     
@@ -63,7 +63,7 @@ for sample_type in range (1, len(datatype)):
         
     ligand_list = list(ligand_dict_dataset.keys())  
      
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] +"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+ dirType[sample_type] + datatype[sample_type] +"_input_graph" , 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
         row_col, edge_weight, lig_rec  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
         
     
@@ -153,7 +153,7 @@ for sample_type in range (1, len(datatype)):
 #######################################
 
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/' + dirType[sample_type] + 'ccc_list_all_'+ 'naive' +'.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_' + dirType[sample_type] + 'ccc_list_all_'+ 'naive' +'.csv', index=False, header=False)
         
     
     #####################################################################################
@@ -367,5 +367,5 @@ for sample_type in range (1, len(datatype)):
         ccc_csv_record.append([i, j, LR_pair_id, csv_record_intersect_dict[key_value][0]])
 #######################################
     df = pd.DataFrame(ccc_csv_record) # output 4
-    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/' + dirType[sample_type]  +datatype[sample_type]+'_ccc_list_all.csv', index=False, header=False)
+    df.to_csv('/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_' + dirType[sample_type]  +datatype[sample_type]+'_ccc_list_all.csv', index=False, header=False)
         
