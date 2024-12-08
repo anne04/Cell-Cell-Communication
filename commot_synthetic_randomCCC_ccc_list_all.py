@@ -23,12 +23,12 @@ dataType = ['equidistant','random_uniform','random_mixed',
 commotResult_name = ['randomCCC_equidistant','randomCCC_uniform',  'randomCCC_mixture',
                     'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
 
-for index in range (2, len(dataType)):
+for index in range (3, len(dataType)):
     print(index)
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_" +  dirType[index]  + "/" + dataType[index] + "_coordinate", 'rb') as fp: #datatype
         x_index, y_index , no_need = pickle.load(fp) #
     
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+  dirType[index]  + "/" + dataType[index] +"_ground_truth_ccc" , 'rb') as fp:  
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/type_"+  dirType[index]  + "/" + dataType[index] +"_ground_truth" , 'rb') as fp:  
         lr_database, lig_rec_dict_TP, random_activation = pickle.load( fp)
     
     # lig_rec_dict_TP has the true positive edge list. lig_rec_dict_TP[i][j] is a list of lr pairs between cell i and cell j
