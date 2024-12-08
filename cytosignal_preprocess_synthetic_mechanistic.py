@@ -6,16 +6,23 @@ import numpy as np
 
 options_list = ['', '', ''
                ] 
-dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/' ]
-noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/']
-datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic']
-noisetype = ['noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2','noise0', 'noise30level1', 'noise30level2']
+dirType = ['type_equidistant_mechanistic/','type_equidistant_mechanistic/','type_equidistant_mechanistic/', 
+           'type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/','type_uniform_distribution_mechanistic/', 
+           'type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/','type_mixed_distribution_mechanistic/',
+          'random_ccc_wo_relay/type_equidistant_mechanistic/', 'random_ccc_wo_relay/type_uniform_distribution_mechanistic/', 
+           'random_ccc_wo_relay/type_mixed_distribution_mechanistic/']
 
-for op_index in range (0, len(datatype)):
+noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', 'highNoise/', '', '', '']
+datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  
+            'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic',
+           'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
+noisetype = ['_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2', '', '' '']
+
+for op_index in range (9, 12):
     print('%d'%op_index)
-    options = datatype[op_index] + '_' + noisetype[op_index]
+    options = datatype[op_index] # + '_' + noisetype[op_index]
     sample_type = op_index  
-    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type] + '_' + noisetype[sample_type] +"_cellvsgene", 'rb') as fp: #'_not_normalized'
+    with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/"+ dirType[sample_type] + noise_dir[sample_type]+ datatype[sample_type]  + noisetype[sample_type] +"_cellvsgene", 'rb') as fp: #'_not_normalized'
         cell_vs_gene = pickle.load(fp)
       
     cell_vs_gene = cell_vs_gene*100
