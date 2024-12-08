@@ -16,7 +16,7 @@ noise_dir = ['no_noise/', 'lowNoise/', 'highNoise/', 'no_noise/', 'lowNoise/', '
 datatype = ['equidistant_mechanistic','equidistant_mechanistic','equidistant_mechanistic', 'uniform_mechanistic',  
             'uniform_mechanistic', 'uniform_mechanistic','mixture_mechanistic', 'mixture_mechanistic', 'mixture_mechanistic',
            'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
-noisetype = ['_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2', '', '' '']
+noisetype = ['_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2','_noise0', '_noise30level1', '_noise30level2', '', '', '']
 
 for op_index in range (9, 12):
     print('%d'%op_index)
