@@ -27,7 +27,12 @@ library(Matrix)
 
 #options = 'mixture_mechanistic_noise0'
 #options = 'mixture_mechanistic_noise30level1'
-options = 'mixture_mechanistic_noise30level2'
+#options = 'mixture_mechanistic_noise30level2'
+
+
+#options = 'randomCCC_equally_spaced_mechanistic'
+#options = 'randomCCC_uniform_distribution_mechanistic'
+#options = 'randomCCC_mix_distribution_mechanistic'
 
 
 countsData <- read.csv(file = paste('/cluster/projects/schwartzgroup/fatema/find_ccc/cytosignal_metadata/synthetic_raw_gene_vs_cell_',options,'.csv', sep=""),row.names = 1) 
