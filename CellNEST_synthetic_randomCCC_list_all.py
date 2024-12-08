@@ -31,9 +31,14 @@ args = parser.parse_args()
 
 ########################################################################################
 
-nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed']
-dirType = ['type_equidistant/', 'type_uniform_distribution/', 'type_mixed_distribution/', ]
-datatype = ['equidistant', 'random_uniform', 'random_mixed']
+nest_model_noise_type = ['random_equidistant', 'random_uniform','random_mixed',
+                        'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_mechanistic', 'randomCCC_mixed_mechanistic'
+                        ]
+dirType = ['type_equidistant/', 'type_uniform_distribution/', 'type_mixed_distribution/',          
+           'equidistant_mechanistic/', 'uniform_distribution_mechanistic/', 
+           'mixed_distribution_mechanistic/' ]
+datatype = ['equidistant', 'random_uniform', 'random_mixed',
+            'randomCCC_equally_spaced_mechanistic', 'randomCCC_uniform_distribution_mechanistic', 'randomCCC_mix_distribution_mechanistic']
 for sample_type in range (1, len(datatype)):
     with gzip.open("/cluster/projects/schwartzgroup/fatema/find_ccc/synthetic_data/random_ccc_wo_relay/"+ dirType[sample_type] + datatype[sample_type] + "_coordinate" , 'rb') as fp: #datatype
         temp_x, temp_y , ccc_region = pickle.load(fp) #
@@ -198,7 +203,8 @@ for sample_type in range (1, len(datatype)):
         csv_record_dict = defaultdict(list)
         for run_time in range (0,total_runs):
             run = run_time
-            with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_"+ nest_model_noise_type[sample_type] +"_noise0_"+filename[run]+"_attention_l1", 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+#            with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_"+ nest_model_noise_type[sample_type] +"_noise0_"+filename[run]+"_attention_l1", 'rb') as fp:  # +'_'+'notQuantileTransformed'at least one of lig or rec has exp > respective knee point          
+            with gzip.open("/cluster/projects/schwartzgroup/fatema/CCC_project/new_alignment/Embedding_data_ccc_rgcn/synthetic_data/synthetic_data_"+ nest_model_noise_type[sample_type] +"_"+filename[run]+"_attention_l1", 'rb') as fp:
                 X_attention_bundle  = pickle.load(fp)  #, lr_database, lig_rec_dict_TP, random_activation
                
             distribution = []
