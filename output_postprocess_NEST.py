@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 #matplotlib.use('TkAgg') 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
+#from matplotlib.colors import LinearSegmentedColormap, to_hex, rgb2hex
 #from typing import List
 import qnorm
 from scipy.sparse import csr_matrix
