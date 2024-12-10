@@ -26,6 +26,10 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, help='Name of the trained model', required=True)
     parser.add_argument( '--data_name', type=str, help='Name of the data.', required=True)
     parser.add_argument( '--output_path', type=str, default='output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
+    parser.add_argument( '--top20', type=int, default=-1, help='set to 1 to output the CCC having the attention score within the 95th percent confidence interval of top20 cutoff')
+    parser.add_argument( '--std', type=int, default=-1, help='set to 1 to output the CCC having the attention score within the 95th percent confidence interval of standard deviation')
+
+    
     args = parser.parse_args()
     if args.output_path=='output/':
         args.output_path = args.output_path + args.data_name + '/'
@@ -38,12 +42,15 @@ if __name__ == "__main__":
 ##################### get metadata: barcode_info ###################################
     df = pd.read_csv(ccc_list_filename, sep=",")
     csv_record = df.values.tolist()
+    df_column_names = list(df.columns)
     # from_cell, to_cell, ligand_gene, receptor_gene, rank, component, from_id, to_id,  attention_score
     total_edge = len(csv_record)
     edge_index = []
+    attention_score_original = []
     for i in range (0, len(csv_record)):
         edge_index.append(i)
-
+        attention_score_original.append(csv_record[i][8])
+        
     new_sets = []
     for i in range (0, num_new_set):
         temp_set = choices(edge_index, k=(2*total_edge)/3)
@@ -66,14 +73,35 @@ if __name__ == "__main__":
         upper_limit = np.percentile(top20_list, 97)
         print('95th percent confidence interval is: %g to %g'%(lower_limit, upper_limit))
         # output only ccc which are between this confidence interval
-
+        csv_record_final = []
+        for i in range (0, len(csv_record)):
+            if lower_limit <= csv_record[i][8] and csv_record[i][8] <= upper_limit:
+                csv_record_final.append(csv_record[i])
+                
+        csv_record_final = [df_column_names] + csv_record_final
+        df = pd.DataFrame(csv_record_final) # output 4
+        df.to_csv(args.output_path + args.model_name+'_CCC_list_top20_confidence.csv', index=False, header=False)
+        
     if args.std == 1:
+        std_list = []
+        for i in range (0, len(new_sets)):
+            std_score = np.std(new_sets[i]) # top 20% means above 80th percentile since the list is in 
+                                            # ascending order and higher value means more strong
+            std_list.append(std_score)
 
-    
-    
-
-    df = pd.DataFrame(csv_record_final) # output 4
-    df.to_csv(args.output_path + args.model_name+'_CCC_list_confident.csv', index=False, header=False)
+        lower_limit = np.percentile(std_list,2.7)
+        upper_limit = np.percentile(std_list, 97)
+        print('95th percent confidence interval is: %g to %g'%(lower_limit, upper_limit))
+        # output only ccc which are between this confidence interval
+        csv_record_final = []
+        mean_score = np.mean(attention_score_original)
+        for i in range (0, len(csv_record)):
+            if lower_limit <= np.abs(mean_score-csv_record[i][8]) and np.abs(mean_score-csv_record[i][8]) <= upper_limit:
+                csv_record_final.append(csv_record[i])
+                
+        csv_record_final = [df_column_names] + csv_record_final
+        df = pd.DataFrame(csv_record_final) # output 4
+        df.to_csv(args.output_path + args.model_name+'_CCC_list_std_confidence.csv', index=False, header=False)
     
     ###########################################################################################################################################
 
