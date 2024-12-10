@@ -52,7 +52,24 @@ if __name__ == "__main__":
     # replace new_sets[i] with attention scores
     for i in range (0, num_new_set):
         for j in range(0, len(new_sets[i])):
-            
+            new_sets[i][j] =  csv_record[new_sets[i][j]][8]
+
+    # now new_sets[i] is a set of attention scores.
+    if args.top20 == 1:
+        top20_list = []
+        for i in range (0, len(new_sets)):
+            top20_score = np.percentile(new_sets[i],80) # top 20% means above 80th percentile since the list is in 
+                                                        # ascending order and higher value means more strong
+            top20_list.append(top20_score)
+
+        lower_limit = np.percentile(top20_list,2.7)
+        upper_limit = np.percentile(top20_list, 97)
+        print('95th percent confidence interval is: %g to %g'%(lower_limit, upper_limit))
+        # output only ccc which are between this confidence interval
+
+    if args.std == 1:
+
+    
     
 
     df = pd.DataFrame(csv_record_final) # output 4
