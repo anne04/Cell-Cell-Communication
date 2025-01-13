@@ -1,3 +1,7 @@
+# Written By 
+# Fatema Tuz Zohora
+
+
 print('package loading')
 import numpy as np
 import csv
@@ -43,7 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')
     parser.add_argument( '--cutoff_MAD', type=int, default=-1, help='Set it to 1 to filter out communications having deviation higher than MAD')
     parser.add_argument( '--cutoff_z_score', type=float, default=-1, help='Set it to 1 to filter out communications having z_score less than 1.97 value')
-    
+    parser.add_argument( '--cutoff_z_score', type=float, default=-1, help='Set it to 1 to filter out communications having z_score less than 1.97 value')
+    parser.add_argument( '--output_all', type=int, default=-1, help='Set it to 1 to output all communications')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -146,7 +151,8 @@ if __name__ == "__main__":
             else: 
                 min_attention_score = 0
             
-            print('min attention score %g, total edges %d'%(min_attention_score, len(distribution)))
+            print('min attention score %g, total edges %d'%(min_attention_score, len(distribution))) 
+            # should always print 0 for min attention score
             
             ccc_index_dict = dict()
             threshold_down =  np.percentile(sorted(distribution), 0)
@@ -207,24 +213,27 @@ if __name__ == "__main__":
                     
                     if i==j:
                         if len(lig_rec_dict[i][j])==0:
-                            continue
+                            continue # because the model generates some score for selfloop even if there was no user input
+                                    # to prevent losing own information
                      
                     atn_score_list = attention_scores[i][j]
                     for k in range (0, len(atn_score_list)):
                         if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
                             if barcode_info[i][3]==0:
                                 print('error')
-                            elif barcode_info[i][3]==1:
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], '0-single', i, j])
-                            else:
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], min_attention_score + attention_scores[i][j][k], barcode_info[i][3], i, j])
+                            elif barcode_info[i][3]==1: # selfloop = autocrine
+                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
+                            else: # paracrine or juxtacrine
+                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
      
             ###########	
           
             print('records found %d'%len(csv_record))
             for i in range (1, len(csv_record)): 
                 key_value = str(csv_record[i][6]) +'-'+ str(csv_record[i][7]) + '-' + csv_record[i][2] + '-' + csv_record[i][3]
+                # i-j-ligandGene-receptorGene
                 csv_record_dict[key_value].append([csv_record[i][4], run])
+                
         '''    
         for key_value in csv_record_dict.keys():
             run_dict = defaultdict(list)
@@ -239,7 +248,7 @@ if __name__ == "__main__":
             for runs in run_dict.keys(): # has just one mean value for the attention score
                 csv_record_dict[key_value].append([run_dict[runs],runs]) # [score, 0]
         '''
-        #######################################
+        ########## All runs combined. Now find rank product #############################
         
         all_edge_list = []
         for key_value in csv_record_dict.keys():
@@ -251,7 +260,7 @@ if __name__ == "__main__":
             all_edge_list.append(edge_score_runs) # [[key_value, score_by_run1, score_by_run2, etc.],...]
     
         ## Find the rank product #####################################################################
-        ## all_edge_list has all the edges along with their scores for different runs in following format: 
+        ## all_edge_list has all the edges along with their scores for different runs in the following format: 
         ## [edge_1_info, score_by_run1, score_by_run2, etc.], [edge_2_info, score_by_run1, score_by_run2, etc.], ..., [edge_N_info, score_by_run1, score_by_run2, etc.]
         edge_rank_dictionary = defaultdict(list)
         # sort the all_edge_list by each run's rank 
@@ -265,24 +274,46 @@ if __name__ == "__main__":
         all_edge_vs_rank = []
         for key_val in edge_rank_dictionary.keys():
             rank_product = 1
+            score_product = 1
             attention_score_list = csv_record_dict[key_value] # [[score, run_id],...]
-            avg_score = 0 #[]
-            total_weight = 0
+            #avg_score = 0 
+            #total_weight = 0
             for i in range (0, len(edge_rank_dictionary[key_val])):
                 rank_product = rank_product * edge_rank_dictionary[key_val][i]
-                weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
-                avg_score = avg_score + attention_score_list[i][0] * weight_by_run
+                score_product = score_product * attention_score_list[i][0]
+                #weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
+                #avg_score = avg_score + attention_score_list[i][0] * weight_by_run
                 #avg_score.append(attention_score_list[i][0])  
-                total_weight = total_weight + weight_by_run
+                #total_weight = total_weight + weight_by_run
                 
-            avg_score = avg_score/total_weight # lower weight being higher attention np.max(avg_score) #
-            all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])  # small rank being high attention
+            #avg_score = avg_score/total_weight # lower weight being higher attention np.max(avg_score) #
+            all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), score_product**(1/total_runs)])  # small rank being high attention
             distribution_rank[layer].append(rank_product**(1/total_runs))
             
         all_edge_sorted_by_rank[layer] = sorted(all_edge_vs_rank, key = lambda x: x[1]) # small rank being high attention 
+        # so ascending by rank = descending by score, right?
     
     #############################################################################################################################################
     # for each layer, should I scale the attention scores [0, 1] over all the edges? So that they are comparable or mergeable between layers?
+    # for each edge, we have two sets of (rank, score). We need just one. 
+    edge_rank_intersect_dict = defaultdict(list)
+    edge_score_intersect_dict = defaultdict(list)
+    for layer in range (0, 2):
+        for i in range (0, len(all_edge_sorted_by_rank[layer])):
+            edge_rank_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][1]) # rank 
+            edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2]) # score
+    
+    key_list = list(edge_rank_intersect_dict.keys())
+    for key in key_list:
+        edge_rank_intersect_dict[key] = (edge_rank_intersect_dict[key][0]*edge_rank_intersect_dict[key][1])**(1/2) # because two layers # or weighted average # or arithmetic?
+        edge_score_intersect_dict[key] = (edge_score_intersect_dict[key][0]*edge_score_intersect_dict[key][1])**(1/2) # because two layers
+
+    all_edge_sorted_by_rank = []
+    for key in key_list:
+        all_edge_sorted_by_rank.append([key, edge_rank_intersect_dict[key], edge_score_intersect_dict[key]]) 
+
+    all_edge_sorted_by_rank = sorted(all_edge_sorted_by_rank, key = lambda x: x[1]) # small rank being high attention 
+    # so ascending by rank = descending by score, right?
     ################################ or ###############################################################################################################
     if args.cutoff_MAD ==-1 and args.cutoff_z_score == -1:
         percentage_value = args.top_percent #20 ##100 #20 # top 20th percentile rank, low rank means higher attention score
@@ -292,7 +323,7 @@ if __name__ == "__main__":
             threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
             for i in range (0, len(all_edge_sorted_by_rank[layer])):
                 if all_edge_sorted_by_rank[layer][i][1] <= threshold_up: # because, lower rank means higher strength
-                    csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(i+1) # already sorted by rank. so just use i as the rank 
+                    csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][1]) # already sorted by rank. so just use i as the rank 
                     edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2]) # score
         ###########################################################################################################################################
         ## get the aggregated rank for all the edges ##
