@@ -56,7 +56,7 @@ def plot(df):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
 
-    parser.add_argument( '--data_name', type=str, help='The name of dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs") # , required=True
+    parser.add_argument( '--data_name', type="", help='The name of dataset', default="Visium_HD_Human_Colon_Cancer_square_002um_outputs") # , required=True
     parser.add_argument( '--model_name', type=str, help='Name of the trained model', default='NEST_Visium_HD_Human_Colon_Cancer_square_002um_outputs') #, required=True
     parser.add_argument( '--top_edge_count', type=int, default=135000 ,help='Number of the top communications to plot. To plot all insert -1') # 
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')    
@@ -327,7 +327,7 @@ if __name__ == "__main__":
         component_label = record[5]
         X = barcode_info[i][1]
         Y = -barcode_info[i][2]
-        opacity = np.float(record[8])
+        opacity = float(record[8])
         active_spot[i].append([pathology_label, component_label, X, Y, opacity])
         
         j = record[7]
@@ -335,7 +335,7 @@ if __name__ == "__main__":
         component_label = record[5]
         X = barcode_info[j][1]
         Y = -barcode_info[j][2]
-        opacity = np.float(record[8])   
+        opacity = float(record[8])   
         active_spot[j].append([pathology_label, component_label, X, Y, opacity])
         ''''''
         
