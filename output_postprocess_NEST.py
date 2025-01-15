@@ -36,9 +36,9 @@ import os
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, help='The name of dataset', required=True) # default='PDAC_64630',
-    parser.add_argument( '--model_name', type=str, help='Name of the trained model', required=True)
-    parser.add_argument( '--total_runs', type=int, help='How many runs for ensemble (at least 2 are preferred)', required=True)
+    parser.add_argument( '--data_name', type=str, default="V1_Human_Lymph_Node_spatial_intra", help='The name of dataset') #, required=True) # default='PDAC_64630',
+    parser.add_argument( '--model_name', type=str, default="NEST_V1_Human_Lymph_Node_spatial_intra", help='Name of the trained model') #, required=True)
+    parser.add_argument( '--total_runs', type=int, default=4, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
@@ -46,7 +46,6 @@ if __name__ == "__main__":
     parser.add_argument( '--output_path', type=str, default='output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')
     parser.add_argument( '--cutoff_MAD', type=int, default=-1, help='Set it to 1 to filter out communications having deviation higher than MAD')
-    parser.add_argument( '--cutoff_z_score', type=float, default=-1, help='Set it to 1 to filter out communications having z_score less than 1.97 value')
     parser.add_argument( '--cutoff_z_score', type=float, default=-1, help='Set it to 1 to filter out communications having z_score less than 1.97 value')
     parser.add_argument( '--output_all', type=int, default=-1, help='Set it to 1 to output all communications')
     args = parser.parse_args()
@@ -94,13 +93,15 @@ if __name__ == "__main__":
     total_runs = args.total_runs 
     start_index = 0 
     distribution_rank = []
+    distribution_score = []
     all_edge_sorted_by_rank = []
     for layer in range (0, 2):
         distribution_rank.append([])
+        distribution_score.append([])
         all_edge_sorted_by_rank.append([])
     
     layer = -1
-    for l in [2,3]: #, 3]: # 2 = layer 2, 3 = layer 1 
+    for l in [3, 2]: #, 3]: # 2 = layer 2, 3 = layer 1 
         layer = layer + 1
         print('layer %d'%layer)
         csv_record_dict = defaultdict(list)
@@ -275,7 +276,7 @@ if __name__ == "__main__":
         for key_val in edge_rank_dictionary.keys():
             rank_product = 1
             score_product = 1
-            attention_score_list = csv_record_dict[key_value] # [[score, run_id],...]
+            attention_score_list = csv_record_dict[key_val] # [[score, run_id],...]
             #avg_score = 0 
             #total_weight = 0
             for i in range (0, len(edge_rank_dictionary[key_val])):
