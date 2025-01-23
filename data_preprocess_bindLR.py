@@ -287,10 +287,58 @@ if __name__ == "__main__":
     print('preprocess done.')
     print('writing data ...')
 
-    ################## input graph #################################################
-    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
-        pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)
- 
+    ################## input gene graph #################################################
+    lig_rec_dict = defaultdict(dict)    
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        if i in lig_rec_dict:
+            if j in lig_rec_dict[i]:
+                lig_rec_dict[i][j].append(lig_rec[index]) 
+            else:
+                lig_rec_dict[i][j] = []
+                lig_rec_dict[i][j].append(lig_rec[index])
+        else:
+            lig_rec_dict[i][j] = []
+            lig_rec_dict[i][j].append(lig_rec[index])                
+
+    gene_node_index = 0
+    gene_node_list_per_spot = defaultdict(dict)
+    barcode_info_gene = []
+    for spot_id in range (0, total_num_cell):    
+        for gene in ligand_list:
+            gene_node_list_per_spot[spot_id][gene] = gene_node_index
+            gene_node_index = gene_node_index + 1
+            
+        for gene in receptor_list:
+            gene_node_list_per_spot[spot_id][gene] = gene_node_index
+            gene_node_index = gene_node_index + 1
+            
+        # cell_code, coordinates[i,0],coordinates[i,1], 0
+        barcode_info_gene.append(barcode_info[spot_id])
+
+    
+    print('Total number of nodes in this graph is %d'%gene_node_index)
+    row_col_gene = []
+    #edge_weight_gene = []
+    
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        ligand_gene = lig_rec[index][0]
+        receptor_gene = lig_rec[index][1]
+        gene_node_from = gene_node_list_per_spot[i][ligand_gene]
+        gene_node_to = gene_node_list_per_spot[j][receptor_gene]
+        row_col_gene.append([gene_node_from, gene_node_to])
+
+        # edge_weight_gene.append(edge_weight[index])
+        
+    with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
+        pickle.dump([row_col_gene, edge_weight, lig_rec, total_num_cell], fp)
+
+    ################### input graph spot/cell  ############
+#    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
+#        pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)    
     ################# metadata #####################################################
     with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
         pickle.dump(self_loop_found, fp)
