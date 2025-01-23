@@ -1,8 +1,11 @@
+# Written By 
+# Fatema Tuz Zohora
+
+
 print('package loading')
 import numpy as np
 import pickle
 from scipy import sparse
-
 import numpy as np
 import qnorm
 from scipy.sparse import csr_matrix
@@ -12,7 +15,6 @@ import gzip
 import argparse
 import os
 import scanpy as sc
-
 
 print('user input reading')
 #current_dir = 
@@ -58,6 +60,7 @@ if __name__ == "__main__":
         gene_ids = list(adata_h5.var_names)
         coordinates = adata_h5.obsm['spatial']
         cell_barcode = np.array(adata_h5.obs.index)
+        print('Number of barcodes: %d'%cell_barcode.shape[0])
         print('Applying quantile normalization')
         temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)      
@@ -72,6 +75,7 @@ if __name__ == "__main__":
         print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
         gene_ids = list(temp.var_names) 
         cell_barcode = np.array(temp.obs.index)
+        print('Number of barcodes: %d'%cell_barcode.shape[0])
         print('Applying quantile normalization')
         temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)  
@@ -82,8 +86,8 @@ if __name__ == "__main__":
         tissue_position = df.values
         barcode_vs_xy = dict() # record the x and y coordinates for each spot/cell
         for i in range (0, tissue_position.shape[0]):
-            #barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] # x and y coordinates
-            barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format for LUAD sample, the x and y are swapped
+            barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] # x and y coordinates
+            #barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format for LUAD sample, the x and y are swapped
         
         coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
         for i in range (0, cell_barcode.shape[0]):
@@ -127,7 +131,7 @@ if __name__ == "__main__":
     ####################################################################
     # ligand - receptor database 
     print('ligand-receptor database reading.')
-    df = pd.read_csv('/cluster/home/t116508uhn/64630/NEST_database.csv', sep=",")
+    df = pd.read_csv(args.database_path, sep=",")
     
     '''
             Ligand   Receptor          Annotation           Reference
@@ -280,21 +284,33 @@ if __name__ == "__main__":
     total_num_cell = cell_vs_gene.shape[0]
     print('total number of nodes is %d, and edges is %d in the input graph'%(total_num_cell, len(row_col)))
     print('preprocess done.')
-    print('write data')
-    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  #b, a:[0:5]  _filtered 
+    print('writing data ...')
+
+    ################## input graph #################################################
+    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
         pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)
 
-    with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp:  #b, a:[0:5]   _filtered
+    ################# metadata #####################################################
+    with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
         pickle.dump(self_loop_found, fp)
 
-    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:  #b, a:[0:5]   _filtered
+    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:  
         pickle.dump(barcode_info, fp)
     
-    ######### optional #################################################################           
+    ################## required for the nest interactive version ###################
+    df = pd.DataFrame(gene_ids)
+    df.to_csv(args.metadata_to + 'gene_ids_'+args.data_name+'.csv', index=False, header=False)
+    df = pd.DataFrame(cell_barcode)
+    df.to_csv(args.metadata_to + 'cell_barcode_'+args.data_name+'.csv', index=False, header=False)
+    df = pd.DataFrame(coordinates)
+    df.to_csv(args.metadata_to + 'coordinates_'+args.data_name+'.csv', index=False, header=False)
+    
+    
+    ######### optional #############################################################           
     # we do not need this to use anywhere. But just for debug purpose we are saving this. We can skip this if we have space issue.
     with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
     	pickle.dump(cell_vs_gene, fp)
         
-   print('write data done')
+    print('write data done')
     
 # nohup python -u data_preprocess_NEST.py --data_name='PDAC_64630_mincell3_th98p5' --data_from='/cluster/projects/schwartzgroup/fatema/pancreatic_cancer_visium/210827_A00827_0396_BHJLJTDRXY_Notta_Karen/V10M25-61_D1_PDA_64630_Pa_P_Spatial10x_new/outs/' --filter_min_cell=3 --threshold_gene_exp=98.5 > output_data_preprocess_PDAC_64630_min_cell_3_th98p5.log &
