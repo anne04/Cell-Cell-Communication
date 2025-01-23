@@ -21,8 +21,8 @@ print('user input reading')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--data_name', type=str, help='Name of the dataset', required=True)  
-    parser.add_argument( '--data_from', type=str, required=True, help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+    parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial_novelLR' ,help='Name of the dataset') #, required=True)  
+    parser.add_argument( '--data_from', type=str, default='../data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #required=True, 
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
