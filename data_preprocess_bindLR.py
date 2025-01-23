@@ -21,8 +21,9 @@ print('user input reading')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial_novelLR' ,help='Name of the dataset') #, required=True)  
-    parser.add_argument( '--data_from', type=str, default='../data/V1_Human_Lymph_Node_spatial/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #required=True, 
+    parser.add_argument( '--data_name', type=str, default='PDAC_exp2_D1_64630_novelLR' ,help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/data/notta_pdac_visium_spaceranger_outputs_no_header/exp2_D1/outs/' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #required=True, 
+    #'../data/V1_Human_Lymph_Node_spatial/'
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
@@ -289,7 +290,7 @@ if __name__ == "__main__":
     ################## input graph #################################################
     with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
         pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)
-
+ 
     ################# metadata #####################################################
     with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
         pickle.dump(self_loop_found, fp)
