@@ -22,24 +22,32 @@ def get_graph(training_data):
         Integer: Dimension of node embedding
     """
     
-    f = gzip.open(training_data , 'rb')
-    row_col, edge_weight, lig_rec, num_cell = pickle.load(f)
+    f = gzip.open(training_data , 'rb') # read input graph
+    row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(f)
     
-    #print(edge_weight)
-
+    print('Unique gene type: %d'%np.unique(gene_node_type))
+    num_feature = np.unique(gene_node_type)
+    
     # one hot vector used as node feature vector
-    X = np.eye(num_cell, num_cell)
-    np.random.shuffle(X)
-    X_data = X # node feature vector
-    num_feature = X_data.shape[0]
+    feature_vector = np.eye(num_feature, num_feature)
+    # 1 0 0 0 = feature_vector[0]
+    # 0 1 0 0 = feature_vector[1]
+    # 0 0 1 0 = feature_vector[2]
+    # 0 0 0 1 = feature_vector[3]
+    # feature_vector[feature_type]
     
+    X = np.zeros((total_num_gene_node, num_feature))
+    for i in range (0, len(gene_node_type)):
+        X[i][:] = feature_vector[gene_node_type[i]]
+    
+    X_data = X # node feature vector
     print('Node feature matrix: X has dimension ', X_data.shape)
-    print("Total number of edges in the input graph is %d"%len(row_col))
+    print("Total number of edges in the input graph is %d"%len(row_col_gene))
     
 
     ###########
 
-    edge_index = torch.tensor(np.array(row_col), dtype=torch.long).T
+    edge_index = torch.tensor(np.array(row_col_gene), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
 
     graph_bags = []
@@ -48,7 +56,7 @@ def get_graph(training_data):
 
     print('Input graph generation done')
 
-    data_loader = DataLoader(graph_bags, batch_size=1) # moved to get_graph
+    data_loader = DataLoader(graph_bags, batch_size=1) 
     
     return data_loader, num_feature
 
