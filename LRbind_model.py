@@ -26,7 +26,7 @@ def get_graph(training_data):
     row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(f)
     
     print('Unique gene type: %d'%np.unique(gene_node_type))
-    num_feature = np.unique(gene_node_type)
+    num_feature = np.max(np.unique(gene_node_type))
     
     # one hot vector used as node feature vector
     feature_vector = np.eye(num_feature, num_feature)
