@@ -302,22 +302,42 @@ if __name__ == "__main__":
             lig_rec_dict[i][j] = []
             lig_rec_dict[i][j].append(lig_rec[index])                
 
+    gene_type_count = 0
+    gene_type = dict()
+    for gene in ligand_list:
+        gene_type[gene] = gene_type_count
+        gene_type_count = gene_type_count + 1
+        
+    for gene in receptor_list:
+        gene_type[gene] = gene_type_count
+        gene_type_count = gene_type_count + 1
+          
+        
     gene_node_index = 0
     gene_node_list_per_spot = defaultdict(dict)
     barcode_info_gene = []
+    gene_node_type = []
+    gene_node_expression = []
     for spot_id in range (0, total_num_cell):    
         for gene in ligand_list:
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
+            gene_node_type.append(gene_type[gene])
+            barcode_info_gene.append(barcode_info[spot_id])
+            gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
             gene_node_index = gene_node_index + 1
             
         for gene in receptor_list:
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
+            gene_node_type.append(gene_type[gene])
+            barcode_info_gene.append(barcode_info[spot_id])
+            gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
             gene_node_index = gene_node_index + 1
             
         # cell_code, coordinates[i,0],coordinates[i,1], 0
-        barcode_info_gene.append(barcode_info[spot_id])
+        
 
     
+    total_num_gene_node = gene_node_index
     print('Total number of nodes in this graph is %d'%gene_node_index)
     row_col_gene = []
     #edge_weight_gene = []
@@ -334,29 +354,31 @@ if __name__ == "__main__":
         # edge_weight_gene.append(edge_weight[index])
         
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
-        pickle.dump([row_col_gene, edge_weight, lig_rec, total_num_cell], fp)
+        pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node], fp)
 
     ################### input graph spot/cell  ############
 #    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
 #        pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)    
     ################# metadata #####################################################
-    with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
-        pickle.dump(self_loop_found, fp)
+#    with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
+#        pickle.dump(self_loop_found, fp)
 
-    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:  
-        pickle.dump(barcode_info, fp)
+    with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
+        pickle.dump(barcode_info_gene, fp)
     
     ################## required for the nest interactive version ###################
+    '''
     df = pd.DataFrame(gene_ids)
     df.to_csv(args.metadata_to + 'gene_ids_'+args.data_name+'.csv', index=False, header=False)
     df = pd.DataFrame(cell_barcode)
     df.to_csv(args.metadata_to + 'cell_barcode_'+args.data_name+'.csv', index=False, header=False)
     df = pd.DataFrame(coordinates)
     df.to_csv(args.metadata_to + 'coordinates_'+args.data_name+'.csv', index=False, header=False)
-    
+    '''
     
     ######### optional #############################################################           
     # we do not need this to use anywhere. But just for debug purpose we are saving this. We can skip this if we have space issue.
+    
     with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:  
     	pickle.dump(cell_vs_gene, fp)
         
