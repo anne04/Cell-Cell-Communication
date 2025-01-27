@@ -57,7 +57,7 @@ if __name__ == "__main__":
     args.training_data = args.training_data + args.data_name + '/' + args.data_name + '_' + 'adjacency_records'
 
     if args.total_subgraphs > 1 :
-        node_id_sorted = args.metadata_to + args.data_name + '/'+ args.data_name+'_'+'node_id_sorted_xy'
+        node_id_sorted = args.metadata_to + args.data_name + '/'+ args.data_name+'_'+'gene_node_id_sorted_xy'
 
     args.embedding_path = args.embedding_path + args.data_name +'/'
     args.model_path = args.model_path + args.data_name +'/'
