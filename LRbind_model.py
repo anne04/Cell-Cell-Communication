@@ -24,9 +24,9 @@ def get_graph(training_data):
     
     f = gzip.open(training_data , 'rb') # read input graph
     row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(f)
-    
-    print('Unique gene type: %d'%np.unique(gene_node_type))
-    num_feature = np.max(np.unique(gene_node_type))
+
+    print('Unique gene type: %d'%np.max(np.unique(gene_node_type)))
+    num_feature = np.max(np.unique(gene_node_type))+1
     
     # one hot vector used as node feature vector
     feature_vector = np.eye(num_feature, num_feature)
@@ -35,7 +35,7 @@ def get_graph(training_data):
     # 0 0 1 0 = feature_vector[2]
     # 0 0 0 1 = feature_vector[3]
     # feature_vector[feature_type]
-    
+    print('total_num_gene_node %d, len gene_node_type %d'%(total_num_gene_node, len(gene_node_type)))
     X = np.zeros((total_num_gene_node, num_feature))
     for i in range (0, len(gene_node_type)):
         X[i][:] = feature_vector[gene_node_type[i]]
@@ -43,6 +43,7 @@ def get_graph(training_data):
     X_data = X # node feature vector
     print('Node feature matrix: X has dimension ', X_data.shape)
     print("Total number of edges in the input graph is %d"%len(row_col_gene))
+    
     
 
     ###########
