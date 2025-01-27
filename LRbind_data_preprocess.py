@@ -354,7 +354,7 @@ if __name__ == "__main__":
             i=i+1
         	
         node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-        with gzip.open(metadata_to + args.data_name+'_'+'gene_node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+        with gzip.open(args.metadata_to + args.data_name+'_'+'gene_node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
         	pickle.dump(node_id_sorted_xy, fp)
     
     ################### input graph spot/cell  ############
