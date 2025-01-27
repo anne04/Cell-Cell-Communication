@@ -311,14 +311,15 @@ if __name__ == "__main__":
         for gene in ligand_list:
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
             gene_node_type.append(gene_type[gene])
-            barcode_info_gene.append(barcode_info[spot_id])
+            barcode_info_gene.append((barcode_info[spot_id]).append(gene_node_index))
             gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
             gene_node_index = gene_node_index + 1
             
         for gene in receptor_list:
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
             gene_node_type.append(gene_type[gene])
-            barcode_info_gene.append(barcode_info[spot_id])
+            #barcode_info_gene.append(barcode_info[spot_id])
+            barcode_info_gene.append((barcode_info[spot_id]).append(gene_node_index))            
             gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
             gene_node_index = gene_node_index + 1
             
@@ -347,11 +348,11 @@ if __name__ == "__main__":
         
     #### needed if split data is used ##############
     if args.split>0:
-        i=0
+        #i=0
         node_id_sorted_xy=[]
         for gene_node in barcode_info_gene:
-            node_id_sorted_xy.append([i, gene_node[1],gene_node[2]])
-            i=i+1
+            node_id_sorted_xy.append([gene_node[4], gene_node[1],gene_node[2]])
+            #i=i+1
         	
         node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
         with gzip.open(args.metadata_to + args.data_name+'_'+'gene_node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
