@@ -350,7 +350,7 @@ if __name__ == "__main__":
         i=0
         node_id_sorted_xy=[]
         for gene_node in barcode_info_gene:
-            node_id_sorted_xy.append([i, gene_node[i][1],gene_node[i][2]])
+            node_id_sorted_xy.append([i, gene_node[1],gene_node[2]])
             i=i+1
         	
         node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
