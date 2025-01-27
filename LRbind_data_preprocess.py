@@ -116,18 +116,7 @@ if __name__ == "__main__":
         gene_index[gene] = i
         i = i+1
         
-    #### needed if split data is used ##############
-    if args.split>0:
-        i=0
-        node_id_sorted_xy=[]
-        for cell_code in cell_barcode:
-            node_id_sorted_xy.append([i, coordinates[i,0],coordinates[i,1]])
-            i=i+1
-        	
-        node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
-        with gzip.open(metadata_to + args.data_name+'_'+'node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
-        	pickle.dump(node_id_sorted_xy, fp)
-    
+
     
     ####################################################################
     # ligand - receptor database 
@@ -355,7 +344,19 @@ if __name__ == "__main__":
         
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
         pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node], fp)
-
+        
+    #### needed if split data is used ##############
+    if args.split>0:
+        i=0
+        node_id_sorted_xy=[]
+        for gene_node in barcode_info_gene:
+            node_id_sorted_xy.append([i, gene_node[i][1],gene_node[i][2]])
+            i=i+1
+        	
+        node_id_sorted_xy = sorted(node_id_sorted_xy, key = lambda x: (x[1], x[2]))
+        with gzip.open(metadata_to + args.data_name+'_'+'gene_node_id_sorted_xy', 'wb') as fp:  #b, a:[0:5]   
+        	pickle.dump(node_id_sorted_xy, fp)
+    
     ################### input graph spot/cell  ############
 #    with gzip.open(args.data_to + args.data_name + '_adjacency_records', 'wb') as fp:  
 #        pickle.dump([row_col, edge_weight, lig_rec, total_num_cell], fp)    
