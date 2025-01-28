@@ -197,8 +197,12 @@ if __name__ == "__main__":
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-        cell_percentile.append(np.percentile(y, args.threshold_gene_exp)) 
-    
+        ## inter ##
+        active_cutoff = np.percentile(y, args.threshold_gene_exp)
+        if active_cutoff == min(cell_vs_gene[i][:]):
+            active_cutoff = max(cell_vs_gene[i][:])
+            #all_deactive_count = all_deactive_count + 1
+        cell_percentile.append(active_cutoff) 
     ##############################################################################
     # some preprocessing before making the input graph
     count_total_edges = 0
@@ -309,6 +313,8 @@ if __name__ == "__main__":
     gene_node_expression = []
     for spot_id in range (0, total_num_cell):    
         for gene in ligand_list:
+            if cell_vs_gene[spot_id][gene_index[gene]] < cell_percentile[spot_id]:
+                continue
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
             gene_node_type.append(gene_type[gene])
             barcode_info_gene.append((barcode_info[spot_id]).append(gene_node_index))
@@ -316,6 +322,8 @@ if __name__ == "__main__":
             gene_node_index = gene_node_index + 1
             
         for gene in receptor_list:
+            if cell_vs_gene[spot_id][gene_index[gene]] < cell_percentile[spot_id]:
+                continue
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
             gene_node_type.append(gene_type[gene])
             #barcode_info_gene.append(barcode_info[spot_id])
