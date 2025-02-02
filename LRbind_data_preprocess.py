@@ -116,6 +116,13 @@ if __name__ == "__main__":
         gene_index[gene] = i
         i = i+1
         
+    ####################### target LR list############################################
+    target_LR_index = dict() 
+    target_LR_list = [['aaa', 'bbb']]
+    for target_LR in target_LR_list:
+        ligand = target_LR[0]
+        receptor = target_LR[1]
+        target_LR_index[ligand + '+' + receptor] = [gene_index[ligand], gene_index[receptor]]
 
     
     ####################################################################
@@ -203,6 +210,23 @@ if __name__ == "__main__":
             active_cutoff = max(cell_vs_gene[i][:])
             #all_deactive_count = all_deactive_count + 1
         cell_percentile.append(active_cutoff) 
+    ##################### target LR cell pairs #########################################################
+    target_cell_pair = defaultdict(list)
+    for target_LR in target_LR_list:
+        ligand = target_LR[0]
+        receptor = target_LR[1]
+        for i in range (0, cell_vs_gene.shape[0]): # ligand
+            if cell_vs_gene[i][gene_index[ligand]] < cell_percentile[i]:
+                continue
+            for j in range (0, cell_vs_gene.shape[0]): # receptor
+                if cell_vs_gene[j][gene_index[receptor]] < cell_percentile[j]:
+                    continue
+                if dist_X[i,j]==0:
+                    continue
+                    
+                target_cell_pair[ligand+'+'+receptor].append([i, j])    
+                
+
     ##############################################################################
     # some preprocessing before making the input graph
     count_total_edges = 0
@@ -223,7 +247,7 @@ if __name__ == "__main__":
     for g in range(start_index, end_index): 
         gene = ligand_list[g]
         for i in range (0, cell_vs_gene.shape[0]): # ligand
-              
+            
             if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
                 continue
             
@@ -375,6 +399,9 @@ if __name__ == "__main__":
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
         pickle.dump(barcode_info_gene, fp)
+
+    with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
+        pickle.dump(target_LR_index, target_cell_pair, fp)
     
     ################## required for the nest interactive version ###################
     '''
