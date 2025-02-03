@@ -39,9 +39,9 @@ import altairThemes # assuming you have altairThemes.py at your current directoy
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, default='V1_Human_Lymph_Node_spatial', help='The name of dataset', required=True) # default='PDAC_64630',
-    parser.add_argument( '--model_name', type=str, default='NEST_V1_Human_Lymph_Node_spatial', help='Name of the trained model', required=True)
-    parser.add_argument( '--total_runs', type=int, default=5, help='How many runs for ensemble (at least 2 are preferred)', required=True)
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial', help='The name of dataset') #, required=True) # default='PDAC_64630',
+    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial', help='Name of the trained model') #, required=True)
+    parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
         
-    X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
+    
 ##################### get metadata: barcode_info ###################################
 
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot = pickle.load(fp)
     
-    with gzip.open(args.metadata_to + args.data_name +'_test_set', 'rb') as fp:  
+    with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
     '''    
     with gzip.open(args.data_from + args.data_name + '_adjacency_records', 'rb') as fp:  #b, a:[0:5]  _filtered 
@@ -98,21 +98,22 @@ if __name__ == "__main__":
     ''' 
     ############# load output graph #################################################
 
-    
-    with gzip.open(X_embedding_filename + '_r1', 'rb') as fp:  
+    X_embedding_filename =  args.embedding_path + args.model_name + '_r1' + '_Embed_X' #.npy
+    with gzip.open(X_embedding_filename, 'rb') as fp:  
         X_embedding = pickle.load(fp)
 
-    found_list = []
-    input_cell_pair_list = []
-    for LR_target in target_cell_pair:
+    found_list = dict()
+    input_cell_pair_list = dict() 
+    top_N = 100
+    for LR_target in target_cell_pair.keys():
         ligand = LR_target.split('+')[0]
         receptor = LR_target.split('+')[1]
         pair_list = target_cell_pair[LR_target]
         for pair in pair_list:
             i = pair[0]
             j = pair[1]
-            input_cell_pair_list.append(i)
-            input_cell_pair_list.append(j)
+            input_cell_pair_list[i] = 1
+            input_cell_pair_list[j] = 1
             ligand_node_index = []
             for gene in gene_node_list_per_spot[i]:
                 if gene in ligand_list:
@@ -126,22 +127,76 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
-                    dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1]], j_gene[1])
+                    dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
 
-            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:10]
+            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
             for item in dot_prod_list:
-                if item[4] == ligand and item[5] == receptor:
-                    found_list.append([i, j])
+                #print(item)
+                if item[3] == ligand and item[4] == receptor:
+                    found_list[i] = 1
+                    found_list[j] = 1
                     break
 
     # plot found_list
-
+    print("positive: %d out of %d"%(len(found_list), len(input_cell_pair_list)))
     # plot input_cell_pair_list
 
-
-
-
+######### plot output #############################
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[]   
+    data_list['gene_expression']=[] 
     
+    for i in range (0, len(barcode_info)):
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(-barcode_info[i][2])
+        if i in found_list:
+            data_list['gene_expression'].append(1)
+        else:
+            data_list['gene_expression'].append(0)
+    
+    source= pd.DataFrame(data_list)
+    
+    chart = alt.Chart(source).mark_point(filled=True).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
+    )
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_output_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
+    
+##################### plot input ###########################
+
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[]   
+    data_list['gene_expression']=[] 
+    
+    for i in range (0, len(barcode_info)):
+        data_list['X'].append(barcode_info[i][1])
+        data_list['Y'].append(-barcode_info[i][2])
+        if i in input_cell_pair_list:
+            data_list['gene_expression'].append(1)
+        else:
+            data_list['gene_expression'].append(0)
+    
+    source= pd.DataFrame(data_list)
+    
+    chart = alt.Chart(source).mark_point(filled=True).encode(
+        alt.X('X', scale=alt.Scale(zero=False)),
+        alt.Y('Y', scale=alt.Scale(zero=False)),
+        color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
+    )
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_input_' + 'CCL19_CCR7'+'.html')
+
+######################################################
+    with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
+        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(fp)
+
+    for lr in lig_rec:
+        if lr[0]=='CCL19' and lr[1]=='CCR7':
+            print('found')
+            break
+######################################################    
     #filename_suffix = ["_r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
     total_runs = args.total_runs 
     start_index = 0 
