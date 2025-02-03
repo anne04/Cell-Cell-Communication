@@ -118,7 +118,7 @@ if __name__ == "__main__":
         
     ####################### target LR list############################################
     target_LR_index = dict() 
-    target_LR_list = [['aaa', 'bbb']]
+    target_LR_list = [['CXCL19', 'CXCR4']]
     for target_LR in target_LR_list:
         ligand = target_LR[0]
         receptor = target_LR[1]
