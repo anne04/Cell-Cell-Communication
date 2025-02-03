@@ -99,7 +99,7 @@ if __name__ == "__main__":
     ############# load output graph #################################################
 
     
-    with gzip.open(X_embedding_filename, 'rb') as fp:  
+    with gzip.open(X_embedding_filename + '_r1', 'rb') as fp:  
         X_embedding = pickle.load(fp)
 
     found_list = []
