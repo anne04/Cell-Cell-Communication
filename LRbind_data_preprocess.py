@@ -396,6 +396,8 @@ if __name__ == "__main__":
     ################# metadata #####################################################
 #    with gzip.open(args.metadata_to + args.data_name +'_self_loop_record', 'wb') as fp: 
 #        pickle.dump(self_loop_found, fp)
+    with gzip.open(args.metadata_to + args.data_name +'_barcode_info', 'wb') as fp:  
+        pickle.dump(barcode_info, fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
         pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot], fp)
