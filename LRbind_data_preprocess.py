@@ -398,10 +398,10 @@ if __name__ == "__main__":
 #        pickle.dump(self_loop_found, fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
-        pickle.dump(barcode_info_gene, fp)
+        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot], fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
-        pickle.dump(target_LR_index, target_cell_pair, fp)
+        pickle.dump([target_LR_index, target_cell_pair], fp)
     
     ################## required for the nest interactive version ###################
     '''
