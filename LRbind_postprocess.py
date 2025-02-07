@@ -39,8 +39,8 @@ import altairThemes # assuming you have altairThemes.py at your current directoy
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial', help='The name of dataset') #, required=True) # default='PDAC_64630',
-    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial', help='Name of the trained model') #, required=True)
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D', help='The name of dataset') #, required=True) # default='PDAC_64630',
+    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D', help='Name of the trained model') #, required=True)
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         barcode_info = pickle.load(fp) 
 
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X = pickle.load(fp)
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         alt.Y('Y', scale=alt.Scale(zero=False)),
         color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
     )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_output_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_output_1D_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
     
 ##################### plot input ###########################
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
         alt.Y('Y', scale=alt.Scale(zero=False)),
         color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
     )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_input_' + 'CCL19_CCR7'+'.html')
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_input_1D_' + 'CCL19_CCR7'+'.html')
 
 ######################################################
     with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
@@ -197,6 +197,44 @@ if __name__ == "__main__":
             print('found')
             break
 ######################################################    
+    top_N = 30
+    lr_dict = defaultdict(list)
+    for i in range (0, len(barcode_info)):
+        for j in range (0, len(barcode_info)):
+            if dist_X[i][j]==0:
+                continue
+            # from i to j
+            ligand_node_index = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in ligand_list:
+                    ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+
+            receptor_node_index = []
+            for gene in gene_node_list_per_spot[j]:
+                if gene in receptor_list:
+                    receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
+
+            dot_prod_list = []
+            for i_gene in ligand_node_index:
+                for j_gene in receptor_node_index:
+                    dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
+
+            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+            for item in dot_prod_list:
+                lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                
+
+    sort_lr_list = []
+    for lr_pair in lr_dict:
+        sum = 0
+        cell_pair_list = lr_dict[lr_pair]
+        for item in cell_pair_list:
+            sum = sum + item[0]
+
+        sort_lr_list.append([lr_pair, sum])
+
+    sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+#######################################################    
     #filename_suffix = ["_r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
     total_runs = args.total_runs 
     start_index = 0 
