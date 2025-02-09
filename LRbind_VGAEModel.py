@@ -62,7 +62,7 @@ class VGAEModel(nn.Module):
     def forward(self, data):
         z = self.encoder(data)
         adj_rec = self.decoder(z)
-        return adj_rec
+        return adj_rec, z
     '''
     def forward(self, g, features):
         z = self.encoder(g, features)
