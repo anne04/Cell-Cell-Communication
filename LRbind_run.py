@@ -85,12 +85,20 @@ if __name__ == "__main__":
     print(device)
 
     if args.total_subgraphs == 1:
-        from LRbind_model import get_graph, train_NEST
-        # data preparation
-        data_loader, num_feature = get_graph(args.training_data)    
-        # train the model
-        DGI_model = train_NEST(args, data_loader=data_loader, in_channels=num_feature)
+        if args.model_type == 'dgi':
+            from LRbind_model import get_graph, train_NEST
+            # data preparation
+            data_loader, num_feature = get_graph(args.training_data)    
+            # train the model
+            DGI_model = train_NEST(args, data_loader=data_loader, in_channels=num_feature)
         # training done
+        if args.model_type == 'vgae':
+            from LRbind_VGAE_model import get_graph, train_LRbind
+            # data preparation
+            data_loader, num_feature = get_graph(args.training_data)    
+            # train the model
+            VGAEModel_model = train_LRbind(args, data_loader=data_loader, in_channels=num_feature)
+            # training done
     elif args.total_subgraphs > 1:
         from CCC_gat_split import get_split_graph, train_NEST #_v2
         # data preparation
