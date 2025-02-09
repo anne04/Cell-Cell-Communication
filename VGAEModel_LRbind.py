@@ -33,8 +33,7 @@ class VGAEModel(nn.Module):
         ]
         self.layers = nn.ModuleList(layers)
 
-    def encoder(self, data): #g, features):
-        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+    def encoder(self, x, edge_index, edge_weight): #g, features):
         x = self.layers[0](x, edge_index, edge_weight=edge_weight)
         x = self.relu(x)
         #h = self.layers[0](g, features)
