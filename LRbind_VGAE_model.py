@@ -11,7 +11,7 @@ from torch_geometric.nn import DeepGraphInfomax #Linear,
 from torch_geometric.data import Data, DataLoader
 import gzip
 
-from LRbind_VGAEModel import VGAEModel
+from VGAEModel_LRbind import VGAEModel
 
 def get_graph(training_data):
     """Add Statement of Purpose
@@ -47,14 +47,21 @@ def get_graph(training_data):
     
 
     ###########
+    weight_tensor = np.zeros((total_num_gene_node, total_num_gene_node))
+    adj = np.zeros((total_num_gene_node, total_num_gene_node))
     for i in range (0, len(edge_weight)):
         edge_weight[i]=edge_weight[i][0] # making it 1D list
-        
+        weight_tensor[row_col_gene[i][0]][row_col_gene[i][1]] = edge_weight[i]
+        adj[row_col_gene[i][0]][row_col_gene[i][1]] = 1
+
+    
     edge_index = torch.tensor(np.array(row_col_gene), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
-
+    weight_tensor = torch.tensor(weight_tensor, dtype=torch.float)
+    adj = torch.tensor(adj, dtype=torch.float)
+    
     graph_bags = []
-    graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
+    graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr, weight_tensor=weight_tensor, adj=adj)
     graph_bags.append(graph)
 
     print('Input graph generation done')
@@ -78,13 +85,14 @@ class my_data():
         self.edge_attr = edge_attr
 
 
-def train_NEST(args, data_loader, in_channels):
+def train_LRbind(args, data_loader, in_channels):
     """Add Statement of Purpose
     Args: [to be]
            
     Returns: [to be]
 
     """
+    
     loss_curve = np.zeros((args.num_epoch//500+1))
     loss_curve_counter = 0
 
@@ -123,6 +131,14 @@ def train_NEST(args, data_loader, in_channels):
     start_time = datetime.datetime.now()
 
     #print('training starts ...')
+    norm = (
+        adj.shape[0]
+        * adj.shape[0]
+        / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
+        )
+    adj = adj.to(device)
+    weight_tensor = weight_tensor.to(device)
+
     for epoch in range(epoch_start, args.num_epoch):
         VGAEModel_model.train()
         VGAEModel_optimizer.zero_grad()
@@ -130,25 +146,8 @@ def train_NEST(args, data_loader, in_channels):
 
         for data in data_loader:
             data = data.to(device)
-            logits, X_embedding =  = VGAEModel_model(data=data) # output from decoder -> adj
-            # compute loss
-            VGAEModel_loss = norm * F.binary_cross_entropy(
-                logits.view(-1), adj.view(-1), weight=weight_tensor
-            )
-            kl_divergence = (
-                0.5
-                / logits.size(0)
-                * (
-                    1
-                    + 2 * vgae_model.log_std
-                    - vgae_model.mean**2
-                    - torch.exp(vgae_model.log_std) ** 2
-                )
-                .sum(1)
-                .mean()
-            )
-            VGAEModel_loss -= kl_divergence
-    
+            logits, X_embedding =  = VGAEModel_model(data.x, data.edge_index, data.edge_attr) # output from decoder -> adj
+            VGAEModel_loss = VGAEModel_model.loss(logits, data.adj, data.weight_tensor, norm)    
             # backward
             VGAEModel_optimizer.zero_grad()
             VGAEModel_loss.backward()
@@ -195,7 +194,7 @@ def train_NEST(args, data_loader, in_channels):
     VGAEModel_model.to(device)
     VGAEModel_model.eval()
     print("debug loss")
-    VGAEModel_loss = VGAEModel_model.loss(data)
+    VGAEModel_loss = VGAEModel_model.loss(data.x, data.edge_index, data.edge_attr)
     print("debug loss latest tupple %g"%VGAEModel_loss.item())
 
     return VGAEModel_model
