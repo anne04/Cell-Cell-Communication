@@ -65,6 +65,13 @@ class VGAEModel(nn.Module):
         
     def loss(self, logits, adj, weight_tensor, norm):
         # compute loss
+        '''
+        norm = (
+            adj.shape[0]
+            * adj.shape[0]
+            / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
+            )
+        '''
         VGAEModel_loss = norm * F.binary_cross_entropy(
             logits.view(-1), adj.view(-1), weight=weight_tensor
         )
