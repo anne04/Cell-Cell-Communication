@@ -62,6 +62,29 @@ class VGAEModel(nn.Module):
         z = self.encoder(data)
         adj_rec = self.decoder(z)
         return adj_rec, z
+        
+    def loss(self, logits, adj, weight_tensor, norm):
+        # compute loss
+        VGAEModel_loss = norm * F.binary_cross_entropy(
+            logits.view(-1), adj.view(-1), weight=weight_tensor
+        )
+        kl_divergence = (
+            0.5
+            / logits.size(0)
+            * (
+                1
+                + 2 * self.log_std
+                - self.mean**2
+                - torch.exp(self.log_std) ** 2
+            )
+            .sum(1)
+            .mean()
+        )
+        VGAEModel_loss -= kl_divergence
+
+        return VGAEModel_loss
+
+        
     '''
     def forward(self, g, features):
         z = self.encoder(g, features)
