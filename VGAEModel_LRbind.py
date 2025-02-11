@@ -55,7 +55,17 @@ class VGAEModel(nn.Module):
         return sampled_z
 
     def decoder(self, z):
-        adj_rec = torch.sigmoid(torch.matmul(z, z.t()))
+        adj_rec = np.zeros((z.shape[0], z.shape[0]))
+        adj_rec = adj_rec.to(device)
+        for i in range (0, z.shape[0]):
+            row = z[i]
+            for j in range(0, z.shape[0]):
+                col = z[j]
+                result = torch.matmul(row, col)
+                adj_rec[i][j] = result
+                
+        adj_rec = torch.sigmoid(adj_rec)
+        #adj_rec = torch.sigmoid(torch.matmul(z, z.t()))
         return adj_rec
 
     def forward(self, data):
