@@ -56,6 +56,7 @@ class VGAEModel(nn.Module):
 
     def decoder(self, z):
         adj_rec = np.zeros((z.shape[0], z.shape[0]))
+        adj_rec = torch.tensor(adj_rec, dtype=torch.float)
         adj_rec = adj_rec.to(device)
         for i in range (0, z.shape[0]):
             row = z[i]
