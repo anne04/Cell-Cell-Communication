@@ -25,6 +25,10 @@ def get_graph(training_data):
     f = gzip.open(training_data , 'rb') # read input graph
     row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(f)
 
+    row_col_gene_dict = defaultdict(dict)
+    for i in range (0, len(row_col_gene)):
+        row_col_gene_dict[row_col_gene[i][0]][row_col_gene[i][1]] = 1
+        
     print('Unique gene type: %d'%np.max(np.unique(gene_node_type)))
     num_feature = np.max(np.unique(gene_node_type))+1
     
@@ -47,28 +51,28 @@ def get_graph(training_data):
     
 
     ###########
-    weight_tensor = np.zeros((total_num_gene_node, total_num_gene_node))
-    adj = np.zeros((total_num_gene_node, total_num_gene_node))
+    #weight_tensor = np.zeros((total_num_gene_node, total_num_gene_node))
+    #adj = np.zeros((total_num_gene_node, total_num_gene_node))
     for i in range (0, len(edge_weight)):
         edge_weight[i]=edge_weight[i][0] # making it 1D list
-        weight_tensor[row_col_gene[i][0]][row_col_gene[i][1]] = edge_weight[i]
-        adj[row_col_gene[i][0]][row_col_gene[i][1]] = 1
+        #weight_tensor[row_col_gene[i][0]][row_col_gene[i][1]] = edge_weight[i]
+        #adj[row_col_gene[i][0]][row_col_gene[i][1]] = 1
 
     
     edge_index = torch.tensor(np.array(row_col_gene), dtype=torch.long).T
     edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
-    weight_tensor = torch.tensor(weight_tensor, dtype=torch.float)
-    adj = torch.tensor(adj, dtype=torch.float)
+    #weight_tensor = torch.tensor(weight_tensor, dtype=torch.float)
+    #adj = torch.tensor(adj, dtype=torch.float)
     
     graph_bags = []
-    graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr, weight_tensor=weight_tensor, adj=adj)
+    graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr) #, weight_tensor=weight_tensor, adj=adj)
     graph_bags.append(graph)
 
     print('Input graph generation done')
 
     data_loader = DataLoader(graph_bags, batch_size=1) 
     
-    return data_loader, num_feature
+    return data_loader, num_feature, row_col_gene_dict
 
 
 
