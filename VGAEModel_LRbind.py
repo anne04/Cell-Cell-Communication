@@ -69,10 +69,27 @@ class VGAEModel(nn.Module):
         #adj_rec = torch.sigmoid(torch.matmul(z, z.t()))
         return adj_rec
 
-    def forward(self, data):
+    def decoder_loss(self, z, row_col_gene_dict):
+        BCE_partial = 0
+        for i in range (0, z.shape[0]):
+            row_i = torch.sigmoid(torch.matmul(z[i], z.t()))
+            for j in range (0, len(row_i)):
+                y_p = row_i[j]
+                if i in row_col_gene_dict and j in row_col_gene_dict[i]:
+                    y_t = 1
+                else:
+                    y_t = 0
+
+                BCE_partial = BCE_partial + y_t*torch.log(y_p) + (1-y_t)*torch.log(1-y_p)
+
+        BCE_loss = -BCE_partial
+        return BCE_loss
+    
+    def forward(self, data, row_col_gene_dict):
         z = self.encoder(data)
-        adj_rec = self.decoder(z)
-        return adj_rec, z
+        #adj_rec = self.decoder(z)
+        BCE_loss = self.decoder_loss(z, row_col_gene_dict)
+        return BCE_loss, z #adj_rec, z
         
     def loss(self, logits, adj, weight_tensor, norm):
         # compute loss
