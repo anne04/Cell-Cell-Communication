@@ -150,8 +150,10 @@ def train_LRbind(args, data_loader, in_channels):
 
         for data in data_loader:
             data = data.to(device)
-            logits, X_embedding =  = VGAEModel_model(data.x, data.edge_index, data.edge_attr) # output from decoder -> adj
-            VGAEModel_loss = VGAEModel_model.loss(logits, data.adj, data.weight_tensor, norm)    
+            #logits, X_embedding =  = VGAEModel_model(data, row_col_gene_dict) # output from decoder -> adj
+            #VGAEModel_loss = VGAEModel_model.loss(logits, data.adj, data.weight_tensor, norm)    
+            BCE_loss, X_embedding =  = VGAEModel_model(data, row_col_gene_dict) # output from decoder -> adj
+            VGAEModel_loss = VGAEModel_model.loss(BCE_loss, norm)
             # backward
             VGAEModel_optimizer.zero_grad()
             VGAEModel_loss.backward()
