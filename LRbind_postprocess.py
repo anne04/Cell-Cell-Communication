@@ -39,8 +39,8 @@ import altairThemes # assuming you have altairThemes.py at your current directoy
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D', help='The name of dataset') #, required=True) # default='PDAC_64630',
-    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D', help='Name of the trained model') #, required=True)
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='PDAC_64630',
+    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True)
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     found_list = dict()
     input_cell_pair_list = dict() 
-    top_N = 100
+    top_N = 30
     for LR_target in target_cell_pair.keys():
         ligand = LR_target.split('+')[0]
         receptor = LR_target.split('+')[1]
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         alt.Y('Y', scale=alt.Scale(zero=False)),
         color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
     )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_output_1D_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_1D_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
     
 ##################### plot input ###########################
 
