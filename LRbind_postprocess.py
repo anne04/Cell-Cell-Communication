@@ -67,7 +67,7 @@ if __name__ == "__main__":
         barcode_info = pickle.load(fp) 
 
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair = pickle.load(fp)
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
@@ -127,9 +127,13 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
+                    if i_gene in l_r_pair and j_gene in l_r_pair[i_gene]: # discard the existing ones
+                        continue
+    
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
-
-            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+                
+            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]    
+            
             for item in dot_prod_list:
                 #print(item)
                 if item[3] == ligand and item[4] == receptor:
