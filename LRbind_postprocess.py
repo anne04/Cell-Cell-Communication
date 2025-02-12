@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     found_list = dict()
     input_cell_pair_list = dict() 
-    top_N = 30
+    top_N = 10
     for LR_target in target_cell_pair.keys():
         ligand = LR_target.split('+')[0]
         receptor = LR_target.split('+')[1]
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
-                    if i_gene in l_r_pair and j_gene in l_r_pair[i_gene]: # discard the existing ones
+                    if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
                         continue
     
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         alt.Y('Y', scale=alt.Scale(zero=False)),
         color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
     )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_1D_' + 'CCL19_CCR7_top'+ str(top_N)  + '.html')
+    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + 'CCL19_CCR7_top'+ str(top_N)  + '_novel.html')
     
 ##################### plot input ###########################
 
@@ -221,7 +221,7 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
-                    if i_gene in l_r_pair and j_gene in l_r_pair[i_gene]: # discard the existing ones
+                    if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
                         continue
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
 
@@ -235,11 +235,19 @@ if __name__ == "__main__":
         sum = 0
         cell_pair_list = lr_dict[lr_pair]
         for item in cell_pair_list:
-            sum = sum + item[0]
+            sum = sum + 1 #item[0]
 
         sort_lr_list.append([lr_pair, sum])
 
     sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+    for i in range (0, len(sort_lr_list)):
+        if sort_lr_list[i][0] == ligand + '+' + receptor:
+            print('index is %d'%i)
+            break
+            
+    # ccl19-ccr7 index is 174 if sorted by total dot product
+    # ccl19-ccr7 index is 196 if sorted by total frequency 
+    # make a histogram plot
 #######################################################    
     #filename_suffix = ["_r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
     total_runs = args.total_runs 
