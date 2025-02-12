@@ -400,7 +400,7 @@ if __name__ == "__main__":
         pickle.dump(barcode_info, fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
-        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot], fp)
+        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, l_r_pair], fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
         pickle.dump([target_LR_index, target_cell_pair], fp)
