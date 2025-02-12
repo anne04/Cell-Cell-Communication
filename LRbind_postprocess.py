@@ -221,6 +221,8 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
+                    if i_gene in l_r_pair and j_gene in l_r_pair[i_gene]: # discard the existing ones
+                        continue
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
 
             dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
