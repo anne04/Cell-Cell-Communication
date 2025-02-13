@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
-   
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     # parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
     # parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
 
@@ -251,8 +251,24 @@ if __name__ == "__main__":
     chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
     print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
 
+    ##################################################################
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        set_LRbind_novel.append(sort_lr_list[i][0])
 
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if ligand in ligand_list and receptor in receptor_list and 'ppi' in df["Reference"][i]:
+            set_nichenet_novel.append(ligand + '+' + receptor)
 
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel), len(common_lr)))
+            
+            
     ##################################################################
     for i in range (0, len(sort_lr_list)):
         if sort_lr_list[i][0] == ligand + '+' + receptor:
