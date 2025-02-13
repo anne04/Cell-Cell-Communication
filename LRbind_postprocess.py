@@ -39,14 +39,19 @@ import altairThemes # assuming you have altairThemes.py at your current directoy
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='PDAC_64630',
-    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True)
+    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
+   
+    # parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
+    # parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
+
+    
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
-    parser.add_argument( '--output_path', type=str, default='output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
+    parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
     parser.add_argument( '--top_percent', type=int, default=20, help='Top N percentage communications to pick')
     parser.add_argument( '--cutoff_MAD', type=int, default=-1, help='Set it to 1 to filter out communications having deviation higher than MAD')
     parser.add_argument( '--cutoff_z_score', type=float, default=-1, help='Set it to 1 to filter out communications having z_score less than 1.97 value')
@@ -71,31 +76,7 @@ if __name__ == "__main__":
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
-    '''    
-    with gzip.open(args.data_from + args.data_name + '_adjacency_records', 'rb') as fp:  #b, a:[0:5]  _filtered 
-        row_col, edge_weight, lig_rec, total_num_cell = pickle.load(fp)
-    
-    
-    datapoint_size = total_num_cell
-    lig_rec_dict = []
-    for i in range (0, datapoint_size):
-        lig_rec_dict.append([])  
-        for j in range (0, datapoint_size):	
-            lig_rec_dict[i].append([])   
-            lig_rec_dict[i][j] = []
-    
-    for index in range (0, len(row_col)):
-            i = row_col[index][0]
-            j = row_col[index][1]
-            lig_rec_dict[i][j].append(lig_rec[index])  
-    
-    row_col = 0
-    edge_weight = 0
-    lig_rec = 0
-    total_num_cell = 0
-    
-    gc.collect()
-    ''' 
+
     ############# load output graph #################################################
 
     X_embedding_filename =  args.embedding_path + args.model_name + '_r1' + '_Embed_X' #.npy
@@ -104,7 +85,7 @@ if __name__ == "__main__":
 
     found_list = dict()
     input_cell_pair_list = dict() 
-    top_N = 10
+    top_N = 50
     for LR_target in target_cell_pair.keys():
         ligand = LR_target.split('+')[0]
         receptor = LR_target.split('+')[1]
@@ -141,57 +122,57 @@ if __name__ == "__main__":
                     found_list[j] = 1
                     break
 
-    # plot found_list
-    print("positive: %d out of %d"%(len(found_list), len(input_cell_pair_list)))
-    # plot input_cell_pair_list
-
-######### plot output #############################
-    data_list=dict()
-    data_list['X']=[]
-    data_list['Y']=[]   
-    data_list['gene_expression']=[] 
+        # plot found_list
+        print("positive: %d out of %d"%(len(found_list), len(input_cell_pair_list)))
+        # plot input_cell_pair_list
+        
+    ######### plot output #############################
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['gene_expression']=[] 
+        
+        for i in range (0, len(barcode_info)):
+            data_list['X'].append(barcode_info[i][1])
+            data_list['Y'].append(-barcode_info[i][2])
+            if i in found_list:
+                data_list['gene_expression'].append(1)
+            else:
+                data_list['gene_expression'].append(0)
+        
+        source= pd.DataFrame(data_list)
+        
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
+        )
+        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
+        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
+    ##################### plot input ###########################
     
-    for i in range (0, len(barcode_info)):
-        data_list['X'].append(barcode_info[i][1])
-        data_list['Y'].append(-barcode_info[i][2])
-        if i in found_list:
-            data_list['gene_expression'].append(1)
-        else:
-            data_list['gene_expression'].append(0)
-    
-    source= pd.DataFrame(data_list)
-    
-    chart = alt.Chart(source).mark_point(filled=True).encode(
-        alt.X('X', scale=alt.Scale(zero=False)),
-        alt.Y('Y', scale=alt.Scale(zero=False)),
-        color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
-    )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + 'CCL19_CCR7_top'+ str(top_N)  + '_novel.html')
-    
-##################### plot input ###########################
-
-    data_list=dict()
-    data_list['X']=[]
-    data_list['Y']=[]   
-    data_list['gene_expression']=[] 
-    
-    for i in range (0, len(barcode_info)):
-        data_list['X'].append(barcode_info[i][1])
-        data_list['Y'].append(-barcode_info[i][2])
-        if i in input_cell_pair_list:
-            data_list['gene_expression'].append(1)
-        else:
-            data_list['gene_expression'].append(0)
-    
-    source= pd.DataFrame(data_list)
-    
-    chart = alt.Chart(source).mark_point(filled=True).encode(
-        alt.X('X', scale=alt.Scale(zero=False)),
-        alt.Y('Y', scale=alt.Scale(zero=False)),
-        color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
-    )
-    chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.data_name + '_input_1D_' + 'CCL19_CCR7'+'.html')
-
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['gene_expression']=[] 
+        
+        for i in range (0, len(barcode_info)):
+            data_list['X'].append(barcode_info[i][1])
+            data_list['Y'].append(-barcode_info[i][2])
+            if i in input_cell_pair_list:
+                data_list['gene_expression'].append(1)
+            else:
+                data_list['gene_expression'].append(0)
+        
+        source= pd.DataFrame(data_list)
+        
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
+        )
+        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
+        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
 ######################################################
     with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
         row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(fp)
@@ -229,17 +210,50 @@ if __name__ == "__main__":
             for item in dot_prod_list:
                 lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                 
+    # save lr_dict that has info about gene node id as well
 
+    ########## take top hits #################################### 
     sort_lr_list = []
     for lr_pair in lr_dict:
         sum = 0
         cell_pair_list = lr_dict[lr_pair]
         for item in cell_pair_list:
-            sum = sum + 1 #item[0]
+            sum = sum + item[0] # + 1
 
         sort_lr_list.append([lr_pair, sum])
 
     sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+
+
+    # save = num_spots/cells * top_N pairs
+    sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
+    for i in range (0, 1000): #len(sort_lr_list)):
+        data_list['X'].append(sort_lr_list[i][0])
+        data_list['Y'].append(sort_lr_list[i][1])
+        
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Dot Product': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Dot Product'
+    )
+
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
+
+
+
+    ##################################################################
     for i in range (0, len(sort_lr_list)):
         if sort_lr_list[i][0] == ligand + '+' + receptor:
             print('index is %d'%i)
