@@ -374,7 +374,18 @@ if __name__ == "__main__":
         row_col_gene.append([gene_node_from, gene_node_to])
 
         # edge_weight_gene.append(edge_weight[index])
-        
+
+    ##################################
+    df = {
+    "Array_1": [30, 70, 100],
+    "Array_2": [65.1, 49.50, 30.7]
+    }
+
+    data = pd.DataFrame(df)
+    gene_coexpression_matrix = data.corr(method='pearson')
+    # for each cell:
+        # connect the ligand and receptor genes with coexpression scores, discard self loop.
+                        
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
         pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node], fp)
         
