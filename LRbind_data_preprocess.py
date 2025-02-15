@@ -376,13 +376,33 @@ if __name__ == "__main__":
         # edge_weight_gene.append(edge_weight[index])
 
     ##################################
+    df = defaultdict(list)
+    for j in range (0, cell_vs_gene.shape[1]):
+        df[gene_ids[j]]=list(cell_vs_gene[:, j])
+
+    '''
     df = {
     "Array_1": [30, 70, 100],
     "Array_2": [65.1, 49.50, 30.7]
-    }
+    }'''
 
     data = pd.DataFrame(df)
     gene_coexpression_matrix = data.corr(method='pearson')
+    for i in range(0, cell_vs_gene.shape[0]):
+        cell_id = i
+        cell_gene_set = ligand_list + receptor_list
+        for gene_a in cell_gene_set:
+            gene_a_idx = gene_node_list_per_spot[cell_id][gene_a]
+            for gene_b in cell_gene_set:
+                if gene_b==gene_a:
+                    continue
+                gene_b_idx = gene_node_list_per_spot[cell_id][gene_b]
+                # add a two-way connection between them with weight = correlation score
+                row_col_gene.append([gene_a_idx, gene_b_idx])
+                edge_weight.append(gene_coexpression_matrix[gene_a][gene_b])
+                row_col_gene.append([gene_b_idx, gene_a_idx])
+                edge_weight.append(gene_coexpression_matrix[gene_a][gene_b])               
+    
     # for each cell:
         # connect the ligand and receptor genes with coexpression scores, discard self loop.
                         
