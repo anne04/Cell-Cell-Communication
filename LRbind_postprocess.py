@@ -33,6 +33,10 @@ import gc
 import os
 import altair as alt
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
+alt.themes.register("publishTheme", altairThemes.publishTheme)
+# enable the newly registered theme
+alt.themes.enable("publishTheme")
+
 
 
 ##########################################################
@@ -42,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
-    parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
 
@@ -175,16 +179,22 @@ if __name__ == "__main__":
         chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
         print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
 ######################################################
-    with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
+    with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records_1D', 'rb') as fp:  
         row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(fp)
 
-    for lr in lig_rec:
-        if lr[0]=='CCL19' and lr[1]=='CCR7':
-            print('found')
+    for i in range (0, len(lig_rec)):
+        lr = lig_rec[i]
+        if lr[0]=='CCL19' or lr[1]=='CCR7':
+            print('found %d'%i)
             break
-######################################################    
-    top_N = 30
+
+#######################################################    
+    top_N = 50
     lr_dict = defaultdict(list)
+    target_ligand = 'CCL19'
+    target_receptor = 'CCR7'
+    found_list = defaultdict(list)
+    test_mode = 1
     for i in range (0, len(barcode_info)):
         for j in range (0, len(barcode_info)):
             if dist_X[i][j]==0:
@@ -210,7 +220,37 @@ if __name__ == "__main__":
             dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
             for item in dot_prod_list:
                 lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
-                
+                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                    found_list[i].append(item[0]) #= 1
+                    found_list[j].append(item[0])
+                    break
+
+    # plot found_list
+    print("positive: %d"%(len(found_list)))
+    # plot input_cell_pair_list  
+    if test_mode==1:
+    ######### plot output #############################
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['total dot product']=[] 
+        for i in range (0, len(barcode_info)):
+            data_list['X'].append(barcode_info[i][1])
+            data_list['Y'].append(-barcode_info[i][2])
+            if i in found_list:
+                data_list['total dot product'].append(np.sum(found_list[i]))
+            else:
+                data_list['total dot product'].append(0)
+        
+        source= pd.DataFrame(data_list)
+        
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('total dot product:Q', scale=alt.Scale(scheme='magma'))
+        )
+        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')
+        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')    
     # save lr_dict that has info about gene node id as well
 
     ########## take top hits #################################### 
@@ -267,9 +307,58 @@ if __name__ == "__main__":
             set_nichenet_novel.append(ligand + '+' + receptor)
 
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
-    print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel), len(common_lr)))
+    print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             
+###################################################
+    print('top_N: %d'%top_N)
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        set_LRbind_novel.append(sort_lr_list[i][0])
+
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list) and ('ppi' in df["Reference"][i]):
+            set_nichenet_novel.append(ligand + '+' + receptor)
             
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+
+###################################################
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        set_LRbind_novel.append(sort_lr_list[i][0])
+
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list) and ('ppi' not in df["Reference"][i]):
+            set_nichenet_novel.append(ligand + '+' + receptor)
+            
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+            
+    ##################################################################
+    df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["ligand"].shape[0]):
+        ligand = df["ligand"][i] 
+        receptor = df["receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list):# and ('ppi' not in df["Reference"][i]):
+            set_nichenet_novel.append(ligand + '+' + receptor)
+
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+     
     ##################################################################
     for i in range (0, len(sort_lr_list)):
         if sort_lr_list[i][0] == ligand + '+' + receptor:
