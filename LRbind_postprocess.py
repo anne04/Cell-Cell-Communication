@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -83,8 +83,8 @@ if __name__ == "__main__":
         target_LR_index, target_cell_pair = pickle.load(fp)
 
     ############# load output graph #################################################
-
-    X_embedding_filename =  args.embedding_path + args.model_name + '_r1' + '_Embed_X' #.npy
+    args.model_name = args.model_name + '_r2'
+    X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
     with gzip.open(X_embedding_filename, 'rb') as fp:  
         X_embedding = pickle.load(fp)
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             break
 
 #######################################################    
-    top_N = 100
+    top_N = 30
     lr_dict = defaultdict(list)
     target_ligand = 'CCL19'
     target_receptor = 'CCR7'
@@ -332,20 +332,25 @@ if __name__ == "__main__":
 ###################################################
     set_LRbind_novel = []
     for i in range (0, len(sort_lr_list)):
-        set_LRbind_novel.append(sort_lr_list[i][0])
+        ligand = sort_lr_list[i][0].split('+')[0]
+        receptor =  sort_lr_list[i][0].split('+')[1]
+        if ligand == 'CCL19' or receptor == 'CCR7':
+            set_LRbind_novel.append(sort_lr_list[i][0])
 
+    set_LRbind_novel = np.unique(set_LRbind_novel)
+    
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
-    set_nichenet_novel = []
+    set_manual = []
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i] 
         receptor = df["Receptor"][i]
         if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list) and ('ppi' not in df["Reference"][i]):
-            set_nichenet_novel.append(ligand + '+' + receptor)
+            set_manual.append(ligand + '+' + receptor)
             
-    set_nichenet_novel = np.unique(set_nichenet_novel)
-    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
-    print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+    set_manual = np.unique(set_manual)
+    common_lr = list(set(set_LRbind_novel) & set(set_manual))
+    print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
             
     ##################################################################
     df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
