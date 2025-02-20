@@ -47,9 +47,9 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
-
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce', help='Name of the trained model') #, required=True) ''
+    #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     found_list = dict()
     input_cell_pair_list = dict() 
-    top_N = 50
+    top_N = 30
     for LR_target in target_cell_pair.keys():
         ligand = LR_target.split('+')[0]
         receptor = LR_target.split('+')[1]
@@ -152,8 +152,8 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
-        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
+        chart.save(args.output_path + args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
+        print(args.output_path + args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
     ##################### plot input ###########################
     
         data_list=dict()
@@ -176,8 +176,8 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
-        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_input_' + ligand + '-' + receptor +'.html')
+        chart.save(args.output_path + args.model_name + '_input_' + ligand + '-' + receptor +'.html')
+        print(args.output_path + args.model_name + '_input_' + ligand + '-' + receptor +'.html')
 ######################################################
     with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records_1D', 'rb') as fp:  
         row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(fp)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             break
 
 #######################################################    
-    top_N = 50
+    top_N = 100
     lr_dict = defaultdict(list)
     target_ligand = 'CCL19'
     target_receptor = 'CCR7'
@@ -249,8 +249,8 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('total dot product:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')
-        print('/cluster/home/t116508uhn/LRbind_output/'+ args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')    
+        chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')
+        print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')    
     # save lr_dict that has info about gene node id as well
 
     ########## take top hits #################################### 
@@ -306,8 +306,9 @@ if __name__ == "__main__":
         if ligand in ligand_list and receptor in receptor_list and 'ppi' in df["Reference"][i]:
             set_nichenet_novel.append(ligand + '+' + receptor)
 
+    set_nichenet_novel = np.unique(set_nichenet_novel)
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
-    print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+    print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             
 ###################################################
     print('top_N: %d'%top_N)
