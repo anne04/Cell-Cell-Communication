@@ -119,7 +119,23 @@ if __name__ == "__main__":
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
                 
             dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]    
-            
+            ########## knee find ###########
+            score_list = []
+            for item in dot_prod_list:
+                score_list.append(item[0])
+
+            score_list = sorted(score_list) # small to high
+            y = score_list
+            x = range(1, len(y)+1)
+            kn = KneeLocator(x, y, curve='convex', direction='increasing')
+            kn_value = y[kn.knee-1]    
+            temp_dot_prod_list = []
+            for item in dot_prod_list:
+                if item[0] >= kn_value:
+                    temp_dot_prod_list.append(item)
+
+            dot_prod_list = temp_dot_prod_list
+            ###########################
             for item in dot_prod_list:
                 #print(item)
                 if item[3] == ligand and item[4] == receptor:
