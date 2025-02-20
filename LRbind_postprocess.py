@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         target_LR_index, target_cell_pair = pickle.load(fp)
 
     ############# load output graph #################################################
-    args.model_name = args.model_name + '_r2'
+    args.model_name = args.model_name + '_r1'
     X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
     with gzip.open(X_embedding_filename, 'rb') as fp:  
         X_embedding = pickle.load(fp)
@@ -115,10 +115,9 @@ if __name__ == "__main__":
                 for j_gene in receptor_node_index:
                     if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
                         continue
-    
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
                 
-            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]    
+            #dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]    
             ########## knee find ###########
             score_list = []
             for item in dot_prod_list:
@@ -204,8 +203,11 @@ if __name__ == "__main__":
             print('found %d'%i)
             break
 
-#######################################################    
+#######################################################   
+    knee_flag = 1
     top_N = 30
+    if knee_flag==1:
+        top_N = 0
     lr_dict = defaultdict(list)
     target_ligand = 'CCL19'
     target_receptor = 'CCR7'
@@ -213,6 +215,7 @@ if __name__ == "__main__":
     test_mode = 1
     for i in range (0, len(barcode_info)):
         for j in range (0, len(barcode_info)):
+            
             if dist_X[i][j]==0:
                 continue
             # from i to j
@@ -229,11 +232,30 @@ if __name__ == "__main__":
             dot_prod_list = []
             for i_gene in ligand_node_index:
                 for j_gene in receptor_node_index:
-                    if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
-                        continue
+                    #if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
+                    #    continue
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
 
-            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+            #dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+            if len(dot_prod_list) == 0:
+                continue
+            ########## knee find ###########
+            score_list = []
+            for item in dot_prod_list:
+                score_list.append(item[0])
+
+            score_list = sorted(score_list) # small to high
+            y = score_list
+            x = range(1, len(y)+1)
+            kn = KneeLocator(x, y, curve='convex', direction='increasing')
+            kn_value = y[kn.knee-1]    
+            temp_dot_prod_list = []
+            for item in dot_prod_list:
+                if item[0] >= kn_value:
+                    temp_dot_prod_list.append(item)
+
+            dot_prod_list = temp_dot_prod_list
+            ###########################
             for item in dot_prod_list:
                 lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                 if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
@@ -265,8 +287,8 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('total dot product:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')
-        print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')    
+        chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
+        print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')    
     # save lr_dict that has info about gene node id as well
 
     ########## take top hits #################################### 
@@ -275,15 +297,15 @@ if __name__ == "__main__":
         sum = 0
         cell_pair_list = lr_dict[lr_pair]
         for item in cell_pair_list:
-            sum = sum + item[0] # + 1
+            sum = sum + 1 #item[0] # 
 
         sort_lr_list.append([lr_pair, sum])
 
     sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
 
-
     # save = num_spots/cells * top_N pairs
-    sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+    if knee_flag == 0:
+        sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
 
     # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
     data_list=dict()
@@ -297,16 +319,16 @@ if __name__ == "__main__":
         'Ligand-Receptor Pairs': data_list['X'],
         'Total Dot Product': data_list['Y']
     })
-    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv', index=False)
-    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv')    
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
     # same as histogram plots
     chart = alt.Chart(data_list_pd).mark_bar().encode(
         x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
         y='Total Dot Product'
     )
 
-    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
-    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')    
 
     ##################################################################
     set_LRbind_novel = []
