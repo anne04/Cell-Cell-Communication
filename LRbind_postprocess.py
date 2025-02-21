@@ -315,7 +315,8 @@ if __name__ == "__main__":
     data_list=dict()
     data_list['X']=[]
     data_list['Y']=[] 
-    for i in range (0, len(sort_lr_list)): #1000): #:
+    max_rows = min(500, len(sort_lr_list))
+    for i in range (0, max_rows): #1000): #:
         data_list['X'].append(sort_lr_list[i][0])
         data_list['Y'].append(sort_lr_list[i][1])
         
@@ -436,7 +437,9 @@ if __name__ == "__main__":
     data_list=dict()
     data_list['X']=[]
     data_list['Y']=[] 
-    for i in range (0, len(sort_lr_list)): #1000): #
+
+    max_rows = min(500, len(sort_lr_list))
+    for i in range (0, max_rows): #1000): #
         data_list['X'].append(sort_lr_list[i][0])
         data_list['Y'].append(sort_lr_list[i][1])
         
@@ -567,7 +570,8 @@ if __name__ == "__main__":
     data_list=dict()
     data_list['X']=[]
     data_list['Y']=[] 
-    for i in range (0, len(sort_lr_list)): #1000): #
+    max_rows = min(500, len(sort_lr_list))
+    for i in range (0, max_rows): #1000): #:
         data_list['X'].append(sort_lr_list[i][0])
         data_list['Y'].append(sort_lr_list[i][1])
         
