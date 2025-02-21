@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -88,6 +88,7 @@ if __name__ == "__main__":
     with gzip.open(X_embedding_filename, 'rb') as fp:  
         X_embedding = pickle.load(fp)
 
+    '''
     found_list = dict()
     input_cell_pair_list = dict() 
     top_N = 30
@@ -202,7 +203,7 @@ if __name__ == "__main__":
         if lr[0]=='CCL19' or lr[1]=='CCR7':
             print('found %d'%i)
             break
-
+    '''
 ########## all #############################################   
     knee_flag = 0
     top_N = 10
@@ -355,13 +356,36 @@ if __name__ == "__main__":
 ##################################  ccl19 and ccr7 related #################
     print('top_N: %d'%top_N)
     set_LRbind_novel = []
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
     for i in range (0, len(sort_lr_list)):
         ligand = sort_lr_list[i][0].split('+')[0]
         receptor =  sort_lr_list[i][0].split('+')[1]
         if ligand == 'CCL19' or receptor == 'CCR7':
             set_LRbind_novel.append(sort_lr_list[i][0])
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
 
     set_LRbind_novel = np.unique(set_LRbind_novel)
+    # plot set_LRbind_nov
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Count': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Count'
+    )
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')   
+
+    ####################
+
     
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
@@ -377,16 +401,6 @@ if __name__ == "__main__":
     print('CCL19/CCR7 related: Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
 
 #################################  ccl19 and ccr7 related: ##################
-    set_LRbind_novel = []
-    for i in range (0, len(sort_lr_list)):
-        ligand = sort_lr_list[i][0].split('+')[0]
-        receptor =  sort_lr_list[i][0].split('+')[1]
-        if ligand == 'CCL19' or receptor == 'CCR7':
-            set_LRbind_novel.append(sort_lr_list[i][0])
-
-    set_LRbind_novel = np.unique(set_LRbind_novel)
-    
-    print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
     set_manual = []
     for i in range (0, df["Ligand"].shape[0]):
@@ -611,15 +625,35 @@ if __name__ == "__main__":
 ################################## remFromDB #################
     print('top_N: %d'%top_N)
     set_LRbind_novel = []
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
     for i in range (0, len(sort_lr_list)):
         ligand = sort_lr_list[i][0].split('+')[0]
         receptor =  sort_lr_list[i][0].split('+')[1]
         if ligand == 'CCL19' or receptor == 'CCR7':
             set_LRbind_novel.append(sort_lr_list[i][0])
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
 
     set_LRbind_novel = np.unique(set_LRbind_novel)
-    #plot set_LRbind_novel
-    
+    # plot set_LRbind_nov
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Count': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Count'
+    )
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7.html')   
+
+    ###################
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
     set_nichenet_novel = []
@@ -633,6 +667,10 @@ if __name__ == "__main__":
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('ccl19 and ccr7 related: Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
     # csv common_lr
+    print(common_lr)
+    pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_commonWnichenet_ccl19ccr7.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_commonWnichenet_ccl19ccr7.csv')    
+    
 ##############################  remFromDB #####################
 
     print('ligand-receptor database reading.')
@@ -660,7 +698,10 @@ if __name__ == "__main__":
     set_nichenet_novel = np.unique(set_nichenet_novel)
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-     
+    print(common_lr)
+    pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_commonWmanual_ccl19ccr7.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_commonWmanual_ccl19ccr7.csv')    
+         
 
     ##################################################################
     for i in range (0, len(sort_lr_list)):
