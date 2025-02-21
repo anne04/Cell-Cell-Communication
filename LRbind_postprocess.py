@@ -618,7 +618,8 @@ if __name__ == "__main__":
             set_LRbind_novel.append(sort_lr_list[i][0])
 
     set_LRbind_novel = np.unique(set_LRbind_novel)
-
+    #plot set_LRbind_novel
+    
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
     set_nichenet_novel = []
@@ -631,17 +632,9 @@ if __name__ == "__main__":
     set_nichenet_novel = np.unique(set_nichenet_novel)
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('ccl19 and ccr7 related: Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-
+    # csv common_lr
 ##############################  remFromDB #####################
-    set_LRbind_novel = []
-    for i in range (0, len(sort_lr_list)):
-        ligand = sort_lr_list[i][0].split('+')[0]
-        receptor =  sort_lr_list[i][0].split('+')[1]
-        if ligand == 'CCL19' or receptor == 'CCR7':
-            set_LRbind_novel.append(sort_lr_list[i][0])
 
-    set_LRbind_novel = np.unique(set_LRbind_novel)
-    
     print('ligand-receptor database reading.')
     df = pd.read_csv(args.database_path, sep=",")
     set_manual = []
