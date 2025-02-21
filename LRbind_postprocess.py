@@ -203,7 +203,7 @@ if __name__ == "__main__":
             print('found %d'%i)
             break
 
-#######################################################   
+########## all #############################################   
     knee_flag = 1
     top_N = 30
     if knee_flag==1:
@@ -236,25 +236,31 @@ if __name__ == "__main__":
                     #    continue
                     dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
 
-            #dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
-            if len(dot_prod_list) == 0:
-                continue
-            ########## knee find ###########
-            score_list = []
-            for item in dot_prod_list:
-                score_list.append(item[0])
-
-            score_list = sorted(score_list) # small to high
-            y = score_list
-            x = range(1, len(y)+1)
-            kn = KneeLocator(x, y, curve='convex', direction='increasing')
-            kn_value = y[kn.knee-1]    
-            temp_dot_prod_list = []
-            for item in dot_prod_list:
-                if item[0] >= kn_value:
-                    temp_dot_prod_list.append(item)
-
-            dot_prod_list = temp_dot_prod_list
+            if knee_flag == 9:
+                dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+            else:
+                if len(dot_prod_list) == 0:
+                    continue
+                ########## knee find ###########
+                score_list = []
+                for item in dot_prod_list:
+                    score_list.append(item[0])
+    
+                score_list = sorted(score_list) # small to high
+                y = score_list
+                x = range(1, len(y)+1)
+                kn = KneeLocator(x, y, direction='increasing')
+                kn_value_inc = y[kn.knee-1]
+                kn = KneeLocator(x, y, direction='decreasing')
+                kn_value_dec = y[kn.knee-1]            
+                kn_value = max(kn_value_inc, kn_value_dec)
+                
+                temp_dot_prod_list = []
+                for item in dot_prod_list:
+                    if item[0] >= kn_value:
+                        temp_dot_prod_list.append(item)
+    
+                dot_prod_list = temp_dot_prod_list
             ###########################
             for item in dot_prod_list:
                 lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
@@ -311,7 +317,7 @@ if __name__ == "__main__":
     data_list=dict()
     data_list['X']=[]
     data_list['Y']=[] 
-    for i in range (0, 1000): #len(sort_lr_list)):
+    for i in range (0, len(sort_lr_list)): #1000): #:
         data_list['X'].append(sort_lr_list[i][0])
         data_list['Y'].append(sort_lr_list[i][1])
         
@@ -329,7 +335,6 @@ if __name__ == "__main__":
 
     chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
     print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')    
-
     ##################################################################
     set_LRbind_novel = []
     for i in range (0, len(sort_lr_list)):
@@ -348,7 +353,7 @@ if __name__ == "__main__":
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             
-###################################################
+##################################  ccl19 and ccr7 related #################
     print('top_N: %d'%top_N)
     set_LRbind_novel = []
     for i in range (0, len(sort_lr_list)):
@@ -367,7 +372,7 @@ if __name__ == "__main__":
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
 
-###################################################
+#################################  ccl19 and ccr7 related: ##################
     set_LRbind_novel = []
     for i in range (0, len(sort_lr_list)):
         ligand = sort_lr_list[i][0].split('+')[0]
@@ -402,6 +407,50 @@ if __name__ == "__main__":
     set_nichenet_novel = np.unique(set_nichenet_novel)
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+############################### novel only out of all LR ################
+    sort_lr_list = []
+    for lr_pair in lr_dict:
+        ligand = lr_pair.split('+')[0]
+        receptor = lr_pair.split('+')[1]
+        if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+            continue
+        sum = 0
+        cell_pair_list = lr_dict[lr_pair]
+        for item in cell_pair_list:
+            sum = sum + 1 #item[0] # 
+
+        sort_lr_list.append([lr_pair, sum])
+
+    sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+
+    # save = num_spots/cells * top_N pairs
+    if knee_flag == 0:
+        sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
+    for i in range (0, len(sort_lr_list)): #1000): #
+        data_list['X'].append(sort_lr_list[i][0])
+        data_list['Y'].append(sort_lr_list[i][1])
+        
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Dot Product': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Dot Product'
+    )
+
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')    
+
+    
      
     ##################################################################
     for i in range (0, len(sort_lr_list)):
@@ -412,406 +461,215 @@ if __name__ == "__main__":
     # ccl19-ccr7 index is 174 if sorted by total dot product
     # ccl19-ccr7 index is 196 if sorted by total frequency 
     # make a histogram plot
-#######################################################    
-    #filename_suffix = ["_r1_", "r2_", "r3_", "r4_", "r5_", "r6_", "r7_", "r8_", "r9_", "r10_"]
-    total_runs = args.total_runs 
-    start_index = 0 
-    distribution_rank = []
-    distribution_score = []
-    all_edge_sorted_by_rank = []
-    for layer in range (0, 2):
-        distribution_rank.append([])
-        distribution_score.append([])
-        all_edge_sorted_by_rank.append([])
-    
-    layer = -1
-    for l in [3,2]: #, 3]: # 2 = layer 2, 3 = layer 1 
-        layer = layer + 1
-        print('layer %d'%layer)
-        csv_record_dict = defaultdict(list)
-        for run_time in range (start_index, start_index+total_runs):
-            filename_suffix = '_'+ 'r'+str(run_time+1) +'_'
-            gc.collect()
-            run = run_time
-            print('run %d'%run)
-    
-            attention_scores = []
-            for i in range (0, datapoint_size):
-                attention_scores.append([])   
-                for j in range (0, datapoint_size):	
-                    attention_scores[i].append([])   
-                    attention_scores[i][j] = []
-    
-            distribution = []
-            ##############################################
-            print(args.model_name)     
-            X_attention_filename = args.embedding_path +  args.model_name + filename_suffix + 'attention' #.npy
-            print(X_attention_filename)
-            #X_attention_bundle = np.load(X_attention_filename, allow_pickle=True) # this is deprecated
-            fp = gzip.open(X_attention_filename, 'rb')  
-            X_attention_bundle = pickle.load(fp)
-            
-            for index in range (0, X_attention_bundle[0].shape[1]):
-                i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index]
-                distribution.append(X_attention_bundle[l][index][0])
-    
-            ################# scaling the attention scores so that layer 1 and 2 will be comparable ##############################        
-            min_attention_score = 1000
-            max_value = np.max(distribution)
-            min_value = np.min(distribution)
-            print('attention score is between %g to %g, total edges %d'%(np.min(distribution), np.max(distribution), len(distribution)))
-            distribution = []
-            for index in range (0, X_attention_bundle[0].shape[1]):
-                i = X_attention_bundle[0][0][index]
-                j = X_attention_bundle[0][1][index]
-                scaled_score = (X_attention_bundle[l][index][0]-min_value)/(max_value-min_value)
-                attention_scores[i][j].append(scaled_score) 
-                if min_attention_score > scaled_score:
-                    min_attention_score = scaled_score
-                distribution.append(scaled_score)
-                
-            print('attention score is scaled between %g to %g for ensemble'%(np.min(distribution), np.max(distribution)))
-    
-            #print('min attention score %g, total edges %d'%(min_attention_score, len(distribution))) 
-            # should always print 0 for min attention score
-            
-            ccc_index_dict = dict()
-            threshold_down =  np.percentile(sorted(distribution), 0)
-            threshold_up =  np.percentile(sorted(distribution), 100)
-            connecting_edges = np.zeros((len(barcode_info),len(barcode_info)))
-            for j in range (0, datapoint_size):
-                #threshold =  np.percentile(sorted(attention_scores[:,j]), 97) #
-                for i in range (0, datapoint_size):
-                    atn_score_list = attention_scores[i][j]
-                    #print(len(atn_score_list))
-                    #s = min(0,len(atn_score_list)-1)
-                    for k in range (0, len(atn_score_list)):
-                        if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: #np.percentile(sorted(distribution), 50):
-                            connecting_edges[i][j] = 1
-                            ccc_index_dict[i] = ''
-                            ccc_index_dict[j] = ''
-        
-        
-        
-            graph = csr_matrix(connecting_edges)
-            n_components, labels = connected_components(csgraph=graph,directed=True, connection = 'weak',  return_labels=True) #
-            #print('number of component %d'%n_components)
-        
-            count_points_component = np.zeros((n_components))
-            for i in range (0, len(labels)):
-                 count_points_component[labels[i]] = count_points_component[labels[i]] + 1
-        
-            #print(count_points_component)
-        
-            id_label = 2 # initially all are zero. =1 those who have self edge but above threshold. >= 2 who belong to some component
-            index_dict = dict()
-            for i in range (0, count_points_component.shape[0]):
-                if count_points_component[i]>1:
-                    index_dict[i] = id_label
-                    id_label = id_label+1
-        
-            #print('number of components with multiple datapoints is %d'%id_label)
-        
-        
-            for i in range (0, len(barcode_info)):
-            #    if barcode_info[i][0] in barcode_label:
-                if count_points_component[labels[i]] > 1:
-                    barcode_info[i][3] = index_dict[labels[i]] #2
-                elif connecting_edges[i][i] == 1 and len(lig_rec_dict[i][i])>0: 
-                    barcode_info[i][3] = 1
-                else:
-                    barcode_info[i][3] = 0
-        
-            #######################
-        
-        
-     
-            ###############
-            csv_record = []
-            csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'attention_score', 'component', 'from_id', 'to_id'])
-            for j in range (0, len(barcode_info)):
-                for i in range (0, len(barcode_info)):
-                    
-                    if i==j:
-                        if len(lig_rec_dict[i][j])==0:
-                            continue # because the model generates some score for selfloop even if there was no user input
-                                    # to prevent losing own information
-                     
-                    atn_score_list = attention_scores[i][j]
-                    for k in range (0, len(atn_score_list)):
-                        if attention_scores[i][j][k] >= threshold_down and attention_scores[i][j][k] <= threshold_up: 
-                            if barcode_info[i][3]==0:
-                                print('error')
-                            elif barcode_info[i][3]==1: # selfloop = autocrine
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], '0-single', i, j])
-                            else: # paracrine or juxtacrine
-                                csv_record.append([barcode_info[i][0], barcode_info[j][0], lig_rec_dict[i][j][k][0], lig_rec_dict[i][j][k][1], attention_scores[i][j][k], barcode_info[i][3], i, j])
-     
-            ###########	
-          
-            #print('records found %d'%len(csv_record))
-            for i in range (1, len(csv_record)): 
-                key_value = str(csv_record[i][6]) +'+'+ str(csv_record[i][7]) + '+' + csv_record[i][2] + '+' + csv_record[i][3]
-                # i-j-ligandGene-receptorGene
-                csv_record_dict[key_value].append([csv_record[i][4], run])
-                
-        '''    
-        for key_value in csv_record_dict.keys():
-            run_dict = defaultdict(list)
-            for scores in csv_record_dict[key_value]: # entry count = total_runs 
-                run_dict[scores[1]].append(scores[0]) # [run_id]=score
-            
-            for runs in run_dict.keys():
-                run_dict[runs] = np.mean(run_dict[runs]) # taking the mean attention score
-            
-     
-            csv_record_dict[key_value] = [] # make it blank
-            for runs in run_dict.keys(): # has just one mean value for the attention score
-                csv_record_dict[key_value].append([run_dict[runs],runs]) # [score, 0]
-        '''
-        ########## All runs combined. Now find rank product #############################
-        
-        all_edge_list = []
-        for key_value in csv_record_dict.keys():
-            edge_score_runs = []
-            edge_score_runs.append(key_value)
-            for runs in csv_record_dict[key_value]:
-                edge_score_runs.append(runs[0]) #
-            
-            all_edge_list.append(edge_score_runs) # [[key_value, score_by_run1, score_by_run2, etc.],...]
-    
-        ## Find the rank product #####################################################################
-        ## all_edge_list has all the edges along with their scores for different runs in the following format: 
-        ## [edge_1_info, score_by_run1, score_by_run2, etc.], [edge_2_info, score_by_run1, score_by_run2, etc.], ..., [edge_N_info, score_by_run1, score_by_run2, etc.]
-        edge_rank_dictionary = defaultdict(list)
-        # sort the all_edge_list by each run's rank 
-        #print('total runs %d. Ensemble them.'%total_runs)
-        for runs in range (0, total_runs):
-            sorted_list_temp = sorted(all_edge_list, key = lambda x: x[runs+1], reverse=True) # sort based on attention score by current run: large to small
-            for rank in range (0, len(sorted_list_temp)):
-                edge_rank_dictionary[sorted_list_temp[rank][0]].append(rank+1) # small rank being high attention, starting from 1
-                
-        max_weight = len(all_edge_list) + 1 # maximum possible rank 
-        all_edge_vs_rank = []
-        for key_val in edge_rank_dictionary.keys():
-            rank_product = 1
-            score_product = 1
-            attention_score_list = csv_record_dict[key_val] # [[score, run_id],...]
-            avg_score = 0 
-            total_weight = 0
-            for i in range (0, len(edge_rank_dictionary[key_val])):
-                rank_product = rank_product * edge_rank_dictionary[key_val][i]
-                score_product = score_product * (attention_score_list[i][0]+0.01) 
-                # translated by a tiny amount to avoid producing 0 during product 
-                weight_by_run = max_weight - edge_rank_dictionary[key_val][i]
-                avg_score = avg_score + attention_score_list[i][0] * weight_by_run
-                total_weight = total_weight + weight_by_run
-                
-            avg_score = avg_score/total_weight # lower weight being higher attention np.max(avg_score) #
-            all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), score_product**(1/total_runs)])  # small rank being high attention
-            # or all_edge_vs_rank.append([key_val, rank_product**(1/total_runs), avg_score])
-            distribution_rank[layer].append(rank_product**(1/total_runs))
-            distribution_score[layer].append(score_product**(1/total_runs)) #avg_score)
 
-        all_edge_sorted_by_rank[layer] = sorted(all_edge_vs_rank, key = lambda x: x[1]) # small rank being high attention 
-        #print('rank ranges from %g to %g'%(np.min(distribution_rank[layer]), np.max(distribution_rank[layer])))
-        #print('score ranges from %g to %g'%(np.min(distribution_score[layer]), np.max(distribution_score[layer]))) 
-    #############################################################################################################################################
-    # for each layer, I scale the attention scores [0, 1] over all the edges. So that they are comparable or mergeable between layers
-    # for each edge, we have two sets of (rank, score) due to 2 layers. We take union of them.
-    print('Multiple runs for each layer are ensembled.') 
-    for layer in range (0, 2):
-        score_min = np.min(distribution_score[layer])
-        score_max = np.max(distribution_score[layer])
-        rank_min = np.min(distribution_rank[layer])
-        rank_max = np.max(distribution_rank[layer])
-        distribution_rank[layer] = []
-        distribution_score[layer] = []
-        #a = 1
-        #b = len(all_edge_sorted_by_rank[layer])
-        #print('b %d'%b)
-        for i in range (0, len(all_edge_sorted_by_rank[layer])):
-            # score is scaled between 0 to 1 again for easier interpretation 
-            all_edge_sorted_by_rank[layer][i][2] = (all_edge_sorted_by_rank[layer][i][2]-score_min)/(score_max-score_min)
-            all_edge_sorted_by_rank[layer][i][1] = i+1 # done for easier interpretation
-            #((all_edge_sorted_by_rank[layer][i][1]-rank_min)/(rank_max-rank_min))*(b-a) + a
-            distribution_rank[layer].append(all_edge_sorted_by_rank[layer][i][1])
-            distribution_score[layer].append(all_edge_sorted_by_rank[layer][i][2])
-    
-    ################################ Just output top 20% edges ###############################################################################################################
-    if args.cutoff_MAD ==-1 and args.cutoff_z_score == -1:
-        percentage_value = args.top_percent #20 ##100 #20 # top 20th percentile rank, low rank means higher attention score
-        csv_record_intersect_dict = defaultdict(list)
-        edge_score_intersect_dict = defaultdict(list)
-        for layer in range (0, 2):
-            threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
-            for i in range (0, len(all_edge_sorted_by_rank[layer])):
-                if all_edge_sorted_by_rank[layer][i][1] <= threshold_up: # because, lower rank means higher strength
-                    csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][1]) #i+1) # already sorted by rank. so just use i as the rank 
-                    edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2]) # score
-        ###########################################################################################################################################
-        ## get the aggregated rank for all the edges ##
-        distribution_temp = []
-        for key_value in csv_record_intersect_dict.keys():  
-            arg_index = np.argmin(csv_record_intersect_dict[key_value]) # layer 0 or 1, whose rank to use # should I take the avg rank instead, and scale the ranks (1 to count(total_edges)) later? 
-            csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # use that rank. smaller rank being the higher attention
-            edge_score_intersect_dict[key_value] = edge_score_intersect_dict[key_value][arg_index] # use that score
-            distribution_temp.append(csv_record_intersect_dict[key_value]) 
-        
-        #################
-        
-        ################################################################################
-        csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
-        
-        ################################################################################
+########## novel only #############################################   
+    knee_flag = 1
+    top_N = 30
+    if knee_flag==1:
+        top_N = 0
+    lr_dict = defaultdict(list)
+    target_ligand = 'CCL19'
+    target_receptor = 'CCR7'
+    found_list = defaultdict(list)
+    test_mode = 1
+    for i in range (0, len(barcode_info)):
+        for j in range (0, len(barcode_info)):
             
-        combined_score_distribution = []
-        csv_record = []
-        csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'edge_rank', 'component', 'from_id', 'to_id', 'attention_score'])
-        for key_value in csv_record_dict.keys():
-            item = key_value.split('+')
-            i = int(item[0])
-            j = int(item[1])
-            ligand = item[2]
-            receptor = item[3]        
-            edge_rank = csv_record_dict[key_value]        
-            score = edge_score_intersect_dict[key_value] # weighted average attention score, where weight is the rank, lower rank being higher attention score
-            label = -1 
-            csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, edge_rank, label, i, j, score])
-            combined_score_distribution.append(score)
-        
+            if dist_X[i][j]==0:
+                continue
+            # from i to j
+            ligand_node_index = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in ligand_list:
+                    ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+
+            receptor_node_index = []
+            for gene in gene_node_list_per_spot[j]:
+                if gene in receptor_list:
+                    receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
+
+            dot_prod_list = []
+            for i_gene in ligand_node_index:
+                for j_gene in receptor_node_index:
+                    if i_gene[1] in l_r_pair and j_gene[1] in l_r_pair[i_gene[1]]: # discard the existing ones
+                        continue
+                    dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
+
+            
+            if knee_flag == 0:
+                dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+            else:
+                if len(dot_prod_list) == 0:
+                    continue
+                ########## knee find ###########
+                score_list = []
+                for item in dot_prod_list:
+                    score_list.append(item[0])
+    
+                score_list = sorted(score_list) # small to high
+                y = score_list
+                x = range(1, len(y)+1)
+    
+                kn = KneeLocator(x, y, direction='increasing')
+                kn_value_inc = y[kn.knee-1]
+                kn = KneeLocator(x, y, direction='decreasing')
+                kn_value_dec = y[kn.knee-1]            
+                kn_value = max(kn_value_inc, kn_value_dec)
                 
-        print('common LR count %d'%len(csv_record))
-        
-        
-        ##### save the file for downstream analysis ########
-        csv_record_final = []
-        csv_record_final.append(csv_record[0])
-        for k in range (1, len(csv_record)):
-            ligand = csv_record[k][2]
-            receptor = csv_record[k][3]
-            #if ligand =='CCL19' and receptor == 'CCR7':
-            csv_record_final.append(csv_record[k])
-        
-        
-            
-        df = pd.DataFrame(csv_record_final) # output 4
-        df.to_csv(args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent.csv', index=False, header=False)
-        print('result is saved at: '+args.output_path + args.model_name+'_top' + str(args.top_percent) + 'percent.csv')
-############### skewness plot ##############
-    percentage_value = 100 #20 ##100 #20 # top 20th percentile rank, low rank means higher attention score
-    csv_record_intersect_dict = defaultdict(list)
-    edge_score_intersect_dict = defaultdict(list)
-    for layer in range (0, 2):
-        threshold_up = np.percentile(distribution_rank[layer], percentage_value) #np.round(np.percentile(distribution_rank[layer], percentage_value),2)
-        for i in range (0, len(all_edge_sorted_by_rank[layer])):
-            if all_edge_sorted_by_rank[layer][i][1] <= threshold_up: # because, lower rank means higher strength
-                csv_record_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][1]) # rank 
-                edge_score_intersect_dict[all_edge_sorted_by_rank[layer][i][0]].append(all_edge_sorted_by_rank[layer][i][2]) # score
-    ###########################################################################################################################################
-    ## get the aggregated rank for all the edges ##
-    distribution_temp = []
-    for key_value in csv_record_intersect_dict.keys():  
-        arg_index = np.argmin(csv_record_intersect_dict[key_value]) # layer 0 or 1, whose rank to use  
-        csv_record_intersect_dict[key_value] = np.min(csv_record_intersect_dict[key_value]) # use that rank. smaller rank being the higher attention
-        edge_score_intersect_dict[key_value] = edge_score_intersect_dict[key_value][arg_index] # use that score
-        distribution_temp.append(csv_record_intersect_dict[key_value]) 
+                temp_dot_prod_list = []
+                for item in dot_prod_list:
+                    if item[0] >= kn_value:
+                        temp_dot_prod_list.append(item)
     
-    #################
-    
-    ################################################################################
-    csv_record_dict = copy.deepcopy(csv_record_intersect_dict)
-    
-    ################################################################################
-    score_distribution = []
-    csv_record = []
-    csv_record.append(['from_cell', 'to_cell', 'ligand', 'receptor', 'edge_rank', 'component', 'from_id', 'to_id', 'attention_score']) #, 'deviation_from_median'
-    for key_value in csv_record_dict.keys():
-        item = key_value.split('+')
-        i = int(item[0])
-        j = int(item[1])
-        ligand = item[2]
-        receptor = item[3]        
-        edge_rank = csv_record_dict[key_value]        
-        score = edge_score_intersect_dict[key_value] # weighted average attention score, where weight is the rank, lower rank being higher attention score
-        label = -1 
-        csv_record.append([barcode_info[i][0], barcode_info[j][0], ligand, receptor, edge_rank, label, i, j, score])
-        score_distribution.append(score)
-    
-            
-#    print('common LR count %d'%len(csv_record))
-    
-    data_list=dict()
-    data_list['attention_score']=[]
-    for score in score_distribution:
-        data_list['attention_score'].append(score)
+                dot_prod_list = temp_dot_prod_list
+            ###########################
+            for item in dot_prod_list:
+                lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                    found_list[i].append(item[0]) #= 1
+                    found_list[j].append(item[0])
+                    break
+
+    # plot found_list
+    print("positive: %d"%(len(found_list)))
+    # plot input_cell_pair_list  
+    if test_mode==1:
+    ######### plot output #############################
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['total dot product']=[] 
+        for i in range (0, len(barcode_info)):
+            data_list['X'].append(barcode_info[i][1])
+            data_list['Y'].append(-barcode_info[i][2])
+            if i in found_list:
+                data_list['total dot product'].append(np.sum(found_list[i]))
+            else:
+                data_list['total dot product'].append(0)
         
-    df = pd.DataFrame(data_list)    
-    chart = alt.Chart(df).transform_density(
-            'attention_score',
-            as_=['attention_score', 'density'],
-        ).mark_area().encode(
-            x="attention_score:Q",
-            y='density:Q',
+        source= pd.DataFrame(data_list)
+        
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('total dot product:Q', scale=alt.Scale(scheme='magma'))
         )
+        chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')
+        print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue.html')    
+    # save lr_dict that has info about gene node id as well
 
-    chart.save(args.output_path + args.model_name+'_attention_score_distribution.html')  
-    print(args.output_path + args.model_name+'_attention_score_distribution.html')
-    skewness_distribution = skew(score_distribution)
-    print('skewness of the distribution is %g'%skewness_distribution)
-    if args.output_all == 1:
-        df = pd.DataFrame(csv_record) # 
-        df.to_csv(args.output_path + args.model_name+'_allCCC.csv', index=False, header=False)
-        print(args.output_path + args.model_name+'_allCCC.csv')
-    ###########
-    if args.cutoff_MAD !=-1:
-        MAD = median_abs_deviation(score_distribution)
-        print("MAD is %g"%MAD)
-        median_distribution = statistics.median(score_distribution)
-        csv_record_final = []
-        csv_record_final.append(csv_record[0])
-        csv_record_final[0].append('deviation_from_median')
-        for k in range (1, len(csv_record)):
-            deviation_from_median = median_distribution-csv_record[k][8]
-            if deviation_from_median <= MAD:   
-                temp_record = csv_record[k]
-                temp_record.append(deviation_from_median)
-                csv_record_final.append(temp_record)
-                
-    
-        df = pd.DataFrame(csv_record_final) # 
-        df.to_csv(args.output_path + args.model_name+'_MAD_cutoff.csv', index=False, header=False)
-        print(args.output_path + args.model_name+'_MAD_cutoff.csv')
-    ##### save the file for downstream analysis ########
-    if args.cutoff_z_score !=-1:
-        z_score_distribution = stats.zscore(score_distribution)
-        csv_record_final = []
-        csv_record_final.append(csv_record[0])
-        csv_record_final[0].append('z-score')
-        for k in range (1, len(csv_record)):
-            if z_score_distribution[k-1] >= 1.97: #args.cutoff_z_score:  
-                temp_record = csv_record[k]
-                temp_record.append(z_score_distribution[k-1])
-                csv_record_final.append(temp_record)
-    
-        df = pd.DataFrame(csv_record_final) # output 4
-        df.to_csv(args.output_path + args.model_name+'_z_score_cutoff.csv', index=False, header=False)
-        print(args.output_path + args.model_name+'_z_score_cutoff.csv')
-    ###########################################################################################################################################
-    
-    # plot the distribution    
+    ########## take top hits #################################### 
+    sort_lr_list = []
+    for lr_pair in lr_dict:
+        sum = 0
+        cell_pair_list = lr_dict[lr_pair]
+        for item in cell_pair_list:
+            sum = sum + 1 #item[0] # 
 
-    # write the skewness and MAD value in a text file
-    # Opening a file
-    '''
-    file1 = open(args.output_path + args.model_name+'_statistics.txt', 'w')
-    L = ["Median Absolute Deviation (MAD):"+str(MAD)+"\n", "Skewness: "+str(skewness_distribution) +" \n"]    
-    # Writing multiple strings
-    file1.writelines(L)
-    # Closing file
-    file1.close()
-    ''' 
+        sort_lr_list.append([lr_pair, sum])
+
+    sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+
+    # save = num_spots/cells * top_N pairs
+    if knee_flag == 0:
+        sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
+    for i in range (0, len(sort_lr_list)): #1000): #
+        data_list['X'].append(sort_lr_list[i][0])
+        data_list['Y'].append(sort_lr_list[i][1])
+        
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Dot Product': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Dot Product'
+    )
+
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
+
+    ##################################################################
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        set_LRbind_novel.append(sort_lr_list[i][0])
+
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if ligand in ligand_list and receptor in receptor_list and 'ppi' in df["Reference"][i]:
+            set_nichenet_novel.append(ligand + '+' + receptor)
+
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+            
+################################## remFromDB #################
+    print('top_N: %d'%top_N)
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        set_LRbind_novel.append(sort_lr_list[i][0])
+
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list) and ('ppi' in df["Reference"][i]):
+            set_nichenet_novel.append(ligand + '+' + receptor)
+            
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('ccl19 and ccr7 related: Only LRbind %d, only nichenet %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+
+##############################  remFromDB #####################
+    set_LRbind_novel = []
+    for i in range (0, len(sort_lr_list)):
+        ligand = sort_lr_list[i][0].split('+')[0]
+        receptor =  sort_lr_list[i][0].split('+')[1]
+        if ligand == 'CCL19' or receptor == 'CCR7':
+            set_LRbind_novel.append(sort_lr_list[i][0])
+
+    set_LRbind_novel = np.unique(set_LRbind_novel)
     
+    print('ligand-receptor database reading.')
+    df = pd.read_csv(args.database_path, sep=",")
+    set_manual = []
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i] 
+        receptor = df["Receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list) and ('ppi' not in df["Reference"][i]):
+            set_manual.append(ligand + '+' + receptor)
+            
+    set_manual = np.unique(set_manual)
+    common_lr = list(set(set_LRbind_novel) & set(set_manual))
+    print('ccl19 and ccr7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
+            
+    ##################################################################
+    df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
+    set_nichenet_novel = []
+    for i in range (0, df["ligand"].shape[0]):
+        ligand = df["ligand"][i] 
+        receptor = df["receptor"][i]
+        if (ligand==target_ligand and receptor in receptor_list) or (receptor == target_receptor and ligand in ligand_list):# and ('ppi' not in df["Reference"][i]):
+            set_nichenet_novel.append(ligand + '+' + receptor)
+
+    set_nichenet_novel = np.unique(set_nichenet_novel)
+    common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
+    print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+     
+
 
  
