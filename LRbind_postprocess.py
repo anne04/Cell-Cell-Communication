@@ -334,8 +334,54 @@ if __name__ == "__main__":
     )
 
     chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')    
-    ##################################################################
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+    ############################### novel only out of all LR ################
+    sort_lr_list = []
+    for lr_pair in lr_dict:
+        ligand = lr_pair.split('+')[0]
+        receptor = lr_pair.split('+')[1]
+        if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+            continue
+        sum = 0
+        cell_pair_list = lr_dict[lr_pair]
+        for item in cell_pair_list:
+            sum = sum + 1 #item[0] # 
+
+        sort_lr_list.append([lr_pair, sum])
+
+    sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+
+    # save = num_spots/cells * top_N pairs
+    if knee_flag == 0:
+        sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+
+    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+    data_list=dict()
+    data_list['X']=[]
+    data_list['Y']=[] 
+
+    max_rows = min(500, len(sort_lr_list))
+    for i in range (0, max_rows): #1000): #
+        data_list['X'].append(sort_lr_list[i][0])
+        data_list['Y'].append(sort_lr_list[i][1])
+        
+    data_list_pd = pd.DataFrame({
+        'Ligand-Receptor Pairs': data_list['X'],
+        'Total Count': data_list['Y']
+    })
+    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+    # same as histogram plots
+    chart = alt.Chart(data_list_pd).mark_bar().encode(
+        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+        y='Total Count'
+    )
+
+    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
+
+    ################################# when not remFromDB #################################
+   
     set_LRbind_novel = []
     for i in range (0, len(sort_lr_list)):
         set_LRbind_novel.append(sort_lr_list[i][0])
@@ -427,50 +473,6 @@ if __name__ == "__main__":
     common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
     print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
     '''
-############################### novel only out of all LR ################
-    sort_lr_list = []
-    for lr_pair in lr_dict:
-        ligand = lr_pair.split('+')[0]
-        receptor = lr_pair.split('+')[1]
-        if ligand in l_r_pair and receptor in l_r_pair[ligand]:
-            continue
-        sum = 0
-        cell_pair_list = lr_dict[lr_pair]
-        for item in cell_pair_list:
-            sum = sum + 1 #item[0] # 
-
-        sort_lr_list.append([lr_pair, sum])
-
-    sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-
-    # save = num_spots/cells * top_N pairs
-    if knee_flag == 0:
-        sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
-
-    # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
-    data_list=dict()
-    data_list['X']=[]
-    data_list['Y']=[] 
-
-    max_rows = min(500, len(sort_lr_list))
-    for i in range (0, max_rows): #1000): #
-        data_list['X'].append(sort_lr_list[i][0])
-        data_list['Y'].append(sort_lr_list[i][1])
-        
-    data_list_pd = pd.DataFrame({
-        'Ligand-Receptor Pairs': data_list['X'],
-        'Total Count': data_list['Y']
-    })
-    data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
-    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
-    # same as histogram plots
-    chart = alt.Chart(data_list_pd).mark_bar().encode(
-        x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-        y='Total Count'
-    )
-
-    chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
-    print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
 
 ########## novel only ############################################# ###########################################################################################  
     lr_dict = defaultdict(list)
