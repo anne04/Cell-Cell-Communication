@@ -210,6 +210,7 @@ if __name__ == "__main__":
         if knee_flag==1:
             top_N = 0
         lr_dict = defaultdict(list)
+        Tcell_zone_lr_dict = defaultdict(list)
         target_ligand = 'CCL19'
         target_receptor = 'CCR7'
         found_list = defaultdict(list)
@@ -263,13 +264,17 @@ if __name__ == "__main__":
                 ###########################
                 for item in dot_prod_list:
                     lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                    
+                    if i in Tcell_zone and j in Tcell_zone:
+                        Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                        
                     if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
                         found_list[i].append(item[0]) #= 1
                         found_list[j].append(item[0])
                         break
     
         # plot found_list
-        print("positive: %d"%(len(found_list)))
+        print("positive: %d"%(len(found_list)))                
         # plot input_cell_pair_list  
         if test_mode==1:
         ######### plot output #############################
@@ -336,8 +341,6 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
-        ############ only Tcell Zone plot #########################################
-        
         ############################### novel only out of all LR ################
         sort_lr_list = []
         for lr_pair in lr_dict:
@@ -382,9 +385,7 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
-         ############ only Tcell Zone plot #########################################
-        
-        ################################# when not remFromDB #################################
+        ################################# when not remFromDB ##########################################################################################################
         
         set_LRbind_novel = []
         for i in range (0, len(sort_lr_list)):
@@ -461,7 +462,89 @@ if __name__ == "__main__":
         common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
         print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
         '''
+         ############ only Tcell Zone plot ##############################################################################################################################
+        sort_lr_list = []
+        for lr_pair in lr_dict:
+            sum = 0
+            cell_pair_list = lr_dict[lr_pair]
+            for item in cell_pair_list:
+                sum = sum + 1 #item[0] # 
     
+            sort_lr_list.append([lr_pair, sum])
+    
+        sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+    
+        # save = num_spots/cells * top_N pairs
+        if knee_flag == 0:
+            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+    
+        # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[] 
+        max_rows = min(500, len(sort_lr_list))
+        for i in range (0, max_rows): #1000): #:
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
+            
+        data_list_pd = pd.DataFrame({
+            'Ligand-Receptor Pairs': data_list['X'],
+            'Total Count': data_list['Y']
+        })
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        # same as histogram plots
+        chart = alt.Chart(data_list_pd).mark_bar().encode(
+            x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y='Total Count'
+        )
+    
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        ############################### novel only out of all LR ################
+        sort_lr_list = []
+        for lr_pair in lr_dict:
+            ligand = lr_pair.split('+')[0]
+            receptor = lr_pair.split('+')[1]
+            if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                continue
+            sum = 0
+            cell_pair_list = lr_dict[lr_pair]
+            for item in cell_pair_list:
+                sum = sum + 1 #item[0] # 
+    
+            sort_lr_list.append([lr_pair, sum])
+    
+        sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+    
+        # save = num_spots/cells * top_N pairs
+        if knee_flag == 0:
+            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+    
+        # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[] 
+    
+        max_rows = min(500, len(sort_lr_list))
+        for i in range (0, max_rows): #1000): #
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
+            
+        data_list_pd = pd.DataFrame({
+            'Ligand-Receptor Pairs': data_list['X'],
+            'Total Count': data_list['Y']
+        })
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        # same as histogram plots
+        chart = alt.Chart(data_list_pd).mark_bar().encode(
+            x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y='Total Count'
+        )
+    
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')             
     ########## novel only ############################################# ###########################################################################################  
         lr_dict = defaultdict(list)
         target_ligand = 'CCL19'
@@ -593,7 +676,6 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
-         ############ only Tcell Zone plot #########################################
         
         ##################### if not remFromDB #############################################
         
@@ -661,6 +743,91 @@ if __name__ == "__main__":
         common_lr = list(set(set_LRbind_novel) & set(set_manual))
         print('ccl19 and ccr7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
         '''
+
+    ###########################only Tcell Zone ###############################################################################################
+         ############ only Tcell Zone plot ##############################################################################################################################
+        sort_lr_list = []
+        for lr_pair in lr_dict:
+            sum = 0
+            cell_pair_list = lr_dict[lr_pair]
+            for item in cell_pair_list:
+                sum = sum + 1 #item[0] # 
+    
+            sort_lr_list.append([lr_pair, sum])
+    
+        sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+    
+        # save = num_spots/cells * top_N pairs
+        if knee_flag == 0:
+            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+    
+        # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[] 
+        max_rows = min(500, len(sort_lr_list))
+        for i in range (0, max_rows): #1000): #:
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
+            
+        data_list_pd = pd.DataFrame({
+            'Ligand-Receptor Pairs': data_list['X'],
+            'Total Count': data_list['Y']
+        })
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        # same as histogram plots
+        chart = alt.Chart(data_list_pd).mark_bar().encode(
+            x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y='Total Count'
+        )
+    
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        ############################### novel only out of all LR ################
+        sort_lr_list = []
+        for lr_pair in lr_dict:
+            ligand = lr_pair.split('+')[0]
+            receptor = lr_pair.split('+')[1]
+            if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                continue
+            sum = 0
+            cell_pair_list = lr_dict[lr_pair]
+            for item in cell_pair_list:
+                sum = sum + 1 #item[0] # 
+    
+            sort_lr_list.append([lr_pair, sum])
+    
+        sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+    
+        # save = num_spots/cells * top_N pairs
+        if knee_flag == 0:
+            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+    
+        # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[] 
+    
+        max_rows = min(500, len(sort_lr_list))
+        for i in range (0, max_rows): #1000): #
+            data_list['X'].append(sort_lr_list[i][0])
+            data_list['Y'].append(sort_lr_list[i][1])
+            
+        data_list_pd = pd.DataFrame({
+            'Ligand-Receptor Pairs': data_list['X'],
+            'Total Count': data_list['Y']
+        })
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        # same as histogram plots
+        chart = alt.Chart(data_list_pd).mark_bar().encode(
+            x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+            y='Total Count'
+        )
+    
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')         
     ##################################################################
     df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
     set_nichenet_novel = []
