@@ -273,6 +273,7 @@ if __name__ == "__main__":
         # plot input_cell_pair_list  
         if test_mode==1:
         ######### plot output #############################
+            # UPDATE # annottaion
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[]   
@@ -335,6 +336,8 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        ############ only Tcell Zone plot #########################################
+        
         ############################### novel only out of all LR ################
         sort_lr_list = []
         for lr_pair in lr_dict:
@@ -379,7 +382,8 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
-    
+         ############ only Tcell Zone plot #########################################
+        
         ################################# when not remFromDB #################################
         
         set_LRbind_novel = []
@@ -589,7 +593,8 @@ if __name__ == "__main__":
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms.html')    
-    
+         ############ only Tcell Zone plot #########################################
+        
         ##################### if not remFromDB #############################################
         
         set_LRbind_novel = []
