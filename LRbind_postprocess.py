@@ -48,7 +48,7 @@ if __name__ == "__main__":
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -217,10 +217,11 @@ if __name__ == "__main__":
             print('found %d'%i)
             break
     '''
-########## all #############################################   
+########## all ############################################# 
+    top_lrp_count = 5000
     knee_flag = 0
     break_flag = 0
-    for top_N in [50, 30, 10]:
+    for top_N in [100, 30, 10]:
         if break_flag == 1: 
             break
         if knee_flag == 1:
@@ -258,19 +259,18 @@ if __name__ == "__main__":
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                         product_only.append(temp)
 
+                if len(dot_prod_list) == 0:
+                    continue
                 # scale 
-                max_prod = max(product_only)
-                min_prod = min(product_only)
+                max_prod = np.max(product_only)
+                min_prod = np.min(product_only)
                 for item_idx in range (0, len(dot_prod_list)):
                     scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
                     dot_prod_list[item_idx][0] = scaled_prod
-                    
                 
                 if knee_flag == 0:
                     dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                 else:
-                    if len(dot_prod_list) == 0:
-                        continue
                     ########## knee find ###########
                     score_list = []
                     for item in dot_prod_list:
@@ -340,16 +340,21 @@ if __name__ == "__main__":
             sum = 0
             cell_pair_list = lr_dict[lr_pair]
             for item in cell_pair_list:
-                sum = sum + 1 #item[0] # 
+                sum = sum + item[0]  
     
             sort_lr_list.append([lr_pair, sum])
     
         sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-    
+        print('len sort_lr_list %d'%len(sort_lr_list))
         # save = num_spots/cells * top_N pairs
         if knee_flag == 0:
-            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
-    
+            sort_lr_list = sort_lr_list[0: top_lrp_count]
+
+        
+        top_hit_lrp_dict = dict()
+        for item in sort_lr_list:
+            top_hit_lrp_dict[item[0]] = ''
+        
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
         data_list['X']=[]
@@ -374,34 +379,25 @@ if __name__ == "__main__":
         #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
         #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
         ############################### novel only out of all LR ################
-        sort_lr_list = []
-        for lr_pair in lr_dict:
-            ligand = lr_pair.split('+')[0]
-            receptor = lr_pair.split('+')[1]
+        sort_lr_list_temp = []
+        for pair in sort_lr_list:                
+            ligand = pair[0].split('+')[0]
+            receptor = pair[0].split('+')[1]
             if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                 continue
-            sum = 0
-            cell_pair_list = lr_dict[lr_pair]
-            for item in cell_pair_list:
-                sum = sum + 1 #item[0] # 
-    
-            sort_lr_list.append([lr_pair, sum])
-    
-        sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-    
-        # save = num_spots/cells * top_N pairs
-        if knee_flag == 0:
-            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
-    
+                
+            sort_lr_list_temp.append(pair) 
+            
+        print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
         data_list['X']=[]
         data_list['Y']=[] 
     
-        max_rows = min(500, len(sort_lr_list))
+        max_rows = min(500, len(sort_lr_list_temp))
         for i in range (0, max_rows): #1000): #
-            data_list['X'].append(sort_lr_list[i][0])
-            data_list['Y'].append(sort_lr_list[i][1])
+            data_list['X'].append(sort_lr_list_temp[i][0])
+            data_list['Y'].append(sort_lr_list_temp[i][1])
             
         data_list_pd = pd.DataFrame({
             'Ligand-Receptor Pairs': data_list['X'],
@@ -420,8 +416,8 @@ if __name__ == "__main__":
         ################################# when not remFromDB ##########################################################################################################
         '''
         set_LRbind_novel = []
-        for i in range (0, len(sort_lr_list)):
-            set_LRbind_novel.append(sort_lr_list[i][0])
+        for i in range (0, len(sort_lr_list_temp)):
+            set_LRbind_novel.append(sort_lr_list_temp[i][0])
     
         print('ligand-receptor database reading.')
         df = pd.read_csv(args.database_path, sep=",")
@@ -443,13 +439,13 @@ if __name__ == "__main__":
         data_list=dict()
         data_list['X']=[]
         data_list['Y']=[] 
-        for i in range (0, len(sort_lr_list)):
-            ligand = sort_lr_list[i][0].split('+')[0]
-            receptor =  sort_lr_list[i][0].split('+')[1]
+        for i in range (0, len(sort_lr_list_temp)):
+            ligand = sort_lr_list_temp[i][0].split('+')[0]
+            receptor =  sort_lr_list_temp[i][0].split('+')[1]
             if ligand == 'CCL19' or receptor == 'CCR7':
-                set_LRbind_novel.append(sort_lr_list[i][0])
-                data_list['X'].append(sort_lr_list[i][0])
-                data_list['Y'].append(sort_lr_list[i][1])
+                set_LRbind_novel.append(sort_lr_list_temp[i][0])
+                data_list['X'].append(sort_lr_list_temp[i][0])
+                data_list['Y'].append(sort_lr_list_temp[i][1])
     
         set_LRbind_novel = np.unique(set_LRbind_novel)
         # plot set_LRbind_nov
@@ -497,19 +493,17 @@ if __name__ == "__main__":
          ############ only Tcell Zone plot ##############################################################################################################################
         Tcell_zone_sort_lr_list = []
         for lr_pair in Tcell_zone_lr_dict:
+            if lr_pair not in top_hit_lrp_dict:
+                continue
             sum = 0
             cell_pair_list = Tcell_zone_lr_dict[lr_pair]
             for item in cell_pair_list:
-                sum = sum + 1 #item[0] # 
+                sum = sum + item[0] # 
     
             Tcell_zone_sort_lr_list.append([lr_pair, sum])
     
         Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
-    
-        # save = num_spots/cells * top_N pairs
-        if knee_flag == 0:
-            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: len(barcode_info)*top_N]
-    
+        
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
         data_list['X']=[]
@@ -536,6 +530,9 @@ if __name__ == "__main__":
         ############################### novel only out of all LR ################
         Tcell_zone_sort_lr_list = []
         for lr_pair in Tcell_zone_lr_dict:
+            if lr_pair not in top_hit_lrp_dict:
+                continue
+            
             ligand = lr_pair.split('+')[0]
             receptor = lr_pair.split('+')[1]
             if ligand in l_r_pair and receptor in l_r_pair[ligand]:
@@ -543,16 +540,12 @@ if __name__ == "__main__":
             sum = 0
             cell_pair_list = Tcell_zone_lr_dict[lr_pair]
             for item in cell_pair_list:
-                sum = sum + 1 #item[0] # 
+                sum = sum + item[0] # 
     
             Tcell_zone_sort_lr_list.append([lr_pair, sum])
     
         Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
-    
-        # save = num_spots/cells * top_N pairs
-        if knee_flag == 0:
-            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: len(barcode_info)*top_N]
-    
+        
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
         data_list['X']=[]
@@ -684,7 +677,7 @@ if __name__ == "__main__":
     
         # save = num_spots/cells * top_N pairs
         if knee_flag == 0:
-            sort_lr_list = sort_lr_list[0: len(barcode_info)*top_N]
+            sort_lr_list = sort_lr_list[0: top_lrp_count]
     
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
@@ -793,7 +786,7 @@ if __name__ == "__main__":
     
         # save = num_spots/cells * top_N pairs
         if knee_flag == 0:
-            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: len(barcode_info)*top_N]
+            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: top_lrp_count]
     
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
@@ -836,7 +829,7 @@ if __name__ == "__main__":
     
         # save = num_spots/cells * top_N pairs
         if knee_flag == 0:
-            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: len(barcode_info)*top_N]
+            Tcell_zone_sort_lr_list = Tcell_zone_sort_lr_list[0: top_lrp_count]
     
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
