@@ -48,7 +48,7 @@ if __name__ == "__main__":
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -219,9 +219,13 @@ if __name__ == "__main__":
     '''
 ########## all #############################################   
     knee_flag = 0
-    for top_N in [30, 10]:
-        if knee_flag==1:
+    break_flag = 0
+    for top_N in [50, 30, 10]:
+        if break_flag == 1: 
+            break
+        if knee_flag == 1:
             top_N = 0
+            break_flag = 1
         lr_dict = defaultdict(list)
         Tcell_zone_lr_dict = defaultdict(list)
         target_ligand = 'CCL19'
@@ -245,10 +249,23 @@ if __name__ == "__main__":
                         receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
     
                 dot_prod_list = []
+                product_only = []
                 for i_gene in ligand_node_index:
                     for j_gene in receptor_node_index:
-                        dot_prod_list.append([np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]), i, j, i_gene[1], j_gene[1]])
-    
+                        if i_gene[1]==j_gene[1]:
+                            continue
+                        temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
+                        dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
+                        product_only.append(temp)
+
+                # scale 
+                max_prod = max(product_only)
+                min_prod = min(product_only)
+                for item_idx in range (0, len(dot_prod_list)):
+                    scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
+                    dot_prod_list[item_idx][0] = scaled_prod
+                    
+                
                 if knee_flag == 0:
                     dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                 else:
@@ -316,8 +333,8 @@ if __name__ == "__main__":
         # save lr_dict that has info about gene node id as well
     
         ########## take top hits #################################### 
-        if top_N == 30:
-            continue
+        #if top_N == 30:
+        #    continue
         sort_lr_list = []
         for lr_pair in lr_dict:
             sum = 0
@@ -354,8 +371,8 @@ if __name__ == "__main__":
             y='Total Count'
         )
     
-        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
         ############################### novel only out of all LR ################
         sort_lr_list = []
         for lr_pair in lr_dict:
@@ -558,8 +575,8 @@ if __name__ == "__main__":
             y='Total Count'
         )
     
-        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')             
+        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')             
     ########## novel only ############################################# ###########################################################################################  
         '''
         lr_dict = defaultdict(list)
