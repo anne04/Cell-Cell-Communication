@@ -48,7 +48,7 @@ if __name__ == "__main__":
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -76,6 +76,19 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info = pickle.load(fp) 
 
+    barcode_index = dict()
+    for i in range (0, len(barcode_info)):
+        barcode_index[barcode_info[i][0]] = i
+
+    Tcell_zone = []
+    df = pd.read_csv("../NEST/data/V1_Human_Lymph_Node_spatial_annotation.csv", sep=",")
+    for i in range (0, df["Barcode"].shape[0]):
+        if df["Type"][i] == 'T-cell':
+            Tcell_zone.append(barcode_index[df["Barcode"][i]])
+
+    
+        
+    
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair = pickle.load(fp)
     
@@ -377,16 +390,16 @@ if __name__ == "__main__":
             'Ligand-Receptor Pairs': data_list['X'],
             'Total Count': data_list['Y']
         })
-        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        #data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y='Total Count'
         )
     
-        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
+        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
         ################################# when not remFromDB ##########################################################################################################
         '''
         set_LRbind_novel = []
@@ -428,15 +441,15 @@ if __name__ == "__main__":
             'Ligand-Receptor Pairs': data_list['X'],
             'Total Count': data_list['Y']
         })
-        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv')    
+        #data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv', index=False)
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelccl19ccr7OutOfallLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y='Total Count'
         )
-        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')   
+        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelccl19ccr7OutOfallLR.html')   
         
         df = pd.read_csv(args.database_path, sep=",")
         set_manual = []
@@ -557,7 +570,7 @@ if __name__ == "__main__":
         for i in range (0, len(barcode_info)):
             for j in range (0, len(barcode_info)):
                 
-                if dist_X[i][j]==0:
+                if dist_X[i][j]==0 or i==j:
                     continue
                 # from i to j
                 ligand_node_index = []
