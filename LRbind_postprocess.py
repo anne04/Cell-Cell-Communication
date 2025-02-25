@@ -206,7 +206,7 @@ if __name__ == "__main__":
     '''
 ########## all #############################################   
     knee_flag = 0
-    for top_N in [10]: #, 30]:
+    for top_N in [30, 10]:
         if knee_flag==1:
             top_N = 0
         lr_dict = defaultdict(list)
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         for i in range (0, len(barcode_info)):
             for j in range (0, len(barcode_info)):
                 
-                if dist_X[i][j]==0:
+                if dist_X[i][j]==0 or i==j :
                     continue
                 # from i to j
                 ligand_node_index = []
@@ -303,6 +303,8 @@ if __name__ == "__main__":
         # save lr_dict that has info about gene node id as well
     
         ########## take top hits #################################### 
+        if top_N == 30:
+            continue
         sort_lr_list = []
         for lr_pair in lr_dict:
             sum = 0
@@ -546,6 +548,7 @@ if __name__ == "__main__":
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')             
     ########## novel only ############################################# ###########################################################################################  
+        '''
         lr_dict = defaultdict(list)
         target_ligand = 'CCL19'
         target_receptor = 'CCR7'
@@ -695,7 +698,7 @@ if __name__ == "__main__":
         set_nichenet_novel = np.unique(set_nichenet_novel)
         common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
         print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-        
+        '''
     ################################## remFromDB #################
         '''
         print('top_N: %d'%top_N)
