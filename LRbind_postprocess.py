@@ -388,7 +388,7 @@ if __name__ == "__main__":
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
         ################################# when not remFromDB ##########################################################################################################
-        
+        '''
         set_LRbind_novel = []
         for i in range (0, len(sort_lr_list)):
             set_LRbind_novel.append(sort_lr_list[i][0])
@@ -405,9 +405,9 @@ if __name__ == "__main__":
         set_nichenet_novel = np.unique(set_nichenet_novel)
         common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
         print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-        
-    ##################################  ccl19 and ccr7 related #################
         '''
+    ##################################  ccl19 and ccr7 related #################
+        
         print('top_N: %d'%top_N)
         set_LRbind_novel = []
         data_list=dict()
@@ -449,7 +449,7 @@ if __name__ == "__main__":
         set_manual = np.unique(set_manual)
         common_lr = list(set(set_LRbind_novel) & set(set_manual))
         print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
-            '''
+            
         ##################################################################
         '''
         df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
