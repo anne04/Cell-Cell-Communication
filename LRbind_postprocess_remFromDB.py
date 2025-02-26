@@ -842,7 +842,7 @@ for model_name in model_names:
         print(args.output_path + args.model_name + '_output_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '_novel.html')
     ##################### plot input ###########################
     
-        data_list=dict() 
+        data_list=dict()
         data_list['X']=[]
         data_list['Y']=[]   
         data_list['gene_expression']=[] 
@@ -874,3 +874,4 @@ for model_name in model_names:
             print('found %d'%i)
             break
     '''
+  
