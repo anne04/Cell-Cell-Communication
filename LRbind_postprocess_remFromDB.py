@@ -201,17 +201,20 @@ for model_name in model_names:
             data_list['X']=[]
             data_list['Y']=[]   
             data_list['total count']=[] 
-            data_list['label'] = []
+            data_list['prediction'] = []
             for i in range (0, len(barcode_info)):
                 data_list['X'].append(barcode_info[i][1])
                 data_list['Y'].append(-barcode_info[i][2])
                 if i in found_list:
                     data_list['total count'].append(np.sum(found_list[i]))
+                    data_list['prediction'].append('positive')
                 else:
                     data_list['total count'].append(0)
+                    data_list['prediction'].append('negative')
+                
                     
                 data_list['label'].append(node_type[barcode_info[i][0]])
-            
+                
             source= pd.DataFrame(data_list)
             
             chart = alt.Chart(source).mark_point(filled=True).encode(
@@ -221,8 +224,63 @@ for model_name in model_names:
                 shape = alt.Shape('label:N')
             )
             chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
-            print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')    
-        # save lr_dict that has info about gene node id as well
+            print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
+
+            # entropy
+            
+            # save lr_dict that has info about gene node id as well
+            ############## entropy ####################################
+
+            true_label_dict = defaultdict(list)
+            for i in range (0, len(barcode_info)):
+                if node_type[barcode_info[i][0]] == 'T-cell':
+                    true_label_dict['positive'].append(barcode_info[i][0])
+                else:
+                    true_label_dict['negative'].append(barcode_info[i][0])
+
+            
+            
+            cluster_dict = defaultdict(list)
+            for i in range (0, len(barcode_info)):
+                if data_list['prediction'][i] == 'positive':
+                    cluster_dict['positive'].append(barcode_info[i][0])
+                else:
+                    cluster_dict['negative'].append(barcode_info[i][0])
+
+            
+            
+                
+            entropy_cluster = np.zeros((len(cluster_dict.keys())))
+            cluster_list = list(cluster_dict.keys())
+            for k in range (0, len(cluster_list)):
+                p = cluster_list[k]
+                cluster_count = len(cluster_dict[p])
+        
+                H_sum = 0
+                for t in true_label_dict.keys():  
+                    count_match = 0
+                    barcodes_list = true_label_dict[t]
+                    for barcode in barcodes_list: 
+                        if barcode in cluster_dict[p]:
+                            count_match = count_match+1
+        
+                    #print(count_match/cluster_count)
+                    if count_match/cluster_count != 0:
+                        H_sum = H_sum + (count_match/cluster_count)*np.log(count_match/cluster_count)
+        
+        
+                entropy_cluster[k] = H_sum
+        
+            N_cells = len(barcode_info)                
+            entropy_total = 0
+            for k in range (0, len(cluster_list)):
+                entropy_total = entropy_total + (len(cluster_dict[cluster_list[k]])*entropy_cluster[k])/N_cells
+        
+            entropy_total = - entropy_total
+            print('##############  shanon entropy  %g #############'%entropy_total)           
+    
+
+
     
         ########## take top hits #################################### 
         
