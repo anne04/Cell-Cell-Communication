@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     knee_flag = 0
     break_flag = 0
     for top_N in [100, 30, 10]:
-        if break_flag == 1: 
+        if break_flag == 1:  
             break
         if knee_flag == 1:
             top_N = 0
@@ -262,6 +262,7 @@ if __name__ == "__main__":
                 if len(dot_prod_list) == 0:
                     continue
                 # scale 
+                
                 max_prod = np.max(product_only)
                 min_prod = np.min(product_only)
                 for item_idx in range (0, len(dot_prod_list)):
@@ -376,8 +377,8 @@ if __name__ == "__main__":
             y='Total Count'
         )
     
-        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
         ############################### novel only out of all LR ################
         sort_lr_list_temp = []
         for pair in sort_lr_list:                
@@ -403,18 +404,18 @@ if __name__ == "__main__":
             'Ligand-Receptor Pairs': data_list['X'],
             'Total Count': data_list['Y']
         })
-        #data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
-        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
             y='Total Count'
         )
     
-        #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
-        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
+        chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
         ################################# when not remFromDB ##########################################################################################################
-        '''
+        
         set_LRbind_novel = []
         for i in range (0, len(sort_lr_list_temp)):
             set_LRbind_novel.append(sort_lr_list_temp[i][0])
@@ -431,9 +432,9 @@ if __name__ == "__main__":
         set_nichenet_novel = np.unique(set_nichenet_novel)
         common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
         print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-        '''
-    ##################################  ccl19 and ccr7 related #################
         
+    ##################################  ccl19 and ccr7 related #################
+        '''
         print('top_N: %d'%top_N)
         set_LRbind_novel = []
         data_list=dict()
@@ -475,7 +476,7 @@ if __name__ == "__main__":
         set_manual = np.unique(set_manual)
         common_lr = list(set(set_LRbind_novel) & set(set_manual))
         print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
-            
+        '''
         ##################################################################
         '''
         df = pd.read_csv("../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv", sep=",")
@@ -528,6 +529,7 @@ if __name__ == "__main__":
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
         ############################### novel only out of all LR ################
+        '''
         Tcell_zone_sort_lr_list = []
         for lr_pair in Tcell_zone_lr_dict:
             if lr_pair not in top_hit_lrp_dict:
@@ -560,8 +562,8 @@ if __name__ == "__main__":
             'Ligand-Receptor Pairs': data_list['X'],
             'Total Count': data_list['Y']
         })
-        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv')    
+        #data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv', index=False)
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
@@ -569,7 +571,8 @@ if __name__ == "__main__":
         )
     
         #chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')
-        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')             
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_Tcell_zone_novelsOutOfallLR.html')       
+        '''
     ########## novel only ############################################# ###########################################################################################  
         '''
         lr_dict = defaultdict(list)
