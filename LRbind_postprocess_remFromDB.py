@@ -82,7 +82,8 @@ if __name__ == "__main__":
     for i in range (0, df["Barcode"].shape[0]):
         if df["Type"][i] == 'T-cell':
             Tcell_zone.append(barcode_index[df["Barcode"][i]])
-            node_type[barcode_index[df["Barcode"][i]] = df["Type"][i]
+        
+        node_type[df["Barcode"][i]] = df["Type"][i]
 
     
         
@@ -202,6 +203,7 @@ for model_name in model_names:
             data_list['Y']=[]   
             data_list['total count']=[] 
             data_list['prediction'] = []
+            data_list['label'] = []
             for i in range (0, len(barcode_info)):
                 data_list['X'].append(barcode_info[i][1])
                 data_list['Y'].append(-barcode_info[i][2])
