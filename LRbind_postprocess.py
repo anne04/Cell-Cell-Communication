@@ -147,25 +147,30 @@ if __name__ == "__main__":
                             receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
         
                     dot_prod_list = []
-                    product_only = []
+                    start_index = 0
                     for i_gene in ligand_node_index:
+                        product_only = []
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
                             temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
-    
+                        # scale                     
+                        if len(product_only) == 0:
+                            continue
+                        max_prod = np.max(product_only)
+                        min_prod = np.min(product_only)
+                        for item_idx in range (start_index, len(dot_prod_list)):
+                            scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
+                            dot_prod_list[item_idx][0] = scaled_prod
+
+                        start_index = len(dot_prod_list)
+
+                    
                     if len(dot_prod_list) == 0:
                         continue
-                    # scale 
-                    
-                    max_prod = np.max(product_only)
-                    min_prod = np.min(product_only)
-                    for item_idx in range (0, len(dot_prod_list)):
-                        scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
-                        dot_prod_list[item_idx][0] = scaled_prod
-                    
+                        
                     if knee_flag == 0:
                         dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                     else:
