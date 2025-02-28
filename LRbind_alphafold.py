@@ -33,12 +33,20 @@ if __name__ == "__main__":
                 ['HLA-DRA', 'PTPRC'], ['PTPRC','CD74'], ['APOE', 'CXCR4'], 
                 ['HSP90B1', 'CXCR4'], ['HLA-F', 'CXCR4'], ['CCL19', 'CXCR4'], 
                 ['HLA-DRA', 'CD74']]
+    
     for pair in lrp_list:
         ligand = pair[0]
         receptor = pair[1]
         lig_seq = dict_gene_seq[ligand]
         rec_seq = dict_gene_seq[receptor]
-        write_str = '>'+ ligand + "\n" + lig_seq + '\n' + '>' + receptor + '\n' + rec_seq
-        print(write_str)
-
- 
+        f = open(ligand+'_'+receptor+".fasta", "w")
+        f.write(">")
+        f.write(ligand)
+        f.write("\n")
+        f.write(lig_seq)
+        f.write("\n")
+        f.write(">")
+        f.write(receptor)
+        f.write("\n")
+        f.write(rec_seq)
+        f.close()
