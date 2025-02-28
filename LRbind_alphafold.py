@@ -10,13 +10,14 @@ import pandas as pd
 import gzip
 import math
 import argparse
-
+from random import randint 
 if __name__ == "__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
     # ================ Specify data type firstly ===============
     parser.add_argument( '--file_name', type=str, default='uniprotkb_reviewed_true_AND_proteome_up_2025_02_27.tsv', help='The name of DB')
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv', help='The name of DB')
     parser.add_argument( '--result_path', type=str, default='result/')
     args = parser.parse_args()
 
@@ -50,3 +51,24 @@ if __name__ == "__main__":
         f.write("\n")
         f.write(rec_seq)
         f.close()
+
+    df = pd.read_csv(args.database_path, sep=",")
+    random_selection = [randint(0, df['Ligand'].shape[0]) for p in range(0, 10)] 
+    for i in random_selection:
+        ligand = df['Ligand'][i]
+        receptor = df['Receptor'][i]
+        lig_seq = dict_gene_seq[ligand]
+        rec_seq = dict_gene_seq[receptor]
+        f = open('manualLRP_'+ligand+'_'+receptor+".fasta", "w")
+        f.write(">")
+        f.write(ligand)
+        f.write("\n")
+        f.write(lig_seq)
+        f.write("\n")
+        f.write(">")
+        f.write(receptor)
+        f.write("\n")
+        f.write(rec_seq)
+        f.close()
+        
+        
