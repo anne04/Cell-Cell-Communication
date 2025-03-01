@@ -2,7 +2,7 @@
 # Fatema Tuz Zohora
 
 
-print('package loading') 
+print('package loading')
 import numpy as np
 import csv
 import pickle
@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -156,7 +156,8 @@ if __name__ == "__main__":
                             temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
-                        # scale                     
+                        # scale  
+                        '''
                         if len(product_only) == 0:
                             continue
                         max_prod = np.max(product_only)
@@ -164,9 +165,9 @@ if __name__ == "__main__":
                         for item_idx in range (start_index, len(dot_prod_list)):
                             scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
                             dot_prod_list[item_idx][0] = scaled_prod
-
+                        '''
                         start_index = len(dot_prod_list)
-
+                    
                     
                     if len(dot_prod_list) == 0:
                         continue
@@ -306,7 +307,8 @@ if __name__ == "__main__":
                 cell_pair_list = lr_dict[lr_pair]
                 for item in cell_pair_list:
                     sum = sum + item[0]  
-        
+
+                sum = sum/len(cell_pair_list)
                 sort_lr_list.append([lr_pair, sum])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -345,11 +347,15 @@ if __name__ == "__main__":
             print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
+            i = 0
             for pair in sort_lr_list:                
                 ligand = pair[0].split('+')[0]
                 receptor = pair[0].split('+')[1]
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                    print(i)
+                    i=i+1
                     continue
+                i = i + 1
                     
                 sort_lr_list_temp.append(pair) 
                 
@@ -421,7 +427,8 @@ if __name__ == "__main__":
                 cell_pair_list = Tcell_zone_lr_dict[lr_pair]
                 for item in cell_pair_list:
                     sum = sum + item[0] # 
-        
+
+                sum = sum/len(cell_pair_list)
                 Tcell_zone_sort_lr_list.append([lr_pair, sum])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -650,8 +657,6 @@ if __name__ == "__main__":
         '''
 
     ###########################only Tcell Zone ###############################################################################################
-         ############ only Tcell Zone plot ##############################################################################################################################
-       ############ only Tcell Zone plot ##############################################################################################################################
         Tcell_zone_sort_lr_list = []
         for lr_pair in Tcell_zone_lr_dict:
             sum = 0
