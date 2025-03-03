@@ -96,7 +96,8 @@ if __name__ == "__main__":
 
     ############# load output graph #################################################
 model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
-              'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
+               'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
+               #'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
               ]
 for model_name in model_names:
     args.model_name = model_name
@@ -150,13 +151,13 @@ for model_name in model_names:
                 if len(dot_prod_list) == 0:
                     continue
                 # scale 
-                
+                '''
                 max_prod = np.max(product_only)
                 min_prod = np.min(product_only)
                 for item_idx in range (0, len(dot_prod_list)):
                     scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
                     dot_prod_list[item_idx][0] = scaled_prod
-                
+                '''
                 if knee_flag == 0:
                     dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                 else:
@@ -292,7 +293,8 @@ for model_name in model_names:
             cell_pair_list = lr_dict[lr_pair]
             for item in cell_pair_list:
                 sum = sum + item[0]  
-    
+                
+            sum = sum/len(cell_pair_list)
             sort_lr_list.append([lr_pair, sum])
     
         sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -331,14 +333,20 @@ for model_name in model_names:
         print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
         ############################### novel only out of all LR ################
         sort_lr_list_temp = []
+        i = 0
         for pair in sort_lr_list:                
             ligand = pair[0].split('+')[0]
             receptor = pair[0].split('+')[1]
             if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                if i<15:
+                    print(i)
+                i=i+1
                 continue
+            i = i + 1
                 
             sort_lr_list_temp.append(pair) 
-            
+
+        
         print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
@@ -407,7 +415,7 @@ for model_name in model_names:
                 
         set_manual = np.unique(set_manual)
         common_lr = list(set(set_LRbind_novel) & set(set_manual))
-        print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_manual)-len(common_lr), len(common_lr)))
+        print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel)-len(common_lr), len(set_manual)-len(common_lr), len(common_lr)))
         
         ##################################################################
         '''
@@ -432,7 +440,8 @@ for model_name in model_names:
             cell_pair_list = Tcell_zone_lr_dict[lr_pair]
             for item in cell_pair_list:
                 sum = sum + item[0] # 
-    
+
+            sum = sum/len(cell_pair_list)
             Tcell_zone_sort_lr_list.append([lr_pair, sum])
     
         Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -475,7 +484,8 @@ for model_name in model_names:
             cell_pair_list = Tcell_zone_lr_dict[lr_pair]
             for item in cell_pair_list:
                 sum = sum + item[0] # 
-    
+
+            sum = sum/len(cell_pair_list)
             Tcell_zone_sort_lr_list.append([lr_pair, sum])
     
         Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
