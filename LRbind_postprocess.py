@@ -101,9 +101,9 @@ if __name__ == "__main__":
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
-                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
-                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
-                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
+                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
+                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
+                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
@@ -111,6 +111,7 @@ if __name__ == "__main__":
         args.model_name = model_name
         args.model_name = args.model_name + '_r1'
         X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
+        print("\n\n"+ X_embedding_filename)
         with gzip.open(X_embedding_filename, 'rb') as fp:  
             X_embedding = pickle.load(fp)
     
@@ -119,7 +120,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [100, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -352,7 +353,8 @@ if __name__ == "__main__":
                 ligand = pair[0].split('+')[0]
                 receptor = pair[0].split('+')[1]
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
-                    print(i)
+                    if i<15:
+                        print(i)
                     i=i+1
                     continue
                 i = i + 1
@@ -401,7 +403,7 @@ if __name__ == "__main__":
         
             set_nichenet_novel = np.unique(set_nichenet_novel)
             common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
-            print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+            print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel)-len(common_lr), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
             print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv') 
             ##################################################################
