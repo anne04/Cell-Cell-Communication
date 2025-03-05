@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
-    parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='P
+    parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='P')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -95,9 +95,10 @@ if __name__ == "__main__":
         target_LR_index, target_cell_pair = pickle.load(fp)
 
     ############# load output graph #################################################
-model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
-               'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
+model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
+               #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
                #'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
+               'model_LRbind_3L_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB'
               ]
 for model_name in model_names:
     args.model_name = model_name
