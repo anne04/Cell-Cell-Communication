@@ -101,9 +101,9 @@ if __name__ == "__main__":
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -307,9 +307,9 @@ if __name__ == "__main__":
                 sum = 0
                 cell_pair_list = lr_dict[lr_pair]
                 for item in cell_pair_list:
-                    sum = sum + item[0]  
+                    sum = sum + 1 #item[0]  
 
-                sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list)
                 sort_lr_list.append([lr_pair, sum])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -428,9 +428,9 @@ if __name__ == "__main__":
                 sum = 0
                 cell_pair_list = Tcell_zone_lr_dict[lr_pair]
                 for item in cell_pair_list:
-                    sum = sum + item[0] # 
+                    sum = sum + 1 #item[0] # 
 
-                sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list)
                 Tcell_zone_sort_lr_list.append([lr_pair, sum])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
