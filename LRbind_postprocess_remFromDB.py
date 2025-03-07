@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
@@ -95,10 +95,10 @@ if __name__ == "__main__":
         target_LR_index, target_cell_pair = pickle.load(fp)
 
     ############# load output graph #################################################
-model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
-               'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
-               #'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
-               'model_LRbind_3L_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB'
+model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
+               #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
+               'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
+               #'model_LRbind_3L_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB'
               ]
 for model_name in model_names:
     args.model_name = model_name
