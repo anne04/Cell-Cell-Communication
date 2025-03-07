@@ -116,7 +116,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [100, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
