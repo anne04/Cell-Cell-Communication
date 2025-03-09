@@ -60,6 +60,11 @@ if __name__ == "__main__":
         f.close()
 
     df = pd.read_csv(args.database_path, sep=",")
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i]
+        receptor = df["Receptor"][i]
+
+    
     random_selection = [randint(0, df['Ligand'].shape[0]) for p in range(0, 10)] 
     for i in random_selection:
         ligand = df['Ligand'][i]
