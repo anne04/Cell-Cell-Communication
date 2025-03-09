@@ -160,6 +160,9 @@ if __name__ == "__main__":
     
     print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
     print('number of ligands %d '%len(ligand_dict_dataset.keys()))
+
+
+
     
     included_gene=[]
     for gene in gene_info.keys(): 
@@ -169,6 +172,12 @@ if __name__ == "__main__":
     print('Total genes in this dataset: %d, number of genes working as ligand and/or receptor: %d '%(len(gene_ids),len(included_gene)))
     
     # assign id to each entry in the ligand-receptor database
+    
+    for ligand in ligand_dict_dataset:
+        receptor_list = ligand_dict_dataset[ligand]
+        receptor_list = np.unique(receptor_list)
+        ligand_dict_dataset[ligand] = receptor_list
+    
     l_r_pair = dict()
     lr_id = 0
     for gene in list(ligand_dict_dataset.keys()): 
@@ -178,7 +187,7 @@ if __name__ == "__main__":
             l_r_pair[gene][receptor_gene] = lr_id 
             lr_id  = lr_id  + 1
         
-    
+    print("unique LR pair count %d"%lr_id)
     ###################################################################################
     # build physical distance matrix
     from sklearn.metrics.pairwise import euclidean_distances
