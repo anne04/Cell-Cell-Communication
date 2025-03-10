@@ -97,9 +97,9 @@ if __name__ == "__main__":
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -145,13 +145,14 @@ if __name__ == "__main__":
         
                     dot_prod_list = []
                     start_index = 0
-                    for i_gene in ligand_node_index:
+                    for j_gene in receptor_node_index:
                         product_only = []
-                        for j_gene in receptor_node_index:
+                        dot_prod_list_temp = []
+                        for i_gene in ligand_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
                             temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                            dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
+                            dot_prod_list_temp.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
                         # scale  
                         '''
@@ -162,9 +163,12 @@ if __name__ == "__main__":
                         for item_idx in range (start_index, len(dot_prod_list)):
                             scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
                             dot_prod_list[item_idx][0] = scaled_prod
-                        '''
+                        
                         start_index = len(dot_prod_list)
-                    
+                        '''
+                        dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
+                        for item in dot_prod_list_temp:
+                            dot_prod_list.append(item)
                     
                     if len(dot_prod_list) == 0:
                         continue
