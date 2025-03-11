@@ -206,7 +206,7 @@ def train_NEST(args, data_loader, in_channels):
 
         #for data in data_loader:
         data = data.to(device)
-        pos_z, neg_z, summary = DGI_model(data=data)
+        pos_z, neg_z, summary = DGI_model(data.x_dict, data.edge_index_dict, data.edge_attr_dict)#(data=data)
         DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
         DGI_loss.backward()
         DGI_all_loss.append(DGI_loss.item())
