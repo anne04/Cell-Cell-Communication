@@ -98,9 +98,9 @@ if __name__ == "__main__":
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
-                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
+                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
-                   'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                   #'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
     for model_name in model_names:
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         top_lrp_count = 5000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [100, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -145,10 +145,10 @@ if __name__ == "__main__":
         
                     dot_prod_list = []
                     start_index = 0
-                    for j_gene in receptor_node_index:
+                    for i_gene in ligand_node_index:
                         product_only = []
                         dot_prod_list_temp = []
-                        for i_gene in ligand_node_index:
+                        for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
                             temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
@@ -166,7 +166,7 @@ if __name__ == "__main__":
                         
                         start_index = len(dot_prod_list)
                         '''
-                        dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
+                        #dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
                         for item in dot_prod_list_temp:
                             dot_prod_list.append(item)
                     
@@ -217,17 +217,17 @@ if __name__ == "__main__":
                 data_list=dict()
                 data_list['X']=[]
                 data_list['Y']=[]   
-                data_list['total count']=[] 
+                data_list['total_dot']=[] 
                 data_list['prediction'] = []
                 data_list['label'] = []
                 for i in range (0, len(barcode_info)):
                     data_list['X'].append(barcode_info[i][1])
                     data_list['Y'].append(-barcode_info[i][2])
                     if i in found_list:
-                        data_list['total count'].append(np.sum(found_list[i]))
+                        data_list['total_dot'].append(np.sum(found_list[i]))
                         data_list['prediction'].append('positive')
                     else:
-                        data_list['total count'].append(0)
+                        data_list['total_dot'].append(0)
                         data_list['prediction'].append('negative')
                     
                         
@@ -238,7 +238,7 @@ if __name__ == "__main__":
                 chart = alt.Chart(source).mark_point(filled=True).encode(
                     alt.X('X', scale=alt.Scale(zero=False)),
                     alt.Y('Y', scale=alt.Scale(zero=False)),
-                    color=alt.Color('total count:Q', scale=alt.Scale(scheme='magma')),
+                    color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
                     shape = alt.Shape('label:N')
                 )
                 chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
