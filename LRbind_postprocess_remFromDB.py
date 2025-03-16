@@ -92,6 +92,7 @@ if __name__ == "__main__":
 
     ############# load output graph #################################################
 model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrp3_remFromDB',
+               #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
                #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
                #'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
                #'model_LRbind_3L_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
