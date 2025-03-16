@@ -43,7 +43,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrLowWeight_remFromDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrp3_remFromDB', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
@@ -91,11 +91,11 @@ if __name__ == "__main__":
         target_LR_index, target_cell_pair = pickle.load(fp)
 
     ############# load output graph #################################################
-model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
+model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrp3_remFromDB',
                #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB_vgae',
                #'model_LRbind_V1_Human_Lymph_Node_spatial_2D_manualDB_geneCorr_remFromDB',
                #'model_LRbind_3L_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_remFromDB',
-                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrLowWeight_remFromDB'
+               # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrLowWeight_remFromDB'
               ]
 for model_name in model_names:
     args.model_name = model_name
@@ -200,17 +200,17 @@ for model_name in model_names:
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[]   
-            data_list['total count']=[] 
+            data_list['total_dot']=[] 
             data_list['prediction'] = []
             data_list['label'] = []
             for i in range (0, len(barcode_info)):
                 data_list['X'].append(barcode_info[i][1])
                 data_list['Y'].append(-barcode_info[i][2])
                 if i in found_list:
-                    data_list['total count'].append(np.sum(found_list[i]))
+                    data_list['total_dot'].append(np.sum(found_list[i]))
                     data_list['prediction'].append('positive')
                 else:
-                    data_list['total count'].append(0)
+                    data_list['total_dot'].append(0)
                     data_list['prediction'].append('negative')
                 
                     
@@ -221,7 +221,7 @@ for model_name in model_names:
             chart = alt.Chart(source).mark_point(filled=True).encode(
                 alt.X('X', scale=alt.Scale(zero=False)),
                 alt.Y('Y', scale=alt.Scale(zero=False)),
-                color=alt.Color('total count:Q', scale=alt.Scale(scheme='magma')),
+                color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
                 shape = alt.Shape('label:N')
             )
             chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
@@ -502,7 +502,7 @@ for model_name in model_names:
             'Ligand-Receptor Pairs': data_list['X'],
             'Avg_DotProduct': data_list['Y']
         })
-        #data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv', index=False)
+        data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv', index=False)
         #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_Tcell_zone_novelsOutOfallLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
