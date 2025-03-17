@@ -39,9 +39,9 @@ if __name__ == "__main__":
     lrp_list =[['CCL21', 'CCR7'], ['RPS19','C5AR1'], ['HLA-A', 'CD8A'],
                ['HLA-B','CCR7'], ['CCL21','CD8A'], ['RPS19','CCR7'],
                ['HLA-DRA', 'CD4'], ['HLA-DRA','CCR7'],['CCL21', 'RPSA'],
-               ['HLA-B', 'C5AR1']
-        
-    ]
+               ['HLA-B', 'C5AR1']]
+    lrp_list =[['HLA-C', 'CD8A']]
+    
     for pair in lrp_list:
         ligand = pair[0]
         receptor = pair[1]
