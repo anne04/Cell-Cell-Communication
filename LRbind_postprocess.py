@@ -20,6 +20,7 @@ import numpy as np
 #from typing import List
 import qnorm
 from scipy.sparse import csr_matrix
+from scipy.spatial import distance
 from scipy.sparse.csgraph import connected_components
 from scipy.stats import median_abs_deviation
 from scipy.stats import skew
@@ -43,7 +44,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     '''
-    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
+    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB_', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
@@ -98,9 +99,9 @@ if __name__ == "__main__":
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
-                   'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
-                   #'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                   'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    
               ]
     for model_name in model_names:
@@ -113,10 +114,10 @@ if __name__ == "__main__":
     
     
     ########## all ############################################# 
-        top_lrp_count = 5000
+        top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             if break_flag == 1:  
                 break
             if knee_flag == 1:
@@ -151,8 +152,8 @@ if __name__ == "__main__":
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                            dot_prod_list_temp.append([temp, i, j, i_gene[1], j_gene[1]])
+                            temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
+                            dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
                         # scale  
                         '''
@@ -166,9 +167,11 @@ if __name__ == "__main__":
                         
                         start_index = len(dot_prod_list)
                         '''
-                        #dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
+                        '''
+                        dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
                         for item in dot_prod_list_temp:
                             dot_prod_list.append(item)
+                        '''
                     
                     if len(dot_prod_list) == 0:
                         continue
@@ -320,8 +323,10 @@ if __name__ == "__main__":
     
             
             top_hit_lrp_dict = dict()
+            i = 0
             for item in sort_lr_list:
-                top_hit_lrp_dict[item[0]] = ''
+                top_hit_lrp_dict[item[0]] = i
+                i = i+1
             
             # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -346,6 +351,8 @@ if __name__ == "__main__":
         
             chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+            if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
+                print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
             i = 0
@@ -421,16 +428,19 @@ if __name__ == "__main__":
             print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             '''
              ############ only Tcell Zone plot ##############################################################################################################################
+
+            if 'CCL19+CCR7' in Tcell_zone_lr_dict:
+                print("Tcell: found CCL19-CCR7")
             Tcell_zone_sort_lr_list = []
             for lr_pair in Tcell_zone_lr_dict:
-                if lr_pair not in top_hit_lrp_dict:
-                    continue
+                #if lr_pair not in top_hit_lrp_dict:
+                #    continue
                 sum = 0
                 cell_pair_list = Tcell_zone_lr_dict[lr_pair]
                 for item in cell_pair_list:
                     sum = sum + item[0] # 
 
-                sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list)
                 Tcell_zone_sort_lr_list.append([lr_pair, sum])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -443,11 +453,16 @@ if __name__ == "__main__":
             for i in range (0, max_rows): #1000): #:
                 data_list['X'].append(Tcell_zone_sort_lr_list[i][0])
                 data_list['Y'].append(Tcell_zone_sort_lr_list[i][1])
+                if Tcell_zone_sort_lr_list[i][0]=='CCL19+CCR7':
+                    print(i)
                 
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Avg_dotProduct': data_list['Y']
             })
+            if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
+                print("found CCL19-CCR7")
+            
             data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv', index=False)
             print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv')    
             # same as histogram plots
