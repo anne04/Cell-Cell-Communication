@@ -112,12 +112,17 @@ if __name__ == "__main__":
         with gzip.open(X_embedding_filename, 'rb') as fp:  
             X_embedding = pickle.load(fp)
     
-    
+        for i in range (0, X_embedding.shape[0]):
+            total_score_per_row = np.sum(X_embedding[i][:])
+            X_embedding[i] = X_embedding[i]/total_score_per_row
+            
+            
+            
     ########## all ############################################# 
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -134,6 +139,7 @@ if __name__ == "__main__":
                 for j in range (0, len(barcode_info)):
                     if dist_X[i][j]==0 or i==j :
                         continue
+                    
                     # from i to j
                     ligand_node_index = []
                     for gene in gene_node_list_per_spot[i]:
@@ -148,13 +154,11 @@ if __name__ == "__main__":
                     dot_prod_list = []
                     product_only = []
                     start_index = 0
-                    for i_gene in ligand_node_index:
-                        
-                        
+                    for i_gene in ligand_node_index:  
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
+                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
                         # scale  
@@ -179,11 +183,12 @@ if __name__ == "__main__":
                         continue
                         
                     if knee_flag == 0:
+                        ''''''
                         max_score = max(product_only)
                         for item_idx in range (0, len(dot_prod_list)):
                             scaled_prod = max_score - dot_prod_list[item_idx][0]
                             dot_prod_list[item_idx][0] = scaled_prod 
-
+                        
                         dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                     else:
                         ########## knee find ###########
