@@ -106,10 +106,11 @@ for model_name in model_names:
         X_embedding = pickle.load(fp)
 
 ########## all ############################################# 
-    top_lrp_count = 5000
+    top_lrp_count = 1000
     knee_flag = 0
     break_flag = 0
-    for top_N in [100, 30, 10]:
+    for top_N in [2000, 500, 100, 30, 10, 5]:
+        print(top_N)
         if break_flag == 1:  
             break
         if knee_flag == 1:
@@ -143,7 +144,7 @@ for model_name in model_names:
                     for j_gene in receptor_node_index:
                         if i_gene[1]==j_gene[1]:
                             continue
-                        temp = np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
+                        temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                         product_only.append(temp)
 
@@ -158,6 +159,11 @@ for model_name in model_names:
                     dot_prod_list[item_idx][0] = scaled_prod
                 '''
                 if knee_flag == 0:
+                    max_score = max(product_only)
+                    for item_idx in range (0, len(dot_prod_list)):
+                        scaled_prod = max_score - dot_prod_list[item_idx][0]
+                        dot_prod_list[item_idx][0] = scaled_prod 
+                        
                     dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                 else:
                     ########## knee find ###########
@@ -193,7 +199,7 @@ for model_name in model_names:
                         break
     
         # plot found_list
-        print("positive: %d"%(len(found_list)))                
+        #print("positive: %d"%(len(found_list)))                
         # plot input_cell_pair_list  
         if test_mode==1:
         ######### plot output #############################
@@ -226,7 +232,7 @@ for model_name in model_names:
                 shape = alt.Shape('label:N')
             )
             chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
-            print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
+            #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
 
             # entropy
             
@@ -279,7 +285,7 @@ for model_name in model_names:
                 entropy_total = entropy_total + (len(cluster_dict[cluster_list[k]])*entropy_cluster[k])/N_cells
         
             entropy_total = - entropy_total
-            print('##############  shanon entropy  %g #############'%entropy_total)           
+            #print('##############  shanon entropy  %g #############'%entropy_total)           
     
 
 
@@ -297,15 +303,18 @@ for model_name in model_names:
             sort_lr_list.append([lr_pair, sum])
     
         sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-        print('len sort_lr_list %d'%len(sort_lr_list))
+        #print('len sort_lr_list %d'%len(sort_lr_list))
         # save = num_spots/cells * top_N pairs
         if knee_flag == 0:
             sort_lr_list = sort_lr_list[0: top_lrp_count]
 
         
         top_hit_lrp_dict = dict()
+        i = 0
         for item in sort_lr_list:
-            top_hit_lrp_dict[item[0]] = ''
+            top_hit_lrp_dict[item[0]] = i
+            i = i+1
+ 
         
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
@@ -320,8 +329,11 @@ for model_name in model_names:
             'Ligand-Receptor Pairs': data_list['X'],
             'Avg_DotProduct': data_list['Y']
         })
+        if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
+            print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
+        
         data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
@@ -329,7 +341,7 @@ for model_name in model_names:
         )
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
         ############################### novel only out of all LR ################
         sort_lr_list_temp = []
         i = 0
@@ -337,8 +349,8 @@ for model_name in model_names:
             ligand = pair[0].split('+')[0]
             receptor = pair[0].split('+')[1]
             if ligand in l_r_pair and receptor in l_r_pair[ligand]:
-                if i<15:
-                    print(i)
+                #if i<15:
+                #    print(i)
                 i=i+1
                 continue
             i = i + 1
@@ -346,7 +358,7 @@ for model_name in model_names:
             sort_lr_list_temp.append(pair) 
 
         
-        print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
+        #print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
         # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
         data_list=dict()
         data_list['X']=[]
@@ -362,7 +374,7 @@ for model_name in model_names:
             'Avg_DotProduct': data_list['Y']
         })
         data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv')    
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
@@ -374,7 +386,7 @@ for model_name in model_names:
 
         ##################################  ccl19 and ccr7 related #################
         
-        print('top_N: %d'%top_N)
+        #print('top_N: %d'%top_N)
         set_LRbind_novel = []
         data_list=dict()
         data_list['X']=[]
@@ -414,7 +426,7 @@ for model_name in model_names:
                 
         set_manual = np.unique(set_manual)
         common_lr = list(set(set_LRbind_novel) & set(set_manual))
-        print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel)-len(common_lr), len(set_manual)-len(common_lr), len(common_lr)))
+        #print('CCL19/CCR7 related: Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel)-len(common_lr), len(set_manual)-len(common_lr), len(common_lr)))
         
         ##################################################################
         '''
@@ -428,13 +440,13 @@ for model_name in model_names:
     
         set_nichenet_novel = np.unique(set_nichenet_novel)
         common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
-        print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
+        #print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
         '''
          ############ only Tcell Zone plot ##############################################################################################################################
         Tcell_zone_sort_lr_list = []
         for lr_pair in Tcell_zone_lr_dict:
-            if lr_pair not in top_hit_lrp_dict:
-                continue
+            #if lr_pair not in top_hit_lrp_dict:
+            #    continue
             sum = 0
             cell_pair_list = Tcell_zone_lr_dict[lr_pair]
             for item in cell_pair_list:
@@ -453,13 +465,15 @@ for model_name in model_names:
         for i in range (0, max_rows): #1000): #:
             data_list['X'].append(Tcell_zone_sort_lr_list[i][0])
             data_list['Y'].append(Tcell_zone_sort_lr_list[i][1])
+            if Tcell_zone_sort_lr_list[i][0]=='CCL19+CCR7':
+                    print("TcellZone: CCL19-CCR7: %d"%i)
             
         data_list_pd = pd.DataFrame({
             'Ligand-Receptor Pairs': data_list['X'],
             'Avg_DotProduct': data_list['Y']
         })
         data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv', index=False)
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv')    
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv')    
         # same as histogram plots
         chart = alt.Chart(data_list_pd).mark_bar().encode(
             x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
@@ -467,7 +481,7 @@ for model_name in model_names:
         )
     
         chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
-        print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
+        #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
         ############################### novel only out of all LR ################
         
         Tcell_zone_sort_lr_list = []
