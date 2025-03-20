@@ -69,7 +69,7 @@ if __name__ == "__main__":
         
     
 ##################### get metadata: barcode_info ###################################
-
+    print("data: "+ args.data_name)
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info = pickle.load(fp) 
 
@@ -101,7 +101,9 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
-                   'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -111,18 +113,19 @@ if __name__ == "__main__":
         print("\n\n"+ X_embedding_filename)
         with gzip.open(X_embedding_filename, 'rb') as fp:  
             X_embedding = pickle.load(fp)
-    
+
+        
         for i in range (0, X_embedding.shape[0]):
             total_score_per_row = np.sum(X_embedding[i][:])
             X_embedding[i] = X_embedding[i]/total_score_per_row
             
-            
+        ''' '''   
             
     ########## all ############################################# 
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [10]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -136,6 +139,10 @@ if __name__ == "__main__":
             found_list = defaultdict(list)
             test_mode = 1
             for i in range (0, len(barcode_info)):
+                if node_type[barcode_info[i][0]] != 'T-cell':
+                    continue
+                #print("i: %d"%i)
+                #print("found list: %d"%len(found_list))
                 for j in range (0, len(barcode_info)):
                     if dist_X[i][j]==0 or i==j :
                         continue
@@ -158,7 +165,9 @@ if __name__ == "__main__":
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # np.dot(X_embedding[i_gene[0]], X_embedding[j_gene[0]])
+                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                            # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                            # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                             product_only.append(temp)
                         # scale  
@@ -221,7 +230,7 @@ if __name__ == "__main__":
                         if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
                             found_list[i].append(item[0]) #= 1
                             found_list[j].append(item[0])
-                            break
+                            #break
         
             # plot found_list
             #print("positive: %d"%(len(found_list)))                
@@ -451,7 +460,7 @@ if __name__ == "__main__":
                 for item in cell_pair_list:
                     sum = sum + item[0] # 
 
-                sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list)
                 Tcell_zone_sort_lr_list.append([lr_pair, sum])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -460,7 +469,7 @@ if __name__ == "__main__":
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[] 
-            max_rows = min(500, len(Tcell_zone_sort_lr_list))
+            max_rows = len(Tcell_zone_sort_lr_list) #min(500, len(Tcell_zone_sort_lr_list))
             for i in range (0, max_rows): #1000): #:
                 data_list['X'].append(Tcell_zone_sort_lr_list[i][0])
                 data_list['Y'].append(Tcell_zone_sort_lr_list[i][1])
