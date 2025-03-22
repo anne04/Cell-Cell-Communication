@@ -1,7 +1,5 @@
 # Written By 
 # Fatema Tuz Zohora
-
-
 print('package loading')
 import numpy as np
 import csv
@@ -48,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
     '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     
@@ -101,9 +99,10 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
-                    'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                   # 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
-                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L'
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
+                    'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -139,10 +138,10 @@ if __name__ == "__main__":
             found_list = defaultdict(list)
             test_mode = 1
             for i in range (0, len(barcode_info)):
-                if node_type[barcode_info[i][0]] != 'T-cell':
-                    continue
-                #print("i: %d"%i)
-                #print("found list: %d"%len(found_list))
+                #if node_type[barcode_info[i][0]] != 'T-cell':
+                #    continue
+                print("i: %d"%i)
+                print("found list: %d"%len(found_list))
                 for j in range (0, len(barcode_info)):
                     if dist_X[i][j]==0 or i==j :
                         continue
@@ -333,7 +332,7 @@ if __name__ == "__main__":
                 for item in cell_pair_list:
                     sum = sum + item[0]  
 
-                sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list)
                 sort_lr_list.append([lr_pair, sum])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
