@@ -89,6 +89,11 @@ if __name__ == "__main__":
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair = pickle.load(fp)
+
+    index_vs_gene_node_info = defaultdict(list)
+    for item in barcode_info_gene:
+        gene_node_index = item[4]
+        index_vs_gene_node_info[gene_node_index] = item
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
@@ -117,4 +122,32 @@ if __name__ == "__main__":
         for i in range (0, X_embedding.shape[0]):
             total_score_per_row = np.sum(X_embedding[i][:])
             X_embedding[i] = X_embedding[i]/total_score_per_row
+
+        # apply PCA
+        target_ligand = 'CCL19'
+        target_receptor = 'CCR7' 
+        X_PCA = sc.pp.pca(X_embedding, n_comps=2) #args.pca
+        # plot those on two dimensional plane
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['Type']=[]   
+        for i in range (0, X_embedding.shape[0]):
+            data_list['X'].append(X_embedding[i][0])
+            data_list['Y'].append(X_embedding[i][1])
+            if index_vs_gene_node_infor[i][5] == target_ligand or index_vs_gene_node_infor[i][5] == target_receptor:
+                data_list['Type'].append(index_vs_gene_node_infor[i][5])
+            else:
+                data_list['Type'].append('Other')
+        
+        source= pd.DataFrame(data_list)
+        
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('Type:Q'),
+            shape = alt.Shape('Type:N')
+        )
+        chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor + '_PCA.html')
+    
             
