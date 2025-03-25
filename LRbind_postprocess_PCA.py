@@ -88,7 +88,7 @@ if __name__ == "__main__":
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, node_active_index = pickle.load(fp)
 
     index_vs_gene_node_info = defaultdict(list)
     for item in barcode_info_gene:
@@ -133,6 +133,8 @@ if __name__ == "__main__":
         data_list['Y']=[]   
         data_list['Type']=[]   
         for i in range (0, X_embedding.shape[0]):
+            if i not node_active_index:
+                continue
             data_list['X'].append(X_embedding[i][0])
             data_list['Y'].append(X_embedding[i][1])
             if index_vs_gene_node_infor[i][5] == target_ligand or index_vs_gene_node_infor[i][5] == target_receptor:
