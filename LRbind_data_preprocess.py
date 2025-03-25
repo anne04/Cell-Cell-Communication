@@ -360,7 +360,9 @@ if __name__ == "__main__":
             gene_node_list_per_spot[spot_id][gene] = gene_node_index
             gene_node_type.append(gene_type[gene])
             #barcode_info_gene.append(barcode_info[spot_id])
-            barcode_info_gene.append((barcode_info[spot_id]).append(gene_node_index))            
+            barcode_info[spot_id].append(gene_node_index)
+            barcode_info[spot_id].append(gene)
+            barcode_info_gene.append(barcode_info[spot_id])            
             gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
             gene_node_index = gene_node_index + 1
             
