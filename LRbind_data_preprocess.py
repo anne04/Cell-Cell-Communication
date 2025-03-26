@@ -388,11 +388,11 @@ if __name__ == "__main__":
     gene_type_id = 0
     gene_type = dict()
 
-    if args.target_lig != "":
+    if args.remove_lig == "True" and args.target_lig != "":
         ligand_list.append(args.target_lig)
         print('adding ligand %s to ligand list'%args.target_lig)
 
-    if args.target_rec != "":
+    if args.remove_rec == "True" and args.target_rec != "":
         receptor_list.append(args.target_rec)
         print('adding receptor %s to receptor list'%args.target_rec)
         
@@ -511,23 +511,31 @@ if __name__ == "__main__":
     print('After gene coexpression matrix: total edges: %d, lig_rec %d'%(len(row_col_gene), len(lig_rec)))
     
     gene_node_index_active = dict()
-    rec_active_count = dict()
-    ligand_active_count = dict()
-    node_active_index = dict()
+    rec_active_count = defaultdict(list)
+    ligand_active_count = defaultdict(list)
     for index in range (0, len(row_col_gene)):
         #i = row_col_gene[index][0]
         j = row_col_gene[index][1]
         #gene_node_index_active[i] = ''
         gene_node_index_active[j] = ''
-        node_active_index[j] = 1
-        if lig_rec[index][1] == 'CCL19': #args.target_lig:
-            ligand_active_count[j] = 1
-        elif lig_rec[index][1] == 'CCR7': #args.target_rec:
-            rec_active_count[j] = 1
+        if lig_rec[index][1] == args.target_lig:
+            ligand_active_count[j].append(1)
+        elif lig_rec[index][1] == args.target_rec:
+            rec_active_count[j].append(1)
 
+    total_incoming_ligand = 0
+    for j in ligand_active_count:
+        ligand_active_count[j] = np.sum(ligand_active_count[j])
+        total_incoming_ligand = total_incoming_ligand + ligand_active_count[j]
+
+    total_incoming_rec = 0
+    for j in rec_active_count:
+        rec_active_count[j] = np.sum(rec_active_count[j])
+        total_incoming_rec = total_incoming_rec + rec_active_count[j]
+    
     print('Total number of gene nodes in this graph is %d, inactive %d, active %d'%(gene_node_index, gene_node_index-len(gene_node_index_active.keys()),len(gene_node_index_active.keys())))
-    print('active '+args.target_lig +' node %d'%len(ligand_active_count))
-    print('active '+args.target_rec +' node %d'%len(rec_active_count))
+    print('active '+args.target_lig +' node %d, with number of incoming connections %d'%(len(ligand_active_count), total_incoming_ligand))
+    print('active '+args.target_rec +' node %d, with number of incoming connections %d'%(len(rec_active_count), total_incoming_rec))
     print('inter edge count %d, intra edge count %d'%(start_of_intra_edge, len(row_col_gene)-start_of_intra_edge))    
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
         pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge], fp)
@@ -557,7 +565,7 @@ if __name__ == "__main__":
         pickle.dump(barcode_info, fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
-        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, node_active_index, ligand_active_count, rec_active_count], fp)
+        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active], fp) #, ligand_active_count, rec_active_count
 
     with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
         pickle.dump([target_LR_index, target_cell_pair], fp)
