@@ -41,15 +41,11 @@ alt.themes.enable("publishTheme")
 ##########################################################
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    '''
-    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC_e2d1_64630_1D_manualDB_', help='The name of dataset') #, required=True) # default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_PDAC_e2d1_64630_1D_manualDB_dgi', help='Name of the trained model') #, required=True) 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB'
-    '''
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
-    
+    #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -88,7 +84,7 @@ if __name__ == "__main__":
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active = pickle.load(fp)
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
@@ -102,7 +98,9 @@ if __name__ == "__main__":
                    # 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
-                    'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L'
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
+                    'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
+                   
                    
               ]
     for model_name in model_names:
@@ -124,7 +122,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [10]: #, 30, 10]:
+        for top_N in [50]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -133,8 +131,8 @@ if __name__ == "__main__":
                 break_flag = 1
             lr_dict = defaultdict(list)
             Tcell_zone_lr_dict = defaultdict(list)
-            target_ligand = 'CCL19'
-            target_receptor = 'CCR7'
+            target_ligand = 'LGALS1' #'CCL19'
+            target_receptor = 'PTPRC' #'CCR7'
             found_list = defaultdict(list)
             test_mode = 1
             for i in range (0, len(barcode_info)):
@@ -223,8 +221,8 @@ if __name__ == "__main__":
                     for item in dot_prod_list:
                         lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                         
-                        if i in Tcell_zone and j in Tcell_zone:
-                            Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                        #if i in Tcell_zone and j in Tcell_zone:
+                        #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                             
                         if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
                             found_list[i].append(item[0]) #= 1
@@ -232,7 +230,7 @@ if __name__ == "__main__":
                             #break
         
             # plot found_list
-            #print("positive: %d"%(len(found_list)))                
+            print("positive: %d"%(len(found_list)))                
             # plot input_cell_pair_list  
             if test_mode==1:
             ######### plot output #############################
