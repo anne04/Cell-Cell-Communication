@@ -122,7 +122,8 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [50]: #, 30, 10]:
+        test_mode = 0
+        for top_N in [10]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -134,7 +135,7 @@ if __name__ == "__main__":
             target_ligand = 'LGALS1' #'CCL19'
             target_receptor = 'PTPRC' #'CCR7'
             found_list = defaultdict(list)
-            test_mode = 1
+            
             for i in range (0, len(barcode_info)):
                 #if node_type[barcode_info[i][0]] != 'T-cell':
                 #    continue
