@@ -25,8 +25,8 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--data_name', type=str, default='LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir', help='The name of dataset') # 
-    parser.add_argument( '--data_from', type=str, default='../data/GSM6177599_NYU_BRCA0_Vis_processed/', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
+    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorr_bidir', help='The name of dataset') # 
+    parser.add_argument( '--data_from', type=str, default='../data/CID44971_spatial/CID44971_spatial.h5ad', help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.')
     parser.add_argument( '--filter_min_cell', type=int, default=1 , help='Minimum number of cells for gene filtering') 
     parser.add_argument( '--tissue_position_file', type=str, default='None', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.') 
     # 'data/LUAD_GSM5702473_TD1/GSM5702473_TD1_tissue_positions_list.csv'
@@ -41,9 +41,10 @@ if __name__ == "__main__":
     
 
     if args.tissue_position_file == 'None': # Data is available in Space Ranger output format
-        adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5')
+        adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5ad')
         print('input data read done')
-        gene_count_before = len(list(adata_h5.var_names) )    
+        gene_count_before = len(list(adata_h5.var_names))   
+        sc.pp.filter_cells(adata_h5, min_counts=1)
         sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
         gene_count_after = len(list(adata_h5.var_names) )  
         print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
@@ -63,7 +64,13 @@ if __name__ == "__main__":
         gene_ids = list(temp.var_names) 
         cell_barcode = np.array(temp.obs.index)
         cell_vs_gene = sparse.csr_matrix.toarray(temp.X)
-    
+
+        temp = sc.read_mtx('../data/CID44971_spatial/filtered_count_matrix/matrix.mtx.gz')
+        cell_vs_gene = sparse.csr_matrix.toarray(np.transpose(temp.X))
+        cell_barcode = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/barcodes.tsv.gz', header=None)
+        cell_barcode = list(cell_barcode[0])
+        gene_ids = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/features.tsv.gz', header=None)
+        gene_ids = list(gene_ids[0])
         
         # now read the tissue position file. It has the format:     
         df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
@@ -89,7 +96,7 @@ if __name__ == "__main__":
 
 
     ################### ####################
-    target_gene_list = ['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
+    target_gene_list = ['CXCL10','CXCR3'] #['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
     target_gene = ''
     
     for target_gene in target_gene_list:
