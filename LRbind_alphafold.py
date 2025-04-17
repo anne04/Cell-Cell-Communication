@@ -12,6 +12,16 @@ import math
 import argparse
 from random import randint 
 
+def write_file(file_name, gene_name, seq):
+    f = open('manualLRP_'+ligand+'_'+receptor+".fasta", "w")
+    f.write(">")
+    f.write(gene_name)
+    f.write("\n")
+    f.write(seq)
+    f.write("\n")
+    f.close()
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -29,6 +39,7 @@ if __name__ == "__main__":
         dict_gene_seq[(df['Gene Names'][i]).split(' ')[0]] = df['Sequence'][i]
         
 
+    ############################
     
     lrp_list = [['CCL21', 'CXCR4'], ['HLA-C', 'CXCR4'], ['HLA-A', 'CXCR4'], 
                 ['HLA-DRA', 'PTPRC'], ['PTPRC','CD74'], ['APOE', 'CXCR4'], 
@@ -59,11 +70,63 @@ if __name__ == "__main__":
         f.write(rec_seq)
         f.close()
 
+    ##################################################################
     df = pd.read_csv(args.database_path, sep=",")
+    lr_unique = defaultdict(dict)
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i]
         receptor = df["Receptor"][i]
+        lr_unique[ligand][receptor] = 1
 
+    
+    count = 0
+    list_of_fastas =''
+    for ligand in lr_unique:
+        for receptor in lr_unique[ligand]:    
+            if ligand not in dict_gene_seq or receptor not in dict_gene_seq:
+                continue
+            lig_seq = dict_gene_seq[ligand]
+            rec_seq = dict_gene_seq[receptor]
+            f = open('alphafold_input/manualLRP_'+ligand+'_'+receptor+".fasta", "w")
+            f.write(">")
+            f.write(ligand)
+            f.write("\n")
+            f.write(lig_seq)
+            f.write("\n")
+            f.write(">")
+            f.write(receptor)
+            f.write("\n")
+            f.write(rec_seq)
+            f.close()
+            count = count + 1
+            list_of_fastas = list_of_fastas + 
+
+    print('total count %d'%count)
+
+################################################################
+    for ligand in lr_unique:
+        for receptor in lr_unique[ligand]:    
+            if ligand not in dict_gene_seq or receptor not in dict_gene_seq:
+                continue
+
+            fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/manualLRP_'+ligand+'_'+receptor+'.fasta'
+
+            print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs -f')
+    
+    #####################
+    df = pd.read_csv(args.database_path, sep=",")
+    manual_lrp_genes = dict()
+    for i in range (0, df["Ligand"].shape[0]):
+        ligand = df["Ligand"][i]
+        receptor = df["Receptor"][i]
+        manual_lrp_genes[ligand] = ''
+        manual_lrp_genes[receptor] = ''
+    
+    print('num of keys %d'%len(manual_lrp_genes.keys()))
+    for gene in manual_lrp_genes.keys():
+        gene_seq = dict_gene_seq[gene]
+        write_file(gene + ".fasta", gene, gene_seq)
+    ################################################
     
     random_selection = [randint(0, df['Ligand'].shape[0]) for p in range(0, 10)] 
     for i in random_selection:
