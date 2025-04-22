@@ -42,10 +42,10 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
-    #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir
+    #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='LGALS1', help='') 
-    parser.add_argument( '--target_receptor', type=str, default='PTPRC', help='')
+    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') 
+    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -103,7 +103,8 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
-                    'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
+                   #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
+                    'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
                    
                    
               ]
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [10]: #, 30, 10]:
+        for top_N in [30]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -139,10 +140,10 @@ if __name__ == "__main__":
             target_receptor = args.target_receptor
             found_list = defaultdict(list)
             test_mode = 1
-            for pair in target_cell_pair['LGALS1+PTPRC']:
+            for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
                 i = pair[0]
                 j = pair[1]
-                print("found list: %d"%len(found_list))
+                print("%d, %d, found list: %d"%(i,j,len(found_list)))
                 if dist_X[i][j]==0 or i==j :
                     continue
                 
@@ -245,7 +246,7 @@ if __name__ == "__main__":
                 #data_list['label'] = []
                 for i in range (0, len(barcode_info)):
                     data_list['X'].append(barcode_info[i][1])
-                    data_list['Y'].append(-barcode_info[i][2])
+                    data_list['Y'].append(barcode_info[i][2])
                     if i in found_list:
                         data_list['total_dot'].append(np.sum(found_list[i]))
                         data_list['prediction'].append('positive')
@@ -359,20 +360,20 @@ if __name__ == "__main__":
                 
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Avg_dotProduct': data_list['Y']
+                'EucDist': data_list['Y']
             })
             data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-                y='Avg_dotProduct'
+                y='EucDist'
             )
         
             chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
-            if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
-                print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
+            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+            if target_ligand + '+' + target_receptor  in list(data_list_pd['Ligand-Receptor Pairs']):
+                print("found %s-%s: %d"%(target_ligand, target_receptor, top_hit_lrp_dict[target_ligand + '+' + target_receptor]))
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
             i = 0
