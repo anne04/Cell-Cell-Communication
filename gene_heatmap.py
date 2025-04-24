@@ -52,6 +52,19 @@ if __name__ == "__main__":
         coordinates = adata_h5.obsm['spatial']
         cell_barcode = np.array(adata_h5.obs.index)
         cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)   
+    '''
+    ...:         adata_h5 = sc.read_h5ad('../data/CID44971_spatial/CID44971_spatial.h5ad')
+    ...:         print('input data read done')
+    ...:         gene_count_before = len(list(adata_h5.var_names))
+    ...:         sc.pp.filter_cells(adata_h5, min_counts=1)
+    ...:         sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
+    ...:         gene_count_after = len(list(adata_h5.var_names) )
+    ...:         print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+    ...:         gene_ids = list(adata_h5.var["feature_name"])
+    ...:         coordinates = adata_h5.obsm['spatial']
+    ...:         cell_barcode = np.array(adata_h5.obs.index)
+    ...:         cell_vs_gene = sparse.csr_matrix.toarray(adata_h5.X)
+    '''
 
     else:
         
@@ -69,10 +82,12 @@ if __name__ == "__main__":
         cell_vs_gene = sparse.csr_matrix.toarray(np.transpose(temp.X))
         cell_barcode = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/barcodes.tsv.gz', header=None)
         cell_barcode = list(cell_barcode[0])
+        cell_barcode = np.array(cell_barcode)
         gene_ids = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/features.tsv.gz', header=None)
         gene_ids = list(gene_ids[0])
         
-        # now read the tissue position file. It has the format:     
+        # now read the tissue position file. It has the format:  
+        args.tissue_position_file='../data/CID44971_spatial/spatial/tissue_positions_list.csv'
         df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
         tissue_position = df.values
         barcode_vs_xy = dict() # record the x and y coordinates for each spot/cell
@@ -96,7 +111,7 @@ if __name__ == "__main__":
 
 
     ################### ####################
-    target_gene_list = ['CXCL10','CXCR3'] #['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
+    target_gene_list = ['CXCL12','CXCR4'] #['CXCL10','CXCR3'] #['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
     target_gene = ''
     
     for target_gene in target_gene_list:
@@ -130,4 +145,4 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save(args.output_path + args.data_name + '_heatmap_' + target_gene + '.html')
+        chart.save(args.output_path + args.data_name + '_heatmap_' + target_gene + '_version2.html')
