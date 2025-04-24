@@ -127,7 +127,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [30]: #, 30, 10]:
+        for top_N in [300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -143,6 +143,8 @@ if __name__ == "__main__":
             for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
                 i = pair[0]
                 j = pair[1]
+                if barcode_info[i][1] < 5000 or barcode_info[i][2] > 5000:
+                    continue
                 print("%d, %d, found list: %d"%(i,j,len(found_list)))
                 if dist_X[i][j]==0 or i==j :
                     continue
@@ -245,6 +247,8 @@ if __name__ == "__main__":
                 data_list['prediction'] = []
                 #data_list['label'] = []
                 for i in range (0, len(barcode_info)):
+                    if barcode_info[i][1] < 5000 or barcode_info[i][2] > 5000:
+                        continue
                     data_list['X'].append(barcode_info[i][1])
                     data_list['Y'].append(barcode_info[i][2])
                     if i in found_list:
