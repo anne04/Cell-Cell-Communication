@@ -52,6 +52,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
+    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') 
+    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -88,7 +90,7 @@ if __name__ == "__main__":
 
     count = 0
     for key in node_active_index:
-        if barcode_info_gene[key][5]=='CCL19':
+        if barcode_info_gene[key][5]==args.target_ligand:
             count = count+1
 
         
@@ -127,9 +129,43 @@ if __name__ == "__main__":
 
         # apply PCA
         X_PCA = sc.pp.pca(X_embedding, n_comps=2) #args.pca
-        target_ligand = 'CCL19'
-        target_receptor = 'CCR7' 
         # plot those on two dimensional plane
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['Type']=[]   
+        lig_count = 0
+        rec_count = 0
+        for i in range (0, X_PCA.shape[0]):
+            #if i in node_active_index:
+            #    continue
+                
+            if index_vs_gene_node_info[i][5] == args.target_ligand: 
+                data_list['Type'].append(index_vs_gene_node_info[i][5])
+                lig_count = lig_count + 1
+            elif index_vs_gene_node_info[i][5] == args.target_receptor:
+                data_list['Type'].append(index_vs_gene_node_info[i][5])
+                rec_count = rec_count + 1 
+            else:
+                continue
+                #data_list['Type'].append('Other')
+
+
+            data_list['X'].append(X_PCA[i][0])
+            data_list['Y'].append(X_PCA[i][1])
+        
+        source= pd.DataFrame(data_list)
+      
+        chart = alt.Chart(source).mark_circle(size=5).encode(
+            x = 'X',
+            y = 'Y',
+            color='Type',
+            #shape = alt.Shape('Type:N')
+        )
+        chart.save(args.output_path + args.model_name + '_output_' + args.target_ligand + '-' + args.target_receptor + '_PCA.html')
+        print(args.output_path + args.model_name + '_output_' + args.target_ligand + '-' + args.target_receptor + '_PCA.html')
+            
+##############
         data_list=dict()
         data_list['X']=[]
         data_list['Y']=[]   
@@ -140,10 +176,10 @@ if __name__ == "__main__":
             if i in node_active_index:
                 continue
                 
-            if index_vs_gene_node_info[i][5] == target_ligand: 
+            if index_vs_gene_node_info[i][5] == args.target_ligand: 
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
                 lig_count = lig_count + 1
-            elif index_vs_gene_node_info[i][5] == target_receptor:
+            elif index_vs_gene_node_info[i][5] == args.target_receptor:
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
                 rec_count = rec_count + 1 
             else:
@@ -164,4 +200,4 @@ if __name__ == "__main__":
         )
         chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor + '_allInactive_PCA.html')
         print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor + '_allInactive_PCA.html')
-            
+         
