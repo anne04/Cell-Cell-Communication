@@ -52,6 +52,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
+    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')    
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -123,7 +125,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 0
-        for top_N in [10]: #, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -132,8 +134,8 @@ if __name__ == "__main__":
                 break_flag = 1
             lr_dict = defaultdict(list)
             Tcell_zone_lr_dict = defaultdict(list)
-            target_ligand = 'LGALS1' #'CCL19'
-            target_receptor = 'PTPRC' #'CCR7'
+            target_ligand = args.target_ligand
+            target_receptor = args.target_receptor
             found_list = defaultdict(list)
             
             for i in range (0, len(barcode_info)):
@@ -266,7 +268,7 @@ if __name__ == "__main__":
                 chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
                 #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
     
-                # entropy
+                # entropy 
                 
                 # save lr_dict that has info about gene node id as well
                 ############## entropy ####################################
