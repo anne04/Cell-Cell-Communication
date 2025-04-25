@@ -42,19 +42,20 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
+    #LRbind_CID44971_1D_manualDB_geneCorr_bidir, CXCL10-CXCR3
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') 
-    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
+    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -88,7 +89,7 @@ if __name__ == "__main__":
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
@@ -104,8 +105,8 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
-                    'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
-                   
+                   # 'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
+                   'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -127,7 +128,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [300]: #, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -269,8 +270,8 @@ if __name__ == "__main__":
                     color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
                     #shape = alt.Shape('label:N')
                 )
-                chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
-                print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
+                chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_ROI_allLR.html')
+                print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_ROI_allLR.html') 
     
                 # entropy
                 
@@ -366,18 +367,18 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'EucDist': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
-            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv', index=False)
+            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
                 y='EucDist'
             )
         
-            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')
+            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')   
             if target_ligand + '+' + target_receptor  in list(data_list_pd['Ligand-Receptor Pairs']):
-                print("found %s-%s: %d"%(target_ligand, target_receptor, top_hit_lrp_dict[target_ligand + '+' + target_receptor]))
+                print("found %s-%s: %d"%(target_ligand, target_receptor, top_hit_lrp_dict[target_ligand + '+' + target_receptor])) # for 100, position is 44, with 4L -- only 5 spots are detected and position - none
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
             i = 0
