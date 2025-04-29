@@ -505,7 +505,11 @@ if __name__ == "__main__":
 
             if cell_vs_gene[spot_id][gene_index[gene_a]] < cell_percentile[spot_id]:
                 continue
- 
+
+            if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
+                gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
+                gene_node_index = gene_node_index + 1
+                
             gene_a_idx = gene_node_list_per_spot[spot_id][gene_a]
             for gene_b in cell_gene_set:
                 if gene_b==gene_a:
@@ -516,6 +520,11 @@ if __name__ == "__main__":
                 if gene_coexpression_matrix[gene_a][gene_b] < args.intra_cutoff: #0.30:
                     continue
 
+    
+                if spot_id not in gene_node_list_per_spot or gene_b not in gene_node_list_per_spot[spot_id]:
+                    gene_node_list_per_spot[spot_id][gene_b] = gene_node_index 
+                    gene_node_index = gene_node_index + 1
+                
                 gene_b_idx = gene_node_list_per_spot[spot_id][gene_b]
 
                 if gene_a_idx not in gene_node_index_active:
