@@ -459,33 +459,6 @@ if __name__ == "__main__":
         gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
         gene_node_index = gene_node_index + 1
         
-
-    
-    for spot_id in range (0, total_num_cell):    
-        for gene in ligand_list:
-            if cell_vs_gene[spot_id][gene_index[gene]] < cell_percentile[spot_id]:
-                continue
-            gene_node_list_per_spot[spot_id][gene] = gene_node_index
-            gene_node_type.append(gene_type[gene])
-            #barcode_info_gene.append(barcode_info[spot_id])
- #           print([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index])
-            barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene])
-            gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
-            gene_node_index = gene_node_index + 1
-            
-        for gene in receptor_list:
-            if cell_vs_gene[spot_id][gene_index[gene]] < cell_percentile[spot_id]:
-                continue
-            gene_node_list_per_spot[spot_id][gene] = gene_node_index
-            gene_node_type.append(gene_type[gene])
-            #barcode_info_gene.append(barcode_info[spot_id])
-            barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene])
-            gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
-            gene_node_index = gene_node_index + 1
-            
-        # cell_code, coordinates[i,0],coordinates[i,1], 0
-        
-
     
     total_num_gene_node = gene_node_index
      
