@@ -432,9 +432,35 @@ if __name__ == "__main__":
         
     gene_node_index = 0
     gene_node_list_per_spot = defaultdict(dict)
-    barcode_info_gene = []
     gene_node_type = []
+    barcode_info_gene = []
     gene_node_expression = []
+    for index in range (0, len(row_col)):
+        i = row_col[index][0]
+        j = row_col[index][1]
+        ligand_name = lig_rec[index][0]
+        receptor_name = lig_rec[index][1]
+        
+        # add ligand gene node to spot/cell i
+        spot_id = i
+        gene = ligand_name
+        gene_node_list_per_spot[spot_id][gene] = gene_node_index
+        gene_node_type.append(gene_type[gene])        
+        barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene])
+        gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
+        gene_node_index = gene_node_index + 1
+    
+        # add receptor gene node to spot/cell j
+        spot_id = j
+        gene = receptor_name
+        gene_node_list_per_spot[spot_id][gene] = gene_node_index
+        gene_node_type.append(gene_type[gene])        
+        barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene])
+        gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene]])
+        gene_node_index = gene_node_index + 1
+        
+
+    
     for spot_id in range (0, total_num_cell):    
         for gene in ligand_list:
             if cell_vs_gene[spot_id][gene_index[gene]] < cell_percentile[spot_id]:
