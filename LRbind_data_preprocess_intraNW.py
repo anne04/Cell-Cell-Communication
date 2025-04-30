@@ -494,8 +494,17 @@ if __name__ == "__main__":
         df[gene_ids[j]]=list(cell_vs_gene[:, j])
 
     data = pd.DataFrame(df)
-    print('Running gene_coexpression_matrix calculation')
-    gene_coexpression_matrix = data.corr(method='pearson')
+    if os.path.isfile(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl'):
+        print('Reading gene_coexpression_matrix calculation')
+        with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'rb') as fp:  
+    	    gene_coexpression_matrix = pickle.load(fp)
+    else:    
+        print('Running gene_coexpression_matrix calculation')
+        gene_coexpression_matrix = data.corr(method='pearson')
+        with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'wb') as fp:  
+    	    pickle.dump(gene_coexpression_matrix, fp)
+
+    
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
     for i in range(0, cell_vs_gene.shape[0]):
