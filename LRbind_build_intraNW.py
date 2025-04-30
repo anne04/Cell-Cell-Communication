@@ -256,6 +256,56 @@ if __name__ == "__main__":
 
     print("unique LR pair count %d"%lr_id)    
 
+
+    ##################################################################################
+    # load 'intra' database
+    if args.add_intra==1:
+        receptor_intra = dict()
+        for i in range (0, df["Receptor"].shape[0]):                
+            receptor = df["Receptor"][i]
+            if receptor not in gene_info: # not found in the dataset
+                continue   
+                
+            receptor_intra[receptor] = ''
+        
+        pathways = pd.read_csv(args.intra_database_path)        
+        pathways = pathways.drop_duplicates(ignore_index=True)
+        # keep only target species
+        pathways_dict = defaultdict(list)
+        TF_genes = dict()
+        for i in range (0, len(pathways)):
+            source_gene = pathways['source'][i].upper()
+            dest_gene = pathways['target'][i].upper()
+            if source_gene in gene_info and dest_gene in gene_info:
+                if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # filter pathway based on common genes in data set
+                    pathways_dict[source_gene].append([dest_gene, pathways['source_is_tf'][i], pathways['target_is_tf'][i], pathways['experimental_score'][i]])
+                    if pathways['source_is_tf'][i] == 'YES':
+                        TF_genes[source_gene] = ''
+                    if pathways['target_is_tf'][i] == 'YES':
+                        TF_genes[dest_gene] = ''
+        
+    
+        # then make a kg for each receptor and save it
+        count_kg = 0
+        for receptor_gene in receptor_intra:
+            print("####### %s ###########"%receptor_gene)
+            get_rows = []
+            gene_visited = dict()
+            #gene_visited[receptor_gene] = ''
+            current_hop = 0
+            pathway.get_KG(receptor_gene, pathways_dict, args.num_hops, get_rows, current_hop, gene_visited) # save it
+            receptor_intra[receptor_gene] =  get_rows
+            if len(get_rows)>0:
+                count_kg = count_kg +1
+        
+        print('Total %d receptors have knowledge graph'%count_kg) 
+    with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'wb') as fp:  
+        pickle.dump(gene_coexpression_matrix, fp) 
+        
+
+
+
+    
     #######################
     cell_gene_set = gene_ids_corr #gene_ids # ligand_list + receptor_list
     df = defaultdict(list)
