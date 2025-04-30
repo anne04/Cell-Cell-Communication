@@ -96,6 +96,11 @@ if __name__ == "__main__":
         sc.pp.filter_genes(temp, min_cells=args.filter_min_cell)
         gene_count_after = len(list(temp.var_names) )
         print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+        temp_corr = sc.pp.normalize_total(temp, target_sum=1, inplace=False)
+        temp_corr = sc.pp.highly_variable_genes(temp_corr, inplace=False)
+        gene_ids_corr = list(temp_corr.var_names) 
+        print('gene count for corr %d'%gene_ids_corr)
+        
         gene_ids = list(temp.var_names) 
         #print(len(gene_ids))
         cell_barcode = np.array(temp.obs.index)
@@ -252,7 +257,7 @@ if __name__ == "__main__":
     print("unique LR pair count %d"%lr_id)    
 
     #######################
-    cell_gene_set = gene_ids # ligand_list + receptor_list
+    cell_gene_set = gene_ids_corr #gene_ids # ligand_list + receptor_list
     df = defaultdict(list)
     for gene in cell_gene_set:
         j = gene_index[gene] 
