@@ -487,7 +487,7 @@ if __name__ == "__main__":
     start_of_intra_edge = len(edge_weight)
 
     
-    cell_gene_set = ligand_list + receptor_list
+    cell_gene_set = gene_ids # ligand_list + receptor_list
     df = defaultdict(list)
     for gene in cell_gene_set:
         j = gene_index[gene] 
@@ -508,11 +508,6 @@ if __name__ == "__main__":
             if cell_vs_gene[spot_id][gene_index[gene_a]] < cell_percentile[spot_id]:
                 continue
 
-            if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
-                gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
-                gene_node_index = gene_node_index + 1
-                
-            gene_a_idx = gene_node_list_per_spot[spot_id][gene_a]
             for gene_b in cell_gene_set:
                 if gene_b==gene_a:
                     continue
@@ -522,13 +517,37 @@ if __name__ == "__main__":
                 if gene_coexpression_matrix[gene_a][gene_b] < args.intra_cutoff: #0.30:
                     continue
 
-    
+                if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
+                    gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
+                    barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_a])
+                    gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene_a]])
+                    gene_node_index = gene_node_index + 1
+                    # if gene_a is of new type, add it to the dictionary
+                    if gene_a not in gene_type:
+                        gene_type[gene_a] = gene_type_id 
+                        gene_type_id = gene_type_id + 1
+                        
+                    gene_node_type.append(gene_type[gene_a])        
+                    
+                gene_a_idx = gene_node_list_per_spot[spot_id][gene_a]   
+                
                 if spot_id not in gene_node_list_per_spot or gene_b not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_b] = gene_node_index 
+                    barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_b])
+                    gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene_b]])
                     gene_node_index = gene_node_index + 1
+                    # if gene_b is of new type, add it to the dictionary
+                    if gene_b not in gene_type:
+                        gene_type[gene_b] = gene_type_id 
+                        gene_type_id = gene_type_id + 1
+                        
+                    gene_node_type.append(gene_type[gene_b])        
+
                 
                 gene_b_idx = gene_node_list_per_spot[spot_id][gene_b]
-
+                
+                
+                
                 if gene_a_idx not in gene_node_index_active:
                     row_col_gene.append([gene_b_idx, gene_a_idx])
                     edge_weight.append([gene_coexpression_matrix[gene_b][gene_a]])
