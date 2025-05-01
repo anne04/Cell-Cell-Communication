@@ -35,26 +35,10 @@ if __name__ == "__main__":
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
     parser.add_argument( '--num_hops', type=int, default=4 , help='Number of hops for direct connection')
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
-    parser.add_argument( '--remove_LR', type=str, help='Test LR to predict')
-    #parser.add_argument( '--remove_LR', type=str, default=[['CCL19', 'CCR7']], help='Test LR to predict') #, required=True) # FN1-RPSA
-    parser.add_argument( '--target_lig', type=str, default="", help='Test LR to predict')
-    parser.add_argument( '--target_rec', type=str, default="", help='Test LR to predict')
-    parser.add_argument( '--remove_lig', type=str, default="False", help='Test LR to predict')
-    parser.add_argument( '--remove_rec', type=str, default="False", help='Test LR to predict')
-    parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
     parser.add_argument( '--add_intra', type=int, default=-1, help='Set to 1 if you want to add intra network')
-    parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
+#    parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
     args = parser.parse_args()
     
-    args.remove_LR = [[args.target_lig, args.target_rec]]
-
-    if args.remove_rec == "True" and args.target_rec == "":
-        print("Please input args.target_rec, or set args.remove_rec=False")
-        exit()
-
-    if args.remove_lig == "True" and args.target_lig == "":
-        print("Please input args.target_lig, or set args.remove_lig=False")
-        exit()
 
     if args.neighborhood_threshold == 0:
         args.neighborhood_threshold = args.spot_diameter*args.num_hops
@@ -135,11 +119,6 @@ if __name__ == "__main__":
         
     
     
-    #######################
-    if args.target_lig in gene_ids:
-        print('target ligand exist in the gene list')
-    if args.target_rec in gene_ids:
-        print('target rec exist in the gene list')
 
 
     ##################### make metadata: barcode_info ###################################
@@ -167,20 +146,7 @@ if __name__ == "__main__":
     for gene in gene_ids: 
         gene_index[gene] = i
         i = i+1
-        
-    ####################### target LR list############################################
-    target_LR_index = dict() 
-    discard_genes = dict()
-    target_LR_list = args.remove_LR #[['CCL19', 'CCR7']]
-    for target_LR in target_LR_list:
-        ligand = target_LR[0]
-        receptor = target_LR[1]
-        target_LR_index[ligand + '+' + receptor] = [gene_index[ligand], gene_index[receptor]]
-        discard_genes[ligand]= ''
-        discard_genes[receptor]= ''
-
-    print(target_LR_index.keys())
-       
+               
     ####################################################################
     # ligand - receptor database 
     print('ligand-receptor database reading.')
@@ -206,17 +172,6 @@ if __name__ == "__main__":
         if receptor not in gene_info: # not found in the dataset
             continue   
 
-
-        if args.remove_lrp == "True":
-            if ligand+'+'+receptor in target_LR_index:
-                continue
-        if args.remove_lig == "True" and ligand in args.target_lig:
-            print('remove_lig true')
-            continue
-
-        if args.remove_rec == "True" and receptor in args.target_rec:
-            print('remove_rec true')
-            continue
         
         ligand_dict_dataset[ligand].append(receptor)
         gene_info[ligand] = 'included'
@@ -228,7 +183,6 @@ if __name__ == "__main__":
     
     receptor_list = list(receptor_list.keys())
     ligand_list =  list(ligand_dict_dataset.keys())
-    print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
     print('number of ligands %d '%len(ligand_dict_dataset.keys()))
     print('number of receptors %d '%len(receptor_list))
     included_gene=[]
