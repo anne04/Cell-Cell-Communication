@@ -15,6 +15,7 @@ import gzip
 import argparse
 import os
 import scanpy as sc
+import pathway_search_CellNEST as pathway
 
 print('user input reading')
 #current_dir = 
@@ -44,6 +45,8 @@ if __name__ == "__main__":
     parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
     parser.add_argument( '--add_intra', type=int, default=-1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=20, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+
     args = parser.parse_args()
     
     args.remove_LR = [[args.target_lig, args.target_rec]]
@@ -292,6 +295,34 @@ if __name__ == "__main__":
         cell_percentile.append(active_cutoff)     
 
 
+    ############################################################################################
+    # for each cell, record the active genes
+    if args.add_intra == 1:
+
+        intra_active = []
+        for i in range (0, cell_vs_gene.shape[0]):
+            y = sorted(cell_vs_gene[i])
+             ## intra ##
+            active_cutoff = np.percentile(y, args.threshold_gene_exp_intra) 
+            '''
+             if active_cutoff == min(cell_vs_gene[i][:]):
+                active_cutoff = max(cell_vs_gene[i][:])  
+                all_deactive_count = all_deactive_count + 1
+            '''
+            intra_active.append(active_cutoff)
+
+
+        active_genes = []
+        for cell in range (0, cell_vs_gene.shape[0]):
+            active_genes.append(dict())
+            for gene in range (0, cell_vs_gene.shape[1]):
+                if cell_vs_gene[cell][gene] >= intra_active[cell]:
+                    active_genes[cell][gene_ids[gene]] = cell_vs_gene[cell][gene]
+            
+            #print(cell)
+
+
+
     ##################### target LR cell pairs #########################################################
     target_cell_pair = defaultdict(list)
     debug = dict()
@@ -487,29 +518,32 @@ if __name__ == "__main__":
     start_of_intra_edge = len(edge_weight)
 
     
-    cell_gene_set = gene_ids # ligand_list + receptor_list
+    cell_gene_set = ligand_list + receptor_list
     df = defaultdict(list)
     for gene in cell_gene_set:
         j = gene_index[gene] 
         df[gene_ids[j]]=list(cell_vs_gene[:, j])
 
+
     data = pd.DataFrame(df)
+    '''
     if os.path.isfile(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl'):
         print('Reading gene_coexpression_matrix calculation')
         with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'rb') as fp:  
-    	    gene_coexpression_matrix = pickle.load(fp)
+            gene_coexpression_matrix = pickle.load(fp)
     else:    
         print('Running gene_coexpression_matrix calculation')
         gene_coexpression_matrix = data.corr(method='pearson')
         with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'wb') as fp:  
-    	    pickle.dump(gene_coexpression_matrix, fp)
-
-    
+            pickle.dump(gene_coexpression_matrix, fp)
+    '''
+    print('Running gene_coexpression_matrix calculation')
+    gene_coexpression_matrix = data.corr(method='pearson')
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
     for i in range(0, cell_vs_gene.shape[0]):
         spot_id = i
-#        print(i)
+        print(i)
         for gene_a in cell_gene_set:
             #if gene_a == "CCL19" :
             #    print("found ccl19")
@@ -570,9 +604,84 @@ if __name__ == "__main__":
                     lig_rec.append([gene_a, gene_b])
                     gene_node_index_active[gene_b_idx] = ''
 
+             
+                #print('total edges: %d, total gene nodes %d'%(len(row_col_gene), gene_node_index))
+   
                 
-    print('After gene coexpression matrix: total edges: %d, lig_rec %d'%(len(row_col_gene), len(lig_rec)))
+    print('After gene coexpression matrix: total edges: %d'%(len(row_col_gene)))
     
+
+
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorr_bidir/LRbind_LUAD_1D_manualDB_geneCorr_bidir_receptor_intra_KG.pkl', 'rb') as fp: 
+    #(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'rb') as fp:  
+        receptor_intra = pickle.load(fp) 
+
+    print('Intra signal')
+    for i in range(0, cell_vs_gene.shape[0]):
+        spot_id = i
+        print(i)
+        gene_pairs = defaultdict(dict)
+        gene_exist_list = active_genes[spot_id]
+        for gene_r in receptor_list:
+            temp_tables = pathway.filter_pathway(receptor_intra[gene_r], gene_exist_list)
+            for rows in temp_tables:
+                gene_pairs[rows[0]][rows[1][0]]= rows[1][3]           
+
+        for gene_a in gene_pairs:
+            for gene_b in gene_pairs[gene_a]:
+                if gene_b==gene_a:
+                    continue
+
+                if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
+                    gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
+                    barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_a])
+                    gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene_a]])
+                    gene_node_index = gene_node_index + 1
+                    # if gene_a is of new type, add it to the dictionary
+                    if gene_a not in gene_type:
+                        gene_type[gene_a] = gene_type_id 
+                        gene_type_id = gene_type_id + 1
+
+                    gene_node_type.append(gene_type[gene_a])        
+
+                gene_a_idx = gene_node_list_per_spot[spot_id][gene_a]   
+
+               	if spot_id not in gene_node_list_per_spot or gene_b not in gene_node_list_per_spot[spot_id]:
+                    gene_node_list_per_spot[spot_id][gene_b] = gene_node_index 
+                    barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_b])
+                    gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene_b]])
+                    gene_node_index = gene_node_index + 1
+                    # if gene_b is of new type, add it to the dictionary
+                    if gene_b not in gene_type:
+                        gene_type[gene_b] = gene_type_id 
+                        gene_type_id = gene_type_id + 1
+
+                    gene_node_type.append(gene_type[gene_b])        
+
+
+               	gene_b_idx = gene_node_list_per_spot[spot_id][gene_b]
+
+
+
+               	if gene_a_idx not in gene_node_index_active:
+                    row_col_gene.append([gene_b_idx, gene_a_idx])
+                    edge_weight.append([gene_pairs[gene_b][gene_a]])
+                    lig_rec.append([gene_b, gene_a])  
+                    gene_node_index_active[gene_a_idx] = ''
+
+
+                if gene_b_idx not in gene_node_index_active:
+                    row_col_gene.append([gene_a_idx, gene_b_idx])
+                    edge_weight.append([gene_pairs[gene_a][gene_b]])
+                    lig_rec.append([gene_a, gene_b])
+                    gene_node_index_active[gene_b_idx] = ''
+
+
+    print('After intra signal: total edges: %d'%(len(row_col_gene)))
+    
+
+
+
     gene_node_index_active = dict()
     rec_active_count = defaultdict(list)
     ligand_active_count = defaultdict(list)
@@ -651,7 +760,8 @@ if __name__ == "__main__":
     	pickle.dump(cell_vs_gene, fp)
     ''' 
     print('write data done')
-    
-# singularity run --home=/cluster/projects/schwartzgroup/fatema/nest_container  /cluster/projects/schwartzgroup/fatema/nest_container/nest_image.sif python LRbind_data_preprocess.py \
+'''    
+ singularity run --home=/cluster/projects/schwartzgroup/fatema/nest_container  /cluster/projects/schwartzgroup/fatema/nest_container/nest_image.sif python LRbind_data_preprocess.py \
     --data_from=/cluster/projects/schwartzgroup/fatema/data/V1_Human_Lymph_Node_spatial/ --data_name=LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrLowWeight_remFromDB \
     --database_path=database/NEST_database_no_predictedPPI.csv --split=16 --remove_lrp=True --remove_lig=True --remove_rec=True --target_lig=CCL19 --target_rec=CCR7
+'''
