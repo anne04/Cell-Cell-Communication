@@ -253,8 +253,8 @@ if __name__ == "__main__":
                 count_kg = count_kg +1
         
         print('Total %d receptors have knowledge graph'%count_kg) 
-    with gzip.open(args.metadata_to +'/' + args.data_name + 'gene_coexpression_matrix.pkl', 'wb') as fp:  
-        pickle.dump(gene_coexpression_matrix, fp) 
+        with gzip.open(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'wb') as fp:  
+            pickle.dump(receptor_intra, fp) 
         
 
 
