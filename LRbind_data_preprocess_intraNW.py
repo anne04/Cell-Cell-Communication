@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument( '--spot_diameter', type=float, default=160, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
-    parser.add_argument( '--num_hops', type=int, default=2 , help='Number of hops for direct connection')
+    parser.add_argument( '--num_hops', type=int, default=3 , help='Number of hops for direct connection')
     parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--remove_LR', type=str, help='Test LR to predict')
     #parser.add_argument( '--remove_LR', type=str, default=[['CCL19', 'CCR7']], help='Test LR to predict') #, required=True) # FN1-RPSA
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
     parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
-    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=90, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=20, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
 
     args = parser.parse_args()
     
@@ -615,6 +615,7 @@ if __name__ == "__main__":
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorr_bidir/LRbind_LUAD_1D_manualDB_geneCorr_bidir_receptor_intra_KG.pkl', 'rb') as fp: 
     #(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'rb') as fp:  
         receptor_intra, TF_genes = pickle.load(fp) 
+        print('len receptor_intra %d')
 
     print('Intra signal')
     for i in range(0, cell_vs_gene.shape[0]):
@@ -634,7 +635,8 @@ if __name__ == "__main__":
                     continue
                 if gene_b==gene_a:
                     continue
-                if 
+                if gene_a not in TF_genes and gene_b not in TF_genes:
+                    continue
                 
                 if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
