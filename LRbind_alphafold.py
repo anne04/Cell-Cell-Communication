@@ -111,8 +111,9 @@ if __name__ == "__main__":
 
             fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/manualLRP_'+ligand+'_'+receptor+'.fasta'
 
-            print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs -f')
-    
+            print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs')
+            print('mv output/manualLRP_'+ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/manualLRP_'+ ligand +'_'+ receptor +'_score.json')
+            print('rm -r output/manualLRP_'+ ligand+'_'+receptor)
     #####################
     df = pd.read_csv(args.database_path, sep=",")
     manual_lrp_genes = dict()
