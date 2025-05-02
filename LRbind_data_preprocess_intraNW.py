@@ -22,30 +22,30 @@ print('user input reading')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--data_name', type=str, help='Name of the dataset', required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--data_from', type=str, default='/cluster/projects/schwartzgroup/data/notta_pdac_visium_spaceranger_outputs_no_header/exp2_D1/outs/' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.',required=True) 
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--data_from', type=str, default='../data/LUAD/LUAD_GSM5702473_TD1/' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     #'../data/V1_Human_Lymph_Node_spatial/'
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
     parser.add_argument( '--metadata_to', type=str, default='metadata/', help='Path to save the metadata')
     parser.add_argument( '--filter_min_cell', type=int, default=1 , help='Minimum number of cells for gene filtering') 
-    parser.add_argument( '--threshold_gene_exp', type=float, default=98, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
-    parser.add_argument( '--tissue_position_file', type=str, default='None', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
-    parser.add_argument( '--spot_diameter', type=float, default=89.43, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
+    parser.add_argument( '--threshold_gene_exp', type=float, default=97, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--tissue_position_file', type=str, default='../data/LUAD/LUAD_GSM5702473_TD1/GSM5702473_TD1_tissue_positions_list.csv', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
+    parser.add_argument( '--spot_diameter', type=float, default=160, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
-    parser.add_argument( '--num_hops', type=int, default=4 , help='Number of hops for direct connection')
-    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
+    parser.add_argument( '--num_hops', type=int, default=2 , help='Number of hops for direct connection')
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--remove_LR', type=str, help='Test LR to predict')
     #parser.add_argument( '--remove_LR', type=str, default=[['CCL19', 'CCR7']], help='Test LR to predict') #, required=True) # FN1-RPSA
-    parser.add_argument( '--target_lig', type=str, default="", help='Test LR to predict')
-    parser.add_argument( '--target_rec', type=str, default="", help='Test LR to predict')
+    parser.add_argument( '--target_lig', type=str, default="TGFB1", help='Test LR to predict')
+    parser.add_argument( '--target_rec', type=str, default="ACVRL1", help='Test LR to predict')
     parser.add_argument( '--remove_lig', type=str, default="False", help='Test LR to predict')
     parser.add_argument( '--remove_rec', type=str, default="False", help='Test LR to predict')
     parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
-    parser.add_argument( '--add_intra', type=int, default=-1, help='Set to 1 if you want to add intra network')
+    parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
-    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=20, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=90, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
 
     args = parser.parse_args()
     
@@ -493,7 +493,7 @@ if __name__ == "__main__":
             gene_node_index = gene_node_index + 1
         
     
-    total_num_gene_node = gene_node_index
+ 
      
     print('Total number of unique gene node types is %d'%np.max(np.unique(gene_node_type)))
     #print(np.unique(gene_node_type))
@@ -538,12 +538,12 @@ if __name__ == "__main__":
             pickle.dump(gene_coexpression_matrix, fp)
     '''
     print('Running gene_coexpression_matrix calculation')
-    gene_coexpression_matrix = data.corr(method='pearson')
+    gene_coexpression_matrix = data.corr(method='spearman')
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
     for i in range(0, cell_vs_gene.shape[0]):
         spot_id = i
-        print(i)
+        #print('%d, %d, %d'%(i, len(gene_node_expression), len(gene_node_type)))
         for gene_a in cell_gene_set:
             #if gene_a == "CCL19" :
             #    print("found ccl19")
@@ -614,24 +614,28 @@ if __name__ == "__main__":
 
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorr_bidir/LRbind_LUAD_1D_manualDB_geneCorr_bidir_receptor_intra_KG.pkl', 'rb') as fp: 
     #(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'rb') as fp:  
-        receptor_intra = pickle.load(fp) 
+        receptor_intra, TF_genes = pickle.load(fp) 
 
     print('Intra signal')
     for i in range(0, cell_vs_gene.shape[0]):
         spot_id = i
-        print(i)
+        #print('%d, %d, %d'%(i, len(gene_node_expression), len(gene_node_type)))
+
         gene_pairs = defaultdict(dict)
         gene_exist_list = active_genes[spot_id]
         for gene_r in receptor_list:
             temp_tables = pathway.filter_pathway(receptor_intra[gene_r], gene_exist_list)
             for rows in temp_tables:
-                gene_pairs[rows[0]][rows[1][0]]= rows[1][3]           
+                gene_pairs[rows[0]][rows[1]]= rows[4]           
 
         for gene_a in gene_pairs:
             for gene_b in gene_pairs[gene_a]:
+                if gene_a not in ligand_list and gene_a not in receptor_list and gene_b not in ligand_list and gene_b not in receptor_list:
+                    continue
                 if gene_b==gene_a:
                     continue
-
+                if 
+                
                 if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
                     barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_a])
@@ -645,8 +649,7 @@ if __name__ == "__main__":
                     gene_node_type.append(gene_type[gene_a])        
 
                 gene_a_idx = gene_node_list_per_spot[spot_id][gene_a]   
-
-               	if spot_id not in gene_node_list_per_spot or gene_b not in gene_node_list_per_spot[spot_id]:
+                if spot_id not in gene_node_list_per_spot or gene_b not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_b] = gene_node_index 
                     barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_b])
                     gene_node_expression.append(cell_vs_gene[spot_id][gene_index[gene_b]])
@@ -659,16 +662,7 @@ if __name__ == "__main__":
                     gene_node_type.append(gene_type[gene_b])        
 
 
-               	gene_b_idx = gene_node_list_per_spot[spot_id][gene_b]
-
-
-
-               	if gene_a_idx not in gene_node_index_active:
-                    row_col_gene.append([gene_b_idx, gene_a_idx])
-                    edge_weight.append([gene_pairs[gene_b][gene_a]])
-                    lig_rec.append([gene_b, gene_a])  
-                    gene_node_index_active[gene_a_idx] = ''
-
+                gene_b_idx = gene_node_list_per_spot[spot_id][gene_b]
 
                 if gene_b_idx not in gene_node_index_active:
                     row_col_gene.append([gene_a_idx, gene_b_idx])
@@ -676,8 +670,14 @@ if __name__ == "__main__":
                     lig_rec.append([gene_a, gene_b])
                     gene_node_index_active[gene_b_idx] = ''
 
-
-    print('After intra signal: total edges: %d'%(len(row_col_gene)))
+                if gene_a_idx not in gene_node_index_active:
+                    row_col_gene.append([gene_b_idx, gene_a_idx])
+                    edge_weight.append([gene_pairs[gene_a][gene_b]]) # the same score is used
+                    lig_rec.append([gene_b, gene_a])  
+                    gene_node_index_active[gene_a_idx] = ''
+         
+            
+        #print('After intra signal: total edges: %d, total gene nodes %d'%(len(row_col_gene), gene_node_index))
     
 
 
@@ -704,11 +704,13 @@ if __name__ == "__main__":
     for j in rec_active_count:
         rec_active_count[j] = np.sum(rec_active_count[j])
         total_incoming_rec = total_incoming_rec + rec_active_count[j]
-    
+
+    total_num_gene_node = len(gene_node_type)
     print('Total number of gene nodes in this graph is %d, inactive %d, active %d'%(gene_node_index, gene_node_index-len(gene_node_index_active.keys()),len(gene_node_index_active.keys())))
     print('active '+args.target_lig +' node %d, with number of incoming connections %d'%(len(ligand_active_count), total_incoming_ligand))
     print('active '+args.target_rec +' node %d, with number of incoming connections %d'%(len(rec_active_count), total_incoming_rec))
     print('inter edge count %d, intra edge count %d'%(start_of_intra_edge, len(row_col_gene)-start_of_intra_edge))    
+    
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
         pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge], fp)
 
