@@ -15,7 +15,7 @@ import gzip
 import argparse
 import os
 import scanpy as sc
-import pathway_search_CellNEST as pathway
+import pathway_search_LRbind as pathway
 
 print('user input reading')
 #current_dir = 
@@ -612,7 +612,7 @@ if __name__ == "__main__":
     
 
 
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorr_bidir/LRbind_LUAD_1D_manualDB_geneCorr_bidir_receptor_intra_KG.pkl', 'rb') as fp: 
+    with gzip.open(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'rb') as fp:  #('metadata/LRbind_LUAD_1D_manualDB_geneCorr_bidir/LRbind_LUAD_1D_manualDB_geneCorr_bidir_receptor_intra_KG.pkl', 'rb') as fp: 
     #(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'rb') as fp:  
         receptor_intra, TF_genes = pickle.load(fp) 
         print('len receptor_intra %d')
@@ -620,16 +620,17 @@ if __name__ == "__main__":
     print('Intra signal')
     for i in range(0, cell_vs_gene.shape[0]):
         spot_id = i
-        #print('%d, %d, %d'%(i, len(gene_node_expression), len(gene_node_type)))
 
         gene_pairs = defaultdict(dict)
         gene_exist_list = active_genes[spot_id]
         for gene_r in receptor_list:
             temp_tables = pathway.filter_pathway(receptor_intra[gene_r], gene_exist_list)
-            adjacency_list = get_adjacency_list(temp_tables)
-            gene_pair_list = get_bfs_gene_pairs(adjacency_list, gene_r, TF_genes)
+            adjacency_list = pathway.get_adjacency_list(temp_tables)
+            gene_pair_list = pathway.get_bfs_gene_pairs(adjacency_list, gene_r, TF_genes)
             for rows in gene_pair_list:
-                gene_pairs[rows[0]][rows[1]]= rows[2]           
+                gene_pairs[rows[0]][rows[1]]= rows[2]     
+                
+        print('%d, %d, %d %d'%(i, len(gene_node_expression), len(gene_pairs), len(row_col_gene)))
 
         for gene_a in gene_pairs:
             for gene_b in gene_pairs[gene_a]:
