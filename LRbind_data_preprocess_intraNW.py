@@ -5,7 +5,7 @@
 print('package loading')
 import numpy as np
 import pickle
-from scipy import sparse
+from scipy import sparse 
 import numpy as np
 import qnorm
 from scipy.sparse import csr_matrix
