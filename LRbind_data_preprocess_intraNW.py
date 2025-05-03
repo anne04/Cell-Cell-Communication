@@ -559,7 +559,7 @@ if __name__ == "__main__":
 
                 if gene_coexpression_matrix[gene_a][gene_b] < args.intra_cutoff: #0.30:
                     continue
-
+                
                 if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
                     barcode_info_gene.append([barcode_info[spot_id][0], barcode_info[spot_id][1], barcode_info[spot_id][2], barcode_info[spot_id][3], gene_node_index, gene_a])
@@ -626,17 +626,19 @@ if __name__ == "__main__":
         gene_exist_list = active_genes[spot_id]
         for gene_r in receptor_list:
             temp_tables = pathway.filter_pathway(receptor_intra[gene_r], gene_exist_list)
-            for rows in temp_tables:
-                gene_pairs[rows[0]][rows[1]]= rows[4]           
+            adjacency_list = get_adjacency_list(temp_tables)
+            gene_pair_list = get_bfs_gene_pairs(adjacency_list, gene_r, TF_genes)
+            for rows in gene_pair_list:
+                gene_pairs[rows[0]][rows[1]]= rows[2]           
 
         for gene_a in gene_pairs:
             for gene_b in gene_pairs[gene_a]:
-                if gene_a not in ligand_list and gene_a not in receptor_list and gene_b not in ligand_list and gene_b not in receptor_list:
-                    continue
+                #if gene_a not in ligand_list and gene_a not in receptor_list and gene_b not in ligand_list and gene_b not in receptor_list:
+                #    continue
                 if gene_b==gene_a:
                     continue
-                if gene_a not in TF_genes and gene_b not in TF_genes:
-                    continue
+                #if gene_a not in TF_genes and gene_b not in TF_genes:
+                #    continue
                 
                 if spot_id not in gene_node_list_per_spot or gene_a not in gene_node_list_per_spot[spot_id]:
                     gene_node_list_per_spot[spot_id][gene_a] = gene_node_index 
