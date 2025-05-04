@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
     parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
-    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=20, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--threshold_gene_exp_intra', type=float, default=50, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
 
     args = parser.parse_args()
     
