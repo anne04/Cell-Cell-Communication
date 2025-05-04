@@ -136,15 +136,23 @@ if __name__ == "__main__":
         data_list['Type']=[]   
         lig_count = 0
         rec_count = 0
+
+        ligand_list = ['CCL19', 'CCL21']
+        receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
+
+
+        type_found = defaultdict(list)
         for i in range (0, X_PCA.shape[0]):
-            #if i in node_active_index:
-            #    continue
+            if i not in node_active_index:
+                continue
                 
-            if index_vs_gene_node_info[i][5] == args.target_ligand: 
+            if index_vs_gene_node_info[i][5] in ligand_list: # == args.target_ligand: 
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
+                type_found[index_vs_gene_node_info[i][5]].append(1)
                 lig_count = lig_count + 1
-            elif index_vs_gene_node_info[i][5] == args.target_receptor:
+            elif index_vs_gene_node_info[i][5] in receptor_list: #== args.target_receptor:
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
+                type_found[index_vs_gene_node_info[i][5]].append(1)
                 rec_count = rec_count + 1 
             else:
                 continue
@@ -162,9 +170,15 @@ if __name__ == "__main__":
             color='Type',
             #shape = alt.Shape('Type:N')
         )
+        for type in type_found:
+            type_found[type] = len(type_found[type])
+            
+        chart.save(args.output_path + args.model_name + '_output_' + 'ligands' + '-' + 'receptors' + '_PCA.html')
+        print(args.output_path + args.model_name + '_output_' + 'ligands' + '-' + 'receptors' + '_PCA.html')
+        '''        
         chart.save(args.output_path + args.model_name + '_output_' + args.target_ligand + '-' + args.target_receptor + '_PCA.html')
         print(args.output_path + args.model_name + '_output_' + args.target_ligand + '-' + args.target_receptor + '_PCA.html')
-            
+        ''' 
 ##############
         data_list=dict()
         data_list['X']=[]
