@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
-    parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
+    #parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
@@ -362,7 +362,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Avg_dotProduct': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
@@ -370,7 +370,7 @@ if __name__ == "__main__":
                 y='Avg_dotProduct'
             )
         
-            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+            chart.save(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
             if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
                 print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
