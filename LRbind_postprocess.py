@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 print("i: %d"%i)
                 print("found list: %d"%len(found_list))
                 for j in range (0, len(barcode_info)):
-                    if dist_X[i][j]==0 or i==j :
+                    if dist_X[i][j]==0 or i==j:
                         continue
                     
                     # from i to j
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                            temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
