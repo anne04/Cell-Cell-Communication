@@ -165,7 +165,7 @@ if __name__ == "__main__":
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]])  #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
@@ -334,6 +334,7 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
+                if 
                 sort_lr_list.append([lr_pair, sum])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
