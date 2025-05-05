@@ -137,9 +137,11 @@ if __name__ == "__main__":
         lig_count = 0
         rec_count = 0
 
-        ligand_list = ['CCL19', 'CCL21']
-        receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
+#        ligand_list = ['CCL19', 'CCL21']
+#        receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
 
+        ligand_list = ['WNT10A']
+        receptor_list = ['FZD1', 'FZD4', 'FZD7', 'FZD8']
 
         type_found = defaultdict(list)
         for i in range (0, X_PCA.shape[0]):
