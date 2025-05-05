@@ -86,7 +86,7 @@ if __name__ == "__main__":
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, node_active_index, ligand_active_count, rec_active_count = pickle.load(fp)
+        barcode_info_gene, target_ligand_list, target_receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, node_active_index, ligand_active_count, rec_active_count = pickle.load(fp)
 
     count = 0
     for key in node_active_index:
@@ -137,22 +137,25 @@ if __name__ == "__main__":
         lig_count = 0
         rec_count = 0
 
-#        ligand_list = ['CCL19', 'CCL21']
-#        receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
+#        target_ligand_list = ['CCL19', 'CCL21']
+#        target_receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
 
-        ligand_list = ['WNT10A']
-        receptor_list = ['FZD1', 'FZD4', 'FZD7', 'FZD8']
+        target_ligand_list = ['WNT10A']
+        target_receptor_list = ['FZD1', 'FZD4', 'FZD7', 'FZD8']
 
+        target_ligand_list = ['TGFB1']
+        target_receptor_list = ['TGFBR1', 'TGFBR2', 'TGFBR3', 'ACVR1B', 'ACVR1C', 'ACVR1', 'ACVRL1' ]
+        
         type_found = defaultdict(list)
         for i in range (0, X_PCA.shape[0]):
             if i not in node_active_index:
                 continue
                 
-            if index_vs_gene_node_info[i][5] in ligand_list: # == args.target_ligand: 
+            if index_vs_gene_node_info[i][5] in target_ligand_list: # == args.target_ligand: 
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
                 type_found[index_vs_gene_node_info[i][5]].append(1)
                 lig_count = lig_count + 1
-            elif index_vs_gene_node_info[i][5] in receptor_list: #== args.target_receptor:
+            elif index_vs_gene_node_info[i][5] in target_receptor_list: #== args.target_receptor:
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
                 type_found[index_vs_gene_node_info[i][5]].append(1)
                 rec_count = rec_count + 1 
