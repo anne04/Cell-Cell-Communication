@@ -42,7 +42,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
+    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -105,9 +105,9 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
-                    'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
+                   # 'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
-                   #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
+                   'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -333,6 +333,7 @@ if __name__ == "__main__":
             #if top_N == 30:
             #    continue
             sort_lr_list = []
+            ligand_found_dict = defaultdict(list)
             for lr_pair in lr_dict:
                 sum = 0
                 cell_pair_list = lr_dict[lr_pair]
@@ -341,12 +342,12 @@ if __name__ == "__main__":
 
                 #sum = sum/len(cell_pair_list)
                 sort_lr_list.append([lr_pair, sum])
+                ligand_found_dict[lr_pair.split('+')[0]].append(lr_pair.split('+')[1])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-            #print('len sort_lr_list %d'%len(sort_lr_list))
-            # save = num_spots/cells * top_N pairs
-            if knee_flag == 0:
-                sort_lr_list = sort_lr_list[0: top_lrp_count]
+            
+            #if knee_flag == 0:
+            #    sort_lr_list = sort_lr_list[0: top_lrp_count]
     
             
             top_hit_lrp_dict = dict()
@@ -356,14 +357,19 @@ if __name__ == "__main__":
                 i = i+1
             
             # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+            ligand_found_dict = defaultdict(list)
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[] 
             max_rows = min(500, len(sort_lr_list))
-            for i in range (0, max_rows): #1000): #:
+            for i in range (0, max_rows): #len(sort_lr_list)): #1000): #:
                 data_list['X'].append(sort_lr_list[i][0])
                 data_list['Y'].append(sort_lr_list[i][1])
-                
+                ligand_found_dict[sort_lr_list[i][0].split('+')[0]].append(sort_lr_list[i][0].split('+')[1])
+                if sort_lr_list[i][0].split('+')[0]=='WNT10A' and sort_lr_list[i][0].split('+')[1]=='FZD1':
+                    print(i)
+
+            
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
                 'EucDist': data_list['Y']
