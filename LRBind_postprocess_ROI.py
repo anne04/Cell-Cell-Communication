@@ -42,7 +42,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
+    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -105,9 +105,9 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
-                   # 'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
+                    'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -169,7 +169,7 @@ if __name__ == "__main__":
                     for j_gene in receptor_node_index:
                         if i_gene[1]==j_gene[1]:
                             continue
-                        temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                        temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                         # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                         # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
