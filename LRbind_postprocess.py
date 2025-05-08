@@ -125,7 +125,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [50]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                         for j_gene in receptor_node_index:
                             if i_gene[1]==j_gene[1]:
                                 continue
-                            temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]])  #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                            temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]])  #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                             # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                             dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
@@ -372,8 +372,8 @@ if __name__ == "__main__":
         
             chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
-            if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
-                print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
+            if target_ligand +'+'+ target_receptor in list(data_list_pd['Ligand-Receptor Pairs']):
+                print("found %d"%top_hit_lrp_dict[target_ligand +'+'+ target_receptor])
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
             i = 0
