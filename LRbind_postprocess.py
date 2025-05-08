@@ -124,7 +124,7 @@ if __name__ == "__main__":
         top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
-        test_mode = 0
+        test_mode = 1
         for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                 data_list['Y']=[]   
                 data_list['total_dot']=[] 
                 data_list['prediction'] = []
-                data_list['label'] = []
+                #data_list['label'] = []
                 for i in range (0, len(barcode_info)):
                     data_list['X'].append(barcode_info[i][1])
                     data_list['Y'].append(-barcode_info[i][2])
@@ -255,7 +255,7 @@ if __name__ == "__main__":
                         data_list['prediction'].append('negative')
                     
                         
-                    data_list['label'].append(node_type[barcode_info[i][0]])
+                    #data_list['label'].append(node_type[barcode_info[i][0]])
                     
                 source= pd.DataFrame(data_list)
                 
@@ -263,9 +263,9 @@ if __name__ == "__main__":
                     alt.X('X', scale=alt.Scale(zero=False)),
                     alt.Y('Y', scale=alt.Scale(zero=False)),
                     color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
-                    shape = alt.Shape('label:N')
+                    #shape = alt.Shape('label:N')
                 )
-                chart.save(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
+                chart.save(args.output_path + model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
                 #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
     
                 # entropy 
@@ -334,7 +334,6 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                if 
                 sort_lr_list.append([lr_pair, sum])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -361,17 +360,17 @@ if __name__ == "__main__":
                 
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Avg_dotProduct': data_list['Y']
+                'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-                y='Avg_dotProduct'
+                y='Score'
             )
         
-            chart.save(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+            chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
             if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
                 print("found CCL19-CCR7: %d"%top_hit_lrp_dict['CCL19+CCR7'])
@@ -403,17 +402,17 @@ if __name__ == "__main__":
                 
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Avg_dotProduct': data_list['Y']
+                'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-                y='Avg_dotProduct'
+                y='Score'
             )
         
-            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+            chart.save(args.output_path +model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
             ################################# when not remFromDB ##########################################################################################################
             
