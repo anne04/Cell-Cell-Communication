@@ -95,6 +95,8 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
 
+
+    
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -139,12 +141,47 @@ if __name__ == "__main__":
             if knee_flag == 1:
                 top_N = 0
                 break_flag = 1
+            ################
+            max_scores = []
+            for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
+                i = pair[0]
+                j = pair[1]
+                
+                if dist_X[i][j]==0 or i==j :
+                    continue
+                
+                # from i to j
+                ligand_node_index = []
+                for gene in gene_node_list_per_spot[i]:
+                    if gene in ligand_list:
+                        ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+    
+                receptor_node_index = []
+                for gene in gene_node_list_per_spot[j]:
+                    if gene in receptor_list:
+                        receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
+    
+                product_only = []
+                for i_gene in ligand_node_index:  
+                    for j_gene in receptor_node_index:
+                        if i_gene[1]==j_gene[1]:
+                            continue
+                        temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
+                        product_only.append(temp)
+                    # scale  
+
+            
+                max_scores.append(max(product_only))
+                print("%d, %d: %g"%(i,j,max(product_only)))    
+
+            
+            ################
+            max_score = np.max(max_scores)
             lr_dict = defaultdict(list)
             Tcell_zone_lr_dict = defaultdict(list)
             target_ligand = args.target_ligand
             target_receptor = args.target_receptor
             found_list = defaultdict(list)
-            
             for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
                 i = pair[0]
                 j = pair[1]
@@ -178,29 +215,14 @@ if __name__ == "__main__":
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                         product_only.append(temp)
                     # scale  
-                    '''
-                    if len(product_only) == 0:
-                        continue
-                    max_prod = np.max(product_only)
-                    min_prod = np.min(product_only)
-                    for item_idx in range (start_index, len(dot_prod_list)):
-                        scaled_prod = (dot_prod_list[item_idx][0]-min_prod)/(max_prod-min_prod)
-                        dot_prod_list[item_idx][0] = scaled_prod
-                    
-                    start_index = len(dot_prod_list)
-                    '''
-                    '''
-                    dot_prod_list_temp = sorted(dot_prod_list_temp, key = lambda x: x[0], reverse=True)[0:10]
-                    for item in dot_prod_list_temp:
-                        dot_prod_list.append(item)
-                    '''
+
                 
                 if len(dot_prod_list) == 0:
                     continue
                     
                 if knee_flag == 0:
                     ''''''
-                    max_score = max(product_only)
+                    #max_score = max(product_only)
                     for item_idx in range (0, len(dot_prod_list)):
                         scaled_prod = max_score - dot_prod_list[item_idx][0]
                         dot_prod_list[item_idx][0] = scaled_prod 
@@ -378,7 +400,7 @@ if __name__ == "__main__":
             
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'EucDist': data_list['Y']
+                'Score': data_list['Y']
             })
             '''
             with gzip.open('output/'+args.data_name+'/' + args.model_name +'_lr_dict_pca', 'wb') as fp:  
@@ -386,23 +408,23 @@ if __name__ == "__main__":
             '''
 
             
-            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv', index=False)
-            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv')    
+            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv', index=False)
+            print(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-                y='EucDist'
+                y='Score'
             )
         
-            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')
-            print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')   
+            chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')
+            print(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_ROI_histogramsallLR.html')   
             if target_ligand + '+' + target_receptor  in list(data_list_pd['Ligand-Receptor Pairs']):
                 print("found %s-%s: %d"%(target_ligand, target_receptor, top_hit_lrp_dict[target_ligand + '+' + target_receptor])) # for 100, position is 44, with 4L -- only 5 spots are detected and position - none
             ############################### novel only out of all LR ################
             sort_lr_list_temp = []
             i = 0
             for pair in sort_lr_list:                
-                ligand = pair[0].split('+')[0]
+                ligand = pair[0].split('+')[0] 
                 receptor = pair[0].split('+')[1]
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                     #if i<15:
@@ -517,4 +539,40 @@ if __name__ == "__main__":
         
             chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
+
+
+#################################
+    node_ROI = dict()
+    for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
+        i = pair[0]
+        j = pair[1]
+        node_ROI[i] = 1
+        node_ROI[j] = 1
+
+    if plot_input == 1:
+        data_list=dict()
+        data_list['X']=[]
+        data_list['Y']=[]   
+        data_list['input']=[] 
+        for i in range (0, len(barcode_info)):
+            
+
+            data_list['X'].append(barcode_info[i][1])
+            data_list['Y'].append(barcode_info[i][2])
+            if i in node_ROI:
+                data_list['input'].append(1)
+            else:
+                data_list['input'].append(0)
+            
+                
+        source= pd.DataFrame(data_list)
+        chart = alt.Chart(source).mark_point(filled=True).encode(
+            alt.X('X', scale=alt.Scale(zero=False)),
+            alt.Y('Y', scale=alt.Scale(zero=False)),
+            color=alt.Color('input:Q', scale=alt.Scale(scheme='magma')),
+            #shape = alt.Shape('label:N')
+        )
+        chart.save(args.output_path + args.data_name + '_input_' + target_ligand + '-' + target_receptor + '.html')
+        print(args.output_path + args.data_name + '_input_' + target_ligand + '-' + target_receptor + '.html') 
+    
 
