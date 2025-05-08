@@ -111,12 +111,12 @@ if __name__ == "__main__":
 
 
     ################### ####################
-    target_gene_list = ['CXCL12','CXCR4'] #['CXCL10','CXCR3'] #['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
+    target_gene_list = ['TGFB1','ACVRL1'] #['CXCL10','CXCR3'] #['LGALS1', 'PTPRC'] #['APOE', 'SDC1', 'FN1', 'RPSA', 'TGFB1', 'ACVRL1', 'TGFBR2']
     target_gene = ''
     
     for target_gene in target_gene_list:
         target_gene_id = -1
-        for j in range (0, len(gene_ids)):
+        for j in range (0, len(gene_ids)): 
             if gene_ids[j]==target_gene: #'PLXNB2':
                 target_gene_id = j
                 break
@@ -145,4 +145,4 @@ if __name__ == "__main__":
             alt.Y('Y', scale=alt.Scale(zero=False)),
             color=alt.Color('gene_expression:Q', scale=alt.Scale(scheme='magma'))
         )
-        chart.save(args.output_path + args.data_name + '_heatmap_' + target_gene + '_version2.html')
+        chart.save(args.output_path + args.data_name + '_heatmap_' + target_gene + '_version.html')
