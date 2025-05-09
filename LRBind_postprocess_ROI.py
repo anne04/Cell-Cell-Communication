@@ -42,7 +42,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
+    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -109,10 +109,11 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
-                   #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
+                   'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
+                   # 'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_h512'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -134,6 +135,8 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
+        target_ligand = args.target_ligand
+        target_receptor = args.target_receptor
         for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
@@ -179,8 +182,7 @@ if __name__ == "__main__":
             max_score = np.max(max_scores)
             lr_dict = defaultdict(list)
             Tcell_zone_lr_dict = defaultdict(list)
-            target_ligand = args.target_ligand
-            target_receptor = args.target_receptor
+
             found_list = defaultdict(list)
             for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
                 i = pair[0]
@@ -401,7 +403,7 @@ if __name__ == "__main__":
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
-            })
+            }) 
             '''
             with gzip.open('output/'+args.data_name+'/' + args.model_name +'_lr_dict_pca', 'wb') as fp:  
                 pickle.dump(lr_dict, fp)
