@@ -145,6 +145,11 @@ if __name__ == "__main__":
 
         target_ligand_list = ['TGFB1']
         target_receptor_list = ['TGFBR1', 'TGFBR2', 'TGFBR3', 'ACVR1B', 'ACVR1C', 'ACVR1', 'ACVRL1' ]
+
+
+        target_ligand_list = ['CXCL10']
+        target_receptor_list = ['CXCR3']
+        
         
         type_found = defaultdict(list)
         for i in range (0, X_PCA.shape[0]):
