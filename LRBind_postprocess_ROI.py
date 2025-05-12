@@ -42,7 +42,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -112,8 +112,10 @@ if __name__ == "__main__":
                    #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
                    # 'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_h512'
+                   # 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -144,45 +146,10 @@ if __name__ == "__main__":
             if knee_flag == 1:
                 top_N = 0
                 break_flag = 1
-            ################
-            max_scores = []
-            for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
-                i = pair[0]
-                j = pair[1]
-                
-                if dist_X[i][j]==0 or i==j :
-                    continue
-                
-                # from i to j
-                ligand_node_index = []
-                for gene in gene_node_list_per_spot[i]:
-                    if gene in ligand_list:
-                        ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
-    
-                receptor_node_index = []
-                for gene in gene_node_list_per_spot[j]:
-                    if gene in receptor_list:
-                        receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
-    
-                product_only = []
-                for i_gene in ligand_node_index:  
-                    for j_gene in receptor_node_index:
-                        if i_gene[1]==j_gene[1]:
-                            continue
-                        temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #
-                        product_only.append(temp)
-                    # scale  
 
-            
-                max_scores.append(max(product_only))
-                print("%d, %d: %g"%(i,j,max(product_only)))    
-
-            
             ################
-            max_score = np.max(max_scores)
             lr_dict = defaultdict(list)
             Tcell_zone_lr_dict = defaultdict(list)
-
             found_list = defaultdict(list)
             for pair in target_cell_pair[target_ligand+'+'+target_receptor]:
                 i = pair[0]
@@ -216,15 +183,15 @@ if __name__ == "__main__":
                         # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
                         product_only.append(temp)
-                    # scale  
+                 
 
                 
                 if len(dot_prod_list) == 0:
                     continue
                     
                 if knee_flag == 0:
-                    ''''''
-                    #max_score = max(product_only)
+                    
+                    max_score = max(product_only)
                     for item_idx in range (0, len(dot_prod_list)):
                         scaled_prod = max_score - dot_prod_list[item_idx][0]
                         dot_prod_list[item_idx][0] = scaled_prod 
