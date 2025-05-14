@@ -285,7 +285,7 @@ if __name__ == "__main__":
             ############################
             lr_dict = copy.deepcopy(save_lr_dict)
             # Set threshold gene percentile
-            threshold_gene_exp = 80
+            threshold_gene_exp = 90
             cell_percentile = []
             for i in range (0, cell_vs_gene.shape[0]):
                 y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
@@ -340,8 +340,14 @@ if __name__ == "__main__":
                 for pair in list_pairs:
                     if pair[2] in keep_receptor:
                         filtered_pairs.append(pair)
-            
-                lr_dict[ligand + '+' + receptor] = filtered_pairs
+
+                if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                    print('list updated: '+ ligand + '+' + receptor)
+
+                if len(filtered_pairs):
+                    lr_dict.pop(ligand + '+' + receptor)
+                else:
+                    lr_dict[ligand + '+' + receptor] = filtered_pairs
                 
 
             
@@ -393,6 +399,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
             }) 
+            print(data_list['X'][0:20])
             '''
             with gzip.open('output/'+args.data_name+'/' + args.model_name +'_lr_dict_pca', 'wb') as fp:  
                 pickle.dump(lr_dict, fp)
