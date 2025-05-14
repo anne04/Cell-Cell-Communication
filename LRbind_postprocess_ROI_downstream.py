@@ -96,6 +96,16 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
 
+    #####################################################################################
+    
+    with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
+        cell_vs_gene = pickle.load(fp)
+
+    with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
+        gene_index = pickle.load(fp)
+
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+        receptor_intraNW, TF_genes = pickle.load(fp)
 
     
     ############# load output graph #################################################
@@ -272,7 +282,26 @@ if __name__ == "__main__":
             '''
             #############################################################
             save_lr_dict = copy.deepcopy(lr_dict)
+            ############################
             lr_dict = copy.deepcopy(save_lr_dict)
+            # Set threshold gene percentile
+            threshold_gene_exp = 80
+            cell_percentile = []
+            for i in range (0, cell_vs_gene.shape[0]):
+                y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
+                ## inter ##
+                active_cutoff = np.percentile(y, threshold_gene_exp)
+                if active_cutoff == min(cell_vs_gene[i][:]):
+                    times = 1
+                    while active_cutoff == min(cell_vs_gene[i][:]):
+                        new_threshold = threshold_gene_exp + 5 * times
+                        if new_threshold >= 100:
+                            active_cutoff = max(cell_vs_gene[i][:])  
+                            break
+                        active_cutoff = np.percentile(y, new_threshold)
+                        times = times + 1 
+        
+                cell_percentile.append(active_cutoff) 
             #####################
             for lr_pair in lr_dict:
                 print(lr_pair)
@@ -539,37 +568,5 @@ if __name__ == "__main__":
     
 ####################################
 
-    with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
-        cell_vs_gene = pickle.load(fp)
-
-    with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
-        gene_index = pickle.load(fp)
-
-
-
-    #####################################################################################
-
-
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
-        receptor_intraNW, TF_genes = pickle.load(fp)
-
-    # Set threshold gene percentile
-    threshold_gene_exp = 80
-    cell_percentile = []
-    for i in range (0, cell_vs_gene.shape[0]):
-        y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-        ## inter ##
-        active_cutoff = np.percentile(y, threshold_gene_exp)
-        if active_cutoff == min(cell_vs_gene[i][:]):
-            times = 1
-            while active_cutoff == min(cell_vs_gene[i][:]):
-                new_threshold = threshold_gene_exp + 5 * times
-                if new_threshold >= 100:
-                    active_cutoff = max(cell_vs_gene[i][:])  
-                    break
-                active_cutoff = np.percentile(y, new_threshold)
-                times = times + 1 
-
-        cell_percentile.append(active_cutoff)     
 
 
