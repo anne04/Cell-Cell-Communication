@@ -102,12 +102,22 @@ if __name__ == "__main__":
         cell_vs_gene = pickle.load(fp)
 
     with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
-        gene_index = pickle.load(fp)
+        gene_index, gene_names = pickle.load(fp)
 
+    
+    adata = anndata.AnnData(cell_vs_gene)
+    adata.obs_names = cell_barcodes 
+    adata.var_names = gene_names
+    
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
         receptor_intraNW, TF_genes = pickle.load(fp)
 
-    
+    for receptor in receptor_intraNW:
+        target_list = []
+        for rows in receptor_intraNW[receptor]:
+            target_list.append(rows[1][0])
+
+        receptor_intraNW[receptor] = target_list
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -315,12 +325,10 @@ if __name__ == "__main__":
                     receptor_cell_list.append(pair[2])
         
                 receptor_cell_list = np.unique(receptor_cell_list)
-                target_list = []
-                for rows in receptor_intraNW[receptor]:
-                    target_list.append(rows[1][0])
+                target_list = receptor_intraNW[receptor]
                 # what percent of them has the target genes expressed
             
-               
+
                 count = 0
                 keep_receptor = dict()
                 for cell in receptor_cell_list:
@@ -333,7 +341,14 @@ if __name__ == "__main__":
                     if found>0 and found/len(target_list) >= 0.5:
                         count = count+1
                         keep_receptor[cell] = 1
-            
+
+
+                # cells in keep_receptor have differentially-expressed target genes?
+                group_A = list(keep_receptor.keys())
+                group_rest = ...
+                # run 
+
+                
                 filtered_pairs = []
                 for pair in list_cell_pairs:
                     if pair[2] in keep_receptor:
@@ -341,7 +356,7 @@ if __name__ == "__main__":
 
                 #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
                     #print('list updated: '+ ligand + '+' + receptor)
-
+      
                 if len(filtered_pairs)==0:
                     lr_dict.pop(ligand + '+' + receptor)
                 else:
@@ -351,10 +366,14 @@ if __name__ == "__main__":
 
             #before post process len 112929
             #After postprocess len 40829
-          
+            
+        
+
+            
             ########## take top hits #################################### 
             #if top_N == 30:
             #    continue
+            
 
 
 
