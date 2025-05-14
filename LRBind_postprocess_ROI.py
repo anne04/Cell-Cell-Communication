@@ -42,13 +42,14 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
     #LRbind_CID44971_1D_manualDB_geneCorr_bidir, CXCL10-CXCR3
     #LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir
     #'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir
+    #'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir'
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -113,9 +114,9 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   # 'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_h512'
+                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
                    # 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -178,7 +179,7 @@ if __name__ == "__main__":
                     for j_gene in receptor_node_index:
                         if i_gene[1]==j_gene[1]:
                             continue
-                        temp = distance.euclidean(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
+                        temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
                         # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                         # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                         dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
@@ -546,12 +547,22 @@ if __name__ == "__main__":
     
 ####################################
 
-    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
+    with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
         cell_vs_gene = pickle.load(fp)
 
+    with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
+        gene_index = pickle.load(fp)
+
+
+
     #####################################################################################
+
+
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+        receptor_intraNW, TF_genes = pickle.load(fp)
+
     # Set threshold gene percentile
-    threshold_gene_exp = 90
+    threshold_gene_exp = 80
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
@@ -570,34 +581,43 @@ if __name__ == "__main__":
         cell_percentile.append(active_cutoff)     
 
 
+    for lr_pair in lr_dict:
+        print(lr_pair)
+        ligand = lr_pair.split('+')[0]
+        receptor = lr_pair.split('+')[1]
 
+        #ligand = 'TGFB1'
+        #receptor = 'ACVRL1'
+
+        list_pairs = lr_dict[ligand + '+' + receptor]
+        receptor_cell_list = []
+        for pair in list_pairs:
+            receptor_cell_list.append(pair[2])
+
+        receptor_cell_list = np.unique(receptor_cell_list)
+        target_list = []
+        for rows in receptor_intraNW[receptor]:
+            target_list.append(rows[1][0])
+        # what percent of them has the target genes expressed
     
-    ligand = 'TGFB1'
-    receptor = 'ACVRL1'
-
-    list_pairs = lr_dict[ligand + '+' + receptor]
-    receptor_cell_list = []
-    for pair in list_pairs:
-        receptor_cell_list.append(pair[2])
-
-    # what percent of them has the target genes expressed
-    target_list = []
-    count = 0
-    keep_receptor = dict()
-    for cell in receptor_cell_list:
-        all_found = 1
-        for gene in target_list:
-            if cell[cell][gene_index[gene]] < cell_percentile[cell]:
-                all_found = 0
-                break
-        if all_found == 1:
-            count = count+1
-            keep_receptor[cell] = 1
-
-    filtered_pairs = []
-    for pair in list_pairs:
-        if pair[2] in keep_receptor:
-            filtered_pairs.append(pair)
-
-    lr_dict[ligand + '+' + receptor] = filtered_pairs
+       
+        count = 0
+        keep_receptor = dict()
+        for cell in receptor_cell_list:
+            found = 0
+            for gene in target_list:
+                if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                    found = found + 1
+                    
+                    
+            if found>0 and len(target_list)/found >= 0.5:
+                count = count+1
+                keep_receptor[cell] = 1
     
+        filtered_pairs = []
+        for pair in list_pairs:
+            if pair[2] in keep_receptor:
+                filtered_pairs.append(pair)
+    
+        lr_dict[ligand + '+' + receptor] = filtered_pairs
+        
