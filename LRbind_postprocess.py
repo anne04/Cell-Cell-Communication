@@ -42,10 +42,14 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
-    #parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
-    #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir
+    #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
+    #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
+    #LRbind_CID44971_1D_manualDB_geneCorr_bidir, CXCL10-CXCR3
+    #LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir
+    #'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir
+    #'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir'
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -53,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
     parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')    
+    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -73,6 +77,7 @@ if __name__ == "__main__":
     for i in range (0, len(barcode_info)):
         barcode_index[barcode_info[i][0]] = i
 
+    '''
     Tcell_zone = []
     node_type = dict()
     df = pd.read_csv("../NEST/data/V1_Human_Lymph_Node_spatial_annotation.csv", sep=",")
@@ -81,16 +86,28 @@ if __name__ == "__main__":
             Tcell_zone.append(barcode_index[df["Barcode"][i]])
             
         node_type[df["Barcode"][i]] = df["Type"][i]
-
+    '''
    
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
-        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active = pickle.load(fp)
+        barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
 
+    #####################################################################################
+    
+    with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
+        cell_vs_gene = pickle.load(fp)
+
+    with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
+        gene_index = pickle.load(fp)
+
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+        receptor_intraNW, TF_genes = pickle.load(fp)
+
+    
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -101,9 +118,15 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
-                    'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
-                   
-                   
+                   #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
+                   #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
+                   #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
+                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   # 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -117,8 +140,6 @@ if __name__ == "__main__":
         for i in range (0, X_embedding.shape[0]):
             total_score_per_row = np.sum(X_embedding[i][:])
             X_embedding[i] = X_embedding[i]/total_score_per_row
-            
-        ''' '''   
             
     ########## all ############################################# 
         top_lrp_count = 1000
