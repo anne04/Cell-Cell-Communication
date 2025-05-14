@@ -344,10 +344,16 @@ if __name__ == "__main__":
 
 
                 # cells in keep_receptor have differentially-expressed target genes?
-                group_A = list(keep_receptor.keys())
-                group_rest = ...
+                m_cells = list(keep_receptor.keys())
+        
                 # run 
 
+# Let's say your selected M cells have indices stored in a list called `m_cells`
+# We'll make a new column to label your M cells
+                adata.obs['group'] = 'other'
+                adata.obs.loc[m_cells, 'group'] = 'target'
+                adata_temp = adata[:, target_list]
+                sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test')
                 
                 filtered_pairs = []
                 for pair in list_cell_pairs:
