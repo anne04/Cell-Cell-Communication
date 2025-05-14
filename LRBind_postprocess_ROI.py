@@ -544,4 +544,60 @@ if __name__ == "__main__":
         chart.save(args.output_path + args.data_name + '_input_' + target_ligand + '-' + target_receptor + '.html')
         print(args.output_path + args.data_name + '_input_' + target_ligand + '-' + target_receptor + '.html') 
     
+####################################
 
+    with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
+        cell_vs_gene = pickle.load(fp)
+
+    #####################################################################################
+    # Set threshold gene percentile
+    threshold_gene_exp = 90
+    cell_percentile = []
+    for i in range (0, cell_vs_gene.shape[0]):
+        y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
+        ## inter ##
+        active_cutoff = np.percentile(y, threshold_gene_exp)
+        if active_cutoff == min(cell_vs_gene[i][:]):
+            times = 1
+            while active_cutoff == min(cell_vs_gene[i][:]):
+                new_threshold = threshold_gene_exp + 5 * times
+                if new_threshold >= 100:
+                    active_cutoff = max(cell_vs_gene[i][:])  
+                    break
+                active_cutoff = np.percentile(y, new_threshold)
+                times = times + 1 
+
+        cell_percentile.append(active_cutoff)     
+
+
+
+    
+    ligand = 'TGFB1'
+    receptor = 'ACVRL1'
+
+    list_pairs = lr_dict[ligand + '+' + receptor]
+    receptor_cell_list = []
+    for pair in list_pairs:
+        receptor_cell_list.append(pair[2])
+
+    # what percent of them has the target genes expressed
+    target_list = []
+    count = 0
+    keep_receptor = dict()
+    for cell in receptor_cell_list:
+        all_found = 1
+        for gene in target_list:
+            if cell[cell][gene_index[gene]] < cell_percentile[cell]:
+                all_found = 0
+                break
+        if all_found == 1:
+            count = count+1
+            keep_receptor[cell] = 1
+
+    filtered_pairs = []
+    for pair in list_pairs:
+        if pair[2] in keep_receptor:
+            filtered_pairs.append(pair)
+
+    lr_dict[ligand + '+' + receptor] = filtered_pairs
+    
