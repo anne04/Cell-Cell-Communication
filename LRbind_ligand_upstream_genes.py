@@ -85,12 +85,8 @@ if __name__ == "__main__":
         cell_barcode = np.array(temp.obs.index)
         temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)
-
-
-
-	'''
-
-
+        
+        '''
         temp = sc.read_mtx(args.data_from)
         cell_vs_gene = sparse.csr_matrix.toarray(np.transpose(temp.X))
         cell_barcode = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/barcodes.tsv.gz', header=None)
