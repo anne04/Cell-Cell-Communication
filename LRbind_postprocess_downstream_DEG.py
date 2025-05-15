@@ -117,7 +117,7 @@ if __name__ == "__main__":
     for receptor in receptor_intraNW:
         target_list = []
         for rows in receptor_intraNW[receptor]:
-            target_list.append(rows[1][0])
+            target_list.append(rows[0])
 
         receptor_intraNW[receptor] = target_list
         
