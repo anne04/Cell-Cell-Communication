@@ -102,13 +102,14 @@ if __name__ == "__main__":
         cell_vs_gene = pickle.load(fp)
 
     with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
-        gene_index, gene_names = pickle.load(fp)
+        gene_index, gene_names, cell_barcodes = pickle.load(fp)
 
     
     adata = anndata.AnnData(cell_vs_gene)
     adata.obs_names = cell_barcodes 
     adata.var_names = gene_names
     #log transform it
+    sc.pp.log1p(adata)
     
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
         receptor_intraNW, TF_genes = pickle.load(fp)
@@ -119,6 +120,7 @@ if __name__ == "__main__":
             target_list.append(rows[1][0])
 
         receptor_intraNW[receptor] = target_list
+        
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -343,27 +345,6 @@ if __name__ == "__main__":
                         count = count+1
                         keep_receptor[cell] = 1
 
-
-                ############ Differentially Expressed genes filtering ################
-
-
-                # cells in keep_receptor have differentially-expressed target genes?
-                m_cells = list(keep_receptor.keys())
-                # Let's say your selected M cells have indices stored in a list called `m_cells`
-                # We'll make a new column to label your M cells
-                adata.obs['group'] = 'other'
-                adata.obs.loc[m_cells, 'group'] = 'target'
-                adata_temp = adata[:, target_list]
-                sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test')
-                # Get the result as a dataframe
-
-
-                # Top genes ranked by p-value or log-fold change
-                result = adata.uns['rank_genes_groups']
-                df = pd.DataFrame({
-                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
-                })
-
                 filtered_pairs = []
                 for pair in list_cell_pairs:
                     if pair[2] in keep_receptor:
@@ -381,6 +362,64 @@ if __name__ == "__main__":
 
             #before post process len 112929
             #After postprocess len 40829
+            ############ Differentially Expressed genes filtering ################
+            key_list = list(lr_dict.keys())
+            pvals_lr = dict()
+            for lr_pair in key_list:
+                #print(lr_pair)
+                ligand = lr_pair.split('+')[0]
+                receptor = lr_pair.split('+')[1]
+                
+                list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                receptor_cell_list = []
+                for pair in list_cell_pairs:
+                    receptor_cell_list.append(pair[2])
+        
+                receptor_cell_list = np.unique(receptor_cell_list)
+                
+                if len(receptor_cell_list) == 1 :
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+                    
+                target_list = receptor_intraNW[receptor]
+                
+                # how well the target_list genes are differentially expressed in 
+                # receptor_cell_list vs the rest
+                index_receptor = []
+                for cell_idx in receptor_cell_list: 
+                    index_receptor.append(cell_barcodes[cell_idx])
+
+                # cells in keep_receptor have differentially-expressed target genes?
+                # Let's say your selected M cells have indices stored in a list called `m_cells`
+                # We'll make a new column to label your M cells
+                adata.obs['group'] = 'other'
+                adata.obs.loc[index_receptor, 'group'] = 'target'
+                adata_temp = adata[:, target_list]
+                sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test') #, pts = True)
+                # Get the result as a dataframe
+                # Top genes ranked by p-value or log-fold change
+                result = adata_temp.uns['rank_genes_groups']
+                df = pd.DataFrame({
+                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
+                })
+                found = 0 
+                avg_pvals = 0
+                for i in range (0, len(df)):
+                    if df['pvals'][i]<0.05:
+                        found = found+1
+                        avg_pvals = avg_pvals + df['pvals'][i]
+                        
+                avg_pvals = avg_pvals/len(target_list)
+                
+                if found/len(target_list) < 0.50:
+                    lr_dict.pop(ligand + '+' + receptor)
+                else:
+                    pvals_lr[ligand + '+' + receptor] = avg_pvals
+                    
+                
+            print('After DEG len %d'%len(lr_dict.keys()))
+
+            #After DEG len 10082
             
         
 
@@ -389,13 +428,6 @@ if __name__ == "__main__":
             #if top_N == 30:
             #    continue
             
-
-
-
-
-
-
-
             sort_lr_list = []
             for lr_pair in lr_dict:
                 sum = 0
@@ -404,10 +436,10 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                sort_lr_list.append([lr_pair, sum])
-        
+                sort_lr_list.append([lr_pair, sum, pvals_lr[lr_pair]])
+                
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
-            
+            #sort_lr_list = sorted(sort_lr_list, key = lambda x: x[2])
             '''
             top_hit_lrp_dict = dict()
             i = 0
@@ -419,16 +451,24 @@ if __name__ == "__main__":
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[] 
+            data_list['type']=[]
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
                 data_list['X'].append(sort_lr_list[i][0])
                 data_list['Y'].append(sort_lr_list[i][1])
-                
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                    data_list['type'].append('From DB')
+                else:
+                    data_list['type'].append('Predicted')
+                    
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Score': data_list['Y']
+                'Score': data_list['Y'],
+                'Type': data_list['type']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_downstream_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_downstream_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
             
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -449,7 +489,7 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_downstream_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+            chart.save(args.output_path +model_name+'_downstream_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
             #if target_ligand +'+'+ target_receptor in list(data_list_pd['Ligand-Receptor Pairs']):
             #    print("found %d"%top_hit_lrp_dict[target_ligand +'+'+ target_receptor])
@@ -481,7 +521,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_downstream_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
             #print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -503,7 +543,7 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_downstream_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+            chart.save(args.output_path +model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
             ################################# when not remFromDB ##########################################################################################################
             
@@ -523,7 +563,7 @@ if __name__ == "__main__":
             set_nichenet_novel = np.unique(set_nichenet_novel)
             common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
             print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel)-len(common_lr), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
+            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv') 
             # top_N:100, Only LRbind 3833, only nichenet 4010, common 167
             ##################################################################
