@@ -1,7 +1,7 @@
 # Written By 
 # Fatema Tuz Zohora
 print('package loading')
-import numpy as np
+import numpy as np 
 import csv
 import pickle
 import statistics
@@ -284,6 +284,7 @@ if __name__ == "__main__":
             save_lr_dict = copy.deepcopy(lr_dict)
             ############################
             lr_dict = copy.deepcopy(save_lr_dict)
+            print('before post process len %d'%len(lr_dict.keys()))
             # Set threshold gene percentile
             threshold_gene_exp = 90
             cell_percentile = []
@@ -303,17 +304,18 @@ if __name__ == "__main__":
         
                 cell_percentile.append(active_cutoff) 
             #####################
-            for lr_pair in lr_dict:
-                print(lr_pair)
+            key_list = list(lr_dict.keys())
+            for lr_pair in key_list:
+                #print(lr_pair)
                 ligand = lr_pair.split('+')[0]
                 receptor = lr_pair.split('+')[1]
         
                 #ligand = 'TGFB1'
                 #receptor = 'ACVRL1'
         
-                list_pairs = lr_dict[ligand + '+' + receptor]
+                list_cell_pairs = lr_dict[ligand + '+' + receptor]
                 receptor_cell_list = []
-                for pair in list_pairs:
+                for pair in list_cell_pairs:
                     receptor_cell_list.append(pair[2])
         
                 receptor_cell_list = np.unique(receptor_cell_list)
@@ -332,23 +334,24 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and len(target_list)/found >= 0.5:
+                    if found>0 and len(target_list)/found >= 0.7:
                         count = count+1
                         keep_receptor[cell] = 1
             
                 filtered_pairs = []
-                for pair in list_pairs:
+                for pair in list_cell_pairs:
                     if pair[2] in keep_receptor:
                         filtered_pairs.append(pair)
 
-                if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
-                    print('list updated: '+ ligand + '+' + receptor)
+                #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                    #print('list updated: '+ ligand + '+' + receptor)
 
-                if len(filtered_pairs):
+                if len(filtered_pairs)==0:
                     lr_dict.pop(ligand + '+' + receptor)
                 else:
                     lr_dict[ligand + '+' + receptor] = filtered_pairs
                 
+            print('After postprocess len %d'%len(lr_dict.keys()))
 
             
             ########## take top hits #################################### 
