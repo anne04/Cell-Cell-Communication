@@ -1,4 +1,3 @@
-# Written By 
 # Fatema Tuz Zohora
 
 
@@ -87,7 +86,9 @@ if __name__ == "__main__":
         temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)
 
-        '''
+
+
+	'''
 
 
         temp = sc.read_mtx(args.data_from)
@@ -210,11 +211,11 @@ if __name__ == "__main__":
     #######################
     # load 'intra' database
     if True: #args.add_intra==1:
-        receptor_intra = dict()
-        for receptor in receptor_list:
-            receptor_intra[receptor] = ''
+        ligand_intra = dict()
+        for ligand in ligand_list:
+            ligand_intra[ligand] = ''
 
-        print('len receptor count %d'%len(receptor_intra))
+        print('len ligand count %d'%len(ligand_intra))
         # keep only target species
         pathways_dict = defaultdict(list)
         count_kg = 0
@@ -226,18 +227,18 @@ if __name__ == "__main__":
             dest_gene = pathways['target'][i].upper()
             if source_gene in gene_info and dest_gene in gene_info:
                 #if gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': #
-                pathways_dict[source_gene].append([dest_gene, pathways['experimental_score'][i]])
+                pathways_dict[dest_gene].append([source_gene, pathways['experimental_score'][i]])
 
         # Then make a kg for each ligand and save it
-        for receptor_gene in receptor_intra:
-            if receptor_gene in pathways_dict:
-                print("####### %s found ###########"%receptor_gene)
-                receptor_intra[receptor_gene] = pathways_dict[receptor_gene]
+        for ligand_gene in ligand_intra:
+            if ligand_gene in pathways_dict:
+                print("####### %s found ###########"%ligand_gene)
+                ligand_intra[ligand_gene] = pathways_dict[ligand_gene]
                 count_kg = count_kg +1
             else:
-                print("####### %s ###########"%receptor_gene)
+                print("####### %s ###########"%ligand_gene)
 
-        print('***** Total %d receptors have knowledge graph *****'%count_kg)
+        print('***** Total %d ligands have knowledge graph *****'%count_kg)
 
         pathways = pd.read_csv(args.intra_human_tf_target_path)        
         #pathways = pathways.drop_duplicates(ignore_index=True)
@@ -246,23 +247,24 @@ if __name__ == "__main__":
             dest_gene = pathways['target'][i].upper()
             if source_gene in gene_info and dest_gene in gene_info:
                 if pathways['mode'][i] == 1: #gene_info[source_gene] == 'included' and gene_info[dest_gene]=='included': # 
-                    pathways_dict[source_gene].append([dest_gene, pathways['confidence_score'][i]])
+                    pathways_dict[dest_gene].append([source_gene, pathways['confidence_score'][i]])
 
 
         # then make a kg for each receptor and save it
 
-        for receptor_gene in receptor_intra:
-            if receptor_gene in pathways_dict:
-                if receptor_intra[receptor_gene] == '':
-                    receptor_intra[receptor_gene] = pathways_dict[receptor_gene]
+        for ligand_gene in ligand_intra:
+            if ligand_gene in pathways_dict:
+                if ligand_intra[ligand_gene] == '':
+                    ligand_intra[ligand_gene] = pathways_dict[ligand_gene]
                     count_kg = count_kg +1
-                    print("####### %s found ###########"%receptor_gene)
+                    print("####### %s found ###########"%ligand_gene)
             else:
-                print("####### %s ###########"%receptor_gene)
+                print("####### %s ###########"%ligand_gene)
 
 
         print('***** Total %d ligands have knowledge graph *****'%count_kg) 
-        with gzip.open(args.metadata_to +'/' + args.data_name + '_receptor_intra_KG.pkl', 'wb') as fp:  
-            pickle.dump(receptor_intra, fp) 
+        with gzip.open(args.metadata_to +'/' + args.data_name + '_ligand_intra_KG.pkl', 'wb') as fp:  
+            pickle.dump(ligand_intra, fp) 
+
 
 
