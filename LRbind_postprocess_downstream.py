@@ -108,6 +108,7 @@ if __name__ == "__main__":
     adata = anndata.AnnData(cell_vs_gene)
     adata.obs_names = cell_barcodes 
     adata.var_names = gene_names
+    #log transform it
     
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
         receptor_intraNW, TF_genes = pickle.load(fp)
