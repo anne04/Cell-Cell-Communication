@@ -344,13 +344,13 @@ if __name__ == "__main__":
                         keep_receptor[cell] = 1
 
 
+                ############ Differentially Expressed genes filtering ################
+
+
                 # cells in keep_receptor have differentially-expressed target genes?
                 m_cells = list(keep_receptor.keys())
-        
-                # run 
-
-# Let's say your selected M cells have indices stored in a list called `m_cells`
-# We'll make a new column to label your M cells
+                # Let's say your selected M cells have indices stored in a list called `m_cells`
+                # We'll make a new column to label your M cells
                 adata.obs['group'] = 'other'
                 adata.obs.loc[m_cells, 'group'] = 'target'
                 adata_temp = adata[:, target_list]
