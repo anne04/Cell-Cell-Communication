@@ -355,7 +355,15 @@ if __name__ == "__main__":
                 adata.obs.loc[m_cells, 'group'] = 'target'
                 adata_temp = adata[:, target_list]
                 sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test')
-                
+                # Get the result as a dataframe
+
+
+                # Top genes ranked by p-value or log-fold change
+                result = adata.uns['rank_genes_groups']
+                df = pd.DataFrame({
+                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
+                })
+
                 filtered_pairs = []
                 for pair in list_cell_pairs:
                     if pair[2] in keep_receptor:
