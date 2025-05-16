@@ -105,19 +105,19 @@ if __name__ == "__main__":
         gene_index, gene_names, cell_barcodes = pickle.load(fp)
 
     
-    adata = anndata.AnnData(cell_vs_gene)
+    adata = anndata.AnnData(cell_vs_gene) # already normalized
     adata.obs_names = cell_barcodes 
     adata.var_names = gene_names
     #log transform it
     sc.pp.log1p(adata)
     
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
-        receptor_intraNW, TF_genes = pickle.load(fp)
+        receptor_intraNW = pickle.load(fp)
 
     for receptor in receptor_intraNW:
         target_list = []
         for rows in receptor_intraNW[receptor]:
-            target_list.append(rows[1][0])
+            target_list.append(rows[0])
 
         receptor_intraNW[receptor] = target_list
         
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -295,7 +295,7 @@ if __name__ == "__main__":
             lr_dict = copy.deepcopy(save_lr_dict)
             print('before post process len %d'%len(lr_dict.keys()))
             # Set threshold gene percentile
-            threshold_gene_exp = 80
+            threshold_gene_exp = 70
             cell_percentile = []
             for i in range (0, cell_vs_gene.shape[0]):
                 y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
