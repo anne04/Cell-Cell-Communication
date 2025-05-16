@@ -112,7 +112,7 @@ if __name__ == "__main__":
     #log transform it
     sc.pp.log1p(adata)
     
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG_nichenet.pkl', 'rb') as fp:
         receptor_intraNW = pickle.load(fp)
 
     for receptor in receptor_intraNW:
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         receptor_intraNW[receptor] = target_list
 
     
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_ligand_intra_KG_nichenet.pkl', 'rb') as fp:
         ligand_intraNW = pickle.load(fp)
 
     for ligand in ligand_intraNW:
@@ -424,7 +424,7 @@ if __name__ == "__main__":
                         
                 avg_pvals = avg_pvals/len(target_list)
                 
-                if found/len(target_list) < 0.30:
+                if found/len(target_list) < 0.50:
                     lr_dict.pop(ligand + '+' + receptor)
                 else:
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
@@ -446,19 +446,42 @@ if __name__ == "__main__":
         
                 #ligand = 'TGFB1'
                 #receptor = 'ACVRL1'
+                list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                ligand_cell_list = []
+                for pair in list_cell_pairs:
+                    ligand_cell_list.append(pair[1])
+        
+                ligand_cell_list = np.unique(ligand_cell_list)             
                 source_list = ligand_intraNW[ligand]
                 
+                count = 0
+                keep_ligand = dict()
+                for cell in ligand_cell_list:
+                    found = 0
+                    for gene in source_list:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                            found = found + 1
+                            
+                            
+                    if found>0 and found/len(target_list) >= 0.5:
+                        count = count+1
+                        keep_ligand[cell] = 1
+
+                filtered_pairs = []
+                for pair in list_cell_pairs:
+                    if pair[1] in keep_ligand:
+                        filtered_pairs.append(pair)
+
+                #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                    #print('list updated: '+ ligand + '+' + receptor)
+      
+                if len(filtered_pairs)==0:
+                    lr_dict.pop(ligand + '+' + receptor)
+                else:
+                    lr_dict[ligand + '+' + receptor] = filtered_pairs
+                    
                 # what percent of them are expressed
                 
-                
-                found = 0
-                for gene in source_list:
-                    if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
-                        found = found + 1
-                           
-                if found/len(target_list) < 1:
-                    lr_dict.pop(ligand + '+' + receptor)
-
             print('After postprocess len %d'%len(lr_dict.keys()))            
         
 
