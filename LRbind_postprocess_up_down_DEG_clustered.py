@@ -30,6 +30,7 @@ import copy
 import argparse
 import gc
 import os
+import anndata
 import altair as alt
 import altairThemes # assuming you have altairThemes.py at your current directoy or your system knows the path of this altairThemes.py.
 alt.themes.register("publishTheme", altairThemes.publishTheme)
@@ -120,7 +121,19 @@ if __name__ == "__main__":
             target_list.append(rows[0])
 
         receptor_intraNW[receptor] = target_list
-        
+
+    
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+        ligand_intraNW = pickle.load(fp)
+
+    for ligand in ligand_intraNW:
+        target_list = []
+        for rows in ligand_intraNW[ligand]:
+            target_list.append(rows[0])
+
+        ligand_intraNW[ligand] = target_list
+
+    
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -411,7 +424,7 @@ if __name__ == "__main__":
                         
                 avg_pvals = avg_pvals/len(target_list)
                 
-                if found/len(target_list) < 0.50:
+                if found/len(target_list) < 0.30:
                     lr_dict.pop(ligand + '+' + receptor)
                 else:
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
@@ -420,7 +433,33 @@ if __name__ == "__main__":
             print('After DEG len %d'%len(lr_dict.keys()))
 
             #After DEG len 10082
-            
+
+            save_lr_dict2 = copy.deepcopy(lr_dict)
+            ############################
+            lr_dict = copy.deepcopy(save_lr_dict2)           
+            ############################################# upstream #############################
+            key_list = list(lr_dict.keys())
+            for lr_pair in key_list:
+                #print(lr_pair)
+                ligand = lr_pair.split('+')[0]
+                receptor = lr_pair.split('+')[1]
+        
+                #ligand = 'TGFB1'
+                #receptor = 'ACVRL1'
+                source_list = ligand_intraNW[ligand]
+                
+                # what percent of them are expressed
+                
+                
+                found = 0
+                for gene in source_list:
+                    if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                        found = found + 1
+                           
+                if found/len(target_list) < 1:
+                    lr_dict.pop(ligand + '+' + receptor)
+
+            print('After postprocess len %d'%len(lr_dict.keys()))            
         
 
             
