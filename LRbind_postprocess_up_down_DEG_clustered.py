@@ -306,6 +306,7 @@ if __name__ == "__main__":
             save_lr_dict = copy.deepcopy(lr_dict)
             ############################
             lr_dict = copy.deepcopy(save_lr_dict)
+            '''
             print('before post process len %d'%len(lr_dict.keys()))
             # Set threshold gene percentile
             threshold_gene_exp = 70
@@ -375,6 +376,7 @@ if __name__ == "__main__":
 
             #before post process len 112929
             #After postprocess len 40829
+            '''
             ############ Differentially Expressed genes filtering ################
             key_list = list(lr_dict.keys())
             pvals_lr = dict()
@@ -395,7 +397,10 @@ if __name__ == "__main__":
                     continue
                     
                 target_list = receptor_intraNW[receptor]
-                
+
+                if len(target_list)==0:
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
                 # how well the target_list genes are differentially expressed in 
                 # receptor_cell_list vs the rest
                 index_receptor = []
