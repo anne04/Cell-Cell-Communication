@@ -357,7 +357,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and found/len(target_list) >= 0.3:
+                    if found>0 and found/len(target_list) >= 0.5:
                         count = count+1
                         keep_receptor[cell] = 1
 
@@ -433,7 +433,7 @@ if __name__ == "__main__":
                         
                 
                 
-                if found/len(target_list) >= 0.30:
+                if found/len(target_list) >= 0.20:
                     avg_pvals = avg_pvals/len(target_list)
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
                     
@@ -474,7 +474,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and found/len(source_list) >= 0.3:
+                    if found>0 and found/len(source_list) >= 0.5:
                         count = count+1
                         keep_ligand[cell] = 1
 
@@ -546,7 +546,7 @@ if __name__ == "__main__":
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                 
-                if found/len(target_list) >= 0.30:
+                if found/len(target_list) >= 0.20:
                     avg_pvals = avg_pvals/found
                     if ligand + '+' + receptor in pvals_lr:
                         pvals_lr[ligand + '+' + receptor] = (pvals_lr[ligand + '+' + receptor] + avg_pvals)/2
