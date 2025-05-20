@@ -110,17 +110,50 @@ if __name__ == "__main__":
     adata.var_names = gene_names
     #log transform it
     sc.pp.log1p(adata)
+
+    # Set threshold gene percentile
+    threshold_gene_exp = 80
+    cell_percentile = []
+    for i in range (0, cell_vs_gene.shape[0]):
+        y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
+        ## inter ##
+        active_cutoff = np.percentile(y, threshold_gene_exp)
+        if active_cutoff == min(cell_vs_gene[i][:]):
+            times = 1
+            while active_cutoff == min(cell_vs_gene[i][:]):
+                new_threshold = threshold_gene_exp + 5 * times
+                if new_threshold >= 100:
+                    active_cutoff = max(cell_vs_gene[i][:])  
+                    break
+                active_cutoff = np.percentile(y, new_threshold)
+                times = times + 1 
+
+        cell_percentile.append(active_cutoff) 
+
+
     
     with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
-        receptor_intraNW, TF_genes = pickle.load(fp)
+        receptor_intraNW = pickle.load(fp)
 
     for receptor in receptor_intraNW:
         target_list = []
         for rows in receptor_intraNW[receptor]:
-            target_list.append(rows[1][0])
+            
+            target_list.append(rows[0])
 
-        receptor_intraNW[receptor] = target_list
+        receptor_intraNW[receptor] = np.unique(target_list)
+
+    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+        ligand_intraNW = pickle.load(fp)
+
+    for ligand in ligand_intraNW:
+        target_list = []
         
+        for rows in ligand_intraNW[ligand]:
+            target_list.append(rows[0])
+
+        ligand_intraNW[ligand] = np.unique(target_list)
+            
     ############# load output graph #################################################
     model_names = [#'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_vgae',
@@ -211,13 +244,13 @@ if __name__ == "__main__":
                     if len(dot_prod_list) == 0:
                         continue
                         
-                    if knee_flag == 0:
-                        
-                        max_score = max(product_only)
-                        for item_idx in range (0, len(dot_prod_list)):
-                            scaled_prod = max_score - dot_prod_list[item_idx][0]
-                            dot_prod_list[item_idx][0] = scaled_prod 
-                        
+                    # Scale so that high score means high probability
+                    max_score = max(product_only)
+                    for item_idx in range (0, len(dot_prod_list)):
+                        scaled_prod = max_score - dot_prod_list[item_idx][0]
+                        dot_prod_list[item_idx][0] = scaled_prod 
+                    
+                    if knee_flag == 0:                       
                         dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
                     else:
                         ########## knee find ###########
@@ -226,6 +259,7 @@ if __name__ == "__main__":
                             score_list.append(item[0])
             
                         score_list = sorted(score_list) # small to high
+                        
                         y = score_list
                         x = range(1, len(y)+1)
                         kn = KneeLocator(x, y, direction='increasing')
@@ -294,24 +328,6 @@ if __name__ == "__main__":
             ############################
             lr_dict = copy.deepcopy(save_lr_dict)
             print('before post process len %d'%len(lr_dict.keys()))
-            # Set threshold gene percentile
-            threshold_gene_exp = 80
-            cell_percentile = []
-            for i in range (0, cell_vs_gene.shape[0]):
-                y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-                ## inter ##
-                active_cutoff = np.percentile(y, threshold_gene_exp)
-                if active_cutoff == min(cell_vs_gene[i][:]):
-                    times = 1
-                    while active_cutoff == min(cell_vs_gene[i][:]):
-                        new_threshold = threshold_gene_exp + 5 * times
-                        if new_threshold >= 100:
-                            active_cutoff = max(cell_vs_gene[i][:])  
-                            break
-                        active_cutoff = np.percentile(y, new_threshold)
-                        times = times + 1 
-        
-                cell_percentile.append(active_cutoff) 
             #####################
             key_list = list(lr_dict.keys())
             for lr_pair in key_list:
@@ -341,7 +357,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and found/len(target_list) >= 0.5:
+                    if found>0 and found/len(target_list) >= 0.3:
                         count = count+1
                         keep_receptor[cell] = 1
 
@@ -362,6 +378,9 @@ if __name__ == "__main__":
 
             #before post process len 112929
             #After postprocess len 40829
+            save_lr_dict2 = copy.deepcopy(lr_dict)
+            ############################
+            lr_dict = copy.deepcopy(save_lr_dict2)   
             ############ Differentially Expressed genes filtering ################
             key_list = list(lr_dict.keys())
             pvals_lr = dict()
@@ -382,7 +401,10 @@ if __name__ == "__main__":
                     continue
                     
                 target_list = receptor_intraNW[receptor]
-                
+                if len(target_list) == 0:
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+                    
                 # how well the target_list genes are differentially expressed in 
                 # receptor_cell_list vs the rest
                 index_receptor = []
@@ -409,19 +431,134 @@ if __name__ == "__main__":
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                         
-                avg_pvals = avg_pvals/len(target_list)
                 
-                if found/len(target_list) < 0.50:
-                    lr_dict.pop(ligand + '+' + receptor)
-                else:
+                
+                if found/len(target_list) >= 0.30:
+                    avg_pvals = avg_pvals/len(target_list)
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
+                    
+                else:
+                    lr_dict.pop(ligand + '+' + receptor)
                     
                 
             print('After DEG len %d'%len(lr_dict.keys()))
 
             #After DEG len 10082
             
+            save_lr_dict2 = copy.deepcopy(lr_dict)
+            ############################
+            lr_dict = copy.deepcopy(save_lr_dict2)           
+            ############################################# upstream #############################
+            key_list = list(lr_dict.keys())
+            for lr_pair in key_list:
+                #print(lr_pair)
+                ligand = lr_pair.split('+')[0]
+                receptor = lr_pair.split('+')[1]
         
+                #ligand = 'TGFB1'
+                #receptor = 'ACVRL1'
+                list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                ligand_cell_list = []
+                for pair in list_cell_pairs:
+                    ligand_cell_list.append(pair[1])
+        
+                ligand_cell_list = np.unique(ligand_cell_list)             
+                source_list = ligand_intraNW[ligand]
+                
+                count = 0
+                keep_ligand = dict()
+                for cell in ligand_cell_list:
+                    found = 0
+                    for gene in source_list:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                            found = found + 1
+                            
+                            
+                    if found>0 and found/len(source_list) >= 0.3:
+                        count = count+1
+                        keep_ligand[cell] = 1
+
+                filtered_pairs = []
+                for pair in list_cell_pairs:
+                    if pair[1] in keep_ligand:
+                        filtered_pairs.append(pair)
+
+                #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                    #print('list updated: '+ ligand + '+' + receptor)
+      
+                if len(filtered_pairs)==0:
+                    lr_dict.pop(ligand + '+' + receptor)
+                else:
+                    lr_dict[ligand + '+' + receptor] = filtered_pairs
+                    
+                # what percent of them are expressed
+                
+            print('After postprocess len %d'%len(lr_dict.keys()))            
+        
+            #After postprocess len 3513
+            ############ Differentially Expressed genes filtering ################
+            key_list = list(lr_dict.keys())
+            #pvals_lr = dict()
+            for lr_pair in key_list:
+                #print(lr_pair)
+                ligand = lr_pair.split('+')[0]
+                receptor = lr_pair.split('+')[1]
+                
+                list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                ligand_cell_list = []
+                for pair in list_cell_pairs:
+                    ligand_cell_list.append(pair[1])
+        
+                ligand_cell_list = np.unique(ligand_cell_list)
+                
+                if len(ligand_cell_list) == 1 :
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+                    
+                target_list = ligand_intraNW[ligand]
+                if len(target_list) == 0:
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+                    
+                # how well the target_list genes are differentially expressed in 
+                # receptor_cell_list vs the rest
+                index_ligand = []
+                for cell_idx in ligand_cell_list: 
+                    index_ligand.append(cell_barcodes[cell_idx])
+
+                # cells in keep_receptor have differentially-expressed target genes?
+                # Let's say your selected M cells have indices stored in a list called `m_cells`
+                # We'll make a new column to label your M cells
+                adata.obs['group'] = 'other'
+                adata.obs.loc[index_ligand, 'group'] = 'target'
+                adata_temp = adata[:, target_list]
+                sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test') #, pts = True)
+                # Get the result as a dataframe
+                # Top genes ranked by p-value or log-fold change
+                result = adata_temp.uns['rank_genes_groups']
+                df = pd.DataFrame({
+                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
+                })
+                found = 0 
+                avg_pvals = 0
+                for i in range (0, len(df)):
+                    if df['pvals'][i]<0.05:
+                        found = found+1
+                        avg_pvals = avg_pvals + df['pvals'][i]
+                
+                if found/len(target_list) >= 0.30:
+                    avg_pvals = avg_pvals/found
+                    if ligand + '+' + receptor in pvals_lr:
+                        pvals_lr[ligand + '+' + receptor] = (pvals_lr[ligand + '+' + receptor] + avg_pvals)/2
+                    else:
+                        pvals_lr[ligand + '+' + receptor] = avg_pvals
+                                        
+                else:
+                    lr_dict.pop(ligand + '+' + receptor)
+
+            print('After DEG len %d'%len(lr_dict.keys()))
+
+      
 
             
             ########## take top hits #################################### 
