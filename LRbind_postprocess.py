@@ -362,6 +362,28 @@ if __name__ == "__main__":
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[] 
+            data_list['type']=[]
+            max_rows = len(sort_lr_list)
+            for i in range (0, max_rows): #1000): #:
+                data_list['X'].append(sort_lr_list[i][0])
+                data_list['Y'].append(sort_lr_list[i][1])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                    data_list['type'].append('From DB')
+                else:
+                    data_list['type'].append('Predicted')
+                    
+            data_list_pd = pd.DataFrame({
+                'Ligand-Receptor Pairs': data_list['X'],
+                'Score': data_list['Y'],
+                'Type': data_list['type']
+            })
+            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+            data_list=dict()
+            data_list['X']=[]
+            data_list['Y']=[] 
             max_rows = min(500, len(sort_lr_list))
             for i in range (0, max_rows): #1000): #:
                 data_list['X'].append(sort_lr_list[i][0])
@@ -371,9 +393,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
-            # same as histogram plots
+            
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
                 y='Score'
