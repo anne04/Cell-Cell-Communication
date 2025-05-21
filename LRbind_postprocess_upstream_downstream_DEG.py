@@ -35,6 +35,8 @@ import altairThemes # assuming you have altairThemes.py at your current directoy
 alt.themes.register("publishTheme", altairThemes.publishTheme)
 # enable the newly registered theme
 alt.themes.enable("publishTheme")
+import warnings
+warnings.filterwarnings('ignore')
 
 
 
@@ -42,7 +44,7 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -132,7 +134,7 @@ if __name__ == "__main__":
 
 
     
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+    with gzip.open(args.metadata_from+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
         receptor_intraNW = pickle.load(fp)
 
     for receptor in receptor_intraNW:
@@ -143,7 +145,7 @@ if __name__ == "__main__":
 
         receptor_intraNW[receptor] = np.unique(target_list)
 
-    with gzip.open('metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/'+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+    with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
         ligand_intraNW = pickle.load(fp)
 
     for ligand in ligand_intraNW:
@@ -170,8 +172,8 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                   # 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                    'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
                    # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
@@ -605,7 +607,7 @@ if __name__ == "__main__":
                 'Score': data_list['Y'],
                 'Type': data_list['type']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_downstream_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
             
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -626,7 +628,7 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_downstream_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+            chart.save(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
             #if target_ligand +'+'+ target_receptor in list(data_list_pd['Ligand-Receptor Pairs']):
             #    print("found %d"%top_hit_lrp_dict[target_ligand +'+'+ target_receptor])
@@ -658,7 +660,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
             #print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -680,12 +682,13 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
+            chart.save(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
             ################################# when not remFromDB ##########################################################################################################
             
             set_LRbind_novel = []
-            for i in range (0, 4000):
+            list_size = min(4000, len(sort_lr_list))
+            for i in range (0, list_size):
                 set_LRbind_novel.append(sort_lr_list[i][0])
         
             #print('ligand-receptor database reading.')
@@ -700,7 +703,7 @@ if __name__ == "__main__":
             set_nichenet_novel = np.unique(set_nichenet_novel)
             common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
             print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel)-len(common_lr), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_downstream_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
+            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv') 
             # top_N:100, Only LRbind 3833, only nichenet 4010, common 167
             ##################################################################
