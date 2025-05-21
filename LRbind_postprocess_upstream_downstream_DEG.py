@@ -732,7 +732,7 @@ if __name__ == "__main__":
                 for item in cell_pair_list:
                     sum = sum + item[0] # 
 
-                #sum = sum/len(cell_pair_list)
+                #sum = sum/len(cell_pair_list) 
                 Tcell_zone_sort_lr_list.append([lr_pair, sum])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
