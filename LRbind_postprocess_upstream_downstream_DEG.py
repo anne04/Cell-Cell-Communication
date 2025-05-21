@@ -44,7 +44,7 @@ warnings.filterwarnings('ignore')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -110,6 +110,7 @@ if __name__ == "__main__":
     adata = anndata.AnnData(cell_vs_gene)
     adata.obs_names = cell_barcodes 
     adata.var_names = gene_names
+    adata.var_names_make_unique()
     #log transform it
     sc.pp.log1p(adata)
 
@@ -162,7 +163,7 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_vgae_gat_wbce',
-                   # 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
+                   #'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
@@ -173,8 +174,8 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                    'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -190,11 +191,11 @@ if __name__ == "__main__":
             X_embedding[i] = X_embedding[i]/total_score_per_row
             
     ########## all ############################################# 
-        top_lrp_count = 1000
+#        top_lrp_count = 1000
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -416,6 +417,7 @@ if __name__ == "__main__":
                 # cells in keep_receptor have differentially-expressed target genes?
                 # Let's say your selected M cells have indices stored in a list called `m_cells`
                 # We'll make a new column to label your M cells
+                
                 adata.obs['group'] = 'other'
                 adata.obs.loc[index_receptor, 'group'] = 'target'
                 adata_temp = adata[:, target_list]
@@ -447,9 +449,9 @@ if __name__ == "__main__":
 
             #After DEG len 10082
             
-            save_lr_dict2 = copy.deepcopy(lr_dict)
+#            save_lr_dict2 = copy.deepcopy(lr_dict)
             ############################
-            lr_dict = copy.deepcopy(save_lr_dict2)           
+#            lr_dict = copy.deepcopy(save_lr_dict2)           
             ############################################# upstream #############################
             key_list = list(lr_dict.keys())
             for lr_pair in key_list:
