@@ -348,9 +348,7 @@ if __name__ == "__main__":
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             #print('len sort_lr_list %d'%len(sort_lr_list))
             # save = num_spots/cells * top_N pairs
-            if knee_flag == 0:
-                sort_lr_list = sort_lr_list[0: top_lrp_count]
-    
+
             
             top_hit_lrp_dict = dict()
             i = 0
