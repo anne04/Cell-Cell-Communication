@@ -153,8 +153,8 @@ if __name__ == "__main__":
         
         type_found = defaultdict(list)
         for i in range (0, X_PCA.shape[0]):
-            if i not in node_active_index:
-                continue
+            #if i not in node_active_index:
+            #    continue
                 
             if index_vs_gene_node_info[i][5] in target_ligand_list: # == args.target_ligand: 
                 data_list['Type'].append(index_vs_gene_node_info[i][5])
