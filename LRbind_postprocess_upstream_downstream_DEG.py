@@ -52,7 +52,7 @@ if __name__ == "__main__":
     #LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir
     #'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir
     #'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir'
-    parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
+    parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True) 
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
