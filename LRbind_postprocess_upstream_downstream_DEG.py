@@ -44,7 +44,7 @@ warnings.filterwarnings('ignore')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
+    parser.add_argument( '--target_ligand', type=str, default='CXCL10', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='CXCR3', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -169,13 +169,13 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
-                   #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
+                   'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
                    #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [300]: #, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -327,6 +327,73 @@ if __name__ == "__main__":
             chart.save(args.output_path + model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
             #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
             '''
+            ############################# top hit without postprocessing ####################3
+            sort_lr_list = []
+            for lr_pair in lr_dict:
+                sum = 0
+                cell_pair_list = lr_dict[lr_pair]
+                for item in cell_pair_list:
+                    sum = sum + item[0]  
+
+                #sum = sum/len(cell_pair_list)
+                sort_lr_list.append([lr_pair, sum])
+        
+            sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
+            
+            
+            top_hit_lrp_dict = dict()
+            i = 0
+            for item in sort_lr_list:
+                top_hit_lrp_dict[item[0]] = i
+                i = i+1
+            
+            # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
+            data_list=dict()
+            data_list['X']=[]
+            data_list['Y']=[] 
+            data_list['type']=[]
+            max_rows = len(sort_lr_list)
+            for i in range (0, max_rows): #1000): #:
+                data_list['X'].append(sort_lr_list[i][0])
+                data_list['Y'].append(sort_lr_list[i][1])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                    data_list['type'].append('From DB')
+                else:
+                    data_list['type'].append('Predicted')
+                    
+            data_list_pd = pd.DataFrame({
+                'Ligand-Receptor Pairs': data_list['X'],
+                'Score': data_list['Y'],
+                'Type': data_list['type']
+            })
+            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+            data_list=dict()
+            data_list['X']=[]
+            data_list['Y']=[] 
+            max_rows = min(500, len(sort_lr_list))
+            for i in range (0, max_rows): #1000): #:
+                data_list['X'].append(sort_lr_list[i][0])
+                data_list['Y'].append(sort_lr_list[i][1])
+                
+            data_list_pd = pd.DataFrame({
+                'Ligand-Receptor Pairs': data_list['X'],
+                'Score': data_list['Y']
+            })
+            
+            chart = alt.Chart(data_list_pd).mark_bar().encode(
+                x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
+                y='Score'
+            )
+        
+            chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+
+
+
+
+            #################################
             save_lr_dict = copy.deepcopy(lr_dict)
             ############################
             lr_dict = copy.deepcopy(save_lr_dict)
