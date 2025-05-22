@@ -52,13 +52,30 @@ if __name__ == "__main__":
                ['HLA-DRA', 'CD4'], ['HLA-DRA','CCR7'],['CCL21', 'RPSA'],
                ['HLA-B', 'C5AR1']]
     lrp_list =[['HLA-C', 'CD8A']]
+
+
+    lrp_list_LUAD = [['COL1A1','NCL'], ['SERPING1','NCL'], ['A2M','NCL'], \
+                ['COL1A1', 'CDH1'], ['HSP90B1', 'NCL'], ['SERPING1', 'ITGB2'], \
+                ['COL1A1', 'SDC4'], ['SERPING1', 'ITGB1'], ['SERPING1', 'SDC4']]
     
+    lrp_list_BRCA_blockA_sec1 = [['CDH1','DDR1'],['CDH1','NCL'],
+                                  ['FN1', 'DDR1'],\
+                                 ['FN1', 'NCL'], ['MDK', 'DDR1'], ['ITGB1', 'DDR1'], ['ITGB1', 'NCL']]
+
+    lrp_list_PDAC = [['GPI','CD74'], ['ITGB1','ITGA3'], ['COL1A1','RPSA'], ['MDK','ITGB4'],\
+                     ['MDK', 'ITGA3'], ['COL1A1', 'ITGB4'], \
+                     ['GRN', 'CD74'], ['CDH1', 'ITGA3']]
+
+    lrp_list = lrp_list_LUAD + lrp_list_BRCA_blockA_sec1 + lrp_list_PDAC
+    #lrp_list = set(lrp_list)
+    
+    path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     for pair in lrp_list:
         ligand = pair[0]
         receptor = pair[1]
         lig_seq = dict_gene_seq[ligand]
         rec_seq = dict_gene_seq[receptor]
-        f = open('dgi_'+ligand+'_'+receptor+".fasta", "w")
+        f = open(path_to + 'lrbind_'+ligand+'_'+receptor+".fasta", "w")
         f.write(">")
         f.write(ligand)
         f.write("\n")
@@ -69,7 +86,11 @@ if __name__ == "__main__":
         f.write("\n")
         f.write(rec_seq)
         f.close()
-
+        fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/lrbind_'+ligand+'_'+receptor+'.fasta'
+        
+        print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs')
+        print('mv output/lrbind_'+ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/lrbind_'+ ligand +'_'+ receptor +'_score.json')
+        print('rm -r output/lrbind_'+ ligand+'_'+receptor)
     ##################################################################
     df = pd.read_csv(args.database_path, sep=",")
     lr_unique = defaultdict(dict)
@@ -101,6 +122,8 @@ if __name__ == "__main__":
             count = count + 1
             list_of_fastas = list_of_fastas + 
 
+
+    
     print('total count %d'%count)
 
 ################################################################
