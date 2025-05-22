@@ -68,7 +68,9 @@ if __name__ == "__main__":
 
     lrp_list = lrp_list_LUAD + lrp_list_BRCA_blockA_sec1 + lrp_list_PDAC
     #lrp_list = set(lrp_list)
-    
+    lrp_list = [['HLA-B','CD74'], ['HLA-A','CD74'], ['CD24', 'CD74'], ['CD46', 'CD74'],\
+               ['FN1','SDC1'], ['FN1', 'ITGB1'], ['PSAP','SDC4'], ['A2M', 'SDC4']]
+
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     for pair in lrp_list:
         ligand = pair[0]
