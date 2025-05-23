@@ -71,13 +71,19 @@ if __name__ == "__main__":
     lrp_list = [['HLA-B','CD74'], ['HLA-A','CD74'], ['CD24', 'CD74'], ['CD46', 'CD74'],\
                ['FN1','SDC1'], ['FN1', 'ITGB1'], ['PSAP','SDC4'], ['A2M', 'SDC4']]
 
+    lrp_list = [['HLA-B','HLA-B'], ['CD74','CD74'], ['CD24', 'CD24'], ['SDC4', 'SDC4'],\
+               ['FN1','FN1'], ['ITGB1', 'ITGB1'], ['PSAP','PSAP'], ['A2M', 'A2M'], \
+                ['MDK', 'MDK'], ['GRN', 'GRN'] ]
+
+    
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
+    prefix = 'false_' # 'lrbind_'
     for pair in lrp_list:
         ligand = pair[0]
         receptor = pair[1]
         lig_seq = dict_gene_seq[ligand]
         rec_seq = dict_gene_seq[receptor]
-        f = open(path_to + 'lrbind_'+ligand+'_'+receptor+".fasta", "w")
+        f = open(path_to + prefix + ligand +'_'+receptor+".fasta", "w")
         f.write(">")
         f.write(ligand)
         f.write("\n")
@@ -88,11 +94,11 @@ if __name__ == "__main__":
         f.write("\n")
         f.write(rec_seq)
         f.close()
-        fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/lrbind_'+ligand+'_'+receptor+'.fasta'
+        fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'+ prefix + ligand + '_' + receptor + '.fasta'
         
         print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs')
-        print('mv output/lrbind_'+ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/lrbind_'+ ligand +'_'+ receptor +'_score.json')
-        print('rm -r output/lrbind_'+ ligand+'_'+receptor)
+        print('mv output/' + prefix + ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/' + prefix + ligand +'_'+ receptor +'_score.json')
+        print('rm -r output/' + prefix + ligand+'_'+receptor)
     ##################################################################
     df = pd.read_csv(args.database_path, sep=",")
     lr_unique = defaultdict(dict)
