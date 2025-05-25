@@ -75,6 +75,14 @@ if __name__ == "__main__":
                ['FN1','FN1'], ['ITGB1', 'ITGB1'], ['PSAP','PSAP'], ['A2M', 'A2M'], \
                 ['MDK', 'MDK'], ['GRN', 'GRN'] ]
 
+    lrp_list = [['HLA-B','HLA-B'], ['CD74','CD74'], ['CD24', 'CD24'], ['SDC4', 'SDC4'],\
+               ['FN1','FN1'], ['ITGB1', 'ITGB1'], ['PSAP','PSAP'], ['A2M', 'A2M'], \
+                ['MDK', 'MDK'], ['GRN', 'GRN'] ]
+    
+    lrp_list = [['TPH1','INSR'], ['TPH2','INSR'], ['GLS', 'IL2RA'], ['BDNF', 'ADRB2'],\
+               ['OXT','EGFR'], ['TNF', 'HTR2A'], ['AGT','GRM5'], ['INS', 'EGFR'], \
+                ['IL2', 'GABRA1'], ['HDC', 'GRIN1'] ]
+
     
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     prefix = 'false_' # 'lrbind_'
