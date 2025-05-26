@@ -45,7 +45,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -174,8 +174,8 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                   'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
                    # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
@@ -503,11 +503,11 @@ if __name__ == "__main__":
                 for i in range (0, len(df)):
                     if df['pvals_adj'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
-                        avg_pvals = avg_pvals + df['pvals'][i]
+                        avg_pvals = avg_pvals + df['pvals_adj'][i]
                         
                 
                 
-                if found/len(target_list) >= 0.20:
+                if found/len(target_list) >= 0.10:
                     avg_pvals = avg_pvals/len(target_list)
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
                     
@@ -618,9 +618,9 @@ if __name__ == "__main__":
                 for i in range (0, len(df)):
                     if df['pvals_adj'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
-                        avg_pvals = avg_pvals + df['pvals'][i]
+                        avg_pvals = avg_pvals + df['pvals_adj'][i]
                 
-                if found/len(target_list) >= 0.20:
+                if found/len(target_list) >= 0.10:
                     avg_pvals = avg_pvals/found
                     if ligand + '+' + receptor in pvals_lr:
                         pvals_lr[ligand + '+' + receptor] = (pvals_lr[ligand + '+' + receptor] + avg_pvals)/2
