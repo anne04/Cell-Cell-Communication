@@ -37,6 +37,7 @@ alt.themes.register("publishTheme", altairThemes.publishTheme)
 alt.themes.enable("publishTheme")
 import warnings
 warnings.filterwarnings('ignore')
+import anndata
 
 
 
@@ -44,7 +45,7 @@ warnings.filterwarnings('ignore')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -173,8 +174,8 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                   #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
                    # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
@@ -389,7 +390,9 @@ if __name__ == "__main__":
             )
         
             chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-
+            
+            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+            	pickle.dump(lr_dict, fp)
 
 
 
@@ -498,7 +501,7 @@ if __name__ == "__main__":
                 found = 0 
                 avg_pvals = 0
                 for i in range (0, len(df)):
-                    if df['pvals'][i]<0.05:
+                    if df['pvals'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                         
@@ -613,7 +616,7 @@ if __name__ == "__main__":
                 found = 0 
                 avg_pvals = 0
                 for i in range (0, len(df)):
-                    if df['pvals'][i]<0.05:
+                    if df['pvals'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                 
@@ -629,7 +632,9 @@ if __name__ == "__main__":
 
             print('After DEG len %d'%len(lr_dict.keys()))
 
-      
+            #############################################################      
+            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
+            	pickle.dump([lr_dict, pvals_lr], fp)
 
             
             ########## take top hits #################################### 
