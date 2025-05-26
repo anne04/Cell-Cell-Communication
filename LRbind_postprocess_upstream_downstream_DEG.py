@@ -196,7 +196,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -496,12 +496,12 @@ if __name__ == "__main__":
                 # Top genes ranked by p-value or log-fold change
                 result = adata_temp.uns['rank_genes_groups']
                 df = pd.DataFrame({
-                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
+                gene: result[gene]['target'] for gene in ['names', 'pvals_adj', 'logfoldchanges']
                 })
                 found = 0 
                 avg_pvals = 0
                 for i in range (0, len(df)):
-                    if df['pvals'][i]<0.05 and df['logfoldchanges'][i]>0:
+                    if df['pvals_adj'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                         
@@ -611,12 +611,12 @@ if __name__ == "__main__":
                 # Top genes ranked by p-value or log-fold change
                 result = adata_temp.uns['rank_genes_groups']
                 df = pd.DataFrame({
-                gene: result[gene]['target'] for gene in ['names', 'pvals', 'logfoldchanges']
+                gene: result[gene]['target'] for gene in ['names', 'pvals_adj', 'logfoldchanges']
                 })
                 found = 0 
                 avg_pvals = 0
                 for i in range (0, len(df)):
-                    if df['pvals'][i]<0.05 and df['logfoldchanges'][i]>0:
+                    if df['pvals_adj'][i]<0.05 and df['logfoldchanges'][i]>0:
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals'][i]
                 
