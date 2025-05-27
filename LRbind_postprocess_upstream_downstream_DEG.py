@@ -116,7 +116,7 @@ if __name__ == "__main__":
     sc.pp.log1p(adata)
 
     # Set threshold gene percentile
-    threshold_gene_exp = 70
+    threshold_gene_exp = 60
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
@@ -144,9 +144,11 @@ if __name__ == "__main__":
         for rows in receptor_intraNW[receptor]:
             
             target_list.append(rows[0])
-
-        receptor_intraNW[receptor] = np.unique(target_list)
-
+        if len(target_list)!=0:
+            receptor_intraNW[receptor] = np.unique(target_list)
+        else:
+            receptor_intraNW.pop(receptor)
+            
     with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
         ligand_intraNW = pickle.load(fp)
 
@@ -417,6 +419,10 @@ if __name__ == "__main__":
                     receptor_cell_list.append(pair[2])
         
                 receptor_cell_list = np.unique(receptor_cell_list)
+                if receptor not in receptor_intraNW:
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+                    
                 target_list = receptor_intraNW[receptor]
                 # what percent of them has the target genes expressed
             
@@ -430,7 +436,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and found/len(target_list) >= 0.5:
+                    if found/len(target_list) >= 0.5:
                         count = count+1
                         keep_receptor[cell] = 1
 
@@ -474,7 +480,7 @@ if __name__ == "__main__":
                     continue
                     
                 target_list = receptor_intraNW[receptor]
-                if len(target_list) == 0:
+                if receptor not in receptor_intraNW:
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
                     
@@ -536,7 +542,12 @@ if __name__ == "__main__":
                 for pair in list_cell_pairs:
                     ligand_cell_list.append(pair[1])
         
-                ligand_cell_list = np.unique(ligand_cell_list)             
+                ligand_cell_list = np.unique(ligand_cell_list)    
+                if ligand not in ligand_intraNW:
+                    lr_dict.pop(ligand + '+' + receptor)
+                    continue
+
+                
                 source_list = ligand_intraNW[ligand]
                 
                 count = 0
@@ -548,7 +559,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found>0 and found/len(source_list) >= 0.5:
+                    if found/len(source_list) >= 0.5:
                         count = count+1
                         keep_ligand[cell] = 1
 
@@ -589,10 +600,11 @@ if __name__ == "__main__":
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
                     
-                target_list = ligand_intraNW[ligand]
-                if len(target_list) == 0:
+                if ligand not in ligand_intraNW:
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
+                    
+                target_list = ligand_intraNW[ligand]
                     
                 # how well the target_list genes are differentially expressed in 
                 # receptor_cell_list vs the rest
