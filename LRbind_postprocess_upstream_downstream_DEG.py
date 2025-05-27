@@ -196,7 +196,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [300]: #, 30, 10]:
+        for top_N in [10]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
