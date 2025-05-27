@@ -116,7 +116,7 @@ if __name__ == "__main__":
     sc.pp.log1p(adata)
 
     # Set threshold gene percentile
-    threshold_gene_exp = 80
+    threshold_gene_exp = 70
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [10]: #, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
