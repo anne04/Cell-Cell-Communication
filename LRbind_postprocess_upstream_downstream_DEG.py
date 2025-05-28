@@ -45,7 +45,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     sc.pp.log1p(adata)
 
     # Set threshold gene percentile
-    threshold_gene_exp = 60
+    threshold_gene_exp = 80
     cell_percentile = []
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
@@ -142,13 +142,15 @@ if __name__ == "__main__":
     for receptor in receptor_intraNW:
         target_list = []
         for rows in receptor_intraNW[receptor]:
-            
             target_list.append(rows[0])
+
+        receptor_intraNW[receptor] = np.unique(target_list)
+        '''
         if len(target_list)!=0:
             receptor_intraNW[receptor] = np.unique(target_list)
         else:
             receptor_intraNW.pop(receptor)
-            
+        ''' 
     with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
         ligand_intraNW = pickle.load(fp)
 
@@ -176,9 +178,9 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
                    #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -198,7 +200,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [100]: #, 30, 10]:
+        for top_N in [10, 30, 100, 300]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -436,7 +438,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found/len(target_list) >= 0.5:
+                    if len(target_list)>0 and found/len(target_list) >= 0.5:
                         count = count+1
                         keep_receptor[cell] = 1
 
@@ -513,7 +515,7 @@ if __name__ == "__main__":
                         
                 
                 
-                if found/len(target_list) >= 0.10:
+                if len(target_list)>0 and found/len(target_list) >= 0.10:
                     avg_pvals = avg_pvals/len(target_list)
                     pvals_lr[ligand + '+' + receptor] = avg_pvals
                     
@@ -559,7 +561,7 @@ if __name__ == "__main__":
                             found = found + 1
                             
                             
-                    if found/len(source_list) >= 0.5:
+                    if len(source_list)>0 and found/len(source_list) >= 0.5:
                         count = count+1
                         keep_ligand[cell] = 1
 
@@ -632,7 +634,7 @@ if __name__ == "__main__":
                         found = found+1
                         avg_pvals = avg_pvals + df['pvals_adj'][i]
                 
-                if found/len(target_list) >= 0.10:
+                if len(target_list)>0 and found/len(target_list) >= 0.10:
                     avg_pvals = avg_pvals/found
                     if ligand + '+' + receptor in pvals_lr:
                         pvals_lr[ligand + '+' + receptor] = (pvals_lr[ligand + '+' + receptor] + avg_pvals)/2
