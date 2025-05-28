@@ -11,6 +11,7 @@ import gzip
 import math
 import argparse
 from random import randint 
+import random
 
 def write_file(file_name, gene_name, seq):
     f = open('manualLRP_'+ligand+'_'+receptor+".fasta", "w")
@@ -20,6 +21,29 @@ def write_file(file_name, gene_name, seq):
     f.write(seq)
     f.write("\n")
     f.close()
+
+def print_command(lrp_list, dict_gene_seq, prefix, path_to):
+    for pair in lrp_list:
+        ligand = pair[0]
+        receptor = pair[1]
+        lig_seq = dict_gene_seq[ligand]
+        rec_seq = dict_gene_seq[receptor]
+        f = open(path_to + prefix + ligand +'_'+receptor+".fasta", "w")
+        f.write(">")
+        f.write(ligand)
+        f.write("\n")
+        f.write(lig_seq)
+        f.write("\n")
+        f.write(">")
+        f.write(receptor)
+        f.write("\n")
+        f.write(rec_seq)
+        f.close()
+        fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'+ prefix + ligand + '_' + receptor + '.fasta'
+        
+        print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs')
+        print('mv output/' + prefix + ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/' + prefix + ligand +'_'+ receptor +'_score.json')
+        print('rm -r output/' + prefix + ligand+'_'+receptor)
 
 
 if __name__ == "__main__":
@@ -86,34 +110,19 @@ if __name__ == "__main__":
     
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     prefix = 'false_' # 'lrbind_'
-    for pair in lrp_list:
-        ligand = pair[0]
-        receptor = pair[1]
-        lig_seq = dict_gene_seq[ligand]
-        rec_seq = dict_gene_seq[receptor]
-        f = open(path_to + prefix + ligand +'_'+receptor+".fasta", "w")
-        f.write(">")
-        f.write(ligand)
-        f.write("\n")
-        f.write(lig_seq)
-        f.write("\n")
-        f.write(">")
-        f.write(receptor)
-        f.write("\n")
-        f.write(rec_seq)
-        f.close()
-        fasta = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'+ prefix + ligand + '_' + receptor + '.fasta'
-        
-        print('bash run_alphafold.sh -d ${DOWNLOAD_DIR} -o output -m model_1_multimer_v3  -p multimer -i ' + fasta + ' -t 2022-01-01 -r \'none\' -c reduced_dbs')
-        print('mv output/' + prefix + ligand+'_'+receptor+'/'+'ranking_debug.json '+ 'output/' + prefix + ligand +'_'+ receptor +'_score.json')
-        print('rm -r output/' + prefix + ligand+'_'+receptor)
+    print_command(lrp_list, dict_gene_seq, prefix, path_to)
+    
     ##################################################################
     df = pd.read_csv(args.database_path, sep=",")
     lr_unique = defaultdict(dict)
+    ligand_list = []
+    receptor_list = []
     for i in range (0, df["Ligand"].shape[0]):
         ligand = df["Ligand"][i]
         receptor = df["Receptor"][i]
         lr_unique[ligand][receptor] = 1
+        ligand_list.append(ligand)
+        receptor_list.append(receptor)
 
     
     count = 0
@@ -136,12 +145,29 @@ if __name__ == "__main__":
             f.write(rec_seq)
             f.close()
             count = count + 1
-            list_of_fastas = list_of_fastas + 
+            #list_of_fastas = list_of_fastas + 
 
 
     
     print('total count %d'%count)
 
+    ############## make random pairs ############################
+    
+    ligand_list = np.unique(ligand_list)
+    receptor_list = np.unique(receptor_list)
+    
+    probable_pairs = []
+    for ligand in ligand_list:
+        for receptor in receptor_list:
+            if ligand not in lr_unique or receptor not in lr_unique[ligand]:
+                if ligand in dict_gene_seq and receptor in dict_gene_seq:
+                    probable_pairs.append([ligand, receptor])
+
+    random.shuffle(probable_pairs)
+    lrp_list = probable_pairs[0:100]
+    path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
+    prefix = 'random_'
+    print_command(lrp_list, dict_gene_seq, prefix, path_to)
 ################################################################
     for ligand in lr_unique:
         for receptor in lr_unique[ligand]:    
