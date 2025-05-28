@@ -45,7 +45,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -179,8 +179,8 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                   #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                   'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -828,6 +828,52 @@ if __name__ == "__main__":
             common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
             #print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             '''
+            ########## Plot an LR pair location ################
+            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'rb') as fp:  
+            	lr_dict, pvals_lr = pickle.load(fp) #
+            
+            ligand = 'ITGB1'
+            receptor = 'ITGA3'
+            found_list = defaultdict(list)
+            for pairs in lr_dict[ligand + '+' + receptor]:
+                found_list[pairs[1]].append(pairs[0])
+                found_list[pairs[2]].append(pairs[0])
+
+            
+            data_list=dict()
+            data_list['X']=[]
+            data_list['Y']=[]   
+            data_list['total_dot']=[] 
+            data_list['prediction'] = []
+            #data_list['label'] = []
+            for i in range (0, len(barcode_info)):
+                #if barcode_info[i][1] < 5000 or barcode_info[i][2] > 5000:
+                #    continue
+                data_list['X'].append(barcode_info[i][1])
+                data_list['Y'].append(-barcode_info[i][2])
+                if i in found_list:
+                    data_list['total_dot'].append(np.sum(found_list[i])) 
+                    data_list['prediction'].append('positive')
+                else:
+                    data_list['total_dot'].append(0)
+                    data_list['prediction'].append('negative')
+                
+                    
+                #data_list['label'].append(node_type[barcode_info[i][0]])
+                
+            source= pd.DataFrame(data_list)
+            
+            chart = alt.Chart(source).mark_point(filled=True).encode(
+                alt.X('X', scale=alt.Scale(zero=False)),
+                alt.Y('Y', scale=alt.Scale(zero=False)),
+                color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
+                #shape = alt.Shape('label:N')
+            )
+            chart.save(args.output_path + args.model_name + '_after_postprocess_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html')
+            print(args.output_path + args.model_name + '_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html') 
+
+
+            
              ############ only Tcell Zone plot ##############################################################################################################################
 
 
