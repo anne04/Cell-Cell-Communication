@@ -341,7 +341,7 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                sort_lr_list.append([lr_pair, sum])
+                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list)])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             
@@ -357,12 +357,16 @@ if __name__ == "__main__":
             data_list['X']=[]
             data_list['Y']=[] 
             data_list['type']=[]
+            #data_list['score_sum'] =[]
+            data_list['score_avg'] = []
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
                 data_list['X'].append(sort_lr_list[i][0])
                 data_list['Y'].append(sort_lr_list[i][1])
                 ligand = sort_lr_list[i][0].split('+')[0]
                 receptor = sort_lr_list[i][0].split('+')[1]
+                #data_list['score_sum'].append()
+                data_list['score_avg'].append(sort_lr_list[i][2])
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                     data_list['type'].append('From DB')
                 else:
@@ -370,7 +374,8 @@ if __name__ == "__main__":
                     
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Score': data_list['Y'],
+                'Score_sum': data_list['Y'],
+                'Score_avg': data_list['score_avg'],
                 'Type': data_list['type']
             })
             data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
