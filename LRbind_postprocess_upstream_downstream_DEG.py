@@ -216,7 +216,7 @@ if __name__ == "__main__":
             for i in range (0, len(barcode_info)):
                 #if node_type[barcode_info[i][0]] != 'T-cell':
                 #    continue
-                print("i: %d"%i)
+                #print("i: %d"%i)
                 #print("found list: %d"%len(found_list))
                 for j in range (0, len(barcode_info)):
 
@@ -361,7 +361,9 @@ if __name__ == "__main__":
             data_list['score_avg'] = []
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
-                data_list['X'].append(sort_lr_list[i][0])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                data_list['X'].append(ligand + '_to_' + receptor)
                 data_list['Y'].append(sort_lr_list[i][1])
                 ligand = sort_lr_list[i][0].split('+')[0]
                 receptor = sort_lr_list[i][0].split('+')[1]
@@ -385,7 +387,9 @@ if __name__ == "__main__":
             data_list['Y']=[] 
             max_rows = min(500, len(sort_lr_list))
             for i in range (0, max_rows): #1000): #:
-                data_list['X'].append(sort_lr_list[i][0])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                data_list['X'].append(ligand + '_to_' + receptor)
                 data_list['Y'].append(sort_lr_list[i][1])
                 
             data_list_pd = pd.DataFrame({
@@ -668,7 +672,7 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                sort_lr_list.append([lr_pair, sum, pvals_lr[lr_pair]])
+                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list),pvals_lr[lr_pair]])
                 
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             #sort_lr_list = sorted(sort_lr_list, key = lambda x: x[2])
@@ -684,12 +688,19 @@ if __name__ == "__main__":
             data_list['X']=[]
             data_list['Y']=[] 
             data_list['type']=[]
+            #data_list['score_sum'] =[]
+            data_list['score_avg'] = []
+            data_list['avg_pvals_adj'] = []
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
-                data_list['X'].append(sort_lr_list[i][0])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                data_list['X'].append(ligand + '_to_' + receptor)
                 data_list['Y'].append(sort_lr_list[i][1])
                 ligand = sort_lr_list[i][0].split('+')[0]
                 receptor = sort_lr_list[i][0].split('+')[1]
+                data_list['score_avg'].append(sort_lr_list[i][2])
+                data_list['avg_pvals_adj'].append(sort_lr_list[i][3]) 
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                     data_list['type'].append('From DB')
                 else:
@@ -697,7 +708,9 @@ if __name__ == "__main__":
                     
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Score': data_list['Y'],
+                'Score_sum': data_list['Y'],
+                'Score_avg': data_list['score_avg'],
+                'Avg_pvals_adj': data_list['avg_pvals_adj'],
                 'Type': data_list['type']
             })
             data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
@@ -708,7 +721,9 @@ if __name__ == "__main__":
             data_list['Y']=[] 
             max_rows = min(500, len(sort_lr_list))
             for i in range (0, max_rows): #1000): #:
-                data_list['X'].append(sort_lr_list[i][0])
+                ligand = sort_lr_list[i][0].split('+')[0]
+                receptor = sort_lr_list[i][0].split('+')[1]
+                data_list['X'].append(ligand + '_to_' + receptor)
                 data_list['Y'].append(sort_lr_list[i][1])
                 
             data_list_pd = pd.DataFrame({
