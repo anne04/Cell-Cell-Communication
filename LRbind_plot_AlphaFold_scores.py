@@ -24,11 +24,12 @@ plt.savefig('/cluster/home/t116508uhn/LRbind_output/AF_score_distribution_manual
 
 ##############
 output_path = '/cluster/home/t116508uhn/LRbind_output/'
-file_name = 'AF_score_distribution_selfbindLRP_' #'AF_score_distribution_predictedLRP_' #'AF_score_distribution_manualLRP_' # 'AF_score_distribution_falseLRP_' #
-lr_type =  'false' #'lrbind' #manual
+plot_title = 'AlphaFold score distribution for random LRP'
+file_name = 'AF_score_distribution_randomLRP_' #'AF_score_distribution_selfbindLRP_' #'AF_score_distribution_predictedLRP_' #'AF_score_distribution_manualLRP_' # 'AF_score_distribution_falseLRP_' #
+lr_type =  'random' #'false' #'lrbind' #manual
 lrpair_score_dict = defaultdict(list)
 score_list = []
-file_list = glob.glob("ParallelFold-main/output/selfbind/"+ lr_type +"*json")
+file_list = glob.glob("ParallelFold-main/output/"+ lr_type +"*json")
 for file_path in file_list:
     if '_old_' in file_path:
         continue
@@ -44,7 +45,7 @@ for file_path in file_list:
 
 plt.clf()
 sns.histplot(score_list, bins=30, kde=True, color='skyblue') #kde adds a kernel density estimate
-plt.title('AlphaFold score distribution for selfbind LRP') #predicted
+plt.title(plot_title) #predicted #selfbind
 plt.xlabel('AlphaFold Score')
 plt.ylabel('Frequency')
 plt.savefig(output_path + file_name +str(len(score_list))+'LRP.jpg')
