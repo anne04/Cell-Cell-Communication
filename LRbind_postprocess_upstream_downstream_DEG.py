@@ -218,6 +218,9 @@ if __name__ == "__main__":
                 #    continue
                 #print("i: %d"%i)
                 #print("found list: %d"%len(found_list))
+
+                dot_prod_list = []
+                product_only = []
                 for j in range (0, len(barcode_info)):
 
                     if dist_X[i][j]==0 or i==j :
@@ -234,8 +237,8 @@ if __name__ == "__main__":
                         if gene in receptor_list:
                             receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
         
-                    dot_prod_list = []
-                    product_only = []
+                    #dot_prod_list = []
+                    #product_only = []
                     start_index = 0
                     for i_gene in ligand_node_index:  
                         for j_gene in receptor_node_index:
@@ -248,53 +251,53 @@ if __name__ == "__main__":
                             product_only.append(temp)
                      
     
+                ###############################################    
+                if len(dot_prod_list) == 0:
+                    continue
                     
-                    if len(dot_prod_list) == 0:
-                        continue
-                        
-                    # Scale so that high score means high probability
-                    max_score = max(product_only)
-                    for item_idx in range (0, len(dot_prod_list)):
-                        scaled_prod = max_score - dot_prod_list[item_idx][0]
-                        dot_prod_list[item_idx][0] = scaled_prod 
-                    
-                    if knee_flag == 0:                       
-                        dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
-                    else:
-                        ########## knee find ###########
-                        score_list = []
-                        for item in dot_prod_list:
-                            score_list.append(item[0])
-            
-                        score_list = sorted(score_list) # small to high
-                        
-                        y = score_list
-                        x = range(1, len(y)+1)
-                        kn = KneeLocator(x, y, direction='increasing')
-                        kn_value_inc = y[kn.knee-1]
-                        kn = KneeLocator(x, y, direction='decreasing')
-                        kn_value_dec = y[kn.knee-1]            
-                        kn_value = max(kn_value_inc, kn_value_dec)
-                        
-                        temp_dot_prod_list = []
-                        for item in dot_prod_list:
-                            if item[0] >= kn_value:
-                                temp_dot_prod_list.append(item)
-            
-                        dot_prod_list = temp_dot_prod_list
-                    ###########################
+                # Scale so that high score means high probability
+                max_score = max(product_only)
+                for item_idx in range (0, len(dot_prod_list)):
+                    scaled_prod = max_score - dot_prod_list[item_idx][0]
+                    dot_prod_list[item_idx][0] = scaled_prod 
+                
+                if knee_flag == 0:                       
+                    dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+                else:
+                    ########## knee find ###########
+                    score_list = []
                     for item in dot_prod_list:
-                        lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                        score_list.append(item[0])
+        
+                    score_list = sorted(score_list) # small to high
+                    
+                    y = score_list
+                    x = range(1, len(y)+1)
+                    kn = KneeLocator(x, y, direction='increasing')
+                    kn_value_inc = y[kn.knee-1]
+                    kn = KneeLocator(x, y, direction='decreasing')
+                    kn_value_dec = y[kn.knee-1]            
+                    kn_value = max(kn_value_inc, kn_value_dec)
+                    
+                    temp_dot_prod_list = []
+                    for item in dot_prod_list:
+                        if item[0] >= kn_value:
+                            temp_dot_prod_list.append(item)
+        
+                    dot_prod_list = temp_dot_prod_list
+                ###########################
+                for item in dot_prod_list:
+                    lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                    
+                    #if i in Tcell_zone and j in Tcell_zone:
+                    #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                         
-                        #if i in Tcell_zone and j in Tcell_zone:
-                        #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
-                            
-                        if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
-                            found_list[i].append(item[0]) #= 1
-                            found_list[j].append(item[0])
-                            #break
+                    if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                        found_list[i].append(item[0]) #= 1
+                        found_list[j].append(item[0])
+                        #break
 
-    
+                ####################################################
         
             # plot found_list
             print("positive: %d"%(len(found_list)))                
