@@ -168,6 +168,50 @@ if __name__ == "__main__":
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     prefix = 'random_'
     print_command(lrp_list, dict_gene_seq, prefix, path_to)
+
+
+########### predicted LRbind ##########
+    for i in range (0, len(lrp_list)):
+        lrp_list[i] = lrp_list[i][0]+'+'+lrp_list[i][1]
+
+    top_N = 100
+    ligand_list = []
+    receptor_list = [] #'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', 
+    data_name = ['LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',\
+                'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir']
+    j = 0 # 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L',\
+    for model_name in ['model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',\
+                      'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L']:
+        df = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/'+ data_name[j] + '/' +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', sep=",")
+            
+        for i in range (0, 60):
+            if df["Ligand-Receptor Pairs"][i] in lrp_list:
+                continue
+                
+            ligand = df["Ligand-Receptor Pairs"][i].split('+')[0]
+            receptor = df["Ligand-Receptor Pairs"][i].split('+')[1]       
+            ligand_list.append(ligand)
+            receptor_list.append(receptor)
+        j = j + 1
+
+
+        
+        
+    probable_pairs = []
+    for ligand in ligand_list:
+        for receptor in receptor_list:
+            
+            probable_pairs.append([ligand, receptor])
+
+
+    
+    lrp_list = probable_pairs[0:100]
+    
+    path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
+    prefix = 'lrbind_'
+    print_command(lrp_list, dict_gene_seq, prefix, path_to)
+
+    
 ################################################################
     for ligand in lr_unique:
         for receptor in lr_unique[ligand]:    
