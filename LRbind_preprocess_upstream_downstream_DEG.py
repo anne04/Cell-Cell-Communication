@@ -83,10 +83,31 @@ if __name__ == "__main__":
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
         barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
+
+    gene_node_to_cell_index = dict()
+    for gene_node_info in  barcode_info_gene:
+        cell_barcode = gene_node_info[0]
+        gene_index = gene_node_info[4]
+        gene_node_to_cell_index[gene_index] = barcode_index[cell_barcode]
+
+    
     
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
 
+    with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
+        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
+
+
+    for i in range(0, len(row_col_gene)):
+        row_col = row_col_gene[i] 
+        sender_gene = row_col[0]
+        rcvr_gene = row_col[1]
+        # get the identity of that sender and rcvr cells
+        sender_cell_index = gene_node_to_cell_index[sender_gene]
+        rcvr_cell_index = gene_node_to_cell_index[rcvr_gene]
+        key_list[lig_rec[i][0]+'+'+lig_rec[i][1]].append([sender_cell_index, rcvr_cell_index])
+        
     #####################################################################################
     
     with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
