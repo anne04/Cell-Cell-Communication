@@ -98,7 +98,7 @@ if __name__ == "__main__":
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
         row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
 
-
+    lr_dict = defaultdict(list)
     for i in range(0, len(row_col_gene)):
         row_col = row_col_gene[i] 
         sender_gene = row_col[0]
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         # get the identity of that sender and rcvr cells
         sender_cell_index = gene_node_to_cell_index[sender_gene]
         rcvr_cell_index = gene_node_to_cell_index[rcvr_gene]
-        key_list[lig_rec[i][0]+'+'+lig_rec[i][1]].append([sender_cell_index, rcvr_cell_index])
+        lr_dict[lig_rec[i][0]+'+'+lig_rec[i][1]].append([sender_cell_index, rcvr_cell_index, i])
         
     #####################################################################################
     
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         ligand_intraNW[ligand] = np.unique(target_list)
             
     ############# load output graph #################################################
-
+    key_list = lr_dict.keys()
     for lr_pair in key_list:
         #print(lr_pair)
         ligand = lr_pair.split('+')[0]
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         list_cell_pairs = lr_dict[ligand + '+' + receptor]
         receptor_cell_list = []
         for pair in list_cell_pairs:
-            receptor_cell_list.append(pair[2])
+            receptor_cell_list.append(pair[1])
 
         receptor_cell_list = np.unique(receptor_cell_list)
         if receptor not in receptor_intraNW:
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
         filtered_pairs = []
         for pair in list_cell_pairs:
-            if pair[2] in keep_receptor:
+            if pair[1] in keep_receptor:
                 filtered_pairs.append(pair)
 
         #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
@@ -239,7 +239,7 @@ if __name__ == "__main__":
         list_cell_pairs = lr_dict[ligand + '+' + receptor]
         receptor_cell_list = []
         for pair in list_cell_pairs:
-            receptor_cell_list.append(pair[2])
+            receptor_cell_list.append(pair[1])
 
         receptor_cell_list = np.unique(receptor_cell_list)
         
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         list_cell_pairs = lr_dict[ligand + '+' + receptor]
         ligand_cell_list = []
         for pair in list_cell_pairs:
-            ligand_cell_list.append(pair[1])
+            ligand_cell_list.append(pair[0])
 
         ligand_cell_list = np.unique(ligand_cell_list)    
         if ligand not in ligand_intraNW:
@@ -333,7 +333,7 @@ if __name__ == "__main__":
 
         filtered_pairs = []
         for pair in list_cell_pairs:
-            if pair[1] in keep_ligand:
+            if pair[0] in keep_ligand:
                 filtered_pairs.append(pair)
 
         #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
@@ -360,7 +360,7 @@ if __name__ == "__main__":
         list_cell_pairs = lr_dict[ligand + '+' + receptor]
         ligand_cell_list = []
         for pair in list_cell_pairs:
-            ligand_cell_list.append(pair[1])
+            ligand_cell_list.append(pair[0])
 
         ligand_cell_list = np.unique(ligand_cell_list)
         
@@ -413,7 +413,36 @@ if __name__ == "__main__":
     print('After DEG len %d'%len(lr_dict.keys()))
 
     #############################################################      
-    with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
+    with gzip.open(args.output_path + args.data_name+'_lr_dict_preprocessed.pkl', 'wb') as fp:  
         pickle.dump([lr_dict, pvals_lr], fp)
 
+
+    index_kept = dict()
+    for key_pair in lr_dict:
+        pair_list = lr_dict[key_pair]
+        for pair in pair_list:
+            index_kept[pair[2]] = 1
+
+
+    row_col_gene_temp = []
+    edge_weight_temp = []
+    lig_rec_temp = []
+    gene_node_type_temp = []
+    gene_node_expression_temp = []
+    for i in index_kept:
+        row_col_gene_temp.append(row_col_gene[i])
+        edge_weight_temp.append(edge_weight[i])
+        lig_rec_temp.append(lig_rec[i])
+        gene_node_type_temp.append(gene_node_type[i])
+        gene_node_expression_temp.append(gene_node_expression[i])    
+
+    row_col_gene = row_col_gene_temp
+    edge_weight = edge_weight_temp
+    lig_rec = lig_rec_temp
+    gene_node_type = gene_node_type_temp
+    gene_node_expression = gene_node_expression_temp
     
+    gc.collect()
+    
+    with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records_prefiltered', 'rb') as fp:  
+        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
