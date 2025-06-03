@@ -24,8 +24,8 @@ plt.savefig('/cluster/home/t116508uhn/LRbind_output/AF_score_distribution_manual
 
 ##############
 output_path = '/cluster/home/t116508uhn/LRbind_output/'
-plot_title = 'AlphaFold score distribution for random LRP'
-file_name = 'AF_score_distribution_randomLRP_' #'AF_score_distribution_selfbindLRP_' #'AF_score_distribution_predictedLRP_' #'AF_score_distribution_manualLRP_' # 'AF_score_distribution_falseLRP_' #
+plot_title = 'AlphaFold score distribution for random LRP' # predicted
+file_name = 'AF_score_distribution_randomLRP_' #'AF_score_distribution_predictedLRP_' #'AF_score_distribution_selfbindLRP_' #'AF_score_distribution_manualLRP_' # 'AF_score_distribution_falseLRP_' #
 lr_type =  'random' #'false' #'lrbind' #manual
 lrpair_score_dict = defaultdict(list)
 score_list = []
