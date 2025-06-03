@@ -437,6 +437,14 @@ if __name__ == "__main__":
 
 
     for i in range(start_of_intra_edge, len(row_col_gene)):
+        row_col = row_col_gene[i] 
+        sender_gene = row_col[0]
+        rcvr_gene = row_col[1]
+        # get the identity of that sender and rcvr cells
+        sender_cell_index = gene_node_to_cell_index[sender_gene]
+        rcvr_cell_index = gene_node_to_cell_index[rcvr_gene]
+        if sender_cell_index not in index_kept or rcvr_cell_index not in index_kept:
+            continue 
         row_col_gene_temp.append(row_col_gene[i])
         edge_weight_temp.append(edge_weight[i])
         lig_rec_temp.append(lig_rec[i])        
@@ -445,7 +453,7 @@ if __name__ == "__main__":
     row_col_gene = row_col_gene_temp
     edge_weight = edge_weight_temp
     lig_rec = lig_rec_temp
-    
+    print('after pre filtering total edge %d'%len(lig_rec))
     gc.collect()
     
     with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records_prefiltered', 'wb') as fp:  
