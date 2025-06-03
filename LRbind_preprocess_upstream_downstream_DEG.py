@@ -95,11 +95,11 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
         target_LR_index, target_cell_pair = pickle.load(fp)
 
-    with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
+    with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records', 'rb') as fp:  
         row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
 
     lr_dict = defaultdict(list)
-    for i in range(0, len(row_col_gene)):
+    for i in range(0, start_of_intra_edge):
         row_col = row_col_gene[i] 
         sender_gene = row_col[0]
         rcvr_gene = row_col[1]
@@ -172,8 +172,11 @@ if __name__ == "__main__":
         ligand_intraNW[ligand] = np.unique(target_list)
             
     ############# load output graph #################################################
-    key_list = lr_dict.keys()
-    for lr_pair in key_list:
+    print('Before postprocess len %d'%len(lr_dict.keys()))
+
+    key_list = list(lr_dict.keys())
+    for lr_pair_index in range(0, len(key_list)):
+        lr_pair = key_list[lr_pair_index]
         #print(lr_pair)
         ligand = lr_pair.split('+')[0]
         receptor = lr_pair.split('+')[1]
@@ -427,22 +430,23 @@ if __name__ == "__main__":
     row_col_gene_temp = []
     edge_weight_temp = []
     lig_rec_temp = []
-    gene_node_type_temp = []
-    gene_node_expression_temp = []
     for i in index_kept:
         row_col_gene_temp.append(row_col_gene[i])
         edge_weight_temp.append(edge_weight[i])
         lig_rec_temp.append(lig_rec[i])
-        gene_node_type_temp.append(gene_node_type[i])
-        gene_node_expression_temp.append(gene_node_expression[i])    
 
+
+    for i in range(start_of_intra_edge, len(row_col_gene)):
+        row_col_gene_temp.append(row_col_gene[i])
+        edge_weight_temp.append(edge_weight[i])
+        lig_rec_temp.append(lig_rec[i])        
+
+        
     row_col_gene = row_col_gene_temp
     edge_weight = edge_weight_temp
     lig_rec = lig_rec_temp
-    gene_node_type = gene_node_type_temp
-    gene_node_expression = gene_node_expression_temp
     
     gc.collect()
     
-    with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records_prefiltered', 'rb') as fp:  
-        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
+    with gzip.open(args.data_from + args.data_name + '_adjacency_gene_records_prefiltered', 'wb') as fp:  
+        pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge], fp)
