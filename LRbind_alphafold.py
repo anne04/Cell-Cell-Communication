@@ -186,7 +186,7 @@ if __name__ == "__main__":
         model_name = model_list[j]
         df = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/'+ data_name[j] + '/' +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', sep=",")
             
-        for i in range (0, 35):
+        for i in range (35, 100):
             #if df["Ligand-Receptor Pairs"][i] in lrp_list:
             #    continue
                 
