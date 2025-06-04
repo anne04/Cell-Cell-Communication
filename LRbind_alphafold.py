@@ -176,17 +176,19 @@ if __name__ == "__main__":
 
     top_N = 100
     ligand_list = []
-    receptor_list = [] #'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', 
-    data_name = ['LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',\
+    receptor_list = [] #
+    data_name = ['LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', 'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',\
                 'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir']
-    j = 0 # 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L',\
-    for model_name in ['model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',\
-                      'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L']:
+    model_list = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L', 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',\
+                      'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L']
+    j = 0 # \
+    for j in range (0, len(model_list)):
+        model_name = model_list[j]
         df = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/'+ data_name[j] + '/' +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', sep=",")
             
-        for i in range (0, 60):
-            if df["Ligand-Receptor Pairs"][i] in lrp_list:
-                continue
+        for i in range (0, 35):
+            #if df["Ligand-Receptor Pairs"][i] in lrp_list:
+            #    continue
                 
             ligand = df["Ligand-Receptor Pairs"][i].split('+')[0]
             receptor = df["Ligand-Receptor Pairs"][i].split('+')[1]       
@@ -198,14 +200,12 @@ if __name__ == "__main__":
         
         
     probable_pairs = []
-    for ligand in ligand_list:
-        for receptor in receptor_list:
-            
-            probable_pairs.append([ligand, receptor])
+    for i in range(0, len(ligand_list)):
+        probable_pairs.append([ligand_list[i], receptor_list[i]])
 
 
     
-    lrp_list = probable_pairs[0:100]
+    lrp_list = probable_pairs #[0:100]
     
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     prefix = 'lrbind_'
