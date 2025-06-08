@@ -878,8 +878,12 @@ if __name__ == "__main__":
 
             
              ############ only Tcell Zone plot ##############################################################################################################################
-
-
+            for pair in lr_dict:
+                i = lr_dict[pair][1]
+                j = lr_dict[pair][2]
+                if i in Tcell_zone and j in Tcell_zone:
+                    Tcell_zone_lr_dict[pair].append([item[0], item[1], item[2]])
+                           
             Tcell_zone_sort_lr_list = []
             for lr_pair in Tcell_zone_lr_dict:
                 #if lr_pair not in top_hit_lrp_dict:
