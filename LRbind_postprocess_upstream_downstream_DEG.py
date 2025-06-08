@@ -45,7 +45,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.')
-    parser.add_argument( '--target_ligand', type=str, default='TGFB1', help='') #
-    parser.add_argument( '--target_receptor', type=str, default='ACVRL1', help='')
+    parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
+    parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
     args = parser.parse_args()
 
     args.metadata_from = args.metadata_from + args.data_name + '/'
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     for i in range (0, len(barcode_info)):
         barcode_index[barcode_info[i][0]] = i
 
-    '''
+    
     Tcell_zone = []
     node_type = dict()
     df = pd.read_csv("../NEST/data/V1_Human_Lymph_Node_spatial_annotation.csv", sep=",")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             Tcell_zone.append(barcode_index[df["Barcode"][i]])
             
         node_type[df["Barcode"][i]] = df["Type"][i]
-    '''
+    ''''''
    
         
     
@@ -172,15 +172,19 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
+                   # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
+                    'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
-                   'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered'
                    #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                   # 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
+                    #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered'
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -200,7 +204,7 @@ if __name__ == "__main__":
         knee_flag = 0
         break_flag = 0
         test_mode = 1
-        for top_N in [10, 30, 100, 300]: #, 30, 10]:
+        for top_N in [10, 30, 100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -407,8 +411,8 @@ if __name__ == "__main__":
         
             chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
             
-            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
-            	pickle.dump(lr_dict, fp)
+            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+            #	pickle.dump(lr_dict, fp)
 
 
 
@@ -659,8 +663,8 @@ if __name__ == "__main__":
             print('After DEG len %d'%len(lr_dict.keys()))
 
             #############################################################      
-            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
-            	pickle.dump([lr_dict, pvals_lr], fp)
+            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
+            #	pickle.dump([lr_dict, pvals_lr], fp)
 
             
             ########## take top hits #################################### 
@@ -832,9 +836,9 @@ if __name__ == "__main__":
             #print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             '''
             ########## Plot an LR pair location ################
-            with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'rb') as fp:  
-            	lr_dict, pvals_lr = pickle.load(fp) #
-            
+            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'rb') as fp:  
+            #	lr_dict, pvals_lr = pickle.load(fp) #
+            '''
             ligand = 'ITGB1'
             receptor = 'ITGA3'
             found_list = defaultdict(list)
@@ -875,14 +879,17 @@ if __name__ == "__main__":
             chart.save(args.output_path + args.model_name + '_after_postprocess_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html')
             print(args.output_path + args.model_name + '_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html') 
 
-
+            '''
             
              ############ only Tcell Zone plot ##############################################################################################################################
-            for pair in lr_dict:
-                i = lr_dict[pair][1]
-                j = lr_dict[pair][2]
-                if i in Tcell_zone and j in Tcell_zone:
-                    Tcell_zone_lr_dict[pair].append([item[0], item[1], item[2]])
+            Tcell_zone_lr_dict = defaultdict(list)
+            for lrp in lr_dict:
+                cell_pair_list = lr_dict[lrp]
+                for pair in cell_pair_list:
+                    i = pair[1]
+                    j = pair[2]
+                    if i in Tcell_zone and j in Tcell_zone:
+                        Tcell_zone_lr_dict[lrp].append([item[0], item[1], item[2]])
                            
             Tcell_zone_sort_lr_list = []
             for lr_pair in Tcell_zone_lr_dict:
@@ -894,7 +901,7 @@ if __name__ == "__main__":
                     sum = sum + item[0] # 
 
                 #sum = sum/len(cell_pair_list) 
-                Tcell_zone_sort_lr_list.append([lr_pair, sum])
+                Tcell_zone_sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list)])
         
             Tcell_zone_sort_lr_list = sorted(Tcell_zone_sort_lr_list, key = lambda x: x[1], reverse=True)
             
@@ -911,19 +918,19 @@ if __name__ == "__main__":
                 
             data_list_pd = pd.DataFrame({
                 'Ligand-Receptor Pairs': data_list['X'],
-                'Avg_dotProduct': data_list['Y']
+                'Score': data_list['Y']
             })
             #if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
             #    print("found CCL19-CCR7")
             
-            data_list_pd.to_csv(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv', index=False)
             #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
-                y='Avg_dotProduct'
+                y='Score'
             )
         
-            chart.save(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
+            chart.save(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
+            print(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
 
