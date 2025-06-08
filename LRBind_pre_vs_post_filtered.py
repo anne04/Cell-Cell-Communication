@@ -40,7 +40,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -67,12 +67,21 @@ if __name__ == "__main__":
 
 
 set_pre_files = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR'
+                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
+                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
+                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR'
                 ]
 set_post_files = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR']
-
-i = 0
+                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
+                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
+                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR'
+                 ]
+flag = ['', '_novelOnly', '', '_novelOnly', '', '_novelOnly']
+i = 5
 set_pre_lrp = pd.read_csv(args.output_path +set_pre_files[i]+'.csv')
 set_pre_lrp = list(set_pre_lrp['Ligand-Receptor Pairs'])
 
@@ -81,4 +90,4 @@ set_post_lrp = list(set_post_lrp['Ligand-Receptor Pairs'])
 
 common_lr = list(set(set_pre_lrp) & set(set_post_lrp))
 print('top_N:%d, Only pre %d, only post %d, common %d'%(top_N, len(set_pre_lrp)-len(common_lr), len(set_post_lrp)-len(common_lr), len(common_lr)))
-pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_top'+str(top_N)+'_common_lrp_pre_vs_post_filter.csv', index=False)
+pd.DataFrame(common_lr).to_csv(args.output_path +args.data_name+'_top'+str(top_N)+'_common_lrp_pre_vs_post_filter'+flag[i]+'.csv', index=False)
