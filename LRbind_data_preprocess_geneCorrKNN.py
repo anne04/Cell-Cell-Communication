@@ -46,6 +46,7 @@ if __name__ == "__main__":
     parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
     parser.add_argument( '--threshold_gene_exp_intra', type=float, default=70, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
+    parser.add_argument( '--prefilter', type=int, default=0, help='Set to 1 if you want to block the ligand/receptors that do not have up/downstream genes expressed.')
 
     args = parser.parse_args()
     
@@ -353,62 +354,63 @@ if __name__ == "__main__":
     print('target_cell_pair %d'%len(debug.keys()))  
     ##############################################################################
     # some preprocessing before making the input graph
-    ### remove the ligand and receptors whose up/dowstream genes are not expressed
-    with gzip.open(args.metadata_from+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
-        receptor_intraNW = pickle.load(fp)
-
-    for receptor in receptor_intraNW:
-        target_list = []
-        for rows in receptor_intraNW[receptor]:
-            target_list.append(rows[0])
-
-        receptor_intraNW[receptor] = np.unique(target_list)
-        
-    with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
-        ligand_intraNW = pickle.load(fp)
-
-    for ligand in ligand_intraNW:
-        target_list = []
-        
-        for rows in ligand_intraNW[ligand]:
-            target_list.append(rows[0])
-
-        ligand_intraNW[ligand] = np.unique(target_list)
-
-    ##############################################
-   
-    blocked_gene_per_cell = defaultdict(dict)
-    for cell in range(0, cell_vs_gene.shape[0]):
-        for j in range(0, cell_vs_gene.shape[1]):
-            gene_name = gene_ids[j]
-            # now see if that gene has up/downstream genes expressed
-            if gene_name in ligand_list:
-                # check for upstream genes
-                target_list = ligand_intraNW[gene_name]
-                found = 0
-                for gene in target_list:
-                    if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
-                        found = found + 1
+    if args.prefilter==1:
+        ### remove the ligand and receptors whose up/dowstream genes are not expressed
+        with gzip.open(args.metadata_from+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+            receptor_intraNW = pickle.load(fp)
+    
+        for receptor in receptor_intraNW:
+            target_list = []
+            for rows in receptor_intraNW[receptor]:
+                target_list.append(rows[0])
+    
+            receptor_intraNW[receptor] = np.unique(target_list)
+            
+        with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+            ligand_intraNW = pickle.load(fp)
+    
+        for ligand in ligand_intraNW:
+            target_list = []
+            
+            for rows in ligand_intraNW[ligand]:
+                target_list.append(rows[0])
+    
+            ligand_intraNW[ligand] = np.unique(target_list)
+    
+        ##############################################
+       
+        blocked_gene_per_cell = defaultdict(dict)
+        for cell in range(0, cell_vs_gene.shape[0]):
+            for j in range(0, cell_vs_gene.shape[1]):
+                gene_name = gene_ids[j]
+                # now see if that gene has up/downstream genes expressed
+                if gene_name in ligand_list:
+                    # check for upstream genes
+                    target_list = ligand_intraNW[gene_name]
+                    found = 0
+                    for gene in target_list:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                            found = found + 1
+                            
+                            
+                    if len(target_list)>0 and found/len(target_list) < 0.5:      
+                        # if not found then turn it off
+                        blocked_gene_per_cell[cell][j] = 0
                         
+                if gene_name in receptor_list:
+                    # check for downstream genes
+                    target_list = receptor_intraNW[gene_name]
+                    found = 0
+                    for gene in target_list:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                            found = found + 1
+                            
+                            
+                    if len(target_list)>0 and found/len(target_list) < 0.5:      
+                        # if not found then turn it off
+                        blocked_gene_per_cell[cell][j] = 0
                         
-                if len(target_list)>0 and found/len(target_list) < 0.5:      
-                    # if not found then turn it off
-                    blocked_gene_per_cell[cell][j] = 0
-                    
-            if gene_name in receptor_list:
-                # check for downstream genes
-                target_list = receptor_intraNW[gene_name]
-                found = 0
-                for gene in target_list:
-                    if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
-                        found = found + 1
-                        
-                        
-                if len(target_list)>0 and found/len(target_list) < 0.5:      
-                    # if not found then turn it off
-                    blocked_gene_per_cell[cell][j] = 0
-                    
-
+    
     ###############################################################################
     count_total_edges = 0
     
