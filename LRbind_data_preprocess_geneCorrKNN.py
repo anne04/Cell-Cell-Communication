@@ -353,6 +353,25 @@ if __name__ == "__main__":
     print('target_cell_pair %d'%len(debug.keys()))  
     ##############################################################################
     # some preprocessing before making the input graph
+    ### remove the ligand and receptors whose up/dowstream genes are not expressed
+    blocked_gene_per_cell = defaultdict(dict)
+    for i in range(0, cell_vs_gene.shape[0]):
+        for j in range(0, cell_vs_gene.shape[1]):
+            gene_name = gene_ids[j]
+            # now see if that gene has up/downstream genes expressed
+            if gene_name in ligand_list:
+                # check for upstream genes
+
+                # if not found then turn it off
+                blocked_gene_per_cell[i][j] = 0
+            if gene_name in receptor_list:
+                # check for downstream genes
+                
+                # if not found then turn it off
+                blocked_gene_per_cell[i][j] = 0
+                    
+
+    ###############################################################################
     count_total_edges = 0
     
     cells_ligand_vs_receptor = []
@@ -375,6 +394,8 @@ if __name__ == "__main__":
             if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
                 #inactive_node.append(1)
                 continue
+            if gene_index[gene] in blocked_gene_per_cell[i]:
+                continue
             
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if dist_X[i,j]==0: #distance_matrix[i,j] >= args.neighborhood_threshold: #spot_diameter*4
@@ -382,6 +403,10 @@ if __name__ == "__main__":
     
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
+            
+                        if gene_index[gene_rec] in blocked_gene_per_cell[j]:
+                            continue
+                        
                         if gene_rec in cell_cell_contact and distance_matrix[i,j] > args.spot_diameter:
                             continue
     
