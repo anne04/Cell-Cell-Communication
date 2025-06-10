@@ -355,6 +355,28 @@ if __name__ == "__main__":
     ##############################################################################
     # some preprocessing before making the input graph
     if args.prefilter==1:
+
+        # Set threshold gene percentile
+        threshold_gene_exp = 80
+        cell_percentile_target_gene = []
+        for i in range (0, cell_vs_gene.shape[0]):
+            y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
+            ## inter ##
+            active_cutoff = np.percentile(y, threshold_gene_exp)
+            if active_cutoff == min(cell_vs_gene[i][:]):
+                times = 1
+                while active_cutoff == min(cell_vs_gene[i][:]):
+                    new_threshold = threshold_gene_exp + 5 * times
+                    if new_threshold >= 100:
+                        active_cutoff = max(cell_vs_gene[i][:])  
+                        break
+                    active_cutoff = np.percentile(y, new_threshold)
+                    times = times + 1 
+    
+            cell_percentile_target_gene.append(active_cutoff) 
+
+
+        
         ### remove the ligand and receptors whose up/dowstream genes are not expressed
         with gzip.open(args.metadata_from+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
             receptor_intraNW = pickle.load(fp)
@@ -389,7 +411,7 @@ if __name__ == "__main__":
                     target_list = ligand_intraNW[gene_name]
                     found = 0
                     for gene in target_list:
-                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile_target_gene[cell]:
                             found = found + 1
                             
                             
@@ -402,7 +424,7 @@ if __name__ == "__main__":
                     target_list = receptor_intraNW[gene_name]
                     found = 0
                     for gene in target_list:
-                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile_target_gene[cell]:
                             found = found + 1
                             
                             
