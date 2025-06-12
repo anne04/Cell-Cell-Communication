@@ -45,7 +45,7 @@ import anndata
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     #_geneCorr_remFromDB
     #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
     #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     for i in range (0, len(barcode_info)):
         barcode_index[barcode_info[i][0]] = i
 
-    
+    '''
     Tcell_zone = []
     node_type = dict()
     df = pd.read_csv("../NEST/data/V1_Human_Lymph_Node_spatial_annotation.csv", sep=",")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             Tcell_zone.append(barcode_index[df["Barcode"][i]])
             
         node_type[df["Barcode"][i]] = df["Type"][i]
-    ''''''
+    '''
    
         
     
@@ -173,7 +173,7 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
-                    'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
+                   # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
@@ -183,7 +183,7 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered'
                    #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
-                   #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
+                   'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
                     #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered'
               ]
     for model_name in model_names:
@@ -201,10 +201,10 @@ if __name__ == "__main__":
             
     ########## all ############################################# 
 #        top_lrp_count = 1000
-        knee_flag = 0
+        knee_flag = 1
         break_flag = 0
         test_mode = 1
-        for top_N in [10, 30, 100]: #, 30, 10]:
+        for top_N in [100]: #, 30, 10]:
             print(top_N)
             if break_flag == 1:  
                 break
@@ -264,31 +264,21 @@ if __name__ == "__main__":
                     for item_idx in range (0, len(dot_prod_list)):
                         scaled_prod = max_score - dot_prod_list[item_idx][0]
                         dot_prod_list[item_idx][0] = scaled_prod 
-                    
+
+
+                    dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # small to low
                     if knee_flag == 0:                       
-                        dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True)[0:top_N]
+                        dot_prod_list = dot_prod_list[0:top_N]
                     else:
                         ########## knee find ###########
+                        x = []
                         score_list = []
-                        for item in dot_prod_list:
-                            score_list.append(item[0])
-            
-                        score_list = sorted(score_list) # small to high
-                        
-                        y = score_list
-                        x = range(1, len(y)+1)
-                        kn = KneeLocator(x, y, direction='increasing')
-                        kn_value_inc = y[kn.knee-1]
-                        kn = KneeLocator(x, y, direction='decreasing')
-                        kn_value_dec = y[kn.knee-1]            
-                        kn_value = max(kn_value_inc, kn_value_dec)
-                        
-                        temp_dot_prod_list = []
-                        for item in dot_prod_list:
-                            if item[0] >= kn_value:
-                                temp_dot_prod_list.append(item)
-            
-                        dot_prod_list = temp_dot_prod_list
+                        for score_index in range (0, len(dot_prod_list)):
+                            score_list.append(dot_prod_list[score_index][0])
+                            x.append(score_index)
+
+                        kn = KneeLocator(x, score_list, direction='decreasing', curve="convex")
+                        dot_prod_list = dot_prod_list[0:kn.knee]
                     ###########################
                     for item in dot_prod_list:
                         lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
@@ -304,7 +294,10 @@ if __name__ == "__main__":
                     ####################################################
         
             # plot found_list
-            print("positive: %d"%(len(found_list)))                
+            print("positive: %d, total pairs %d"%(len(found_list), len(lr_dict.keys())))
+            
+            
+            
             # plot input_cell_pair_list  
             '''
             ######### plot output #############################
@@ -336,10 +329,10 @@ if __name__ == "__main__":
                 color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
                 #shape = alt.Shape('label:N')
             )
-            chart.save(args.output_path + model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html')
-            #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ str(top_N)  + '_wholeTissue_allLR.html') 
+            chart.save(args.output_path + model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ '_elbow'  + '_wholeTissue_allLR.html')
+            #print(args.output_path + args.model_name + '_output_' + target_ligand + '-' + target_receptor +'_top'+ '_elbow'  + '_wholeTissue_allLR.html') 
             '''
-            ############################# top hit without postprocessing ####################3
+            ####### sort the pairs based on total score ####################
             sort_lr_list = []
             for lr_pair in lr_dict:
                 sum = 0
@@ -348,17 +341,37 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list)])
+                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list)])
         
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             
+            ### now remove the LR pairs which are below the elbow point
+            X_axis = []
+            Y_axis = []
+            for i in range (0, len(sort_lr_list)):
+                X_axis.append(i)
+                Y_axis.append(sort_lr_list[i][1])
+
+            kn = KneeLocator(X_axis, Y_axis, direction='decreasing', curve="convex")
+            #kn_value_dec = Y_axis[kn.knee-1]            
+            sort_lr_list = sort_lr_list[0: kn.knee]
+
+            ##################### now keep only those LR ####################
+            keep_pair = dict()
+            for i in range (0, len(sort_lr_list)):
+                pair = sort_lr_list[i][0]
+                keep_pair[pair] = 1
+
+            pair_list = list(lr_dict.keys())
+            for pair in pair_list:
+                if pair not in keep_pair:
+                    lr_dict.pop(pair)
+                    
+            print('Top %d records are kept'%kn.knee)
             
-            top_hit_lrp_dict = dict()
-            i = 0
-            for item in sort_lr_list:
-                top_hit_lrp_dict[item[0]] = i
-                i = i+1
+            ############### record the top hit without postprocessing ####################3
             
+
             # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
             data_list['X']=[]
@@ -366,6 +379,7 @@ if __name__ == "__main__":
             data_list['type']=[]
             #data_list['score_sum'] =[]
             data_list['score_avg'] = []
+            data_list['pair_count'] = []
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
                 ligand = sort_lr_list[i][0].split('+')[0]
@@ -376,6 +390,8 @@ if __name__ == "__main__":
                 receptor = sort_lr_list[i][0].split('+')[1]
                 #data_list['score_sum'].append()
                 data_list['score_avg'].append(sort_lr_list[i][2])
+                data_list['pair_count'].append(sort_lr_list[i][3])
+                
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                     data_list['type'].append('From DB')
                 else:
@@ -385,10 +401,11 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score_sum': data_list['Y'],
                 'Score_avg': data_list['score_avg'],
-                'Type': data_list['type']
+                'Type': data_list['type'],
+                'Pair_count': data_list['pair_count']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv')    
+            data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+'_elbow_'+'allLR.csv', index=False)
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+'_elbow_'+'allLR.csv')    
             data_list=dict()
             data_list['X']=[]
             data_list['Y']=[] 
@@ -409,11 +426,10 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
+            chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+'_elbow_'+'_histogramsallLR.html')
             
-            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+            #with gzip.open(args.output_path +model_name+'_top'+'_elbow'+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
             #	pickle.dump(lr_dict, fp)
-
 
 
             #################################
@@ -663,7 +679,7 @@ if __name__ == "__main__":
             print('After DEG len %d'%len(lr_dict.keys()))
 
             #############################################################      
-            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
+            #with gzip.open(args.output_path +model_name+'_top'+'_elbow'+'_lr_dict_after_postprocess.pkl', 'wb') as fp:  
             #	pickle.dump([lr_dict, pvals_lr], fp)
 
             
@@ -679,7 +695,7 @@ if __name__ == "__main__":
                     sum = sum + item[0]  
 
                 #sum = sum/len(cell_pair_list)
-                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list),pvals_lr[lr_pair]])
+                sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), pvals_lr[lr_pair], len(cell_pair_list)])
                 
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             #sort_lr_list = sorted(sort_lr_list, key = lambda x: x[2])
@@ -698,6 +714,7 @@ if __name__ == "__main__":
             #data_list['score_sum'] =[]
             data_list['score_avg'] = []
             data_list['avg_pvals_adj'] = []
+            data_list['pair_count'] = []
             max_rows = len(sort_lr_list)
             for i in range (0, max_rows): #1000): #:
                 ligand = sort_lr_list[i][0].split('+')[0]
@@ -708,6 +725,7 @@ if __name__ == "__main__":
                 receptor = sort_lr_list[i][0].split('+')[1]
                 data_list['score_avg'].append(sort_lr_list[i][2])
                 data_list['avg_pvals_adj'].append(sort_lr_list[i][3]) 
+                data_list['pair_count'].append(sort_lr_list[i][4])
                 if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                     data_list['type'].append('From DB')
                 else:
@@ -718,9 +736,10 @@ if __name__ == "__main__":
                 'Score_sum': data_list['Y'],
                 'Score_avg': data_list['score_avg'],
                 'Avg_pvals_adj': data_list['avg_pvals_adj'],
-                'Type': data_list['type']
+                'Type': data_list['type'],
+                'Pair_count': data_list['pair_count']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'allLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+'_elbow_'+'allLR.csv', index=False)
             
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -743,8 +762,8 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histogramsallLR.html')   
+            chart.save(args.output_path +model_name+'_down_up_deg_lr_list_sortedBy_totalScore_top'+'_elbow'+'_histogramsallLR.html')
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'_histogramsallLR.html')   
             #if target_ligand +'+'+ target_receptor in list(data_list_pd['Ligand-Receptor Pairs']):
             #    print("found %d"%top_hit_lrp_dict[target_ligand +'+'+ target_receptor])
             ############################### novel only out of all LR ################
@@ -775,7 +794,7 @@ if __name__ == "__main__":
                 'Ligand-Receptor Pairs': data_list['X'],
                 'Score': data_list['Y']
             })
-            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', index=False)
+            data_list_pd.to_csv(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'_novelsOutOfallLR.csv', index=False)
             #print('novel LRP length %d out of top %d LRP'%(len(sort_lr_list_temp), top_lrp_count))
             # now plot the top max_rows histograms where X axis will show the name or LR pair and Y axis will show the score.
             data_list=dict()
@@ -797,14 +816,14 @@ if __name__ == "__main__":
                 y='Score'
             )
         
-            chart.save(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_histograms_novelsOutOfallLR.html')   
+            chart.save(args.output_path +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'_histograms_novelsOutOfallLR.html')
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'_histograms_novelsOutOfallLR.html')   
             ################################# when not remFromDB ##########################################################################################################
             
             set_LRbind_novel = []
-            list_size = min(4000, len(sort_lr_list))
+            list_size = min(4000, len(sort_lr_list_temp))
             for i in range (0, list_size):
-                set_LRbind_novel.append(sort_lr_list[i][0])
+                set_LRbind_novel.append(sort_lr_list_temp[i][0])
         
             #print('ligand-receptor database reading.')
             df = pd.read_csv(args.database_path, sep=",")
@@ -818,8 +837,8 @@ if __name__ == "__main__":
             set_nichenet_novel = np.unique(set_nichenet_novel)
             common_lr = list(set(set_LRbind_novel) & set(set_nichenet_novel))
             print('top_N:%d, Only LRbind %d, only nichenet %d, common %d'%(top_N, len(set_LRbind_novel)-len(common_lr), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
-            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_common_with_nichenet.csv', index=False)
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'novelsOutOfallLR.csv') 
+            pd.DataFrame(common_lr).to_csv(args.output_path +args.model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'_common_with_nichenet.csv', index=False)
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'novelsOutOfallLR.csv') 
             # top_N:100, Only LRbind 3833, only nichenet 4010, common 167
             ##################################################################
             '''
@@ -836,7 +855,7 @@ if __name__ == "__main__":
             #print('Only LRbind %d, only manual %d, common %d'%(len(set_LRbind_novel), len(set_nichenet_novel)-len(common_lr), len(common_lr)))
             '''
             ########## Plot an LR pair location ################
-            #with gzip.open(args.output_path +model_name+'_top'+str(top_N)+'_lr_dict_after_postprocess.pkl', 'rb') as fp:  
+            #with gzip.open(args.output_path +model_name+'_top'+'_elbow'+'_lr_dict_after_postprocess.pkl', 'rb') as fp:  
             #	lr_dict, pvals_lr = pickle.load(fp) #
             '''
             ligand = 'ITGB1'
@@ -876,8 +895,8 @@ if __name__ == "__main__":
                 color=alt.Color('total_dot:Q', scale=alt.Scale(scheme='magma')),
                 #shape = alt.Shape('label:N')
             )
-            chart.save(args.output_path + args.model_name + '_after_postprocess_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html')
-            print(args.output_path + args.model_name + '_spatial_location_' + ligand + '-' + receptor +'_top'+ str(top_N)  + '.html') 
+            chart.save(args.output_path + args.model_name + '_after_postprocess_spatial_location_' + ligand + '-' + receptor +'_top'+ '_elbow'  + '.html')
+            print(args.output_path + args.model_name + '_spatial_location_' + ligand + '-' + receptor +'_top'+ '_elbow'  + '.html') 
 
             '''
             
@@ -923,14 +942,14 @@ if __name__ == "__main__":
             #if 'CCL19+CCR7' in list(data_list_pd['Ligand-Receptor Pairs']):
             #    print("found CCL19-CCR7")
             
-            data_list_pd.to_csv(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv', index=False)
-            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_allLR.csv')    
+            data_list_pd.to_csv(args.output_path +args.model_name+'_sortedBy_totalScore_top'+'_elbow'+'Tcell_zone_allLR.csv', index=False)
+            #print(args.output_path +args.model_name+'_novel_lr_list_sortedBy_totalScore_top'+'_elbow'+'Tcell_zone_allLR.csv')    
             # same as histogram plots
             chart = alt.Chart(data_list_pd).mark_bar().encode(
                 x=alt.X("Ligand-Receptor Pairs:N", axis=alt.Axis(labelAngle=45), sort='-y'),
                 y='Score'
             )
         
-            chart.save(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')
-            print(args.output_path +args.model_name+'_sortedBy_totalScore_top'+str(top_N)+'Tcell_zone_histogramsallLR.html')   
+            chart.save(args.output_path +args.model_name+'_sortedBy_totalScore_top'+'_elbow_'+'Tcell_zone_histogramsallLR.html')
+            print(args.output_path +args.model_name+'_sortedBy_totalScore_top'+'_elbow_'+'Tcell_zone_histogramsallLR.html')   
 
