@@ -80,10 +80,10 @@ set_post_files = ['LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD
 flag = ['', '_novelOnly', '', '_novelOnly', '', '_novelOnly']
 i = 3
 set_pre_lrp = pd.read_csv(args.output_path +set_pre_files[i]+'.csv')
-set_pre_lrp = list(set_pre_lrp['Ligand-Receptor Pairs'])
+set_pre_lrp = list(set_pre_lrp['Ligand-Receptor Pairs'])[0:10]
 
 set_post_lrp = pd.read_csv(args.output_path + set_post_files[i]+'.csv')
-set_post_lrp = list(set_post_lrp['Ligand-Receptor Pairs'])
+set_post_lrp = list(set_post_lrp['Ligand-Receptor Pairs'])[0:10]
 
 common_lr = list(set(set_pre_lrp) & set(set_post_lrp))
 print('Only pre %d, only post %d, common %d'%(len(set_pre_lrp)-len(common_lr), len(set_post_lrp)-len(common_lr), len(common_lr)))
