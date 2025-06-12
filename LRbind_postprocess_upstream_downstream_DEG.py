@@ -173,7 +173,7 @@ if __name__ == "__main__":
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L',
                    # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
-                   # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
+                   #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
                    #'model_LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir_3L'
                    #'model_LRbind_CID44971_1D_manualDB_geneCorr_bidir_3L',
                    #'model_LRbind_CID44971_1D_manualDB_geneCorrKNN_bidir_3L'
@@ -181,10 +181,12 @@ if __name__ == "__main__":
                    #'model_LRbind_LUAD_1D_manualDB_geneCorr_signaling_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L'
                    #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'
-                   #'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered'
+                   #'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered'
                    #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L'
+                   #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
                    'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
-                    #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered'
+                   #'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered'
+                    
               ]
     for model_name in model_names:
         args.model_name = model_name
@@ -346,6 +348,7 @@ if __name__ == "__main__":
             sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
             
             ### now remove the LR pairs which are below the elbow point
+            ''''''
             X_axis = []
             Y_axis = []
             for i in range (0, len(sort_lr_list)):
@@ -438,6 +441,7 @@ if __name__ == "__main__":
             lr_dict = copy.deepcopy(save_lr_dict)
             print('before post process len %d'%len(lr_dict.keys()))
             #####################
+            '''
             key_list = list(lr_dict.keys())
             for lr_pair in key_list:
                 #print(lr_pair)
@@ -488,7 +492,7 @@ if __name__ == "__main__":
                     lr_dict[ligand + '+' + receptor] = filtered_pairs
                 
             print('After postprocess len %d'%len(lr_dict.keys()))
-
+            '''
             #before post process len 112929
             #After postprocess len 40829
             save_lr_dict2 = copy.deepcopy(lr_dict)
@@ -512,12 +516,15 @@ if __name__ == "__main__":
                 if len(receptor_cell_list) == 1 :
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
-                    
-                target_list = receptor_intraNW[receptor]
-                if receptor not in receptor_intraNW:
+
+
+                if receptor not in receptor_intraNW or len(receptor_intraNW[receptor])==0:
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
                     
+                target_list = receptor_intraNW[receptor]
+                
+
                 # how well the target_list genes are differentially expressed in 
                 # receptor_cell_list vs the rest
                 index_receptor = []
@@ -563,6 +570,7 @@ if __name__ == "__main__":
             ############################
 #            lr_dict = copy.deepcopy(save_lr_dict2)           
             ############################################# upstream #############################
+            '''
             key_list = list(lr_dict.keys())
             for lr_pair in key_list:
                 #print(lr_pair)
@@ -615,6 +623,7 @@ if __name__ == "__main__":
             print('After postprocess len %d'%len(lr_dict.keys()))            
         
             #After postprocess len 3513
+            '''
             ############ Differentially Expressed genes filtering ################
             key_list = list(lr_dict.keys())
             #pvals_lr = dict()
@@ -634,12 +643,12 @@ if __name__ == "__main__":
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
                     
-                if ligand not in ligand_intraNW:
+                if ligand not in ligand_intraNW or len(ligand_intraNW[ligand])==0:
                     lr_dict.pop(ligand + '+' + receptor)
                     continue
                     
                 target_list = ligand_intraNW[ligand]
-                    
+                
                 # how well the target_list genes are differentially expressed in 
                 # receptor_cell_list vs the rest
                 index_ligand = []
