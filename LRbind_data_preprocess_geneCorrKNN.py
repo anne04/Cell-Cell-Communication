@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
     parser.add_argument( '--threshold_gene_exp_intra', type=float, default=70, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     parser.add_argument( '--prefilter', type=int, default=0, help='Set to 1 if you want to block the ligand/receptors that do not have up/downstream genes expressed.')
+    parser.add_argument( '--local_coexpression', type=int, default=0, help='Set to 1 if you want to use local coexpression matrix.')
 
     args = parser.parse_args()
     
@@ -278,6 +279,26 @@ if __name__ == "__main__":
     
     # assign weight to the neighborhood relations based on neighborhood distance 
     dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
+    neighbor_list_per_cell = []
+    #print(' --------- %g --------'%distance_matrix[1276][3517])
+    k_nn = 50
+    for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
+        max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
+        min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
+        for i in range(distance_matrix.shape[0]):
+            dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
+
+        if args.local_coexpression==1:
+            list_indx = list(np.argsort(dist_X[:,j]))
+            k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
+            neighbor_list_per_cell.append(k_higher)
+        for i in range(0, distance_matrix.shape[0]):
+            if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
+                dist_X[i,j] = 0 # no ccc happening outside threshold distance
+                
+    #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
+    ###################################################################################
+    dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
     #print(' --------- %g --------'%distance_matrix[1276][3517])
     for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
         max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
@@ -290,8 +311,8 @@ if __name__ == "__main__":
         for i in range(0, distance_matrix.shape[0]):
             if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
                 dist_X[i,j] = 0 # no ccc happening outside threshold distance
-                
-    #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
+          
+    
     #####################################################################################
     # Set threshold gene percentile
     cell_percentile = []
@@ -619,19 +640,30 @@ if __name__ == "__main__":
     start_of_intra_edge = len(edge_weight)    
     cell_gene_set = ligand_list + receptor_list #list(active_genes.keys()) #ligand_list + receptor_list
     print('gene count for corr matrix %d'%len(cell_gene_set))
-    df = defaultdict(list)
-    for gene in cell_gene_set:
-        j = gene_index[gene] 
-        df[gene_ids[j]]=list(cell_vs_gene[:, j])
-
-
-    data = pd.DataFrame(df)
+    if args.local_coexpression == 0:
+        df = defaultdict(list)
+        for gene in cell_gene_set:
+            j = gene_index[gene] 
+            df[gene_ids[j]]=list(cell_vs_gene[:, j])
     
-    print('Running gene_coexpression_matrix calculation')
-    gene_coexpression_matrix = data.corr(method='spearman')
+        data = pd.DataFrame(df)
+        print('Running gene_coexpression_matrix calculation')
+        gene_coexpression_matrix = data.corr(method='spearman')
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
     for i in range(0, cell_vs_gene.shape[0]):
+        if args.local_coexpression == 1:
+            neighbor_list = neighbor_list_per_cell[i]
+            temp_cell_vs_gene = cell_vs_gene[neighbor_list]
+            df = defaultdict(list)
+            for gene in cell_gene_set:
+                j = gene_index[gene] 
+                df[gene_ids[j]]=list(temp_cell_vs_gene[:, j])
+        
+            data = pd.DataFrame(df)
+            print('Running gene_coexpression_matrix calculation')
+            gene_coexpression_matrix = data.corr(method='spearman')
+        
         spot_id = i
         print('i %d, edge %d, gene node %d'%(i, len(row_col_gene), len(gene_node_type)))
         cell_intra_gcm = defaultdict(dict)
