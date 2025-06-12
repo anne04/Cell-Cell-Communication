@@ -57,31 +57,28 @@ if __name__ == "__main__":
     parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
     parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
     args = parser.parse_args()
-
-    args.metadata_from = args.metadata_from + args.data_name + '/'
-    args.data_from = args.data_from + args.data_name + '/'
-    args.embedding_path  = args.embedding_path + args.data_name + '/'
-    args.output_path = args.output_path + args.data_name + '/'
+    
+    args.output_path = args.output_path 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
 
-
-set_pre_files = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
-                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',
-                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR'
+ 
+set_pre_files = ['LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered/model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered/model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR',\
+                 'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered/model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered/model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR',
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR'
                 ]
-set_post_files = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
-                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR',\
-                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top100allLR',\
-                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top100_novelsOutOfallLR'
+set_post_files = ['LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR',\
+                 'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir/model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir/model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_lr_list_sortedBy_totalScore_top_elbow_allLR',\
+                 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_down_up_deg_novel_lr_list_sortedBy_totalScore_top_elbow_novelsOutOfallLR'
                  ]
 flag = ['', '_novelOnly', '', '_novelOnly', '', '_novelOnly']
-i = 5
+i = 3
 set_pre_lrp = pd.read_csv(args.output_path +set_pre_files[i]+'.csv')
 set_pre_lrp = list(set_pre_lrp['Ligand-Receptor Pairs'])
 
@@ -89,5 +86,5 @@ set_post_lrp = pd.read_csv(args.output_path + set_post_files[i]+'.csv')
 set_post_lrp = list(set_post_lrp['Ligand-Receptor Pairs'])
 
 common_lr = list(set(set_pre_lrp) & set(set_post_lrp))
-print('top_N:%d, Only pre %d, only post %d, common %d'%(top_N, len(set_pre_lrp)-len(common_lr), len(set_post_lrp)-len(common_lr), len(common_lr)))
-pd.DataFrame(common_lr).to_csv(args.output_path +args.data_name+'_top'+str(top_N)+'_common_lrp_pre_vs_post_filter'+flag[i]+'.csv', index=False)
+print('Only pre %d, only post %d, common %d'%(len(set_pre_lrp)-len(common_lr), len(set_post_lrp)-len(common_lr), len(common_lr)))
+pd.DataFrame(common_lr).to_csv(args.output_path +args.data_name+'_top_elbow'+'_common_lrp_pre_vs_post_filter'+flag[i]+'.csv', index=False)
