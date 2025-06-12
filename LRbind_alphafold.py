@@ -12,6 +12,7 @@ import math
 import argparse
 from random import randint 
 import random
+import glob
 
 def write_file(file_name, gene_name, seq):
     f = open('manualLRP_'+ligand+'_'+receptor+".fasta", "w")
@@ -206,6 +207,59 @@ if __name__ == "__main__":
 
     
     lrp_list = probable_pairs #[0:100]
+    
+    path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
+    prefix = 'lrbind_'
+    print_command(lrp_list, dict_gene_seq, prefix, path_to)
+########################################################################
+########### predicted LRbind ##########
+
+    
+    ligand_list = []
+    receptor_list = [] #
+    data_name = ['LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', 'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',\
+                'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir']
+    model_list = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L', 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',\
+                      'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L']
+    j = 0 # \
+    for j in range (0, len(model_list)):
+        model_name = model_list[j]
+        df = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/'+ data_name[j] + '/' +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+'_elbow_'+'novelsOutOfallLR.csv', sep=",")
+            
+        for i in range (0, min(10,len( df["Ligand-Receptor Pairs"]))):
+            #if df["Ligand-Receptor Pairs"][i] in lrp_list:
+            #    continue
+                
+            ligand = df["Ligand-Receptor Pairs"][i].split('+')[0]
+            receptor = df["Ligand-Receptor Pairs"][i].split('+')[1]       
+            ligand_list.append(ligand)
+            receptor_list.append(receptor)
+        j = j + 1
+
+
+    
+    probable_pairs = []
+    for i in range(0, len(ligand_list)):
+        probable_pairs.append([ligand_list[i], receptor_list[i]])
+
+
+    
+    ### see which of those are not calculated yet #############
+    file_list = glob.glob("ParallelFold-main/output/"+ "lrbind" +"*json")
+    calculated_pairs = dict()
+    for file_path in file_list:
+        ligand = file_path.split('_')[1]
+        receptor = file_path.split('_')[2]
+        calculated_pairs[ligand + '+' + receptor] = ''
+
+
+    lrp_list = []
+    for pair in probable_pairs:
+        ligand = pair[0]
+        receptor = pair[1]
+        if ligand + '+' + receptor not in calculated_pairs:
+            lrp_list.append([ligand, receptor]) 
+
     
     path_to = '/cluster/projects/schwartzgroup/fatema/LRbind/alphafold_input/'
     prefix = 'lrbind_'
