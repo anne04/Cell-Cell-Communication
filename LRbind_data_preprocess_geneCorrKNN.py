@@ -92,7 +92,7 @@ if __name__ == "__main__":
     
     else: # Data is not available in Space Ranger output format
         # read the mtx file
-        '''	
+        	
         temp = sc.read_10x_mtx(args.data_from) #
         print(temp)
         print('*.mtx file read done')
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         print('Applying quantile normalization')
         temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)  
-                                
+        '''                                
         
         # now read the tissue position file. It has the format:     
         df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
@@ -235,6 +235,7 @@ if __name__ == "__main__":
             cell_cell_contact[receptor] = '' # keep track of which ccc are labeled as cell-cell-contact
     
     receptor_list = list(receptor_list.keys())
+    ligand_list =  list(ligand_dict_dataset.keys())
     print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
     print('number of ligands %d '%len(ligand_dict_dataset.keys()))
     print('number of receptors %d '%len(receptor_list))
@@ -354,6 +355,7 @@ if __name__ == "__main__":
     print('target_cell_pair %d'%len(debug.keys()))  
     ##############################################################################
     # some preprocessing before making the input graph
+    blocked_gene_per_cell = defaultdict(dict)
     if args.prefilter==1:
 
         # Set threshold gene percentile
@@ -378,7 +380,7 @@ if __name__ == "__main__":
 
         
         ### remove the ligand and receptors whose up/dowstream genes are not expressed
-        with gzip.open(args.metadata_from+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
+        with gzip.open(args.metadata_to+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
             receptor_intraNW = pickle.load(fp)
     
         for receptor in receptor_intraNW:
@@ -388,7 +390,7 @@ if __name__ == "__main__":
     
             receptor_intraNW[receptor] = np.unique(target_list)
             
-        with gzip.open(args.metadata_from+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
+        with gzip.open(args.metadata_to+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
             ligand_intraNW = pickle.load(fp)
     
         for ligand in ligand_intraNW:
@@ -445,7 +447,7 @@ if __name__ == "__main__":
             cells_ligand_vs_receptor[i].append([])
             cells_ligand_vs_receptor[i][j] = []
 
-    ligand_list =  list(ligand_dict_dataset.keys())            
+    #ligand_list =  list(ligand_dict_dataset.keys())            
     start_index = 0 #args.slice
     end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
     #inactive_node=[]
@@ -634,6 +636,8 @@ if __name__ == "__main__":
         print('i %d, edge %d, gene node %d'%(i, len(row_col_gene), len(gene_node_type)))
         cell_intra_gcm = defaultdict(dict)
         for gene_a in cell_gene_set:
+            if gene_index[gene_a] in blocked_gene_per_cell[i]:
+                continue
             #if gene_a == "CCL19" :
             #    print("found ccl19")
             if cell_vs_gene[spot_id][gene_index[gene_a]] < intra_active[spot_id]: #cell_percentile[spot_id]:
@@ -657,6 +661,7 @@ if __name__ == "__main__":
                 # find knn ligand genes 
             sorted_gene_b_receptor = []
             for gene_b in receptor_list:
+                    
                 if gene_b==gene_a or gene_coexpression_matrix[gene_a][gene_b]<=0: # or cell_vs_gene[spot_id][gene_index[gene_b]] < intra_active[spot_id]: #cell_percentile[spot_id]:
                     continue 
 
@@ -674,7 +679,7 @@ if __name__ == "__main__":
             sorted_gene_b = sorted_gene_b_temp
             
             for gene_b in sorted_gene_b: #cell_gene_set:
-                if gene_b==gene_a:
+                if gene_index[gene_b] in blocked_gene_per_cell[i]:
                     continue
 
                 if gene_a in cell_intra_gcm and gene_b in cell_intra_gcm[gene_a]:
@@ -802,7 +807,6 @@ if __name__ == "__main__":
     #	pickle.dump(cell_vs_gene, fp)
      
     print('write data done')
-
 
 
 
