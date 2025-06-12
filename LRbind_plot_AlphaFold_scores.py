@@ -52,6 +52,34 @@ plt.savefig(output_path + file_name +str(len(score_list))+'LRP.jpg')
 
 data_list_pd = pd.DataFrame(lrpair_score_dict)
 data_list_pd.to_csv(output_path + file_name +str(len(score_list))+'LRP.csv' , index=False)
+###################################################################################################
+top_N = 100
+ligand_list = []
+receptor_list = [] #
+data_name = ['LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir', 'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',\
+	'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir']
+model_list = ['model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L', 'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',\
+	      'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_3L']
+j = 0 # \
+for j in range (0, len(model_list)):
+model_name = model_list[j]
+df = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/'+ data_name[j] + '/' +model_name+'_down_up_deg_novel_lr_list_sortedBy_totalScore_top'+str(top_N)+'_novelsOutOfallLR.csv', sep=",")
+    
+for i in range (35, 100):
+    ligand = df["Ligand-Receptor Pairs"][i].split('+')[0]
+    receptor = df["Ligand-Receptor Pairs"][i].split('+')[1]       
+    ligand_list.append(ligand)
+    receptor_list.append(receptor)
+j = j + 1
+
+
+
+
+probable_pairs = []
+for i in range(0, len(ligand_list)):
+probable_pairs.append([ligand_list[i], receptor_list[i]])
+
+
 
 # Print the data
 print(data)
