@@ -88,7 +88,7 @@ if __name__ == "__main__":
         cell_barcode = np.array(adata_h5.obs.index)
         print('Number of barcodes: %d'%cell_barcode.shape[0])
         print('Applying quantile normalization')
-        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
+        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarra(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)      
     
     else: # Data is not available in Space Ranger output format
