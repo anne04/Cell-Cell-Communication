@@ -40,15 +40,25 @@ warnings.filterwarnings('ignore')
 import anndata
 
 
-data_name_list = ['LRbind_V1_Human_Lymph_Node_spatial', 'LRbind_V1_Human_Lymph_Node_spatial', \
-                  'LRbind_V1_Human_Lymph_Node_spatial', 'LRbind_V1_Human_Lymph_Node_spatial',\
-                  
-                 'LUAD', 'LUAD', 'LUAD', 'LUAD', \
-                  
-                 'PDAC64630', 'PDAC64630', #'PDAC64630', 'PDAC64630',\
-
-                 'V1_Breast_Cancer_Block_A_Section_1_spatial', 'V1_Breast_Cancer_Block_A_Section_1_spatial', \
-                  'V1_Breast_Cancer_Block_A_Section_1_spatial', 'V1_Breast_Cancer_Block_A_Section_1_spatial'
+data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir',
+               'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered',
+               'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir',
+               'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               
+               'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir',
+               'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_prefiltered',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+                
+               'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
+               #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
+               'LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir',
+               #'LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               
+               'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir',
+               'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered',
+               'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir',
+               'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
                  ]
 
 model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
