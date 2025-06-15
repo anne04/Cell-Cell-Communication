@@ -84,6 +84,7 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 ##########################################################
 if __name__ == "__main__":
+    for data_index in range(0, len(data_name_list)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
@@ -104,9 +105,9 @@ if __name__ == "__main__":
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
         args = parser.parse_args()
         ##############
-        args.data_name = data_names[i]
-        args.target_ligand = target_ligands[i]
-        args.target_receptor = target_receptors[i]
+        args.data_name = data_names[data_index]
+        args.target_ligand = target_ligands[data_index]
+        args.target_receptor = target_receptors[data_index] 
         ##############
         args.metadata_from = args.metadata_from + args.data_name + '/'
         args.data_from = args.data_from + args.data_name + '/'
@@ -208,8 +209,11 @@ if __name__ == "__main__":
             ligand_intraNW[ligand] = np.unique(target_list)
                 
         ############# load output graph #################################################
-    
-        for model_name in model_names[i]:
+        print(args.data_name)
+        print(model_names[data_index])
+        print(args.target_ligand + '-' + args.target_receptor)
+        
+        for model_name in model_names[data_index]:
             args.model_name = model_name
             args.model_name = args.model_name + '_r1'
             X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
@@ -369,7 +373,7 @@ if __name__ == "__main__":
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
                 
                 ### now remove the LR pairs which are below the elbow point
-                ''''''
+                
                 X_axis = []
                 Y_axis = []
                 for i in range (0, len(sort_lr_list)):
@@ -462,58 +466,58 @@ if __name__ == "__main__":
                 lr_dict = copy.deepcopy(save_lr_dict)
                 print('before post process len %d'%len(lr_dict.keys()))
                 #####################
-                '''
-                key_list = list(lr_dict.keys())
-                for lr_pair in key_list:
-                    #print(lr_pair)
-                    ligand = lr_pair.split('+')[0]
-                    receptor = lr_pair.split('+')[1]
-            
-                    #ligand = 'TGFB1'
-                    #receptor = 'ACVRL1'
-            
-                    list_cell_pairs = lr_dict[ligand + '+' + receptor]
-                    receptor_cell_list = []
-                    for pair in list_cell_pairs:
-                        receptor_cell_list.append(pair[2])
-            
-                    receptor_cell_list = np.unique(receptor_cell_list)
-                    if receptor not in receptor_intraNW:
-                        lr_dict.pop(ligand + '+' + receptor)
-                        continue
-                        
-                    target_list = receptor_intraNW[receptor]
-                    # what percent of them has the target genes expressed
+                if 'prefiltered' not in model_name:
+                    key_list = list(lr_dict.keys())
+                    for lr_pair in key_list:
+                        #print(lr_pair)
+                        ligand = lr_pair.split('+')[0]
+                        receptor = lr_pair.split('+')[1]
                 
-    
-                    count = 0
-                    keep_receptor = dict()
-                    for cell in receptor_cell_list:
-                        found = 0
-                        for gene in target_list:
-                            if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
-                                found = found + 1
-                                
-                                
-                        if len(target_list)>0 and found/len(target_list) >= 0.5:
-                            count = count+1
-                            keep_receptor[cell] = 1
-    
-                    filtered_pairs = []
-                    for pair in list_cell_pairs:
-                        if pair[2] in keep_receptor:
-                            filtered_pairs.append(pair)
-    
-                    #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
-                        #print('list updated: '+ ligand + '+' + receptor)
-          
-                    if len(filtered_pairs)==0:
-                        lr_dict.pop(ligand + '+' + receptor)
-                    else:
-                        lr_dict[ligand + '+' + receptor] = filtered_pairs
+                        #ligand = 'TGFB1'
+                        #receptor = 'ACVRL1'
+                
+                        list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                        receptor_cell_list = []
+                        for pair in list_cell_pairs:
+                            receptor_cell_list.append(pair[2])
+                
+                        receptor_cell_list = np.unique(receptor_cell_list)
+                        if receptor not in receptor_intraNW:
+                            lr_dict.pop(ligand + '+' + receptor)
+                            continue
+                            
+                        target_list = receptor_intraNW[receptor]
+                        # what percent of them has the target genes expressed
                     
-                print('After postprocess len %d'%len(lr_dict.keys()))
-                '''
+        
+                        count = 0
+                        keep_receptor = dict()
+                        for cell in receptor_cell_list:
+                            found = 0
+                            for gene in target_list:
+                                if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                                    found = found + 1
+                                    
+                                    
+                            if len(target_list)>0 and found/len(target_list) >= 0.5:
+                                count = count+1
+                                keep_receptor[cell] = 1
+        
+                        filtered_pairs = []
+                        for pair in list_cell_pairs:
+                            if pair[2] in keep_receptor:
+                                filtered_pairs.append(pair)
+        
+                        #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                            #print('list updated: '+ ligand + '+' + receptor)
+              
+                        if len(filtered_pairs)==0:
+                            lr_dict.pop(ligand + '+' + receptor)
+                        else:
+                            lr_dict[ligand + '+' + receptor] = filtered_pairs
+                        
+                    print('After postprocess len %d'%len(lr_dict.keys()))
+                    
                 #before post process len 112929
                 #After postprocess len 40829
                 save_lr_dict2 = copy.deepcopy(lr_dict)
@@ -559,7 +563,7 @@ if __name__ == "__main__":
                     adata.obs['group'] = 'other'
                     adata.obs.loc[index_receptor, 'group'] = 'target'
                     adata_temp = adata[:, target_list]
-                    sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test') #, pts = True)
+                    sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='wilcoxon') #, pts = True)
                     # Get the result as a dataframe
                     # Top genes ranked by p-value or log-fold change
                     result = adata_temp.uns['rank_genes_groups']
@@ -591,60 +595,60 @@ if __name__ == "__main__":
                 ############################
     #            lr_dict = copy.deepcopy(save_lr_dict2)           
                 ############################################# upstream #############################
-                '''
-                key_list = list(lr_dict.keys())
-                for lr_pair in key_list:
-                    #print(lr_pair)
-                    ligand = lr_pair.split('+')[0]
-                    receptor = lr_pair.split('+')[1]
-            
-                    #ligand = 'TGFB1'
-                    #receptor = 'ACVRL1'
-                    list_cell_pairs = lr_dict[ligand + '+' + receptor]
-                    ligand_cell_list = []
-                    for pair in list_cell_pairs:
-                        ligand_cell_list.append(pair[1])
-            
-                    ligand_cell_list = np.unique(ligand_cell_list)    
-                    if ligand not in ligand_intraNW:
-                        lr_dict.pop(ligand + '+' + receptor)
-                        continue
-    
-                    
-                    source_list = ligand_intraNW[ligand]
-                    
-                    count = 0
-                    keep_ligand = dict()
-                    for cell in ligand_cell_list:
-                        found = 0
-                        for gene in source_list:
-                            if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
-                                found = found + 1
-                                
-                                
-                        if len(source_list)>0 and found/len(source_list) >= 0.5:
-                            count = count+1
-                            keep_ligand[cell] = 1
-    
-                    filtered_pairs = []
-                    for pair in list_cell_pairs:
-                        if pair[1] in keep_ligand:
-                            filtered_pairs.append(pair)
-    
-                    #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
-                        #print('list updated: '+ ligand + '+' + receptor)
-          
-                    if len(filtered_pairs)==0:
-                        lr_dict.pop(ligand + '+' + receptor)
-                    else:
-                        lr_dict[ligand + '+' + receptor] = filtered_pairs
+                if 'prefiltered' not in model_name:
+                    key_list = list(lr_dict.keys())
+                    for lr_pair in key_list:
+                        #print(lr_pair)
+                        ligand = lr_pair.split('+')[0]
+                        receptor = lr_pair.split('+')[1]
+                
+                        #ligand = 'TGFB1'
+                        #receptor = 'ACVRL1'
+                        list_cell_pairs = lr_dict[ligand + '+' + receptor]
+                        ligand_cell_list = []
+                        for pair in list_cell_pairs:
+                            ligand_cell_list.append(pair[1])
+                
+                        ligand_cell_list = np.unique(ligand_cell_list)    
+                        if ligand not in ligand_intraNW:
+                            lr_dict.pop(ligand + '+' + receptor)
+                            continue
+        
                         
-                    # what percent of them are expressed
-                    
-                print('After postprocess len %d'%len(lr_dict.keys()))            
-            
+                        source_list = ligand_intraNW[ligand]
+                        
+                        count = 0
+                        keep_ligand = dict()
+                        for cell in ligand_cell_list:
+                            found = 0
+                            for gene in source_list:
+                                if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile[cell]:
+                                    found = found + 1
+                                    
+                                    
+                            if len(source_list)>0 and found/len(source_list) >= 0.5:
+                                count = count+1
+                                keep_ligand[cell] = 1
+        
+                        filtered_pairs = []
+                        for pair in list_cell_pairs:
+                            if pair[1] in keep_ligand:
+                                filtered_pairs.append(pair)
+        
+                        #if len(lr_dict[ligand + '+' + receptor]) > len(filtered_pairs):
+                            #print('list updated: '+ ligand + '+' + receptor)
+              
+                        if len(filtered_pairs)==0:
+                            lr_dict.pop(ligand + '+' + receptor)
+                        else:
+                            lr_dict[ligand + '+' + receptor] = filtered_pairs
+                            
+                        # what percent of them are expressed
+                        
+                    print('After postprocess len %d'%len(lr_dict.keys()))            
+                
                 #After postprocess len 3513
-                '''
+                
                 ############ Differentially Expressed genes filtering ################
                 key_list = list(lr_dict.keys())
                 #pvals_lr = dict()
@@ -682,7 +686,7 @@ if __name__ == "__main__":
                     adata.obs['group'] = 'other'
                     adata.obs.loc[index_ligand, 'group'] = 'target'
                     adata_temp = adata[:, target_list]
-                    sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='t-test') #, pts = True)
+                    sc.tl.rank_genes_groups(adata_temp, groupby='group', groups=['target'], reference='other', method='wilcoxon') #, pts = True)
                     # Get the result as a dataframe
                     # Top genes ranked by p-value or log-fold change
                     result = adata_temp.uns['rank_genes_groups']
@@ -714,9 +718,6 @@ if __name__ == "__main__":
     
                 
                 ########## take top hits #################################### 
-                #if top_N == 30:
-                #    continue
-                
                 sort_lr_list = []
                 for lr_pair in lr_dict:
                     sum = 0
@@ -729,13 +730,7 @@ if __name__ == "__main__":
                     
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
                 #sort_lr_list = sorted(sort_lr_list, key = lambda x: x[2])
-                '''
-                top_hit_lrp_dict = dict()
-                i = 0
-                for item in sort_lr_list:
-                    top_hit_lrp_dict[item[0]] = i
-                    i = i+1
-                '''
+
                # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
                 data_list=dict()
                 data_list['X']=[]
