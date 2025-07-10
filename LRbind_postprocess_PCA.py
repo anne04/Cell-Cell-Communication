@@ -42,10 +42,10 @@ alt.themes.enable("publishTheme")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     #parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-    parser.add_argument( '--data_name', type=str, default='LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
     parser.add_argument( '--model_name', type=str, default='model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB', help='Name of the trained model') #, required=True) ''
     #_geneCorr_remFromDB
-    
+    # V1_Human_Lymph_Node_spatial
     parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True)
     #######################################################################################################
     parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     barcode_index = dict()
     for i in range (0, len(barcode_info)):
         barcode_index[barcode_info[i][0]] = i
-
+    '''
     Tcell_zone = []
     node_type = dict()
     df = pd.read_csv("../NEST/data/V1_Human_Lymph_Node_spatial_annotation.csv", sep=",")
@@ -82,7 +82,7 @@ if __name__ == "__main__":
             
         node_type[df["Barcode"][i]] = df["Type"][i]
 
-   
+    '''
         
     
     with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
@@ -111,7 +111,9 @@ if __name__ == "__main__":
                    # 'LRbind_model_V1_Human_Lymph_Node_spatial_1D_manualDB',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir',
                    #'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_bidir_3L',
-                    'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L'
+                   # 'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir_3L'
+                   # 'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered'
+                    'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'
                    
               ]
     for model_name in model_names:
@@ -128,27 +130,27 @@ if __name__ == "__main__":
             X_embedding[i] = X_embedding[i]/total_score_per_row
 
         # apply PCA
-        X_PCA = sc.pp.pca(X_embedding, n_comps=2) #args.pca
+        X_PCA = sc.pp.pca(X_embedding, n_comps=50) #args.pca
         # plot those on two dimensional plane
+
+#        target_ligand_list = ['CCL19', 'CCL21']
+#        target_receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
+
+#        target_ligand_list = ['WNT10A']
+#        target_receptor_list = ['FZD1', 'FZD4', 'FZD7', 'FZD8']
+
+        target_ligand_list = ['TGFB1']
+        target_receptor_list = ['TGFBR1', 'TGFBR2', 'TGFBR3', 'ACVR1B', 'ACVR1C', 'ACVR1', 'ACVRL1' ]
+
+
+#       target_ligand_list = ['CXCL10']
+#        target_receptor_list = ['CXCR3']
         data_list=dict()
         data_list['X']=[]
         data_list['Y']=[]   
         data_list['Type']=[]   
         lig_count = 0
         rec_count = 0
-
-#        target_ligand_list = ['CCL19', 'CCL21']
-#        target_receptor_list = ['ACKR4', 'CXCR3', 'CCR7', 'CCRL2']
-
-        target_ligand_list = ['WNT10A']
-        target_receptor_list = ['FZD1', 'FZD4', 'FZD7', 'FZD8']
-
-        target_ligand_list = ['TGFB1']
-        target_receptor_list = ['TGFBR1', 'TGFBR2', 'TGFBR3', 'ACVR1B', 'ACVR1C', 'ACVR1', 'ACVRL1' ]
-
-
-        target_ligand_list = ['CXCL10']
-        target_receptor_list = ['CXCR3']
         
         
         type_found = defaultdict(list)
