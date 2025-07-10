@@ -100,9 +100,9 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',
                     'ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
-elbow_cut_flag = 0
-knee_flag = 1 #0
-file_name_suffix = '_elbow' # '100' #
+elbow_cut_flag = 0 #1 #0
+knee_flag = 0 #1 #0
+file_name_suffix = '100' # '_elbow' # 
 ##########################################################
 if __name__ == "__main__":
     for data_index in [8]: #range(0, len(data_names)):
