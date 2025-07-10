@@ -49,7 +49,9 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
-                
+
+                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+              
                'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
                #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir',
@@ -71,7 +73,9 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
-                
+
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
+               
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir_3L',
@@ -87,19 +91,21 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 
+                  'TGFB1',
                   'TGFB1','TGFB1', #'TGFB1','TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',  
                     'ACVRL1','ACVRL1','ACVRL1','ACVRL1',
+                    'ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
-elbow_cut_flag = 1
-knee_flag = 0 #1
-file_name_suffix = '100' #'_elbow' #
+elbow_cut_flag = 0
+knee_flag = 1 #0
+file_name_suffix = '_elbow' # '100' #
 ##########################################################
 if __name__ == "__main__":
-    for data_index in range(0, len(data_names)):
+    for data_index in [8]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
@@ -279,7 +285,7 @@ if __name__ == "__main__":
                         for gene in gene_node_list_per_spot[i]:
                             if gene in ligand_list:
                                 ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
-            
+                        
                         receptor_node_index = []
                         for gene in gene_node_list_per_spot[j]:
                             if gene in receptor_list:
@@ -474,8 +480,8 @@ if __name__ == "__main__":
             
                 chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+file_name_suffix+'_histogramsallLR.html')
                 
-                #with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
-                #	pickle.dump(lr_dict, fp)
+                with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+                    pickle.dump(lr_dict, fp)
     
     
                 #################################
