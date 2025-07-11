@@ -101,14 +101,14 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 elbow_cut_flag = 0 #1 #0
-knee_flag = 0 #1 #0
-file_name_suffix = '100' # '_elbow' # 
+knee_flag = 1 #1 #0
+file_name_suffix = '_elbow' #'100_woHistElbowCut' # '_elbow' #'100' 
 ##########################################################
 if __name__ == "__main__":
-    for data_index in [8]: #range(0, len(data_names)):
+    for data_index in [7]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
-        parser.add_argument( '--data_name', type=str, default='LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneCorrKNN_bidir', help='The name of dataset') #, required=True) # default='',
+        parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
         #_geneCorr_remFromDB
         #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
         #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -238,8 +238,8 @@ if __name__ == "__main__":
         
         for model_name in [model_names[data_index]]:
             args.model_name = model_name
-            args.model_name = args.model_name + '_r1'
-            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy
+            args.model_name = args.model_name + '_r2'
+            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy #_layer1
             print("\n\n"+ X_embedding_filename)
             with gzip.open(X_embedding_filename, 'rb') as fp:  
                 X_embedding = pickle.load(fp)
@@ -442,22 +442,50 @@ if __name__ == "__main__":
                     receptor = sort_lr_list[i][0].split('+')[1]
                     #data_list['score_sum'].append()
                     data_list['score_avg'].append(sort_lr_list[i][2])
-                    data_list['pair_count'].append(sort_lr_list[i][3])
+                    data_list['pair_count'].append(sort_lr_list[i][3]) 
                     
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
                     else:
                         data_list['type'].append('Predicted')
                         
-                data_list_pd = pd.DataFrame({
+                data_list_pd_l3 = pd.DataFrame({
                     'Ligand-Receptor Pairs': data_list['X'],
                     'Score_sum': data_list['Y'],
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count']
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR.csv', index=False)
+                data_list_pd_l3.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_l3.csv', index=False)
+                ######
+                pair_vs_position_l1 = dict()
+                lig_rec_pairs_l1 = data_list_pd['Ligand-Receptor Pairs']
+                for i in range (0, len(lig_rec_pairs_l1)):
+                    pair_vs_position_l1[lig_rec_pairs_l1[i]] = data_list_pd['Score_avg'][i] #i
                     
+                pair_vs_position_l3 = dict()
+                lig_rec_pairs_l3 = data_list_pd_l3['Ligand-Receptor Pairs']
+                for i in range (0, len(lig_rec_pairs_l3)):
+                    pair_vs_position_l3[lig_rec_pairs_l3[i]] = data_list_pd_l3['Score_avg'][i] #i
+                    
+                 
+                pair_vs_difference = []
+                for pair in pair_vs_position_l3.keys():
+                    position_layer3 = pair_vs_position_l3[pair]
+                    if pair in pair_vs_position_l1:
+                        position_layer1 = pair_vs_position_l1[pair]
+                    else:
+                        continue
+                        #position_layer1 = len(lig_rec_pairs_l1)
+
+                    # position_layer3 should be smaller than position_layer1
+                    position_difference = position_layer3 - position_layer1
+                    pair_vs_difference.append([pair, position_difference])
+
+                # now sort the pairs in ascending order of difference - small to large
+                sort_pair_vs_difference = sorted(pair_vs_difference, key = lambda x: x[1])
+
+                ######
                 data_list=dict()
                 data_list['X']=[]
                 data_list['Y']=[] 
