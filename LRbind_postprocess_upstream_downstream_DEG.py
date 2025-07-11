@@ -248,7 +248,17 @@ if __name__ == "__main__":
             for i in range (0, X_embedding.shape[0]):
                 total_score_per_row = np.sum(X_embedding[i][:])
                 X_embedding[i] = X_embedding[i]/total_score_per_row
-                
+
+            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy #_layer1
+            print("\n\n"+ X_embedding_filename)
+            with gzip.open(X_embedding_filename, 'rb') as fp:  
+                X_embedding_layer1 = pickle.load(fp)
+    
+            
+            for i in range (0, X_embedding_layer1.shape[0]):
+                total_score_per_row = np.sum(X_embedding_layer1[i][:])
+                X_embedding_layer1[i] = X_embedding_layer1[i]/total_score_per_row
+
         ########## all ############################################# 
     #        top_lrp_count = 1000
             
@@ -293,30 +303,37 @@ if __name__ == "__main__":
             
                         dot_prod_list = []
                         product_only = []
+                        product_only_layer1 = []
                         start_index = 0
                         for i_gene in ligand_node_index:  
                             for j_gene in receptor_node_index:
                                 if i_gene[1]==j_gene[1]:
                                     continue
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
-                                # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                                temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
+
+                              # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]])
+                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], temp_layer1])
                                 product_only.append(temp)
-                         
+                                product_only_layer1.append(temp_layer1)
         
                         ###############################################    
                         if len(dot_prod_list) == 0:
                             continue
                             
-                        # Scale so that high score means high probability
+                        # flip so that high score means high probability
                         max_score = max(product_only)
+                        max_score_layer1 = max(product_only_layer1)
                         for item_idx in range (0, len(dot_prod_list)):
                             scaled_prod = max_score - dot_prod_list[item_idx][0]
                             dot_prod_list[item_idx][0] = scaled_prod 
-    
-    
-                        dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # small to low
+                          
+                            scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
+                            dot_prod_list[item_idx][5] = scaled_prod 
+
+                          
+                        dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # high to low
                         if knee_flag == 0:                       
                             dot_prod_list = dot_prod_list[0:top_N]
                         else:
@@ -332,7 +349,7 @@ if __name__ == "__main__":
                                 dot_prod_list = dot_prod_list[0:kn.knee]
                         ###########################
                         for item in dot_prod_list:
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])
                             
                             #if i in Tcell_zone and j in Tcell_zone:
                             #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
@@ -387,12 +404,14 @@ if __name__ == "__main__":
                 sort_lr_list = []
                 for lr_pair in lr_dict:
                     sum = 0
+                    sum_layer1 = 0
                     cell_pair_list = lr_dict[lr_pair]
                     for item in cell_pair_list:
                         sum = sum + item[0]  
+                        sum_layer1 = sum_layer1 + item[5]
     
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list)])
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list), sum_layer1, sum_layer1/len(cell_pair_list)])
             
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
                 
