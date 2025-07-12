@@ -442,7 +442,9 @@ if __name__ == "__main__":
                     
                 ############### record the top hit without postprocessing ####################3
                 
-    
+                with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+                pickle.dump(lr_dict, fp)
+
                 # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
                 data_list=dict()
                 data_list['X']=[]
@@ -451,6 +453,8 @@ if __name__ == "__main__":
                 #data_list['score_sum'] =[]
                 data_list['score_avg'] = []
                 data_list['pair_count'] = []
+                data_list['score_sum_layer1'] =[]
+                data_list['score_avg_layer1'] = []              
                 max_rows = len(sort_lr_list)
                 for i in range (0, max_rows): #1000): #:
                     ligand = sort_lr_list[i][0].split('+')[0]
@@ -462,6 +466,8 @@ if __name__ == "__main__":
                     #data_list['score_sum'].append()
                     data_list['score_avg'].append(sort_lr_list[i][2])
                     data_list['pair_count'].append(sort_lr_list[i][3]) 
+                    data_list['score_sum_layer1'].append(sort_lr_list[i][4])
+                    data_list['score_avg_layer1'].append(sort_lr_list[i][5])
                     
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
@@ -474,8 +480,11 @@ if __name__ == "__main__":
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count']
+                    'Score_sum_layer1': data_list['score_sum_layer1'],
+                    'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                data_list_pd_l3.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_l3.csv', index=False)
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR.csv', index=False)
+
                 ######
                 pair_vs_position_l1 = dict()
                 lig_rec_pairs_l1 = data_list_pd['Ligand-Receptor Pairs']
@@ -527,9 +536,7 @@ if __name__ == "__main__":
             
                 chart.save(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+file_name_suffix+'_histogramsallLR.html')
                 
-                with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
-                    pickle.dump(lr_dict, fp)
-    
+
     
                 #################################
                 save_lr_dict = copy.deepcopy(lr_dict)
