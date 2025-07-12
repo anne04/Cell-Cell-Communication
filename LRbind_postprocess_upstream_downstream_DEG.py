@@ -101,8 +101,8 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 elbow_cut_flag = 0 #1 #0
-knee_flag = 1 #1 #0
-file_name_suffix = '_elbow' #'100_woHistElbowCut' # '_elbow' #'100' 
+knee_flag = 0 #1 #0
+file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
 ##########################################################
 if __name__ == "__main__":
     for data_index in [7]: #range(0, len(data_names)):
@@ -239,7 +239,7 @@ if __name__ == "__main__":
         for model_name in [model_names[data_index]]:
             args.model_name = model_name
             args.model_name = args.model_name + '_r2'
-            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy #_layer1
+            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' 
             print("\n\n"+ X_embedding_filename)
             with gzip.open(X_embedding_filename, 'rb') as fp:  
                 X_embedding = pickle.load(fp)
@@ -249,7 +249,7 @@ if __name__ == "__main__":
                 total_score_per_row = np.sum(X_embedding[i][:])
                 X_embedding[i] = X_embedding[i]/total_score_per_row
 
-            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' #.npy #_layer1
+            X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X_layer1' 
             print("\n\n"+ X_embedding_filename)
             with gzip.open(X_embedding_filename, 'rb') as fp:  
                 X_embedding_layer1 = pickle.load(fp)
@@ -408,7 +408,7 @@ if __name__ == "__main__":
                     cell_pair_list = lr_dict[lr_pair]
                     for item in cell_pair_list:
                         sum = sum + item[0]  
-                        sum_layer1 = sum_layer1 + item[5]
+                        sum_layer1 = sum_layer1 + item[3]
     
                     #sum = sum/len(cell_pair_list)
                     sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list), sum_layer1, sum_layer1/len(cell_pair_list)])
@@ -443,7 +443,7 @@ if __name__ == "__main__":
                 ############### record the top hit without postprocessing ####################3
                 
                 with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
-                pickle.dump(lr_dict, fp)
+                    pickle.dump(lr_dict, fp)
 
                 # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
                 data_list=dict()
@@ -474,12 +474,12 @@ if __name__ == "__main__":
                     else:
                         data_list['type'].append('Predicted')
                         
-                data_list_pd_l3 = pd.DataFrame({
+                data_list_pd = pd.DataFrame({
                     'Ligand-Receptor Pairs': data_list['X'],
                     'Score_sum': data_list['Y'],
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
-                    'Pair_count': data_list['pair_count']
+                    'Pair_count': data_list['pair_count'],
                     'Score_sum_layer1': data_list['score_sum_layer1'],
                     'Score_avg_layer1': data_list['score_avg_layer1']
                 })
