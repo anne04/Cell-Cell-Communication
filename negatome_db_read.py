@@ -52,10 +52,17 @@ if __name__ == "__main__":
         for gene in rec_gene_list:
             receptor_list.append(gene)
 
+        for lig_gene in ligand_gene_list:
+            for rec_gene in rec_gene_list:
+                lr_unique[lig_gene][rec_gene]=1
+
 
     ligand_list = np.unique(ligand_list)
     receptor_list = np.unique(receptor_list)
-  
+
+    with gzip.open('database/negatome_ligand_receptor_set', 'wb') as fp:  
+    	pickle.dump([ligand_list, receptor_list], fp)
+        
     
 
         
