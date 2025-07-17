@@ -164,7 +164,14 @@ if __name__ == "__main__":
         
         with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
             barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
-        
+
+        negatome_gene_found = dict()
+        for index in gene_node_index_active:
+            gene_name = barcode_info_gene[index][5]
+            if gene_name in nigatome_ligand_list or gene_name in nigatome_receptor_list:
+                negatome_gene_found[gene_name] = 1
+           
+      
         with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
             target_LR_index, target_cell_pair = pickle.load(fp)
     
