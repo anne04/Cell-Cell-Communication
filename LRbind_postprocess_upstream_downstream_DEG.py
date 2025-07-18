@@ -105,7 +105,7 @@ knee_flag = 0 #1 #0
 file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
 ##########################################################
 if __name__ == "__main__":
-    for data_index in [7]: #range(0, len(data_names)):
+    for data_index in [3]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -165,18 +165,31 @@ if __name__ == "__main__":
         with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
             barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
 
-        negatome_gene_found = dict()
-        for index in gene_node_index_active:
-            gene_name = barcode_info_gene[index][5]
-            if gene_name in nigatome_ligand_list or gene_name in nigatome_receptor_list:
-                negatome_gene_found[gene_name] = 1
-           
+          
       
         with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
             target_LR_index, target_cell_pair = pickle.load(fp)
     
         #####################################################################################
-        
+        with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+            negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
+      
+        negatome_gene_found = dict()
+        for index in gene_node_index_active:
+            gene_name = barcode_info_gene[index][5]
+            if gene_name in negatome_ligand_list or gene_name in negatome_receptor_list:
+                negatome_gene_found[gene_name] = 1
+
+        negatome_lr_pair = defaultdict(dict)
+        negatome_candidate = 0
+        for ligand in lr_unique:
+            for receptor in lr_unique[ligand]:
+                if ligand in negatome_gene_found and receptor in negatome_gene_found:
+                    negatome_lr_pair[ligand][receptor] = 1
+                    negatome_candidate = negatome_candidate + 1
+
+        print('negatome_cand %d'%negatome_candidate)  # negatome_cand 37 - luad
+        #####################
         with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
             cell_vs_gene = pickle.load(fp)
     
@@ -463,9 +476,21 @@ if __name__ == "__main__":
                 data_list['score_sum_layer1'] =[]
                 data_list['score_avg_layer1'] = []              
                 max_rows = len(sort_lr_list)
+
+                
                 for i in range (0, max_rows): #1000): #:
                     ligand = sort_lr_list[i][0].split('+')[0]
                     receptor = sort_lr_list[i][0].split('+')[1]
+                    if ligand in l_r_pair and receptor in l_r_pair[ligand]:
+                        data_list['type'].append('From DB')
+                    elif ligand in negatome_lr_pair and receptor in negatome_lr_pair[ligand]:
+                        data_list['type'].append('From negatome')
+                    else:
+                        continue
+                        data_list['type'].append('Predicted')
+                    
+
+                    
                     data_list['X'].append(ligand + '_to_' + receptor)
                     data_list['Y'].append(sort_lr_list[i][1])
                     ligand = sort_lr_list[i][0].split('+')[0]
@@ -476,10 +501,6 @@ if __name__ == "__main__":
                     data_list['score_sum_layer1'].append(sort_lr_list[i][4])
                     data_list['score_avg_layer1'].append(sort_lr_list[i][5])
                     
-                    if ligand in l_r_pair and receptor in l_r_pair[ligand]:
-                        data_list['type'].append('From DB')
-                    else:
-                        data_list['type'].append('Predicted')
                         
                 data_list_pd = pd.DataFrame({
                     'Ligand-Receptor Pairs': data_list['X'],
@@ -490,36 +511,10 @@ if __name__ == "__main__":
                     'Score_sum_layer1': data_list['score_sum_layer1'],
                     'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR.csv', index=False)
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_negatome.csv', index=False)
 
-                ######
-                pair_vs_position_l1 = dict()
-                lig_rec_pairs_l1 = data_list_pd['Ligand-Receptor Pairs']
-                for i in range (0, len(lig_rec_pairs_l1)):
-                    pair_vs_position_l1[lig_rec_pairs_l1[i]] = data_list_pd['Score_avg'][i] #i
-                    
-                pair_vs_position_l3 = dict()
-                lig_rec_pairs_l3 = data_list_pd_l3['Ligand-Receptor Pairs']
-                for i in range (0, len(lig_rec_pairs_l3)):
-                    pair_vs_position_l3[lig_rec_pairs_l3[i]] = data_list_pd_l3['Score_avg'][i] #i
-                    
-                 
-                pair_vs_difference = []
-                for pair in pair_vs_position_l3.keys():
-                    position_layer3 = pair_vs_position_l3[pair]
-                    if pair in pair_vs_position_l1:
-                        position_layer1 = pair_vs_position_l1[pair]
-                    else:
-                        continue
-                        #position_layer1 = len(lig_rec_pairs_l1)
 
-                    # position_layer3 should be smaller than position_layer1
-                    position_difference = position_layer3 - position_layer1
-                    pair_vs_difference.append([pair, position_difference])
-
-                # now sort the pairs in ascending order of difference - small to large
-                sort_pair_vs_difference = sorted(pair_vs_difference, key = lambda x: x[1])
-
+                
                 ######
                 data_list=dict()
                 data_list['X']=[]
