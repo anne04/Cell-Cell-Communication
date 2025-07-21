@@ -80,6 +80,14 @@ if __name__ == "__main__":
 
     with gzip.open('database/negatome_ligand_receptor_set', 'wb') as fp:  
     	pickle.dump([negatome_ligand_list, negatome_receptor_list, lr_unique], fp)
+
+####
+for ligand_gene in lr_unique:
+    for rec_gene in lr_unique[ligand_gene]:
+        print(ligand_gene + '_to_' + rec_gene)
+
+
+        
         
     
 #### There are 110 ligand gene and 121 receptor gene from negatome database
