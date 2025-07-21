@@ -44,13 +44,15 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
                
                'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
 
-                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
               
                'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
                #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
@@ -68,6 +70,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
+               'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
                
                'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L',
                'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
@@ -75,6 +78,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
 
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
                
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
@@ -89,23 +93,25 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                
                                
           ]
-target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19',  
+target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 
-                  'TGFB1',
+                  'TGFB1', 'TGFB1',
                   'TGFB1','TGFB1', #'TGFB1','TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
-target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7',  
+target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
                     'ACVRL1','ACVRL1','ACVRL1','ACVRL1',
-                    'ACVRL1',
+                    'ACVRL1', 'ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
-elbow_cut_flag = 0 #1 #0
-knee_flag = 0 #1 #0
-file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
-##########################################################
+
 if __name__ == "__main__":
-    for data_index in [3]: #range(0, len(data_names)):
+    elbow_cut_flag = 0 #1 #0
+    knee_flag = 0 #1 #0
+    file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
+    ##########################################################
+
+    for data_index in [4, 10]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -258,7 +264,7 @@ if __name__ == "__main__":
         
         for model_name in [model_names[data_index]]:
             args.model_name = model_name
-            args.model_name = args.model_name + '_r2'
+            args.model_name = args.model_name + '_r1'
             X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' 
             print("\n\n"+ X_embedding_filename)
             with gzip.open(X_embedding_filename, 'rb') as fp:  
@@ -462,8 +468,8 @@ if __name__ == "__main__":
                     
                 ############### record the top hit without postprocessing ####################3
                 
-                with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
-                    pickle.dump(lr_dict, fp)
+                #with gzip.open(args.output_path +model_name+'_top'+file_name_suffix+'_lr_dict_before_postprocess.pkl', 'wb') as fp:  
+                #    pickle.dump(lr_dict, fp)
 
                 # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
                 data_list=dict()
