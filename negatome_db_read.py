@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # ================ Specify data type firstly ===============
     parser.add_argument( '--file_name', type=str, default='uniprotkb_reviewed_true_AND_proteome_up_2025_02_27.tsv', help='The name of DB')
     parser.add_argument( '--negatome_database_path', type=str, default='database/combined_stringent.txt', help='The name of DB')
-    parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv', help='The name of DB')
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
     parser.add_argument( '--database_path_omnipath', type=str, default='database/omnipath_lr_db.csv', help='The name of DB')
     parser.add_argument( '--result_path', type=str, default='result/')
     args = parser.parse_args()
@@ -44,12 +44,10 @@ if __name__ == "__main__":
     for i in range (0, df['genesymbol_intercell_source'].shape[0]):
         ligand = df['genesymbol_intercell_source'][i]
         receptor = df['genesymbol_intercell_target'][i]
-        if str(df['secreted_intercell_source'][i]) == 'False' or str(df['is_inhibition'][i]) =='True' :
-            continue
-            
-        #lr_unique[ligand][receptor] = 1
-        ligand_list.append(ligand)
-        receptor_list.append(receptor)
+        if (str(df['secreted_intercell_source'][i]) == 'True' or ) and str(df['is_inhibition'][i]) =='False':                
+            #lr_unique[ligand][receptor] = 1
+            ligand_list.append(ligand)
+            receptor_list.append(receptor)
         
 
     ##################################################################
