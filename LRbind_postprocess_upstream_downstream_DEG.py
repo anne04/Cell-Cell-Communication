@@ -285,7 +285,25 @@ if __name__ == "__main__":
                 total_score_per_row = np.sum(X_embedding_layer1[i][:])
                 X_embedding_layer1[i] = X_embedding_layer1[i]/total_score_per_row
 
-        ########## all ############################################# 
+
+
+
+            ############ attention scores ##############################
+            attention_scores = defaultdict(dict)      
+            distribution = []
+            X_attention_filename = args.embedding_path +  args.model_name + filename_suffix + 'attention' #.npy
+            print(X_attention_filename)
+            fp = gzip.open(X_attention_filename, 'rb')  
+            X_attention_bundle = pickle.load(fp)
+            
+            for index in range (0, X_attention_bundle[0].shape[1]):
+                i = X_attention_bundle[0][0][index]
+                j = X_attention_bundle[0][1][index]
+                distribution.append(X_attention_bundle[1][index][0])
+                attention_scores[i][j] = X_attention_bundle[1][index][0]
+
+      
+            ########## all ############################################# 
     #        top_lrp_count = 1000
             
             break_flag = 0
@@ -316,7 +334,7 @@ if __name__ == "__main__":
                         if dist_X[i][j]==0 or i==j :
                             continue
                         
-                        # from i to j
+                        # from i to j 
                         ligand_node_index = []
                         for gene in gene_node_list_per_spot[i]:
                             if gene in ligand_list:
@@ -326,7 +344,17 @@ if __name__ == "__main__":
                         for gene in gene_node_list_per_spot[j]:
                             if gene in receptor_list:
                                 receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
-            
+
+
+                        # from i to j == total attention score
+                        if args.multiply_attn == 1:
+                            total_attention_score = 0 
+                            for i_gene in ligand_node_index:  
+                                for j_gene in receptor_node_index:
+                                    if i gene in attention_scores and j_gene in attention_scores[i_gene]:
+                                        total_attention_score = total_attention_score + attention_scores[i][j]
+
+                        
                         dot_prod_list = []
                         product_only = []
                         product_only_layer1 = []
@@ -374,16 +402,27 @@ if __name__ == "__main__":
                                 kn = KneeLocator(x, score_list, direction='decreasing', curve="convex")
                                 dot_prod_list = dot_prod_list[0:kn.knee]
                         ###########################
-                        for item in dot_prod_list:
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])
-                            
-                            #if i in Tcell_zone and j in Tcell_zone:
-                            #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
-                                
-                            if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
-                                found_list[i].append(item[0]) #= 1
-                                found_list[j].append(item[0])
-                                #break
+                        if args.multiply_attn == 1:
+                            for item in dot_prod_list:
+                                lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2], item[5]])                            
+                                #if i in Tcell_zone and j in Tcell_zone:
+                                #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2]])
+                                    
+                                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                                    found_list[i].append(item[0]*total_attention_score) #= 1
+                                    found_list[j].append(item[0]*total_attention_score)
+                                    #break
+                        
+                        else:
+                            for item in dot_prod_list:
+                                lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])                            
+                                #if i in Tcell_zone and j in Tcell_zone:
+                                #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                                    
+                                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                                    found_list[i].append(item[0]) #= 1
+                                    found_list[j].append(item[0])
+                                    #break
         
                         ####################################################
             
