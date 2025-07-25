@@ -44,6 +44,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
                
                'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir',
@@ -70,6 +71,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
+               'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
                
                'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L',
@@ -93,13 +95,13 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                
                                
           ]
-target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
+target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 
                   'TGFB1', 'TGFB1',
                   'TGFB1','TGFB1', #'TGFB1','TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
-target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
+target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
                     'ACVRL1','ACVRL1','ACVRL1','ACVRL1',
                     'ACVRL1', 'ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [9]: #range(0, len(data_names)):
+    for data_index in [10]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -130,6 +132,7 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
+        parser.add_argument( '--multiply_attn', type=int, default=1, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -275,6 +278,7 @@ if __name__ == "__main__":
                 total_score_per_row = np.sum(X_embedding[i][:])
                 X_embedding[i] = X_embedding[i]/total_score_per_row
 
+            '''
             X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X_layer1' 
             print("\n\n"+ X_embedding_filename)
             with gzip.open(X_embedding_filename, 'rb') as fp:  
@@ -284,7 +288,7 @@ if __name__ == "__main__":
             for i in range (0, X_embedding_layer1.shape[0]):
                 total_score_per_row = np.sum(X_embedding_layer1[i][:])
                 X_embedding_layer1[i] = X_embedding_layer1[i]/total_score_per_row
-
+            '''
 
 
 
@@ -313,6 +317,17 @@ if __name__ == "__main__":
               distribution.append(scaled_score)
               attention_scores[i][j] = scaled_score
 
+            ########################################################################
+            '''
+            In [9]: sort_lr_list[282]
+            Out[9]: ['TGFB1+RPSA', 87.83863203846781, 0.04901709377146641, 1792]
+            
+            In [10]: sort_lr_list[369]
+            Out[10]: ['TGFB1+TGFBR1', 60.0198603777533, 0.3390952563714876, 177]
+            '''
+            #########################################################################
+
+            
     
             ########## all ############################################# 
     #        top_lrp_count = 1000
@@ -358,7 +373,7 @@ if __name__ == "__main__":
 
 
                         # from i to j == total attention score
-                        if multiply_attn == 1:
+                        if args.multiply_attn == 1:
                             total_attention_score = 0 
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
@@ -368,7 +383,7 @@ if __name__ == "__main__":
                         
                         dot_prod_list = []
                         product_only = []
-                        product_only_layer1 = []
+                        #product_only_layer1 = []
                         start_index = 0
                         for i_gene in ligand_node_index:  
                             for j_gene in receptor_node_index:
@@ -392,8 +407,10 @@ if __name__ == "__main__":
                         # max_score_layer1 = max(product_only_layer1)
                         for item_idx in range (0, len(dot_prod_list)):
                             scaled_prod = max_score - dot_prod_list[item_idx][0]
-                            dot_prod_list[item_idx][0] = scaled_prod 
-                          
+                            if args.multiply_attn == 1:
+                                dot_prod_list[item_idx][0] = scaled_prod * total_attention_score
+                            else: 
+                                dot_prod_list[item_idx][0] = scaled_prod
                             #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
                             #dot_prod_list[item_idx][5] = scaled_prod 
 
@@ -413,27 +430,16 @@ if __name__ == "__main__":
                                 kn = KneeLocator(x, score_list, direction='decreasing', curve="convex")
                                 dot_prod_list = dot_prod_list[0:kn.knee]
                         ###########################
-                        if multiply_attn == 1:
-                            for item in dot_prod_list:
-                                lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2]]) #, item[5]])                            
-                                #if i in Tcell_zone and j in Tcell_zone:
-                                #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2]])
-                                    
-                                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
-                                    found_list[i].append(item[0]*total_attention_score) #= 1
-                                    found_list[j].append(item[0]*total_attention_score)
-                                    #break
-                        
-                        else:
-                            for item in dot_prod_list:
-                                lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])                            
-                                #if i in Tcell_zone and j in Tcell_zone:
-                                #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
-                                    
-                                if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
-                                    found_list[i].append(item[0]) #= 1
-                                    found_list[j].append(item[0])
-                                    #break
+
+                        for item in dot_prod_list:
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]]) # , item[5]])                            
+                            #if i in Tcell_zone and j in Tcell_zone:
+                            #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
+                                
+                            if test_mode == 1 and item[3] == target_ligand and item[4] == target_receptor:
+                                found_list[i].append(item[0]) #= 1
+                                found_list[j].append(item[0])
+                                #break
         
                         ####################################################
             
@@ -480,7 +486,7 @@ if __name__ == "__main__":
                 sort_lr_list = []
                 for lr_pair in lr_dict:
                     sum = 0
-                    sum_layer1 = 0
+                    #sum_layer1 = 0
                     cell_pair_list = lr_dict[lr_pair]
                     for item in cell_pair_list:
                         sum = sum + item[0]  
@@ -529,8 +535,8 @@ if __name__ == "__main__":
                 #data_list['score_sum'] =[]
                 data_list['score_avg'] = []
                 data_list['pair_count'] = []
-                data_list['score_sum_layer1'] =[]
-                data_list['score_avg_layer1'] = []              
+                #data_list['score_sum_layer1'] =[]
+                #data_list['score_avg_layer1'] = []              
                 max_rows = len(sort_lr_list)
 
                 
@@ -554,8 +560,8 @@ if __name__ == "__main__":
                     #data_list['score_sum'].append()
                     data_list['score_avg'].append(sort_lr_list[i][2])
                     data_list['pair_count'].append(sort_lr_list[i][3]) 
-                    data_list['score_sum_layer1'].append(sort_lr_list[i][4])
-                    data_list['score_avg_layer1'].append(sort_lr_list[i][5])
+                    #data_list['score_sum_layer1'].append(sort_lr_list[i][4])
+                    #data_list['score_avg_layer1'].append(sort_lr_list[i][5])
                     
                         
                 data_list_pd = pd.DataFrame({
@@ -564,8 +570,8 @@ if __name__ == "__main__":
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count'],
-                    'Score_sum_layer1': data_list['score_sum_layer1'],
-                    'Score_avg_layer1': data_list['score_avg_layer1']
+                    #'Score_sum_layer1': data_list['score_sum_layer1'],
+                    #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_negatome.csv', index=False)
 
