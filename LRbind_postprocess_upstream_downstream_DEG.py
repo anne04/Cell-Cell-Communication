@@ -111,7 +111,7 @@ if __name__ == "__main__":
     file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [4, 10]: #range(0, len(data_names)):
+    for data_index in [9]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -291,7 +291,7 @@ if __name__ == "__main__":
             ############ attention scores ##############################
             attention_scores = defaultdict(dict)      
             distribution = []
-            X_attention_filename = args.embedding_path +  args.model_name + filename_suffix + 'attention' #.npy
+            X_attention_filename = args.embedding_path +  args.model_name + '_attention' #.npy
             print(X_attention_filename)
             fp = gzip.open(X_attention_filename, 'rb')  
             X_attention_bundle = pickle.load(fp)
@@ -300,9 +300,20 @@ if __name__ == "__main__":
                 i = X_attention_bundle[0][0][index]
                 j = X_attention_bundle[0][1][index]
                 distribution.append(X_attention_bundle[1][index][0])
-                attention_scores[i][j] = X_attention_bundle[1][index][0]
+                
 
-      
+
+            min_value = min(distribution)
+            max_value = max(distribution)
+            distribution = []
+            for index in range (0, X_attention_bundle[0].shape[1]):
+              i = X_attention_bundle[0][0][index]
+              j = X_attention_bundle[0][1][index]
+              scaled_score = (X_attention_bundle[1][index][0]-min_value)/(max_value-min_value)
+              distribution.append(scaled_score)
+              attention_scores[i][j] = scaled_score
+
+    
             ########## all ############################################# 
     #        top_lrp_count = 1000
             
@@ -347,12 +358,12 @@ if __name__ == "__main__":
 
 
                         # from i to j == total attention score
-                        if args.multiply_attn == 1:
+                        if multiply_attn == 1:
                             total_attention_score = 0 
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
-                                    if i gene in attention_scores and j_gene in attention_scores[i_gene]:
-                                        total_attention_score = total_attention_score + attention_scores[i][j]
+                                    if i_gene[0] in attention_scores and j_gene[0] in attention_scores[i_gene[0]]:
+                                        total_attention_score = total_attention_score + attention_scores[i_gene[0]][j_gene[0]]
 
                         
                         dot_prod_list = []
@@ -364,13 +375,13 @@ if __name__ == "__main__":
                                 if i_gene[1]==j_gene[1]:
                                     continue
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
-                                temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
+                                #temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
 
                               # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], temp_layer1])
+                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]]) #, temp_layer1])
                                 product_only.append(temp)
-                                product_only_layer1.append(temp_layer1)
+                                #product_only_layer1.append(temp_layer1)
         
                         ###############################################    
                         if len(dot_prod_list) == 0:
@@ -378,13 +389,13 @@ if __name__ == "__main__":
                             
                         # flip so that high score means high probability
                         max_score = max(product_only)
-                        max_score_layer1 = max(product_only_layer1)
+                        # max_score_layer1 = max(product_only_layer1)
                         for item_idx in range (0, len(dot_prod_list)):
                             scaled_prod = max_score - dot_prod_list[item_idx][0]
                             dot_prod_list[item_idx][0] = scaled_prod 
                           
-                            scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
-                            dot_prod_list[item_idx][5] = scaled_prod 
+                            #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
+                            #dot_prod_list[item_idx][5] = scaled_prod 
 
                           
                         dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # high to low
@@ -402,9 +413,9 @@ if __name__ == "__main__":
                                 kn = KneeLocator(x, score_list, direction='decreasing', curve="convex")
                                 dot_prod_list = dot_prod_list[0:kn.knee]
                         ###########################
-                        if args.multiply_attn == 1:
+                        if multiply_attn == 1:
                             for item in dot_prod_list:
-                                lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2], item[5]])                            
+                                lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2]]) #, item[5]])                            
                                 #if i in Tcell_zone and j in Tcell_zone:
                                 #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0]*total_attention_score, item[1], item[2]])
                                     
@@ -473,10 +484,10 @@ if __name__ == "__main__":
                     cell_pair_list = lr_dict[lr_pair]
                     for item in cell_pair_list:
                         sum = sum + item[0]  
-                        sum_layer1 = sum_layer1 + item[3]
+                        #sum_layer1 = sum_layer1 + item[3]
     
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list), sum_layer1, sum_layer1/len(cell_pair_list)])
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list)]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
             
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
                 
