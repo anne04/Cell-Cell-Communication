@@ -394,7 +394,7 @@ if __name__ == "__main__":
 
                               # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]]) #, temp_layer1])
+                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], total_attention_score]) #, temp_layer1])
                                 product_only.append(temp)
                                 #product_only_layer1.append(temp_layer1)
         
@@ -408,7 +408,7 @@ if __name__ == "__main__":
                         for item_idx in range (0, len(dot_prod_list)):
                             scaled_prod = max_score - dot_prod_list[item_idx][0]
                             if args.multiply_attn == 1:
-                                dot_prod_list[item_idx][0] = scaled_prod * total_attention_score
+                                dot_prod_list[item_idx][0] = scaled_prod #* total_attention_score
                             else: 
                                 dot_prod_list[item_idx][0] = scaled_prod
                             #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
@@ -432,7 +432,7 @@ if __name__ == "__main__":
                         ###########################
 
                         for item in dot_prod_list:
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]]) # , item[5]])                            
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])                            
                             #if i in Tcell_zone and j in Tcell_zone:
                             #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                                 
@@ -487,14 +487,19 @@ if __name__ == "__main__":
                 for lr_pair in lr_dict:
                     sum = 0
                     #sum_layer1 = 0
+                    attention_score_sum = 0
                     cell_pair_list = lr_dict[lr_pair]
+                    weighted_sum = 0
                     for item in cell_pair_list:
                         sum = sum + item[0]  
                         #sum_layer1 = sum_layer1 + item[3]
+                        attention_score_sum = attention_score_sum + item[3] 
+                        weighted_sum = weighted_sum + item[0] * item[3] 
     
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list)]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
-            
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+                    
+              
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
                 
                 ### now remove the LR pairs which are below the elbow point
@@ -532,11 +537,12 @@ if __name__ == "__main__":
                 data_list['X']=[]
                 data_list['Y']=[] 
                 data_list['type']=[]
-                #data_list['score_sum'] =[]
                 data_list['score_avg'] = []
                 data_list['pair_count'] = []
                 #data_list['score_sum_layer1'] =[]
-                #data_list['score_avg_layer1'] = []              
+                #data_list['score_avg_layer1'] = []         
+                data_list['total_attention_score'] =[]
+                data_list['weighted_sum'] = []  
                 max_rows = len(sort_lr_list)
 
                 
@@ -545,10 +551,11 @@ if __name__ == "__main__":
                     receptor = sort_lr_list[i][0].split('+')[1]
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
+                    
                     elif ligand in negatome_lr_pair and receptor in negatome_lr_pair[ligand]:
                         data_list['type'].append('From negatome')
                     else:
-                        continue
+                        #continue
                         data_list['type'].append('Predicted')
                     
 
@@ -557,12 +564,12 @@ if __name__ == "__main__":
                     data_list['Y'].append(sort_lr_list[i][1])
                     ligand = sort_lr_list[i][0].split('+')[0]
                     receptor = sort_lr_list[i][0].split('+')[1]
-                    #data_list['score_sum'].append()
                     data_list['score_avg'].append(sort_lr_list[i][2])
                     data_list['pair_count'].append(sort_lr_list[i][3]) 
                     #data_list['score_sum_layer1'].append(sort_lr_list[i][4])
                     #data_list['score_avg_layer1'].append(sort_lr_list[i][5])
-                    
+                    data_list['total_attention_score'].append(sort_lr_list[i][4])
+                    data_list['weighted_sum'].append(sort_lr_list[i][5])                    
                         
                 data_list_pd = pd.DataFrame({
                     'Ligand-Receptor Pairs': data_list['X'],
@@ -570,10 +577,12 @@ if __name__ == "__main__":
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count'],
+                    'Total attention score': data_list['total_attention_score'],
+                    'Weighted Sum': data_list['weighted_sum']                  
                     #'Score_sum_layer1': data_list['score_sum_layer1'],
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_negatome.csv', index=False)
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR.csv', index=False) #_negatome
 
 
                 
