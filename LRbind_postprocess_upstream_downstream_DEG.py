@@ -110,7 +110,7 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',
 if __name__ == "__main__":
     elbow_cut_flag = 0 #1 #0
     knee_flag = 1 #1 #0
-    file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
+    file_name_suffix = '_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
     for data_index in [10]: #range(0, len(data_names)):
@@ -293,31 +293,30 @@ if __name__ == "__main__":
 
 
             ############ attention scores ##############################
-                
+            layer = 3
+          
             distribution = []
             X_attention_filename = args.embedding_path +  args.model_name + '_attention' #.npy
             print(X_attention_filename)
             fp = gzip.open(X_attention_filename, 'rb')  
-            X_attention_bundle = pickle.load(fp)
+            X_attention_bundle = pickle.load(fp) # 0 = index, 1 - 3 = layer 1 - 3 
             
             for index in range (0, X_attention_bundle[0].shape[1]):
                 i = X_attention_bundle[0][0][index]
                 j = X_attention_bundle[0][1][index]
-                distribution.append(X_attention_bundle[1][index][0])
+                distribution.append(X_attention_bundle[layer][index][0])
                 
 
 
             min_value = min(distribution)
             max_value = max(distribution)
-            distribution = []
-            #attention_scores = defaultdict(dict)  
+            distribution = [] 
             for index in range (0, X_attention_bundle[0].shape[1]):
               i = X_attention_bundle[0][0][index]
               j = X_attention_bundle[0][1][index]
-              scaled_score = (X_attention_bundle[1][index][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
+              scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
               distribution.append(scaled_score)
-              #attention_scores[i][j] = scaled_score
-
+             
             percentage_value = 80
             th_80th = np.percentile(sorted(distribution), percentage_value) # higher attention score means stronger connection
             # Now keep only 
@@ -325,7 +324,7 @@ if __name__ == "__main__":
             for index in range (0, X_attention_bundle[0].shape[1]):
               i = X_attention_bundle[0][0][index]
               j = X_attention_bundle[0][1][index]
-              scaled_score = (X_attention_bundle[1][index][0]-min_value)/(max_value-min_value)
+              scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value)
               if scaled_score >= th_80th:
                   attention_scores[i][j] = scaled_score
 
@@ -347,7 +346,7 @@ if __name__ == "__main__":
             
             break_flag = 0
             test_mode = 1
-            for top_N in [300]: #, 30, 10]:
+            for top_N in [100]: #, 30, 10]:
                 print(top_N)
                 if break_flag == 1:  
                     break
