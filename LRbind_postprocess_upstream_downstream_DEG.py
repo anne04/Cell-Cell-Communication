@@ -109,7 +109,7 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',
 
 if __name__ == "__main__":
     elbow_cut_flag = 0 #1 #0
-    knee_flag = 0 #1 #0
+    knee_flag = 1 #1 #0
     file_name_suffix = '100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
-        parser.add_argument( '--multiply_attn', type=int, default=1, help='')
+        parser.add_argument( '--use_attn', type=int, default=1, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -293,7 +293,7 @@ if __name__ == "__main__":
 
 
             ############ attention scores ##############################
-            attention_scores = defaultdict(dict)      
+                
             distribution = []
             X_attention_filename = args.embedding_path +  args.model_name + '_attention' #.npy
             print(X_attention_filename)
@@ -310,13 +310,26 @@ if __name__ == "__main__":
             min_value = min(distribution)
             max_value = max(distribution)
             distribution = []
+            #attention_scores = defaultdict(dict)  
+            for index in range (0, X_attention_bundle[0].shape[1]):
+              i = X_attention_bundle[0][0][index]
+              j = X_attention_bundle[0][1][index]
+              scaled_score = (X_attention_bundle[1][index][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
+              distribution.append(scaled_score)
+              #attention_scores[i][j] = scaled_score
+
+            percentage_value = 80
+            th_80th = np.percentile(sorted(distribution), percentage_value) # higher attention score means stronger connection
+            # Now keep only 
+            attention_scores = defaultdict(dict)  
             for index in range (0, X_attention_bundle[0].shape[1]):
               i = X_attention_bundle[0][0][index]
               j = X_attention_bundle[0][1][index]
               scaled_score = (X_attention_bundle[1][index][0]-min_value)/(max_value-min_value)
-              distribution.append(scaled_score)
-              attention_scores[i][j] = scaled_score
+              if scaled_score >= th_80th:
+                  attention_scores[i][j] = scaled_score
 
+            
             ########################################################################
             '''
             In [9]: sort_lr_list[282]
@@ -334,7 +347,7 @@ if __name__ == "__main__":
             
             break_flag = 0
             test_mode = 1
-            for top_N in [100]: #, 30, 10]:
+            for top_N in [300]: #, 30, 10]:
                 print(top_N)
                 if break_flag == 1:  
                     break
@@ -371,16 +384,24 @@ if __name__ == "__main__":
                             if gene in receptor_list:
                                 receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
 
-
                         # from i to j == total attention score
-                        if args.multiply_attn == 1:
+                        if args.use_attn == 1:
                             total_attention_score = 0 
+                            total_connection = 0
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
                                     if i_gene[0] in attention_scores and j_gene[0] in attention_scores[i_gene[0]]:
                                         total_attention_score = total_attention_score + attention_scores[i_gene[0]][j_gene[0]]
+                                        total_connection = total_connection + 1
 
-                        
+                            if total_connection != 0:
+                                total_attention_score = total_attention_score/total_connection
+
+                        if args.use_attn == 1:
+                            if total_attention_score == 0:
+                                # means it is below threshold
+                                continue
+                            
                         dot_prod_list = []
                         product_only = []
                         #product_only_layer1 = []
@@ -389,6 +410,7 @@ if __name__ == "__main__":
                             for j_gene in receptor_node_index:
                                 if i_gene[1]==j_gene[1]:
                                     continue
+
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
                                 #temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
 
@@ -403,19 +425,22 @@ if __name__ == "__main__":
                             continue
                             
                         # flip so that high score means high probability
-                        max_score = max(product_only)
-                        # max_score_layer1 = max(product_only_layer1)
-                        for item_idx in range (0, len(dot_prod_list)):
-                            scaled_prod = max_score - dot_prod_list[item_idx][0]
-                            if args.multiply_attn == 1:
-                                dot_prod_list[item_idx][0] = scaled_prod #* total_attention_score
-                            else: 
+                        if len(dot_prod_list) > 1:
+                            max_value = max(product_only)
+                            min_value = min(product_only)
+                            
+                            # max_score_layer1 = max(product_only_layer1)
+                            for item_idx in range (0, len(dot_prod_list)):
+                                scaled_prod = (dot_prod_list[item_idx][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
+                                scaled_prod = 1 - scaled_prod # flipped
+                                #scaled_prod = max_value - dot_prod_list[item_idx][0]
+                                
                                 dot_prod_list[item_idx][0] = scaled_prod
-                            #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
-                            #dot_prod_list[item_idx][5] = scaled_prod 
-
-                          
-                        dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # high to low
+                                #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
+                                #dot_prod_list[item_idx][5] = scaled_prod 
+    
+                              
+                            dot_prod_list = sorted(dot_prod_list, key = lambda x: x[0], reverse=True) # high to low
                         if knee_flag == 0:                       
                             dot_prod_list = dot_prod_list[0:top_N]
                         else:
@@ -570,7 +595,8 @@ if __name__ == "__main__":
                     #data_list['score_avg_layer1'].append(sort_lr_list[i][5])
                     data_list['total_attention_score'].append(sort_lr_list[i][4])
                     data_list['weighted_sum'].append(sort_lr_list[i][5])                    
-                        
+
+                ########################################
                 data_list_pd = pd.DataFrame({
                     'Ligand-Receptor Pairs': data_list['X'],
                     'Score_sum': data_list['Y'],
