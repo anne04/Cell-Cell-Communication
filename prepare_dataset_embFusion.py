@@ -45,5 +45,27 @@ def get_cellEmb_geneEmb_pairs(
     X_g = 2D np.array having row = gene node index, column = feature dimension
     """
     
+    cell_vs_gene_emb = defaultdict(dict)
+    for item in barcode_info_gene:
+        cell_barcode = item[0]
+        gene_index = item[4]
+        cell_index = cell_vs_index[cell_barcode]
+        
+        cell_vs_gene_emb[cell_barcode][gene_index] = [X[cell_index], X_g[gene_index]]
 
+    return cell_vs_gene_emb
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    ################## Mandatory ####################################################################
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../data/LUAD/LUAD_GSM5702473_TD1/' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset') 
+    parser.add_argument( '--cell_emb_cellnest_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset')
+    args = parser.parse_args()
+    
+            
 
