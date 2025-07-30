@@ -55,6 +55,9 @@ def get_cellEmb_geneEmb_pairs(
 
     return cell_vs_gene_emb
 
+def get_training_sample(
+) -> :
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -67,15 +70,27 @@ if __name__ == "__main__":
     parser.add_argument( '--protein_emb_path', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset')
     args = parser.parse_args()
 
-    ccc_pairs = 
+    ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
 
-    barcode_info = 
+    with gzip.open(args.barcode_info_cellnest_path, 'rb') as fp:     
+        barcode_info = pickle.load(fp)
 
-    barcode_info_gene = 
+    with gzip.open(args.barcode_info_gene_path, 'rb') as fp: 
+        barcode_info_gene = pickle.load(fp)
+
+    
+    with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
+        X_embedding = pickle.load(fp) 
 
     X = 
 
+    with gzip.open(args.gene_emb_path, 'rb') as fp:  
+        X_gene_embedding = pickle.load(fp)
+
     X_g = 
+    
+    with gzip.open(args.protein_emb_path, 'rb') as fp:  
+        X_protein_embedding = pickle.load(fp)
 
     X_p = 
 
