@@ -33,10 +33,17 @@ def get_cellInfo_CellNEST(
 def get_cellEmb_geneEmb_pairs(
     cell_vs_index: dict(),
     barcode_info_gene: list(),
+    X = np.array,
+    X_g = np.array
 ) -> defaultdict(dict):
     """
 
     Parameters:
-    barcode_info_gene: list of []
-    
+    cell_vs_index: dictionary with key = cell_barcode, value = index of that cell 
+    barcode_info_gene: list of [cell's barcode, cell's X, cell's Y, -1, gene_node_index, gene_name]
+    X = 2D np.array having row = cell index, column = feature dimension
+    X_g = 2D np.array having row = gene node index, column = feature dimension
     """
+    
+
+
