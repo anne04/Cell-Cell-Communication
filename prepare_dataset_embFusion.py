@@ -69,14 +69,13 @@ def get_cellEmb_geneEmb_pairs(
     
     cell_vs_gene_emb = defaultdict(dict)
     for i in range (0, len(barcode_info_gene)):
-        if 
         cell_index = i
-        cell_barcode = item[0]
-        gene_index = item[4]
+        cell_barcode = barcode_info_gene[i][0]
+        gene_index = barcode_info_gene[i][4]
         cell_index_cellnest = cell_vs_index[cell_barcode]
-        gene_name = item[5]
-        if gene_name in X_p:
-            cell_vs_gene_emb[cell_barcode][gene_index] = [X_embedding[cell_index], X_gene_embedding[gene_index], X_p[gene_name]]
+        gene_name = barcode_info_gene[i][5]
+        if gene_name in X_protein_embedding:
+            cell_vs_gene_emb[cell_barcode][gene_index] = [X_embedding[cell_index_cellnest], X_gene_embedding[gene_index], X_protein_embedding[gene_name]]
 
     return cell_vs_gene_emb
 
