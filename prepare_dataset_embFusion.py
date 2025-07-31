@@ -27,19 +27,25 @@ def get_dataset(
         print(i)
         sender_cell_barcode = ccc_pairs['from_cell'][i]
         rcv_cell_barcode = ccc_pairs['to_cell'][i]
+        if sender_cell_barcode  == rcv_cell_barcode:
+            continue # for now, skipping autocrine signals
+            
         ligand_gene = ccc_pairs['ligand'][i]
         rec_gene = ccc_pairs['receptor'][i]
         sender_cell_index = ccc_pairs['from_id'][i]
         rcvr_cell_index = ccc_pairs['to_id'][i]
         # need to find the index of gene nodes in cells
-        
-        ligand_node_index = gene_node_list_per_spot[sender_cell_index][ligand_gene]
-        rec_node_index = gene_node_list_per_spot[rcvr_cell_index][rec_gene]
-        
-        sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
-        rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
-        score = ccc_pairs['attention_score']
-        dataset.append([sender_set, rcvr_set, score])
+
+        if ligand_gene in gene_node_list_per_spot[sender_cell_barcode] and \
+            rec_gene in gene_node_list_per_spot[rcv_cell_barcode]:
+            
+            ligand_node_index = gene_node_list_per_spot[sender_cell_barcode][ligand_gene]
+            rec_node_index = gene_node_list_per_spot[rcv_cell_barcode][rec_gene]
+            
+            sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
+            rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
+            score = ccc_pairs['attention_score']
+            dataset.append([sender_set, rcvr_set, score])
 
     return dataset
 
@@ -48,9 +54,9 @@ def get_dataset(
 def get_cellEmb_geneEmb_pairs(
     cell_vs_index: dict(),
     barcode_info_gene: list(),
-    X = np.array,
-    X_g = np.array,
-    X_p = np.array
+    X_embedding = np.array,
+    X_gene_embedding = np.array,
+    X_protein_embedding = np.array
 ) -> defaultdict(dict):
     """
 
@@ -62,13 +68,15 @@ def get_cellEmb_geneEmb_pairs(
     """
     
     cell_vs_gene_emb = defaultdict(dict)
-    for item in barcode_info_gene:
+    for i in range (0, len(barcode_info_gene)):
+        if 
+        cell_index = i
         cell_barcode = item[0]
         gene_index = item[4]
-        cell_index = cell_vs_index[cell_barcode]
+        cell_index_cellnest = cell_vs_index[cell_barcode]
         gene_name = item[5]
         if gene_name in X_p:
-            cell_vs_gene_emb[cell_barcode][gene_index] = [X[cell_index], X_g[gene_index], X_p[gene_name]]
+            cell_vs_gene_emb[cell_barcode][gene_index] = [X_embedding[cell_index], X_gene_embedding[gene_index], X_p[gene_name]]
 
     return cell_vs_gene_emb
 
@@ -94,6 +102,13 @@ if __name__ == "__main__":
     with gzip.open(args.barcode_info_gene_path, 'rb') as fp: 
         barcode_info_gene, na, na, gene_node_list_per_spot, na, na, na, na, na = pickle.load(fp)
 
+    gene_node_list_per_spot_temp = defaultdict(dict)
+    for cell_index in gene_node_list_per_spot:
+        gene_node_list_per_spot_temp[barcode_info_gene[cell_index][0]] = gene_node_list_per_spot[cell_index]
+        
+    gene_node_list_per_spot = gene_node_list_per_spot_temp 
+    gene_node_list_per_spot_temp = 0
+    gc.collect()
     
     with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
         X_embedding = pickle.load(fp) 
@@ -103,12 +118,12 @@ if __name__ == "__main__":
     with gzip.open(args.gene_emb_path, 'rb') as fp:  
         X_gene_embedding = pickle.load(fp)
 
-    X_g = 
+    #X_g = 
     
     with gzip.open(args.protein_emb_path, 'rb') as fp:  
         X_protein_embedding = pickle.load(fp)
 
-    X_p = 
+    #X_p = 
     
     cell_vs_index = dict()
     for i in range(0, len(barcode_info)):
