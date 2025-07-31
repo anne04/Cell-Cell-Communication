@@ -104,5 +104,15 @@ if __name__ == "__main__":
         rcv_cell_barcode = item[1]
         ligand_gene = item[2]
         rec_gene = item[3]
+        sender_cell_index = item[6]
+        rcvr_cell_index = item[7]
         # need to find the index of gene nodes in cells
+        ligand_node_index = gene_node_list_per_spot[sender_cell_index][ligand_gene]
+        rec_node_index = gene_node_list_per_spot[rcvr_cell_index][rec_gene]
+        sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
+        rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
+        score = item[8]
+        dataset.append([sender_set, rcvr_set, score])
 
+    # save it
+    
