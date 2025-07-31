@@ -108,12 +108,12 @@ target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 
 if __name__ == "__main__":
-    elbow_cut_flag = 0 #1 #0
-    knee_flag = 1 #1 #0
-    file_name_suffix = '_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
+    elbow_cut_flag = 0 #1 #0 #histogram
+    knee_flag = 0 #1 #0 # pairwise
+    file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [10]: #range(0, len(data_names)):
+    for data_index in [6]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
-        parser.add_argument( '--use_attn', type=int, default=1, help='')
+        parser.add_argument( '--use_attn', type=int, default=0, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -293,6 +293,7 @@ if __name__ == "__main__":
 
 
             ############ attention scores ##############################
+            '''
             layer = 3
           
             distribution = []
@@ -328,7 +329,7 @@ if __name__ == "__main__":
               if scaled_score >= th_80th:
                   attention_scores[i][j] = scaled_score
 
-            
+            '''
             ########################################################################
             '''
             In [9]: sort_lr_list[282]
@@ -346,7 +347,7 @@ if __name__ == "__main__":
             
             break_flag = 0
             test_mode = 1
-            for top_N in [100]: #, 30, 10]:
+            for top_N in [300]: #, 30, 10]:
                 print(top_N)
                 if break_flag == 1:  
                     break
@@ -415,7 +416,7 @@ if __name__ == "__main__":
 
                               # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], total_attention_score]) #, temp_layer1])
+                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]]) #, total_attention_score]) #, temp_layer1])
                                 product_only.append(temp)
                                 #product_only_layer1.append(temp_layer1)
         
@@ -430,9 +431,9 @@ if __name__ == "__main__":
                             
                             # max_score_layer1 = max(product_only_layer1)
                             for item_idx in range (0, len(dot_prod_list)):
-                                scaled_prod = (dot_prod_list[item_idx][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
-                                scaled_prod = 1 - scaled_prod # flipped
-                                #scaled_prod = max_value - dot_prod_list[item_idx][0]
+                                #scaled_prod = (dot_prod_list[item_idx][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
+                                #scaled_prod = 1 - scaled_prod # flipped
+                                scaled_prod = max_value - dot_prod_list[item_idx][0]
                                 
                                 dot_prod_list[item_idx][0] = scaled_prod
                                 #scaled_prod = max_score_layer1 - dot_prod_list[item_idx][5]
@@ -456,7 +457,7 @@ if __name__ == "__main__":
                         ###########################
 
                         for item in dot_prod_list:
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2], item[5]])                            
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])                            
                             #if i in Tcell_zone and j in Tcell_zone:
                             #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                                 
