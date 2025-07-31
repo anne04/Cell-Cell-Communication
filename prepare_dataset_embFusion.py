@@ -82,7 +82,7 @@ if __name__ == "__main__":
     with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
         X_embedding = pickle.load(fp) 
 
-    X = 
+    
 
     with gzip.open(args.gene_emb_path, 'rb') as fp:  
         X_gene_embedding = pickle.load(fp)
@@ -93,4 +93,16 @@ if __name__ == "__main__":
         X_protein_embedding = pickle.load(fp)
 
     X_p = 
+
+    cellPair_vs_genePair, cell_vs_index = get_cellInfo_CellNEST(ccc_pairs, barcode_info)
+    cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
+
+    # each sample has [sender set, receiver set, score]
+    dataset = []
+    for item in ccc_pairs:
+        sender_cell_barcode = item[0]
+        rcv_cell_barcode = item[1]
+        ligand_gene = item[2]
+        rec_gene = item[3]
+        # need to find the index of gene nodes in cells
 
