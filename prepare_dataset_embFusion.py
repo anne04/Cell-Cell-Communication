@@ -76,7 +76,7 @@ if __name__ == "__main__":
         barcode_info = pickle.load(fp)
 
     with gzip.open(args.barcode_info_gene_path, 'rb') as fp: 
-        barcode_info_gene = pickle.load(fp)
+        barcode_info_gene, na, na, gene_node_list_per_spot, na, na, na, na, na = pickle.load(fp)
 
     
     with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
