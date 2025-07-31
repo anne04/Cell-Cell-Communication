@@ -36,7 +36,7 @@ if __name__ == "__main__":
     for gene in dict_genes_uniprotID:
         if len(dict_genes_uniprotID[gene]) > 1:
             print('multiple uniprot id found for gene '+ gene)
-            gene_remove.append(gene)
+            #gene_remove.append(gene)
 
     
     df = pd.read_csv(args.database_path, sep=",")
@@ -57,16 +57,16 @@ if __name__ == "__main__":
 
     uniprot_vs_lr = defaultdict(list)
     for gene in ligand_list:
-        if gene in gene_remove:
-            print('remove ligand ' + gene)
-            continue
-        if gene in dict_genes_uniprotID:
+        #if gene in gene_remove:
+        #    print('remove ligand ' + gene)
+        #    continue
+        if gene in dict_genes_uniprotID:    
             uniprot_vs_lr[dict_genes_uniprotID[gene][0]].append(gene)
 
     for gene in receptor_list:
-        if gene in gene_remove:
-            print('remove rec ' + gene)
-            continue
+        #if gene in gene_remove:
+        #    print('remove rec ' + gene)
+        #    continue
         if gene in dict_genes_uniprotID:
             uniprot_vs_lr[dict_genes_uniprotID[gene][0]].append(gene)
 
@@ -82,14 +82,15 @@ if __name__ == "__main__":
     with h5py.File("per-protein.h5", "r") as file:
         print(f"number of entries: {len(file.items())}")
         for sequence_id, embedding in file.items():
-            if sequence_id in uniprot_vs_lr and len(uniprot_vs_lr[sequence_id])==1:
+            if sequence_id in uniprot_vs_lr: # and len(uniprot_vs_lr[sequence_id])==1:
                 gene_vs_embedding[uniprot_vs_lr[sequence_id][0]] = np.array(embedding)
                 print(
                     f"  id: {sequence_id}, "
                     f"  embeddings shape: {embedding.shape}, "
                     f"  embeddings mean: {np.array(embedding).mean()}"
                 )
-                
+
+    print('len is %d'%len(gene_vs_embedding.keys()))
     with gzip.open('database/ligand_receptor_protein_embedding.pkl', 'wb') as fp:  
     	pickle.dump(gene_vs_embedding, fp)
 
