@@ -4,12 +4,14 @@ import pickle
 import argparse
 import gzip
 import numpy as np
+import gc
 
 def get_dataset(
     ccc_pairs: pd.DataFrame,
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
-    X_protein_embedding = np.array
+    X_protein_embedding = dict(),
+    dataset = list()
 ) -> list():
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
@@ -46,7 +48,7 @@ def get_dataset(
             
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
-            score = ccc_pairs['attention_score']
+            score = ccc_pairs['attention_score'][i]
             dataset.append([sender_set, rcvr_set, score])
 
     return dataset
@@ -95,10 +97,10 @@ if __name__ == "__main__":
     ################## Mandatory ####################################################################
     parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
-    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_barcode_info_gene', help='Name of the dataset') 
-    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_barcode_info', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_barcode_info', help='Name of the dataset') 
     parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_r1_Embed_X', help='Name of the dataset')
     parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
     args = parser.parse_args()
 
@@ -142,18 +144,21 @@ if __name__ == "__main__":
 
     
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
-    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot)
+    dataset = []
+    get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, dataset)
     print(len(dataset))
     # save it
 
     unique_gene = dict()
     for i in range(0, len(barcode_info_gene)):
         unique_gene[barcode_info_gene[i][5]] = 1
-    len(unique_gene)
+    print(len(unique_gene))
     count = 0
     for gene in unique_gene:
         if gene in X_protein_embedding:
             count = count+1
 
     print(count)
-            
+
+    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    	pickle.dump(dataset, fp)
