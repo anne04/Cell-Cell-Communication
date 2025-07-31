@@ -1,9 +1,9 @@
 import pandas as pd
 
-def get_cellInfo_CellNEST(
+def get_dataset(
     ccc_pairs: pd.DataFrame,
-    barcode_info: list(),
-) -> defaultdict(dict), dict():
+    cell_vs_gene_emb: ddefaultdict(dict),
+) -> list():
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
     for each pair of cells based on CellNEST detection. And a dictionary with cell_vs_index mapping.
@@ -15,20 +15,26 @@ def get_cellInfo_CellNEST(
     edge_rank, component_label, index_sender, index_receiver, attention_score
     barcode_info: list of [cell_barcode, coordinate_x, coordinates_y, -1]
     """
-    cellPair_vs_genePair = defaultdict(dict)
-    for i in range (0, len(ccc_pairs)):
-        sender_cell_barcode = ccc_pairs['from_cell'] 
-        rcvr_cell_barcode = ccc_pairs['to_cell']
-        if sender_cell_barcode not in cellPair_vs_genePair or rcvr_cell_barcode not in cellPair_vs_genePair[sender_cell_barcode]:
-            cellPair_vs_genePair[sender_cell_barcode][rcvr_cell_barcode] = []
-        else:
-            cellPair_vs_genePair[sender_cell_barcode][rcvr_cell_barcode].append([ccc_pairs['ligand'], ccc_pairs['receptor'], ccc_pairs['attention_score']])           
+    # each sample has [sender set, receiver set, score]
+    dataset = []
+    for item in ccc_pairs:
+        sender_cell_barcode = item[0]
+        rcv_cell_barcode = item[1]
+        ligand_gene = item[2]
+        rec_gene = item[3]
+        sender_cell_index = item[6]
+        rcvr_cell_index = item[7]
+        # need to find the index of gene nodes in cells
+        ligand_node_index = gene_node_list_per_spot[sender_cell_index][ligand_gene]
+        rec_node_index = gene_node_list_per_spot[rcvr_cell_index][rec_gene]
+        sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
+        rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
+        score = item[8]
+        dataset.append([sender_set, rcvr_set, score])
 
-    cell_vs_index = dict()
-    for i in range(0, len(barcode_info)):
-        cell_vs_index[barcode_info[i][0]] = i
+    return dataset
 
-    return cellPair_vs_genePair, cell_vs_index
+
 
 def get_cellEmb_geneEmb_pairs(
     cell_vs_index: dict(),
@@ -93,26 +99,14 @@ if __name__ == "__main__":
         X_protein_embedding = pickle.load(fp)
 
     X_p = 
+    
+    cell_vs_index = dict()
+    for i in range(0, len(barcode_info)):
+        cell_vs_index[barcode_info[i][0]] = i
 
-    cellPair_vs_genePair, cell_vs_index = get_cellInfo_CellNEST(ccc_pairs, barcode_info)
+    
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
-
-    # each sample has [sender set, receiver set, score]
-    dataset = []
-    for item in ccc_pairs:
-        sender_cell_barcode = item[0]
-        rcv_cell_barcode = item[1]
-        ligand_gene = item[2]
-        rec_gene = item[3]
-        sender_cell_index = item[6]
-        rcvr_cell_index = item[7]
-        # need to find the index of gene nodes in cells
-        ligand_node_index = gene_node_list_per_spot[sender_cell_index][ligand_gene]
-        rec_node_index = gene_node_list_per_spot[rcvr_cell_index][rec_gene]
-        sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
-        rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
-        score = item[8]
-        dataset.append([sender_set, rcvr_set, score])
+    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb)
 
     # save it
     
