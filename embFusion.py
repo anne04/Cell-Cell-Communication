@@ -81,33 +81,41 @@ def train_fusionMLP(
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learing_rate)
 
-    
+    total_training_samples = training_set[0].shape[0]
+    total_batch = total_training_samples//batch_size
     for epoch_indx in range (0, epoch):
         # shuffle the training set
         shuffle_data(training_set)
-        training_sender_emb = training_set
+        training_sender_emb = training_set[0]
+        training_rcv_emb = training_set[1]
+        training_prediction = training_set[2]
+        
         # model_fusionMLP.train() # training mode
-        optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
-        total_loss = [] 
+        
+        total_loss = 0
         for batch_idx in range(0, total_batch):
+            optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
             
+            batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
+            batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
+            batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
             
-            batch_data = training_set[batch_idx*batch_size: (batch_idx+1)*batch_size]
-            batch_data
+            batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
             
-        sender_emb_batch = training_set
-        prediction = model_fusionMLP(inputs)
+            loss = loss_function(batch_prediction, batch_target)
+            
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
 
-        loss = loss_function(outputs, targets)
+            
+        
+        avg_loss = total_loss/batch_size
+        if epoch_index%500 == 0:
+            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
 
-        loss.backward()
-
-        optimizer.step()
-
-        current_loss += loss.item()
-
-
-    
+            # run validation
+            
         
         
 
