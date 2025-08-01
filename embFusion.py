@@ -1,8 +1,10 @@
 import torch
-import matplotlib.pyplot as plt
-from sklearn.datasets import make_moons
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+#import matplotlib.pyplot as plt
+#from sklearn.datasets import make_moons
+#from sklearn.model_selection import train_test_split
+#from sklearn.preprocessing import StandardScaler
+import random
+
 
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
@@ -51,6 +53,28 @@ def train_fusionMLP(
     epoch: int = 1000,
     batch_size: int = 32
     ):
+    """
+    split the training set into 80% training data and 20% validation set
+    """
+    # CHECK = do I need to set a seed?
+    random.shuffle(dataset)
+    training_set_count = (len(dataset)*80)//100
+    training_set = dataset[0:training_set_count]
+    validation_set = dataset[training_set_count:]
+
+    # initialize the model
+    model_fusionMLP = fusionMLP(
+                 input_size = 512 + 264 + 1023, 
+                 hidden_size_fusion = 1024, 
+                 output_size_fusion = 256,
+                 hidden_size_predictor_layer1 = 256*2,
+                 hidden_size_predictor_layer2 = 256
+    )
+
+    # set the loss function
+    
+    for epoch_indx in range (0, epoch):
+    
     
         
         
