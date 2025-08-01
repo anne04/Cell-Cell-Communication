@@ -83,6 +83,7 @@ def train_fusionMLP(
 
     total_training_samples = training_set[0].shape[0]
     total_batch = total_training_samples//batch_size
+    min_loss = 10000 # just a big number to initialize
     for epoch_indx in range (0, epoch):
         # shuffle the training set
         shuffle_data(training_set)
@@ -113,9 +114,25 @@ def train_fusionMLP(
         avg_loss = total_loss/batch_size
         if epoch_index%500 == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
-
-            # run validation
             
+            # run validation
+            # CHECK: if you use dropout layer, you might need to set some flag during inference step 
+            batch_sender_emb = validation_sender_emb
+            batch_data_rcv_emb = validation_rcv_emb
+            batch_target = validation_prediction
+            
+            batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+            validation_loss = loss_function(batch_prediction, batch_target)
+            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
+            if validation_loss <= min_loss:
+                min_loss = validation_loss
+                # state save
+                torch.save(model_fusionMLP, "my_model_fusionMLP.pickle")
+                # model = torch.load("my_model.pickle")
+                torch.save(model_fusionMLP.state_dict(), "my_model_fusionMLP_state_dict.pickle")
+                # model = nn.Sequential(...)
+                # model.load_state_dict(torch.load("my_model.pickle"))
+
         
         
 
