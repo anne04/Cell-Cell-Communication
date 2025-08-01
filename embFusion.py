@@ -6,6 +6,17 @@ import torch
 import random
 import numpy as np
 
+def shuffle_data(
+    training_set: list()
+    ):
+    """
+    Shuffles the training data
+    """
+    sample_count = training_set[0].shape[0]
+    index_order = np.arange(sample_count)
+    random.shuffle(index_order)
+    # now reorder training data in that order
+    
 
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
