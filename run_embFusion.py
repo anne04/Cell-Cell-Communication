@@ -58,9 +58,12 @@ if __name__ == "__main__":
     np.random.shuffle(dataset)
     training_set = dataset[0:(len(dataset)*80)//100]
     val_set = dataset[(len(dataset)*80)//100:]
-
-    training_set = data_to_tensor(training_set)
-    val_set = data_to_tensor(val_set)
+    
+    training_set, add_set = data_to_tensor(training_set, remove_set)
+    # append add_set to the validation set
+    for item in add_set:
+        val_set.append(item) 
+    val_set = data_to_tensor(val_set, None)
 
     train_fusionMLP(training_set, val_set, epoch = 1000,
                     batch_size = 128, learning_rate= 0.001
