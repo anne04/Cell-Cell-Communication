@@ -63,7 +63,8 @@ if __name__ == "__main__":
     # append add_set to the validation set
     for item in add_set:
         val_set.append(item) 
-    val_set = data_to_tensor(val_set, None)
+        
+    val_set, na = data_to_tensor(val_set, None)
 
     train_fusionMLP(training_set, val_set, epoch = 1000,
                     batch_size = 128, learning_rate= 0.001
