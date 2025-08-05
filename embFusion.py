@@ -12,6 +12,14 @@ cellNEST_dimension = 512
 lrbind_dimension = 264
 proteinEmb_dimension = 1024
 
+
+def split_branch(data):
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
+    sender_emb = data[:, 0:sender_dimension_total]    
+    rcv_emb = data[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
+    prediction = data[:, prediction_column]
+    return sender_emb, rcv_emb, prediction 
+        
 def shuffle_data(
     training_set #: torch.tensor 
     ):
@@ -26,11 +34,14 @@ def shuffle_data(
     # Shuffle the rows using advanced indexing
     training_set = training_set[row_perm]
     print(training_set)
+    training_sender_emb, training_rcv_emb, training_prediction = split_branch(training_set)
+    """
     rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
         
     training_sender_emb = training_set[:, 0:sender_dimension_total]    
     training_rcv_emb = training_set[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
     training_prediction = training_set[:, prediction_column]
+    """
     return training_sender_emb, training_rcv_emb, training_prediction 
     
     
@@ -139,7 +150,7 @@ def train_fusionMLP(
         total_loss = 0
         for batch_idx in range(0, total_batch):
             optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
-            
+            # .to(device) to transfer to GPU
             batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
@@ -158,28 +169,29 @@ def train_fusionMLP(
         avg_loss = total_loss/batch_size
         if epoch_indx%10 == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
-            """
+            
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
-            batch_sender_emb = validation_sender_emb 
-            batch_data_rcv_emb = validation_rcv_emb
-            batch_target = validation_prediction
+            validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(training_set)
+            # .to(device) to transfer to GPU
+            batch_sender_emb = validation_sender_emb.to(device)
+            batch_data_rcv_emb = validation_rcv_emb.to(device)
+            batch_target = validation_prediction.to(device)
             
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
-            validation_loss = loss_function(batch_prediction, batch_target)
+            validation_loss = loss_function(batch_prediction.flatten(), batch_target)
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
             if validation_loss <= min_loss:
                 min_loss = validation_loss
                 # state save
-                torch.save(model_fusionMLP, "my_model_fusionMLP.pickle")
+                torch.save(model_fusionMLP, "model/my_model_fusionMLP.pickle")
                 # model = torch.load("my_model.pickle")
-                torch.save(model_fusionMLP.state_dict(), "my_model_fusionMLP_state_dict.pickle")
+                torch.save(model_fusionMLP.state_dict(), "model/my_model_fusionMLP_state_dict.pickle")
                 # model = nn.Sequential(...)
                 # model.load_state_dict(torch.load("my_model.pickle"))
                 print('*** min loss found! ***')
-            
-            """
-        
+    
+                
         
 
                    
