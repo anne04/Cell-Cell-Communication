@@ -7,16 +7,18 @@ import random
 import argparse
 import torch
 from embFusion import data_to_tensor
+import pickle
+import gzip
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # =========================== must be provided ===============================
     #parser.add_argument( '--data_name', type=str, help='Name of the dataset') #default='PDAC_64630', 
-    parser.add_argument( '--model_name', type=str, help='Provide a model name')
+    parser.add_argument( '--model_name', type=str, default="embFusion_test", help='Provide a model name')
     #=========================== default is set ======================================
-    parser.add_argument( '--num_epoch', type=int, default=60000, help='Number of epochs or iterations for model training')
+    parser.add_argument( '--num_epoch', type=int, default=10000, help='Number of epochs or iterations for model training')
     parser.add_argument( '--model_path', type=str, default='model/', help='Path to save the model state') # We do not need this for output generation  
-    parser.add_argument( '--training_data', type=str, default='input_graph/', help='Path to input graph. ')
+    parser.add_argument( '--training_data', type=str, default='database/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_dataset_embFusion.pkl', help='Path to input graph. ')
     parser.add_argument( '--dropout', type=float, default=0)
     parser.add_argument( '--lr_rate', type=float, default=0.00001)
     parser.add_argument( '--manual_seed', type=str, default='no')
@@ -52,10 +54,10 @@ if __name__ == "__main__":
     	dataset = pickle.load(fp)
 
     # shuffle and keep 80% for training, 20% for validation
-    train_dataset = dataset[0:(len(dataset)*80)//100]
+    training_set = dataset[0:(len(dataset)*80)//100]
     val_dataset = dataset[(len(dataset)*80)//100:]
 
-    train_dataset_tensor = data_to_tensor(train_dataset)
+    training_set = data_to_tensor(training_set)
     val_dataset_tensor = data_to_tensor(val_dataset)
 
     
