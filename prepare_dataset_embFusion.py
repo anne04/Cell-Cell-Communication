@@ -49,7 +49,7 @@ def get_dataset(
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             score = ccc_pairs['attention_score'][i]
-            dataset.append([sender_set, rcvr_set, score])
+            dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
     return dataset
 
