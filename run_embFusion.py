@@ -7,6 +7,7 @@ import random
 import argparse
 import torch
 from embFusion import data_to_tensor
+from embFusion import train_fusionMLP
 import pickle
 import gzip
 
@@ -54,6 +55,7 @@ if __name__ == "__main__":
     	dataset = pickle.load(fp)
 
     # shuffle and keep 80% for training, 20% for validation
+    np.random.shuffle(dataset)
     training_set = dataset[0:(len(dataset)*80)//100]
     val_set = dataset[(len(dataset)*80)//100:]
 
@@ -61,7 +63,7 @@ if __name__ == "__main__":
     val_set = data_to_tensor(val_set)
 
     train_fusionMLP(training_set, val_set, epoch = 1000,
-                    batch_size = 32, learning_rate: 0.001
+                    batch_size = 128, learning_rate= 0.001
     )
 
 
