@@ -55,12 +55,14 @@ if __name__ == "__main__":
 
     # shuffle and keep 80% for training, 20% for validation
     training_set = dataset[0:(len(dataset)*80)//100]
-    val_dataset = dataset[(len(dataset)*80)//100:]
+    val_set = dataset[(len(dataset)*80)//100:]
 
     training_set = data_to_tensor(training_set)
-    val_dataset_tensor = data_to_tensor(val_dataset)
+    val_set = data_to_tensor(val_set)
 
-    
+    train_fusionMLP(training_set, val_set, epoch = 1000,
+                    batch_size = 32, learning_rate: 0.001
+    )
 
 
     
