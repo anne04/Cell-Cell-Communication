@@ -166,7 +166,7 @@ def train_fusionMLP(
 
             
         
-        avg_loss = total_loss/batch_size
+        avg_loss = total_loss/total_batch
         if epoch_indx%10 == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
             
