@@ -17,13 +17,6 @@ def shuffle_data(
     """
     Shuffles the training data
     """
-    import torch
-
-    # Create a 2D tensor
-    t = torch.tensor([[1, 2, 3],
-                      [4, 5, 6],
-                      [7, 8, 9]])
-
     # Generate random permutation of row indices
     sample_count = training_set.size(0)
     prediction_column = training_set.size(1)-1
@@ -54,7 +47,7 @@ def data_to_tensor(
         training_set_matrix[i, sender_dimension_total+rcvr_dimension_total+1] = training_set[i][2]
 
     # convert to tensor
-    training_set_tensor = 
+    training_set_tensor = torch.tensor(training_set_matrix, dtype=torch.float)
     return training_set_tensor
     
 class fusionMLP(torch.nn.Module):
@@ -100,8 +93,8 @@ class fusionMLP(torch.nn.Module):
         return ppi_prediction
 
 def train_fusionMLP(
-    training_set: list(),
-    validation_set: list(),
+    training_set: torch.tensor,
+    validation_set: torch.tensor = None,
     epoch: int = 1000,
     batch_size: int = 32,
     learning_rate: np.float =  1e-4
@@ -160,7 +153,7 @@ def train_fusionMLP(
         avg_loss = total_loss/batch_size
         if epoch_index%500 == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
-            
+            """
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
             batch_sender_emb = validation_sender_emb
@@ -178,7 +171,9 @@ def train_fusionMLP(
                 torch.save(model_fusionMLP.state_dict(), "my_model_fusionMLP_state_dict.pickle")
                 # model = nn.Sequential(...)
                 # model.load_state_dict(torch.load("my_model.pickle"))
-
+                print('*** min loss found! ***')
+            
+            """
         
         
 
