@@ -161,7 +161,7 @@ def train_fusionMLP(
             """
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
-            batch_sender_emb = validation_sender_emb
+            batch_sender_emb = validation_sender_emb 
             batch_data_rcv_emb = validation_rcv_emb
             batch_target = validation_prediction
             
