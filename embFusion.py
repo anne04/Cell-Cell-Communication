@@ -31,7 +31,7 @@ def shuffle_data(
     training_sender_emb = training_set[:, 0:sender_dimension_total]    
     training_rcv_emb = training_set[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
     training_prediction = training_set[:, prediction_column]
-    return 
+    return training_sender_emb, training_rcv_emb, training_prediction 
     
     
 def data_to_tensor(
@@ -124,12 +124,12 @@ def train_fusionMLP(
     ).to(device)
 
     # set the loss function
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.MSELoss() #CrossEntropyLoss()
 
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
 
-    total_training_samples = training_set[0].shape[0]
+    total_training_samples = training_set.shape[0]
     total_batch = total_training_samples//batch_size
     min_loss = 10000 # just a big number to initialize
     for epoch_indx in range (0, epoch):
@@ -147,7 +147,7 @@ def train_fusionMLP(
             # move the sender and rcvr emb to the GPU
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
             
-            loss = loss_fn(batch_prediction, batch_target)
+            loss = loss_fn(batch_prediction.flatten(), batch_target)
             
             loss.backward()
             optimizer.step()
@@ -156,7 +156,7 @@ def train_fusionMLP(
             
         
         avg_loss = total_loss/batch_size
-        if epoch_index%500 == 0:
+        if epoch_index%50 == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
             """
             # run validation
