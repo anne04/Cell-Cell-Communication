@@ -6,18 +6,57 @@ import torch
 import random
 import numpy as np
 
+
+cellNEST_dimension = 512
+lrbind_dimension = 264
+proteinEmb_dimension = 1024
+
 def shuffle_data(
-    training_set: list()
+    training_set: torch.tensor
     ):
     """
     Shuffles the training data
     """
-    sample_count = training_set[0].shape[0]
-    index_order = np.arange(sample_count)
-    random.shuffle(index_order)
-    # now reorder training data in that order
-    
+    import torch
 
+    # Create a 2D tensor
+    t = torch.tensor([[1, 2, 3],
+                      [4, 5, 6],
+                      [7, 8, 9]])
+
+    # Generate random permutation of row indices
+    sample_count = training_set.size(0)
+    prediction_column = training_set.size(1)-1
+    row_perm = torch.randperm(sample_count)
+
+    # Shuffle the rows using advanced indexing
+    training_set = training_set[row_perm]
+    print(training_set)
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1023
+        
+    training_sender_emb = training_set[:, 0:sender_dimension_total]    
+    training_rcv_emb = training_set[sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
+    training_prediction = training_set[:,prediction_column]
+    return 
+    
+    
+def data_to_tensor(
+    training_set: list()
+    ):
+    """
+    training_set = list of [sender_emb, rcvr_emb, pred]
+    """
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1023
+    training_set_matrix = np.zeros((len(training_set), sender_dimension_total + rcvr_dimension_total + 1 )) # 1=prediction column
+    for i in range(0, len(training_set)):
+        training_set_matrix[i, 0:sender_dimension_total] = training_set[i][0]
+        training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = training_set[i][1]
+        training_set_matrix[i, sender_dimension_total+rcvr_dimension_total+1] = training_set[i][2]
+
+    # convert to tensor
+    training_set_tensor = 
+    return training_set_tensor
+    
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
                  input_size: np.int = 512 + 264 + 1023, 
@@ -97,11 +136,7 @@ def train_fusionMLP(
     min_loss = 10000 # just a big number to initialize
     for epoch_indx in range (0, epoch):
         # shuffle the training set
-        shuffle_data(training_set)
-        training_sender_emb = training_set[0]
-        training_rcv_emb = training_set[1]
-        training_prediction = training_set[2]
-        
+        training_sender_emb, training_rcv_emb, training_prediction = shuffle_data(training_set)        
         # model_fusionMLP.train() # training mode
         
         total_loss = 0
