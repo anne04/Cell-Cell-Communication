@@ -139,9 +139,15 @@ def train_fusionMLP(
 
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
-
     total_training_samples = training_set.shape[0]
     total_batch = total_training_samples//batch_size
+
+    loss_curve = np.zeros((args.num_epoch//args.epoch_interval+1))
+    loss_curve_counter = 0
+
+
+
+
     min_loss = 10000 # just a big number to initialize
     for epoch_indx in range (0, epoch):
         # shuffle the training set
@@ -167,7 +173,7 @@ def train_fusionMLP(
             
         
         avg_loss = total_loss/total_batch
-        if epoch_indx%10 == 0:
+        if epoch_indx%args.epoch_interval == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
             
             # run validation
