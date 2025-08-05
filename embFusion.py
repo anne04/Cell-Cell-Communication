@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 #import matplotlib.pyplot as plt
 #from sklearn.datasets import make_moons
 #from sklearn.model_selection import train_test_split
@@ -12,7 +13,7 @@ lrbind_dimension = 264
 proteinEmb_dimension = 1024
 
 def shuffle_data(
-    training_set: torch.tensor
+    training_set #: torch.tensor 
     ):
     """
     Shuffles the training data
@@ -25,39 +26,42 @@ def shuffle_data(
     # Shuffle the rows using advanced indexing
     training_set = training_set[row_perm]
     print(training_set)
-    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1023
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
         
     training_sender_emb = training_set[:, 0:sender_dimension_total]    
-    training_rcv_emb = training_set[sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
-    training_prediction = training_set[:,prediction_column]
+    training_rcv_emb = training_set[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
+    training_prediction = training_set[:, prediction_column]
     return 
     
     
 def data_to_tensor(
-    training_set: list()
+    training_set #: list()
     ):
     """
     training_set = list of [sender_emb, rcvr_emb, pred]
     """
-    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1023
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
     training_set_matrix = np.zeros((len(training_set), sender_dimension_total + rcvr_dimension_total + 1 )) # 1=prediction column
     for i in range(0, len(training_set)):
-        training_set_matrix[i, 0:sender_dimension_total] = training_set[i][0]
-        training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = training_set[i][1]
-        training_set_matrix[i, sender_dimension_total+rcvr_dimension_total+1] = training_set[i][2]
+        training_set_matrix[i, 0:sender_dimension_total] = np.concatenate((training_set[i][0][0],training_set[i][0][1], training_set[i][0][2]), axis=0)
+        
+        training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = np.concatenate((training_set[i][1][0],training_set[i][1][1], training_set[i][1][2]), axis=0)
+        
+        training_set_matrix[i, sender_dimension_total+rcvr_dimension_total] = training_set[i][2]
 
     # convert to tensor
-    training_set_tensor = torch.tensor(training_set_matrix, dtype=torch.float)
-    return training_set_tensor
+    training_set = torch.tensor(training_set_matrix, dtype=torch.float)
+    return training_set
     
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
-                 input_size: np.int = 512 + 264 + 1023, 
-                 hidden_size_fusion: np.int = 1024, 
-                 output_size_fusion: np.int = 256,
-                 hidden_size_predictor_layer1: np.int = 256*2,
-                 hidden_size_predictor_layer2: np.int = 256
+                 input_size: np.int32 = 512 + 264 + 1023, 
+                 hidden_size_fusion: np.int32 = 1024, 
+                 output_size_fusion: np.int32 = 256,
+                 hidden_size_predictor_layer1: np.int32 = 256*2,
+                 hidden_size_predictor_layer2: np.int32 = 256
                 ):
+        super().__init__() # without this error happens
         # Branch: sender
         self.sender_fusion_layer = nn.Sequential(
           nn.Linear(input_size, hidden_size_fusion),
@@ -87,17 +91,17 @@ class fusionMLP(torch.nn.Module):
     def forward(self, sender_emb, receiver_emb):
         fused_emb_sender = self.sender_fusion_layer(sender_emb)
         fused_emb_rcvr = self.rcvr_fusion_layer(sender_emb)
-        concat_fused_emb = torch.cat(fused_emb_sender, fused_emb_rcvr)
+        concat_fused_emb = torch.cat((fused_emb_sender, fused_emb_rcvr), dim=1)
         ppi_prediction = self.ppi_predict_layer(concat_fused_emb)
         
         return ppi_prediction
 
 def train_fusionMLP(
-    training_set: torch.tensor,
-    validation_set: torch.tensor = None,
+    training_set#: torch.tensor,
+    validation_set#: torch.tensor = None,
     epoch: int = 1000,
     batch_size: int = 32,
-    learning_rate: np.float =  1e-4
+    learning_rate: float =  1e-4,
     ):
     """
     split the training set into 80% training data and 20% validation set
@@ -109,20 +113,21 @@ def train_fusionMLP(
     training_set = dataset[0:training_set_count]
     validation_set = dataset[training_set_count:]
     """
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     model_fusionMLP = fusionMLP(
-                 input_size = 512 + 264 + 1023, 
+                 input_size = 512 + 264 + 1024, 
                  hidden_size_fusion = 1024, 
                  output_size_fusion = 256,
                  hidden_size_predictor_layer1 = 256*2,
                  hidden_size_predictor_layer2 = 256
-    )
+    ).to(device)
 
     # set the loss function
     loss_fn = nn.CrossEntropyLoss()
 
     # set optimizer
-    optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learing_rate)
+    optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
 
     total_training_samples = training_set[0].shape[0]
     total_batch = total_training_samples//batch_size
@@ -131,18 +136,18 @@ def train_fusionMLP(
         # shuffle the training set
         training_sender_emb, training_rcv_emb, training_prediction = shuffle_data(training_set)        
         # model_fusionMLP.train() # training mode
-        
         total_loss = 0
         for batch_idx in range(0, total_batch):
             optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
             
-            batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
-            batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
-            batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size, :]
-            
+            batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
+            batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
+            batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
+
+            # move the sender and rcvr emb to the GPU
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
             
-            loss = loss_function(batch_prediction, batch_target)
+            loss = loss_fn(batch_prediction, batch_target)
             
             loss.backward()
             optimizer.step()
