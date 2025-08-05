@@ -110,7 +110,7 @@ class fusionMLP(torch.nn.Module):
 def train_fusionMLP(
     training_set#: torch.tensor,
     validation_set#: torch.tensor = None,
-    epoch: int = 1000,
+    args,
     batch_size: int = 32,
     learning_rate: float =  1e-4,
     ):
@@ -140,7 +140,7 @@ def train_fusionMLP(
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
     total_training_samples = training_set.shape[0]
-    total_batch = total_training_samples//batch_size
+    total_batch = total_training_samples//args.batch_size
 
     loss_curve = np.zeros((args.num_epoch//args.epoch_interval+1))
     loss_curve_counter = 0
@@ -149,7 +149,7 @@ def train_fusionMLP(
 
 
     min_loss = 10000 # just a big number to initialize
-    for epoch_indx in range (0, epoch):
+    for epoch_indx in range (0, args.num_epoch):
         # shuffle the training set
         training_sender_emb, training_rcv_emb, training_prediction = shuffle_data(training_set)        
         # model_fusionMLP.train() # training mode
@@ -157,9 +157,9 @@ def train_fusionMLP(
         for batch_idx in range(0, total_batch):
             optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
             # .to(device) to transfer to GPU
-            batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
-            batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
-            batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
+            batch_sender_emb = training_sender_emb[batch_idx*args.batch_size: (batch_idx+1)*args.batch_size, :].to(device)
+            batch_data_rcv_emb = training_rcv_emb[batch_idx*args.batch_size: (batch_idx+1)*args.batch_size, :].to(device)
+            batch_target = training_prediction[batch_idx*args.batch_size: (batch_idx+1)*args.batch_size].to(device)
 
             # move the sender and rcvr emb to the GPU
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
@@ -174,7 +174,7 @@ def train_fusionMLP(
         
         avg_loss = total_loss/total_batch
         if epoch_indx%args.epoch_interval == 0:
-            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
+            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, args.num_epoch, avg_loss))
             
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
@@ -186,7 +186,7 @@ def train_fusionMLP(
             
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
             validation_loss = loss_function(batch_prediction.flatten(), batch_target)
-            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
+            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, args.num_epoch, avg_loss))
             if validation_loss <= min_loss:
                 min_loss = validation_loss
                 # state save
