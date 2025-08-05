@@ -46,14 +46,21 @@ def shuffle_data(
     
     
 def data_to_tensor(
-    training_set #: list()
+    training_set, #: list()
+    remove_set=None
     ):
     """
     training_set = list of [sender_emb, rcvr_emb, pred]
     """
+    add_set = []
     rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
     training_set_matrix = np.zeros((len(training_set), sender_dimension_total + rcvr_dimension_total + 1 )) # 1=prediction column
     for i in range(0, len(training_set)):
+        if remove_set != None:
+            if training_set[i][3]+'_to_'+training_set[i][4] in remove_set:
+                add_set.append(training_set[i])
+                continue
+                
         training_set_matrix[i, 0:sender_dimension_total] = np.concatenate((training_set[i][0][0],training_set[i][0][1], training_set[i][0][2]), axis=0)
         
         training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = np.concatenate((training_set[i][1][0],training_set[i][1][1], training_set[i][1][2]), axis=0)
@@ -62,7 +69,7 @@ def data_to_tensor(
 
     # convert to tensor
     training_set = torch.tensor(training_set_matrix, dtype=torch.float)
-    return training_set
+    return training_set, add_set
     
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
