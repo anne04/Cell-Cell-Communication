@@ -142,7 +142,7 @@ def train_fusionMLP(
     total_training_samples = training_set.shape[0]
     total_batch = total_training_samples//args.batch_size
 
-    loss_curve = np.zeros((args.num_epoch//args.epoch_interval+1))
+    loss_curve = np.zeros((args.num_epoch//args.epoch_interval+1, 2))
     loss_curve_counter = 0
 
 
@@ -173,6 +173,7 @@ def train_fusionMLP(
             
         
         avg_loss = total_loss/total_batch
+        
         if epoch_indx%args.epoch_interval == 0:
             print('Epoch %d/%d, Training loss: %g'%(epoch_indx, args.num_epoch, avg_loss))
             
@@ -199,7 +200,14 @@ def train_fusionMLP(
     
                 
         
+            loss_curve[loss_curve_counter][0] = avg_loss
+            loss_curve[loss_curve_counter][1] = validation_loss
 
+            loss_curve_counter = loss_curve_counter + 1
+        
+            logfile=open(args.model_path+'embFusion_'+ args.model_name+'_loss_curve.csv', 'wb')
+            np.savetxt(logfile,loss_curve, delimiter=',')
+            logfile.close()
                    
 
       
