@@ -12,7 +12,7 @@ def get_dataset(
     gene_node_list_per_spot: defaultdict(dict),
     X_protein_embedding = dict(),
     dataset = list()
-) -> list():
+):
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
     for each pair of cells based on CellNEST detection. And a dictionary with cell_vs_index mapping.
@@ -25,7 +25,7 @@ def get_dataset(
     barcode_info: list of [cell_barcode, coordinate_x, coordinates_y, -1]
     """
     # each sample has [sender set, receiver set, score]
-    dataset = []
+    
     for i in range (0, len(ccc_pairs)):
         print(i)
         sender_cell_barcode = ccc_pairs['from_cell'][i]
@@ -51,7 +51,8 @@ def get_dataset(
             score = ccc_pairs['attention_score'][i]
             dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
-    return dataset
+    print('len dataset: %d'%len(dataset))
+    #return dataset
 
 
 
