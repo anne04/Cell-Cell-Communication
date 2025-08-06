@@ -63,21 +63,41 @@ if __name__ == "__main__":
         if item[3]+'_to_'+item[4] in val_pairs:
             val_set.append(item)
 
-    val_prediction = []
-    threshold_prediction = 0.7
-    TP = 0
-    TN = 0
-    for item in val_set:
-        if item[2] >= threshold_prediction:
-            val_prediction.append(1)
-            TP = TP + 1
+    val_class = []
+    threshold_score = 0.7
+    P = 0
+    N = 0
+    for item in val_class:
+        if item[2] >= threshold_score:
+            val_class.append(1)
+            P = P + 1
         else:
-            val_prediction.append(0)
-            TN = TN + 1
+            val_class.append(0)
+            N = N + 1
 
 
     model_name = 'model/my_model_fusionMLP.pickle'
-    FP, FN = val_fusionMLP(val_set, model_name)    
+    pred_class = val_fusionMLP(val_set, model_name, threshold_score)    
+
+    TP = TN = FN = FP = 0
+    for i in range (0, val_class):
+        if val_class[i] == 1 and pred_class[i] == 1:
+            TP = TP + 1
+        elif val_class[i] == 1 and pred_class[i] == 0:
+            FN = FN + 1
+        elif val_class[i] == 0 and pred_class[i] == 1:
+            FP = FP + 1
+        elif val_class[i] == 0 and pred_class[i] == 0:
+            TN = TN + 1
+
+
+    confusion_matrix = np.zeros((2,2))
+    confusion_matrix[0][0] = # True positive rate = TP/P
+    confusion_matrix[0][1] = # False positive rate 
+    confusion_matrix[1][0] = # 
+    confusion_matrix[1][1] = # True negative rate = TN/N
+            
+            
             
   
     # shuffle and keep 80% for training, 20% for validation
