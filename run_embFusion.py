@@ -58,7 +58,10 @@ if __name__ == "__main__":
     np.random.shuffle(dataset)
     training_set = dataset[0:(len(dataset)*80)//100]
     val_set = dataset[(len(dataset)*80)//100:]
-    
+
+    remove_set = ['TGFB1_to_TGFBR2',
+               'TGFB1_to_ACVRL1'
+              ]
     training_set, add_set = data_to_tensor(training_set, remove_set)
     # append add_set to the validation set
     for item in add_set:
