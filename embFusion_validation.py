@@ -64,10 +64,10 @@ if __name__ == "__main__":
             val_set.append(item)
 
     val_class = []
-    threshold_score = 0.7
+    threshold_score = 0.9
     P = 0
     N = 0
-    for item in val_class:
+    for item in val_set:
         if item[2] >= threshold_score:
             val_class.append(1)
             P = P + 1
@@ -77,10 +77,11 @@ if __name__ == "__main__":
 
 
     model_name = 'model/my_model_fusionMLP.pickle'
+    val_set, na = data_to_tensor(val_set, None)
     pred_class = val_fusionMLP(val_set, model_name, threshold_score)    
 
     TP = TN = FN = FP = 0
-    for i in range (0, val_class):
+    for i in range (0, len(val_class)):
         if val_class[i] == 1 and pred_class[i] == 1:
             TP = TP + 1
         elif val_class[i] == 1 and pred_class[i] == 0:
@@ -91,6 +92,7 @@ if __name__ == "__main__":
             TN = TN + 1
 
 
+    print(TP/P)
     confusion_matrix = np.zeros((2,2))
     confusion_matrix[0][0] = # True positive rate = TP/P
     confusion_matrix[0][1] = # False positive rate 
@@ -99,22 +101,5 @@ if __name__ == "__main__":
             
             
             
-  
-    # shuffle and keep 80% for training, 20% for validation
-    np.random.shuffle(dataset)
-    training_set = dataset[0:(len(dataset)*80)//100]
-    val_set = dataset[(len(dataset)*80)//100:]
-
-    training_set, add_set = data_to_tensor(training_set, remove_set)
-    # append add_set to the validation set
-    for item in add_set:
-        val_set.append(item) 
-        
-    val_set, na = data_to_tensor(val_set, None)
-
-    train_fusionMLP(training_set, val_set, epoch = 1000,
-                    batch_size = 128, learning_rate= 0.001
-    )
-
 
     
