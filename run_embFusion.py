@@ -56,8 +56,21 @@ if __name__ == "__main__":
 
     # shuffle and keep 80% for training, 20% for validation
     np.random.shuffle(dataset)
-    training_set = dataset[0:(len(dataset)*80)//100]
-    val_set = dataset[(len(dataset)*80)//100:]
+    # separate into positive and negative samples based on a threshold_score
+    threshold_score = 0.7
+    positive_set = []
+    negative_set = []
+    for item in dataset:
+        if item[2] >= threshold_score:
+            positive_set.append(item)
+        else:
+            negative_set.append(item)
+
+    
+    training_set = positive_set[0:(len(positive_set)*80)//100] + negative_set[0:(len(negative_set)*80)//100]
+    val_set = positive_set[(len(positive_set)*80)//100:] + negative_set[(len(negative_set)*80)//100 : ]
+
+    
 
     remove_set = ['TGFB1_to_TGFBR2',
                'TGFB1_to_ACVRL1'
@@ -69,9 +82,17 @@ if __name__ == "__main__":
         
     val_set, na = data_to_tensor(val_set, None)
 
+    val_class = []
+    for item in val_set:
+        if item[2] >= threshold_score:
+            val_class.append(1)
+        else:
+            val_class.append(0)
+    
     train_fusionMLP(training_set, val_set, epoch = 1000,
-                    batch_size = 128, learning_rate= 0.001
-    )
+                    batch_size = 128, learning_rate= 0.001, 
+                    val_class
+                   )
 
 
     
