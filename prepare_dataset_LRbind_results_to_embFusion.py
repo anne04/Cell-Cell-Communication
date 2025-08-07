@@ -48,8 +48,8 @@ def get_dataset(
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             #score = ccc_pairs['attention_score'][i]
-            dataset.append([sender_set, rcvr_set, ligand_gene, rec_gene])
-            record_index.append(i)
+            dataset.append([sender_set, rcvr_set, -1, ligand_gene, rec_gene])
+            record_index.append(1)
 
     print('len dataset: %d'%len(dataset))
     #return dataset, record_index
@@ -153,16 +153,6 @@ if __name__ == "__main__":
     print(len(dataset))
     # save it
 
-    unique_gene = dict()
-    for i in range(0, len(barcode_info_gene)):
-        unique_gene[barcode_info_gene[i][5]] = 1
-    print(len(unique_gene))
-    count = 0
-    for gene in unique_gene:
-        if gene in X_protein_embedding:
-            count = count+1
-
-    print(count)
 
     with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir'+'_dataset_results_to_embFusion.pkl', 'wb') as fp:  
     	pickle.dump([dataset, record_index], fp)
