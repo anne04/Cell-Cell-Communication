@@ -133,6 +133,7 @@ if __name__ == "__main__":
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
         parser.add_argument( '--use_attn', type=int, default=0, help='')
+        parser.add_argument( '--use_embFusion', type=int, default=1, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -347,7 +348,8 @@ if __name__ == "__main__":
             
             break_flag = 0
             test_mode = 1
-            for top_N in [300]: #, 30, 10]:
+            all_ccc_pairs = defaultdict(list)
+            for top_N in [100]: #, 30, 10]:
                 print(top_N)
                 if break_flag == 1:  
                     break
@@ -411,12 +413,16 @@ if __name__ == "__main__":
                                 if i_gene[1]==j_gene[1]:
                                     continue
 
+                                #if args.use_embFusion==1:
+                                #    # prepare sender_embedding
+                                #    # prepare rcvr_embedding
+                                #    # 
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
                                 #temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
 
                               # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1]]) #, total_attention_score]) #, temp_layer1])
+                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]]) #, total_attention_score]) #, temp_layer1])
                                 product_only.append(temp)
                                 #product_only_layer1.append(temp_layer1)
         
@@ -457,7 +463,15 @@ if __name__ == "__main__":
                         ###########################
 
                         for item in dot_prod_list:
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])                            
+                            all_ccc_pairs['from_cell'].append(barcode_info[item[1]][0])
+                            all_ccc_pairs['to_cell'].append(barcode_info[item[2]][0])
+                            all_ccc_pairs['from_gene_node'].append(item[5])
+                            all_ccc_pairs['to_gene_node'].append(item[6])
+                            all_ccc_pairs['ligand_gene'].append(item[3])
+                            all_ccc_pairs['rec_gene'].append(item[4])
+                            
+                          
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])  # score, cell ids, gene_node ids                          
                             #if i in Tcell_zone and j in Tcell_zone:
                             #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                                 
@@ -470,6 +484,16 @@ if __name__ == "__main__":
             
                 # plot found_list
                 print("positive: %d, total pairs %d"%(len(found_list), len(lr_dict.keys())))
+                data_list_pd = pd.DataFrame({
+                    'from_cell': all_ccc_pairs['from_cell'],
+                    'to_cell': all_ccc_pairs['to_cell'],
+                    'from_gene_node': all_ccc_pairs['from_gene_node'],
+                    'to_gene_node': all_ccc_pairs['to_gene_node'],
+                    'ligand_gene': all_ccc_pairs['ligand_gene'],
+                    'rec_gene': all_ccc_pairs['rec_gene'],
+                    
+                })
+                data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
                 
                 
                 
