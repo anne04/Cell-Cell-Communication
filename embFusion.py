@@ -236,7 +236,7 @@ def train_fusionMLP(
                    
 
       
-def val_fusionMLP(val_set, model_name, threshold_score):
+def val_fusionMLP(val_set, model_name, threshold_score = 0.7):
     #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     """
@@ -259,14 +259,14 @@ def val_fusionMLP(val_set, model_name, threshold_score):
     batch_target = validation_prediction.to(device)  
     batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
     batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
-    
+    prediction_class = []
     for i in range(0, len(batch_prediction)):
         if batch_prediction[i]>= threshold_score:
-            batch_prediction[i] = 1
+            prediction_class.append(1)
         else:
-            batch_prediction[i] = 0
+            prediction_class.append(0)
 
-    return batch_prediction
+    return prediction_class, batch_prediction
 
 
 # https://medium.com/@mn05052002/building-a-simple-mlp-from-scratch-using-pytorch-7d50ca66512b
