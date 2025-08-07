@@ -75,23 +75,24 @@ if __name__ == "__main__":
     remove_set = ['TGFB1_to_TGFBR2',
                'TGFB1_to_ACVRL1'
               ]
+    
     training_set, add_set = data_to_tensor(training_set, remove_set)
     # append add_set to the validation set
     for item in add_set:
         val_set.append(item) 
         
-    val_set, na = data_to_tensor(val_set, None)
-
     val_class = []
     for item in val_set:
         if item[2] >= threshold_score:
             val_class.append(1)
         else:
             val_class.append(0)
+
+    val_set, na = data_to_tensor(val_set, None)
     
     train_fusionMLP(training_set, val_set, epoch = 1000,
                     batch_size = 128, learning_rate= 0.001, 
-                    val_class
+                    val_class = val_class
                    )
 
 
