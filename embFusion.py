@@ -120,6 +120,7 @@ def train_fusionMLP(
     args,
     batch_size: int = 32,
     learning_rate: float =  1e-4,
+    val_class: list()
     ):
     """
     split the training set into 80% training data and 20% validation set
@@ -186,7 +187,7 @@ def train_fusionMLP(
             
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
-            validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(training_set)
+            validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(validation_set)
             # .to(device) to transfer to GPU
             batch_sender_emb = validation_sender_emb.to(device)
             batch_data_rcv_emb = validation_rcv_emb.to(device)
@@ -204,8 +205,25 @@ def train_fusionMLP(
                 # model = nn.Sequential(...)
                 # model.load_state_dict(torch.load("my_model.pickle"))
                 print('*** min loss found! ***')
-    
-                
+
+            pred_class = list(batch_prediction.flatten().cpu().detach().numpy())
+            TP = TN = FN = FP = 0
+            P = N = 0
+            for i in range (0, len(val_class)):
+                if val_class[i] == 1 and pred_class[i] == 1:
+                    TP = TP + 1
+                    P = P + 1
+                elif val_class[i] == 1 and pred_class[i] == 0:
+                    FN = FN + 1
+                    P = P + 1
+                elif val_class[i] == 0 and pred_class[i] == 1:
+                    FP = FP + 1
+                    N = N + 1
+                elif val_class[i] == 0 and pred_class[i] == 0:
+                    TN = TN + 1
+                    N = N + 1
+
+            print('TP/P = %g, TN/N=%g '%(TP/P, TN/N))
         
             loss_curve[loss_curve_counter][0] = avg_loss
             loss_curve[loss_curve_counter][1] = validation_loss
@@ -219,7 +237,7 @@ def train_fusionMLP(
 
       
 def val_fusionMLP(val_set, model_name, threshold_score):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     """
     model_fusionMLP = fusionMLP(
