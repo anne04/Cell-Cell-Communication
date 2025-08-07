@@ -93,7 +93,7 @@ if __name__ == "__main__":
             TN = TN + 1
 
 
-    print(TP/P)
+    print(TP/P) 
     confusion_matrix = np.zeros((2,2))
     confusion_matrix[0][0] = # True positive rate = TP/P
     confusion_matrix[0][1] = # False positive rate 
