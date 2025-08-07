@@ -51,37 +51,30 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-    
+    ccc_pairs = pd.read_csv(args.lr_lrbind_csv_path, sep=",")
     with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir'+'_dataset_results_to_embFusion.pkl', 'rb') as fp:  
-    	dataset = pickle.load(fp)
+    	dataset, record_index = pickle.load(fp)
 
-
+    
    
 
     model_name = 'model/my_model_fusionMLP.pickle'
     val_set, na = data_to_tensor(dataset, None)
-    pred_class = val_fusionMLP(val_set, model_name, threshold_score=0.7)    
+    prediction_score, pred_class = val_fusionMLP(val_set, model_name, threshold_score=0.7)    
 
-    TP = TN = FN = FP = 0
-    for i in range (0, len(val_class)):
-        if val_class[i] == 1 and pred_class[i] == 1:
-            TP = TP + 1
-        elif val_class[i] == 1 and pred_class[i] == 0:
-            FN = FN + 1
-        elif val_class[i] == 0 and pred_class[i] == 1:
-            FP = FP + 1
-        elif val_class[i] == 0 and pred_class[i] == 0:
-            TN = TN + 1
-
-
-    print(TP/P) 
-    confusion_matrix = np.zeros((2,2))
-    confusion_matrix[0][0] = # True positive rate = TP/P
-    confusion_matrix[0][1] = # False positive rate 
-    confusion_matrix[1][0] = # 
-    confusion_matrix[1][1] = # True negative rate = TN/N
-            
-            
-            
-
+    index_vs_score = dict()
+    for i in range(0, len(record_index)):
+        index = record_index[i]
+        index_vs_score[index] = prediction_score[i]
     
+    for i in range(0, len(ccc_pairs)):
+        if i not in index_vs_score:
+            index_vs_score[i] = -1
+    
+    pred_score = []
+    for i in range(0, len(ccc_pairs)):
+        pred_score.append(index_vs_score[i])
+
+    # now add this column to ccc_pairs
+
+    # save it
