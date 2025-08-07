@@ -26,6 +26,7 @@ def get_dataset(
     """
     # each sample has [sender set, receiver set, score]
     print('len ccc pairs: %d'%len(ccc_pairs))
+    record_index = []
     for i in range (0, len(ccc_pairs)):
         #print(i)
         sender_cell_barcode = ccc_pairs['from_cell'][i]
@@ -48,10 +49,10 @@ def get_dataset(
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             #score = ccc_pairs['attention_score'][i]
             dataset.append([sender_set, rcvr_set, ligand_gene, rec_gene])
-        
+            record_index.append(i)
 
     print('len dataset: %d'%len(dataset))
-    #return dataset
+    #return dataset, record_index
 
 
 
@@ -164,4 +165,4 @@ if __name__ == "__main__":
     print(count)
 
     with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir'+'_dataset_results_to_embFusion.pkl', 'wb') as fp:  
-    	pickle.dump(dataset, fp)
+    	pickle.dump([dataset, record_index], fp)
