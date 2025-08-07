@@ -8,6 +8,7 @@ import argparse
 import torch
 from embFusion import data_to_tensor
 from embFusion import train_fusionMLP
+from embFusion import val_fusionMLP
 import pickle
 import gzip
 
@@ -64,7 +65,7 @@ if __name__ == "__main__":
             val_set.append(item)
 
     val_class = []
-    threshold_score = 0.9
+    threshold_score = 0.7
     P = 0
     N = 0
     for item in val_set:
