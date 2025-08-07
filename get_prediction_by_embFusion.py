@@ -11,12 +11,16 @@ from embFusion import train_fusionMLP
 from embFusion import val_fusionMLP
 import pickle
 import gzip
+import pandas as pd
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # =========================== must be provided ===============================
     #parser.add_argument( '--data_name', type=str, help='Name of the dataset') #default='PDAC_64630', 
     parser.add_argument( '--model_name', type=str, default="embFusion_test", help='Provide a model name')
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_allLR_nodeInfo.csv', 
+                        help='Name of the dataset') #, required=True)
     #=========================== default is set ======================================
     parser.add_argument( '--num_epoch', type=int, default=10000, help='Number of epochs or iterations for model training')
     parser.add_argument( '--model_path', type=str, default='model/', help='Path to save the model state') # We do not need this for output generation  
@@ -58,8 +62,10 @@ if __name__ == "__main__":
     
    
 
-    model_name = 'model/my_model_fusionMLP.pickle'
+    
     val_set, na = data_to_tensor(dataset, None)
+    
+    model_name = 'model/my_model_fusionMLP.pickle'
     prediction_score, pred_class = val_fusionMLP(val_set, model_name, threshold_score=0.7)    
 
     index_vs_score = dict()
@@ -76,5 +82,7 @@ if __name__ == "__main__":
         pred_score.append(index_vs_score[i])
 
     # now add this column to ccc_pairs
-
+    ccc_pairs['pred_score'] = pred_score
     # save it
+    ccc_pairs.to_csv(args.lr_lrbind_csv_path, index=False) 
+                
