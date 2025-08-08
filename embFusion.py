@@ -236,7 +236,7 @@ def train_fusionMLP(
                    
 
       
-def val_fusionMLP(val_set, model_name, threshold_score = 0.7):
+def val_fusionMLP_multiBatch(val_set, model_name, threshold_score = 0.7, total_batch = 1):
     #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     """
@@ -252,16 +252,37 @@ def val_fusionMLP(val_set, model_name, threshold_score = 0.7):
     """
     model_fusionMLP = torch.load(model_name)
     model_fusionMLP.to(device)
-    
+    batch_size = val_set.shape[0]//total_batch
     validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(val_set)
-    batch_sender_emb = validation_sender_emb.to(device)
-    batch_data_rcv_emb = validation_rcv_emb.to(device)
-    batch_target = validation_prediction.to(device)  
-    batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
-    batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+    batch_prediction_combined = []
+    for batch_idx in range(0, total_batch):
+        # .to(device) to transfer to GPU
+        batch_sender_emb = validation_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
+        batch_data_rcv_emb = validation_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
+        # batch_target = validation_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
+
+        # move the sender and rcvr emb to the GPU
+        batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+        batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+        for score in batch_prediction:
+            batch_prediction_combined.append(score)
+
+    if (batch_idx+1)*batch_size < val_set.shape[0]-1:
+        batch_sender_emb = validation_sender_emb[(batch_idx+1)*batch_size: , :].to(device)
+        batch_data_rcv_emb = validation_rcv_emb[(batch_idx+1)*batch_size: , :].to(device)
+        # batch_target = validation_prediction[(batch_idx+1)*batch_size: , :].to(device)
+
+        # move the sender and rcvr emb to the GPU
+        batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+        batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+        for score in batch_prediction:
+            batch_prediction_combined.append(score)
+        
+
+    batch_prediction = batch_prediction_combined
     prediction_class = []
     for i in range(0, len(batch_prediction)):
-        if batch_prediction[i]>= threshold_score:
+        if batch_prediction[i] >= threshold_score:
             prediction_class.append(1)
         else:
             prediction_class.append(0)
