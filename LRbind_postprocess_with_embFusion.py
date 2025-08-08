@@ -115,7 +115,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [7]: #range(0, len(data_names)):
+    for data_index in [6]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
-        parser.add_argument( '--use_attn', type=int, default=1, help='')
+        parser.add_argument( '--use_attn', type=int, default=0, help='')
         parser.add_argument( '--use_embFusion', type=int, default=1, help='')
         parser.add_argument( '--prediction_threshold', type=float, default=0.7, help='')
         args = parser.parse_args()
@@ -402,10 +402,10 @@ if __name__ == "__main__":
                             if total_connection != 0:
                                 total_attention_score = total_attention_score/total_connection
 
-                        if args.use_attn == 1:
-                            if total_attention_score == 0:
-                                # means it is below threshold
-                                continue
+                        #if args.use_attn == 1:
+                        #    if total_attention_score == 0:
+                        #        # means it is below threshold
+                        #        continue
                             
                         dot_prod_list = []
                         product_only = []
@@ -423,9 +423,12 @@ if __name__ == "__main__":
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
                                 #temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
 
-                              # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
+                                # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
-                                dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]]) #, total_attention_score]) #, temp_layer1])
+                                if args.use_attn == 1:
+                                    dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0], total_attention_score])    
+                                else:
+                                    dot_prod_list.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]]) #, total_attention_score]) #, temp_layer1])
                                 product_only.append(temp)
                                 #product_only_layer1.append(temp_layer1)
         
@@ -475,6 +478,7 @@ if __name__ == "__main__":
                             all_ccc_pairs['score'].append(item[0])
                             all_ccc_pairs['from_cell_index'].append(item[1])
                             all_ccc_pairs['to_cell_index'].append(item[2])
+                            all_ccc_pairs['attention_score'].append(item[7])
                           
                             lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])                          
                             #if i in Tcell_zone and j in Tcell_zone:
@@ -507,11 +511,15 @@ if __name__ == "__main__":
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
+                ccc_pairs['attention_score'] = all_ccc_pairs['attention_score']
                 lr_dict = defaultdict(list)
                 for i in range(0, len(ccc_pairs)):
-                    if ccc_pairs['pred_score'][i] < prediction_threshold:
+                    if ccc_pairs['pred_score'][i] < 0.7:
                         continue
-                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i]])  # score, cell ids, gene_node ids   
+                    if ccc_pairs['attention_score'][i] < 0.7:
+                        continue
+
+                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
 
                     
                 # plot input_cell_pair_list  
@@ -560,12 +568,12 @@ if __name__ == "__main__":
                     for item in cell_pair_list:
                         sum = sum + item[0]  
                         #sum_layer1 = sum_layer1 + item[3]
-                        #attention_score_sum = attention_score_sum + item[3] 
-                        #weighted_sum = weighted_sum + item[0] * item[3] 
+                        attention_score_sum = attention_score_sum + item[3] 
+                        weighted_sum = weighted_sum + item[0] * item[3] 
                         sum_pred = sum_pred + item[3]
                         
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list)]) #attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
                     
               
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -641,8 +649,8 @@ if __name__ == "__main__":
 
                     #data_list['score_sum_layer1'].append(sort_lr_list[i][4])
                     #data_list['score_avg_layer1'].append(sort_lr_list[i][5])
-                    #data_list['total_attention_score'].append(sort_lr_list[i][4])
-                    #data_list['weighted_sum'].append(sort_lr_list[i][5])                    
+                    data_list['total_attention_score'].append(sort_lr_list[i][6])
+                    data_list['weighted_sum'].append(sort_lr_list[i][7])                    
 
                 ########################################
                 data_list_pd = pd.DataFrame({
@@ -652,10 +660,10 @@ if __name__ == "__main__":
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count'],
                     'total_pred_score': data_list['total_pred_score'],
-                    'avg_pred': data_list['avg_pred']   
+                    'avg_pred': data_list['avg_pred']  , 
                     
-                    #'Total attention score': data_list['total_attention_score'],
-                    #'Weighted Sum': data_list['weighted_sum']                  
+                    'Total attention score': data_list['total_attention_score'],
+                    'Weighted Sum': data_list['weighted_sum']                  
                     #'Score_sum_layer1': data_list['score_sum_layer1'],
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
