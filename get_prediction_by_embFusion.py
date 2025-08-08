@@ -143,4 +143,7 @@ if __name__ == "__main__":
     ccc_pairs['pred_score'] = pred_score
     # save it
     ccc_pairs.to_csv(args.lr_lrbind_csv_path, index=False) 
+
+
+
                 
