@@ -48,6 +48,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
                
                'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir',
+               'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
@@ -75,6 +76,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
                
                'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L',
+               'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_tanh',
                'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
@@ -96,13 +98,13 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                                
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
-                  'TGFB1','TGFB1','TGFB1','TGFB1', 
+                  'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1',
                   'TGFB1', 'TGFB1',
                   'TGFB1','TGFB1', #'TGFB1','TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
-                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1',
+                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1',
                     'ACVRL1', 'ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [6]: #range(0, len(data_names)):
+    for data_index in [7]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -132,8 +134,9 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
-        parser.add_argument( '--use_attn', type=int, default=0, help='')
+        parser.add_argument( '--use_attn', type=int, default=1, help='')
         parser.add_argument( '--use_embFusion', type=int, default=1, help='')
+        parser.add_argument( '--prediction_threshold', type=float, default=0.7, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -469,9 +472,11 @@ if __name__ == "__main__":
                             all_ccc_pairs['to_gene_node'].append(item[6])
                             all_ccc_pairs['ligand_gene'].append(item[3])
                             all_ccc_pairs['rec_gene'].append(item[4])
-                            
+                            all_ccc_pairs['score'].append(item[0])
+                            all_ccc_pairs['from_cell_index'].append(item[1])
+                            all_ccc_pairs['to_cell_index'].append(item[2])
                           
-                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])  # score, cell ids, gene_node ids                          
+                            lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])                          
                             #if i in Tcell_zone and j in Tcell_zone:
                             #    Tcell_zone_lr_dict[item[3]+'+'+item[4]].append([item[0], item[1], item[2]])
                                 
@@ -481,9 +486,10 @@ if __name__ == "__main__":
                                 #break
         
                         ####################################################
-            
+                
                 # plot found_list
                 print("positive: %d, total pairs %d"%(len(found_list), len(lr_dict.keys())))
+                """
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_ccc_pairs['from_cell'],
                     'to_cell': all_ccc_pairs['to_cell'],
@@ -491,12 +497,23 @@ if __name__ == "__main__":
                     'to_gene_node': all_ccc_pairs['to_gene_node'],
                     'ligand_gene': all_ccc_pairs['ligand_gene'],
                     'rec_gene': all_ccc_pairs['rec_gene'],
+                    'score': all_ccc_pairs['score']
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
+                """
                 
-                
-                
+                ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', sep=",")
+                ccc_pairs['score'] = all_ccc_pairs['score']
+                ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
+                ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
+                lr_dict = defaultdict(list)
+                for i in range(0, len(ccc_pairs)):
+                    if ccc_pairs['pred_score'][i] < prediction_threshold:
+                        continue
+                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i]])  # score, cell ids, gene_node ids   
+
+                    
                 # plot input_cell_pair_list  
                 '''
                 ######### plot output #############################
@@ -535,6 +552,7 @@ if __name__ == "__main__":
                 sort_lr_list = []
                 for lr_pair in lr_dict:
                     sum = 0
+                    sum_pred = 0
                     #sum_layer1 = 0
                     attention_score_sum = 0
                     cell_pair_list = lr_dict[lr_pair]
@@ -542,11 +560,12 @@ if __name__ == "__main__":
                     for item in cell_pair_list:
                         sum = sum + item[0]  
                         #sum_layer1 = sum_layer1 + item[3]
-                        attention_score_sum = attention_score_sum + item[3] 
-                        weighted_sum = weighted_sum + item[0] * item[3] 
-    
+                        #attention_score_sum = attention_score_sum + item[3] 
+                        #weighted_sum = weighted_sum + item[0] * item[3] 
+                        sum_pred = sum_pred + item[3]
+                        
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list)]) #attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
                     
               
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -582,7 +601,8 @@ if __name__ == "__main__":
                 #    pickle.dump(lr_dict, fp)
 
                 # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
-                data_list=dict()
+                data_list=defaultdict(list)
+                """
                 data_list['X']=[]
                 data_list['Y']=[] 
                 data_list['type']=[]
@@ -590,8 +610,9 @@ if __name__ == "__main__":
                 data_list['pair_count'] = []
                 #data_list['score_sum_layer1'] =[]
                 #data_list['score_avg_layer1'] = []         
-                data_list['total_attention_score'] =[]
-                data_list['weighted_sum'] = []  
+                #data_list['total_attention_score'] =[]
+                #data_list['weighted_sum'] = []  
+                """
                 max_rows = len(sort_lr_list)
 
                 
@@ -615,10 +636,13 @@ if __name__ == "__main__":
                     receptor = sort_lr_list[i][0].split('+')[1]
                     data_list['score_avg'].append(sort_lr_list[i][2])
                     data_list['pair_count'].append(sort_lr_list[i][3]) 
+                    data_list['total_pred_score'].append(sort_lr_list[i][4])
+                    data_list['avg_pred'].append(sort_lr_list[i][5])                    
+
                     #data_list['score_sum_layer1'].append(sort_lr_list[i][4])
                     #data_list['score_avg_layer1'].append(sort_lr_list[i][5])
-                    data_list['total_attention_score'].append(sort_lr_list[i][4])
-                    data_list['weighted_sum'].append(sort_lr_list[i][5])                    
+                    #data_list['total_attention_score'].append(sort_lr_list[i][4])
+                    #data_list['weighted_sum'].append(sort_lr_list[i][5])                    
 
                 ########################################
                 data_list_pd = pd.DataFrame({
@@ -627,12 +651,15 @@ if __name__ == "__main__":
                     'Score_avg': data_list['score_avg'],
                     'Type': data_list['type'],
                     'Pair_count': data_list['pair_count'],
-                    'Total attention score': data_list['total_attention_score'],
-                    'Weighted Sum': data_list['weighted_sum']                  
+                    'total_pred_score': data_list['total_pred_score'],
+                    'avg_pred': data_list['avg_pred']   
+                    
+                    #'Total attention score': data_list['total_attention_score'],
+                    #'Weighted Sum': data_list['weighted_sum']                  
                     #'Score_sum_layer1': data_list['score_sum_layer1'],
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR.csv', index=False) #_negatome
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
 
 
                 
