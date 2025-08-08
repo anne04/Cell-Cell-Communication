@@ -115,7 +115,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [6]: #range(0, len(data_names)):
+    for data_index in [7]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         parser.add_argument( '--output_path', type=str, default='/cluster/home/t116508uhn/LRbind_output/', help='Path to save the visualization results, e.g., histograms, graph etc.') #
         parser.add_argument( '--target_ligand', type=str, default='CCL19', help='') #
         parser.add_argument( '--target_receptor', type=str, default='CCR7', help='')
-        parser.add_argument( '--use_attn', type=int, default=0, help='')
+        parser.add_argument( '--use_attn', type=int, default=1, help='')
         parser.add_argument( '--use_embFusion', type=int, default=1, help='')
         parser.add_argument( '--prediction_threshold', type=float, default=0.7, help='')
         args = parser.parse_args()
