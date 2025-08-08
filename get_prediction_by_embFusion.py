@@ -46,7 +46,7 @@ def val_fusionMLP_multiBatch(dataset, model_name, threshold_score = 0.7, total_b
         for score in batch_prediction:
             batch_prediction_combined.append(score)
 
-    if (batch_idx+1)*batch_size < val_set.shape[0]-1:
+    if (batch_idx+1)*batch_size < len(dataset)-1:
         val_set, na = data_to_tensor(dataset[(batch_idx+1)*batch_size:], None)
         validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(val_set)
         batch_sender_emb = validation_sender_emb.to(device)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     model_name = 'model/my_model_fusionMLP.pickle'
     
     #val_set, na = data_to_tensor(dataset, None)
-    prediction_score, pred_class = val_fusionMLP_multiBatch(dataset, model_name, threshold_score=0.7)    
+    prediction_score, pred_class = val_fusionMLP_multiBatch(dataset, model_name, threshold_score=0.7, total_batch = 1000)    
 
     index_vs_score = dict()
     for i in range(0, len(record_index)):
