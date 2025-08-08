@@ -7,11 +7,70 @@ import random
 import argparse
 import torch
 from embFusion import data_to_tensor
-from embFusion import train_fusionMLP
-from embFusion import val_fusionMLP
+from embFusion import split_branch
 import pickle
 import gzip
 import pandas as pd
+
+def val_fusionMLP_multiBatch(dataset, model_name, threshold_score = 0.7, total_batch = 1):
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # initialize the model
+    """
+    model_fusionMLP = fusionMLP(
+                 input_size = 512 + 264 + 1024, 
+                 hidden_size_fusion = 1024, 
+                 output_size_fusion = 256,
+                 hidden_size_predictor_layer1 = 256*2,
+                 hidden_size_predictor_layer2 = 256
+    ).to(device)
+    model_fusionMLP.load_state_dict(torch.load(model_name))
+    model_fusionMLP.to(device)
+    """
+    model_fusionMLP = torch.load(model_name)
+    model_fusionMLP.to(device)
+    batch_size = len(dataset)//total_batch
+    
+    batch_prediction_combined = []
+    for batch_idx in range(0, total_batch):
+        print(batch_idx)
+        # .to(device) to transfer to GPU
+        val_set, na = data_to_tensor(dataset[batch_idx*batch_size: (batch_idx+1)*batch_size], None)
+        validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(val_set)
+        batch_sender_emb = validation_sender_emb.to(device)
+        batch_data_rcv_emb = validation_rcv_emb.to(device)
+        # batch_target = validation_prediction.to(device)
+
+        # move the sender and rcvr emb to the GPU
+        batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+        batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+        for score in batch_prediction:
+            batch_prediction_combined.append(score)
+
+    if (batch_idx+1)*batch_size < val_set.shape[0]-1:
+        val_set, na = data_to_tensor(dataset[(batch_idx+1)*batch_size:], None)
+        validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(val_set)
+        batch_sender_emb = validation_sender_emb.to(device)
+        batch_data_rcv_emb = validation_rcv_emb.to(device)
+        # batch_target = validation_prediction.to(device)
+
+        # move the sender and rcvr emb to the GPU
+        batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+        batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+        for score in batch_prediction:
+            batch_prediction_combined.append(score)
+        
+
+    prediction_score = batch_prediction_combined
+    pred_class = []
+    for i in range(0, len(prediction_score)):
+        if prediction_score[i] >= threshold_score:
+            pred_class.append(1)
+        else:
+            pred_class.append(0)
+
+    
+    return prediction_score, pred_class
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -62,11 +121,10 @@ if __name__ == "__main__":
     
    
 
-    
-    val_set, na = data_to_tensor(dataset, None)
-    
     model_name = 'model/my_model_fusionMLP.pickle'
-    prediction_score, pred_class = val_fusionMLP(val_set, model_name, threshold_score=0.7)    
+    
+    #val_set, na = data_to_tensor(dataset, None)
+    prediction_score, pred_class = val_fusionMLP_multiBatch(dataset, model_name, threshold_score=0.7)    
 
     index_vs_score = dict()
     for i in range(0, len(record_index)):
