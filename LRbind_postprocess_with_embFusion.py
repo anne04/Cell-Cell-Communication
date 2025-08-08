@@ -297,7 +297,7 @@ if __name__ == "__main__":
 
 
             ############ attention scores ##############################
-            '''
+            
             layer = 3
           
             distribution = []
@@ -333,7 +333,7 @@ if __name__ == "__main__":
               if scaled_score >= th_80th:
                   attention_scores[i][j] = scaled_score
 
-            '''
+            
             ########################################################################
             '''
             In [9]: sort_lr_list[282]
