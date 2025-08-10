@@ -507,7 +507,7 @@ if __name__ == "__main__":
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
                 """
                 
-                ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', sep=",")
+                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'+'_allLR_nodeInfo.csv', sep=",")
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
@@ -610,23 +610,16 @@ if __name__ == "__main__":
 
                 # now plot the histograms where X axis will show the name or LR pair and Y axis will show the score.
                 data_list=defaultdict(list)
-                """
-                data_list['X']=[]
-                data_list['Y']=[] 
-                data_list['type']=[]
-                data_list['score_avg'] = []
-                data_list['pair_count'] = []
-                #data_list['score_sum_layer1'] =[]
-                #data_list['score_avg_layer1'] = []         
-                #data_list['total_attention_score'] =[]
-                #data_list['weighted_sum'] = []  
-                """
                 max_rows = len(sort_lr_list)
 
                 
                 for i in range (0, max_rows): #1000): #:
                     ligand = sort_lr_list[i][0].split('+')[0]
                     receptor = sort_lr_list[i][0].split('+')[1]
+
+                    if sort_lr_list[i][3] < 10 or sort_lr_list[i][6]<1.0:
+                        continue
+                    
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
                     
