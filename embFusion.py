@@ -16,9 +16,9 @@ proteinEmb_dimension = 1024
 def split_branch(data):
     prediction_column = data.size(1)-1
     rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
-    sender_emb = data[:, 0:sender_dimension_total]    
+    sender_emb = data[:, cellNEST_dimension:sender_dimension_total]    
 
-    rcv_emb = data[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
+    rcv_emb = data[:, sender_dimension_total+cellNEST_dimension:sender_dimension_total+rcvr_dimension_total]
     prediction = data[:, prediction_column]
     return sender_emb, rcv_emb, prediction 
 
