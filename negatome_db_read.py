@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
     parser.add_argument( '--database_path_omnipath', type=str, default='database/omnipath_lr_db.csv', help='The name of DB')
     parser.add_argument( '--result_path', type=str, default='result/')
+    parser.add_argument( '--get_negatome_pair_only', type=int, default=1)
     args = parser.parse_args()
 
     df = pd.read_csv(args.file_name, sep="\t")
@@ -36,6 +37,32 @@ if __name__ == "__main__":
             
 
 
+    if args.get_negatome_pair_only == 1:
+        df = pd.read_csv(args.negatome_database_path, sep="\t", header=None)
+        lr_unique = dict()
+        negatome_gene = []
+        for i in range (0, df[0].shape[0]):
+            ligand_uniprot = df[0][i]
+            receptor_uniprot = df[1][i]
+            chain_A_list = dict_uniprotID_genes[ligand_uniprot]
+            chain_B_list = dict_uniprotID_genes[receptor_uniprot]
+    
+            for gene_a in chain_A_list:
+                for gene_b in chain_B_list:
+                    if gene_a == gene_b:
+                        continue
+                    negatome_gene.append(gene_a)
+                    negatome_gene.append(gene_b)
+                    lr_unique[gene_a + '_with_' + gene_b] = 0    
+
+        negatome_gene = list(np.unique(negatome_gene))
+        print('len of unique pairs: %d, unique genes %d'%(len(lr_unique.keys()), ))
+        
+        with gzip.open('database/negatome_gene_complex_set', 'wb') as fp:  
+        	pickle.dump([negatome_gene, lr_unique], fp)
+
+        
+        exit(0)
     ##############################
     df = pd.read_csv(args.database_path_omnipath, sep=",")
     #lr_unique = defaultdict(dict)
@@ -76,7 +103,6 @@ if __name__ == "__main__":
 
     ############################
     df = pd.read_csv(args.database_path, sep=",")
-    #lr_unique = defaultdict(dict)
     ligand_list = []
     receptor_list = []
     for i in range (0, df["Ligand"].shape[0]):
