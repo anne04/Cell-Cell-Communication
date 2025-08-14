@@ -88,7 +88,7 @@ if __name__ == "__main__":
         cell_barcode = np.array(adata_h5.obs.index)
         print('Number of barcodes: %d'%cell_barcode.shape[0])
         print('Applying quantile normalization')
-        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarra(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
+        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
         cell_vs_gene = np.transpose(temp)      
     
     else: # Data is not available in Space Ranger output format
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     
     receptor_list = list(receptor_list.keys())
     ligand_list =  list(ligand_dict_dataset.keys())
-    print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
+#    print('number of ligand-receptor pairs in this dataset %d '%count_pair) 
     print('number of ligands %d '%len(ligand_dict_dataset.keys()))
     print('number of receptors %d '%len(receptor_list))
     included_gene=[]
@@ -246,6 +246,30 @@ if __name__ == "__main__":
             included_gene.append(gene)
             
     print('Total genes in this dataset: %d, number of genes working as ligand and/or receptor: %d '%(len(gene_ids),len(included_gene)))
+
+
+    ####################### for debug purpose ###########
+    print('Looking for embedding of ligand and receptor genes')
+    
+    with gzip.open('database/ligand_receptor_protein_embedding.pkl', 'rb') as fp:  
+        gene_vs_embedding = pickle.load(fp)    
+
+    for gene in ligand_list:
+        if gene not in gene_vs_embedding:
+            print('Embedding not found for ligand:' + gene)
+
+    for gene in receptor_list:
+        if gene not in gene_vs_embedding:
+            print('Embedding not found for receptor:' + gene)
+
+
+
+
+    exit(0)
+    #######################
+
+
+
     
     # assign id to each entry in the ligand-receptor database
     for ligand in ligand_dict_dataset:
@@ -264,6 +288,52 @@ if __name__ == "__main__":
             lr_id  = lr_id  + 1
 
     print("unique LR pair count %d"%lr_id)        
+    ##################### read negatome to see how many overlaps ####################
+
+    with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
+        negatome_gene, negatome_lr_unique = pickle.load(fp)
+
+    
+    set_1 = set(gene_ids)
+    set_2 = set(negatome_gene)
+    
+    intersection_list = list(set1.intersection(set2))
+    print('len of common genes with negatome genes %d'%len(intersection_list))
+
+
+    with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+        negatome_ligand_list, negatome_receptor_list, lr_unique_negatome = pickle.load(fp)
+        
+    found_overlap = 0  
+    for ligand in lr_unique_negatome:
+        if ligand in l_r_pair:
+            for receptor in lr_unique_negatome[ligand]:
+                #print(receptor)
+                if receptor in l_r_pair[ligand]:
+                    found_overlap = found_overlap + 1
+                    #print(ligand + '_to_' + receptor)
+     
+    print('found overlap %d'%found_overlap)
+            
+    count = 0
+    for ligand in negatome_ligand_list:
+        if ligand in ligand_list:
+            count = count + 1
+
+    print('negatome ligand found %d'%count)
+
+    count = 0
+    for receptor in negatome_receptor_list:
+        if receptor in receptor_list:
+            count = count + 1
+
+    print('negatome receptor found %d'%count)
+
+
+    exit(0)    
+
+
+
     ##################################################################################
     #coordinates = coordinates[cell_ROI]
     #print(cell_ROI)
@@ -637,8 +707,30 @@ if __name__ == "__main__":
 
 
 
+    # add the ligands and receptors from negatome
+
+
     start_of_intra_edge = len(edge_weight)    
+
+    ### negatome ###
+    with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+        negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
+    
+    for ligand_gene in negatome_ligand_list:
+        if ligand_gene in gene_ids and ligand_gene not in ligand_list:    
+            ligand_list.append(ligand_gene)
+
+    for receptor_gene in negatome_receptor_list:
+        if receptor_gene in gene_ids and receptor_gene not in receptor_list:    
+            receptor_list.append(receptor_gene)
+
+    ################
+
+
     cell_gene_set = ligand_list + receptor_list #list(active_genes.keys()) #ligand_list + receptor_list
+
+
+
     print('gene count for corr matrix %d'%len(cell_gene_set))
     if args.local_coexpression == 0:
         df = defaultdict(list)
