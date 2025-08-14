@@ -728,9 +728,7 @@ if __name__ == "__main__":
 
 
     cell_gene_set = ligand_list + receptor_list #list(active_genes.keys()) #ligand_list + receptor_list
-
-
-
+    
     print('gene count for corr matrix %d'%len(cell_gene_set))
     if args.local_coexpression == 0:
         df = defaultdict(list)
@@ -741,6 +739,7 @@ if __name__ == "__main__":
         data = pd.DataFrame(df)
         print('Running gene_coexpression_matrix calculation')
         gene_coexpression_matrix = data.corr(method='spearman')
+        
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
     for i in range(0, cell_vs_gene.shape[0]):
