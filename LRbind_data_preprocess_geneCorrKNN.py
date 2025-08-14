@@ -298,7 +298,7 @@ if __name__ == "__main__":
     set_2 = set(negatome_gene)
     
     intersection_list = list(set1.intersection(set2))
-    print('len of common genes with negatome genes %d'%len(intersection_list))
+    print('len of common genes with negatome genes %d'%len(intersection_list)) #
 
 
     with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
