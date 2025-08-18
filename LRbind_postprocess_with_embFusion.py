@@ -352,6 +352,7 @@ if __name__ == "__main__":
             break_flag = 0
             test_mode = 1
             all_ccc_pairs = defaultdict(list)
+            all_negatome_pairs = defaultdict(list)
             for top_N in [100]: #, 30, 10]:
                 print(top_N)
                 if break_flag == 1:  
@@ -389,12 +390,21 @@ if __name__ == "__main__":
                             if gene in receptor_list:
                                 receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
 
+                        receptor_node_index_intra = []
+                        for gene in gene_node_list_per_spot[i]:
+                            if gene in receptor_list:
+                                receptor_node_index_intra.append([gene_node_list_per_spot[j][gene], gene])
+
+                      
                         # from i to j == total attention score
                         if args.use_attn == 1:
                             total_attention_score = 0 
                             total_connection = 0
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
+                                    if i_gene[1]+'_with_'+j_gene[1] is in negatome_pair:
+                                        continue
+                                  
                                     if i_gene[0] in attention_scores and j_gene[0] in attention_scores[i_gene[0]]:
                                         total_attention_score = total_attention_score + attention_scores[i_gene[0]][j_gene[0]]
                                         total_connection = total_connection + 1
@@ -408,6 +418,8 @@ if __name__ == "__main__":
                         #        continue
                             
                         dot_prod_list = []
+                        dot_prod_list_negatome_inter = []
+                        dot_prod_list_negatome_intra = []
                         product_only = []
                         #product_only_layer1 = []
                         start_index = 0
@@ -415,14 +427,13 @@ if __name__ == "__main__":
                             for j_gene in receptor_node_index:
                                 if i_gene[1]==j_gene[1]:
                                     continue
+                              
+                                temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
 
-                                #if args.use_embFusion==1:
-                                #    # prepare sender_embedding
-                                #    # prepare rcvr_embedding
-                                #    # 
-                                temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
-                                #temp_layer1 = distance.euclidean(X_embedding_layer1[i_gene[0]], X_embedding_layer1[j_gene[0]]) # #(X_PCA[i_gene[0]], X_PCA[j_gene[0]]) #
-
+                                if i_gene[1]+'_with_'+j_gene[1] is in negatome_candidate:
+                                    dot_prod_list_negatome_inter.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                                    continue
+                                  
                                 # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
                                 if args.use_attn == 1:
@@ -432,7 +443,21 @@ if __name__ == "__main__":
                                 product_only.append(temp)
                                 #product_only_layer1.append(temp_layer1)
         
-                        ###############################################    
+                        ###############################################
+                        ## get the list of dot_prod_list_negatome_intra
+                        for i_gene in ligand_node_index:  
+                            for j_gene in receptor_node_index_intra:
+                                if i_gene[1]==j_gene[1]:
+                                    continue
+                              
+                                temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
+
+                                if i_gene[1]+'_with_'+j_gene[1] is in negatome_lr_pair:
+                                    dot_prod_list_negatome_intra.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                                    continue
+                                  
+                      
+                      
                         if len(dot_prod_list) == 0:
                             continue
                             
@@ -467,7 +492,17 @@ if __name__ == "__main__":
                                 kn = KneeLocator(x, score_list, direction='decreasing', curve="convex")
                                 dot_prod_list = dot_prod_list[0:kn.knee]
                         ###########################
-
+                        for item in dot_prod_list_negatome_inter:
+                            all_negatome_pairs['from_cell'].append(barcode_info[item[1]][0])
+                            all_negatome_pairs['to_cell'].append(barcode_info[item[2]][0])
+                            all_negatome_pairs['from_gene_node'].append(item[5])
+                            all_negatome_pairs['to_gene_node'].append(item[6])
+                            all_negatome_pairs['ligand_gene'].append(item[3])
+                            all_negatome_pairs['rec_gene'].append(item[4])
+                            all_negatome_pairs['score'].append(item[0])
+                            all_negatome_pairs['from_cell_index'].append(item[1])
+                            all_negatome_pairs['to_cell_index'].append(item[2])
+                            
                         for item in dot_prod_list:
                             all_ccc_pairs['from_cell'].append(barcode_info[item[1]][0])
                             all_ccc_pairs['to_cell'].append(barcode_info[item[2]][0])
@@ -505,6 +540,20 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
+
+                # you can double check if all sender and rcvr cells are the same one
+                data_list_pd = pd.DataFrame({
+                    'from_cell': all_negatome_pairs['from_cell'],
+                    'to_cell': all_negatome_pairs['to_cell'],
+                    'from_gene_node': all_negatome_pairs['from_gene_node'],
+                    'to_gene_node': all_negatome_pairs['to_gene_node'],
+                    'ligand_gene': all_negatome_pairs['ligand_gene'],
+                    'rec_gene': all_negatome_pairs['rec_gene'],
+                    'score': all_negatome_pairs['score']
+                    
+                })
+                data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo.csv', index=False) #_negatome
+                
                 """
                 
                 ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'+'_allLR_nodeInfo.csv', sep=",")
