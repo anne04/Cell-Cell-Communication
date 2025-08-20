@@ -84,7 +84,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
 
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
-                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome'
+                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
                
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
