@@ -10,7 +10,7 @@ def get_dataset(
     ccc_pairs: pd.DataFrame,
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
-    X_protein_embedding = dict()
+    X_protein_embedding: dict()
 ):
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
@@ -26,7 +26,7 @@ def get_dataset(
     # each sample has [sender set, receiver set, score]
     dataset = []
     for i in range (0, len(ccc_pairs)):
-        print(i)
+        print("%d/%d - found %d"%(i,len(ccc_pairs),len(dataset)), end='\r')
         sender_cell_barcode = ccc_pairs['from_cell'][i]
         rcv_cell_barcode = ccc_pairs['to_cell'][i]
         if sender_cell_barcode  == rcv_cell_barcode:
@@ -34,8 +34,8 @@ def get_dataset(
             
         ligand_gene = ccc_pairs['ligand'][i]
         rec_gene = ccc_pairs['receptor'][i]
-        sender_cell_index = ccc_pairs['from_id'][i]
-        rcvr_cell_index = ccc_pairs['to_id'][i]
+        #sender_cell_index = ccc_pairs['from_id'][i]
+        #rcvr_cell_index = ccc_pairs['to_id'][i]
         # need to find the index of gene nodes in cells
 
         if ligand_gene in gene_node_list_per_spot[sender_cell_barcode] and \
@@ -50,17 +50,74 @@ def get_dataset(
             score = ccc_pairs['attention_score'][i]
             dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
-    print('len dataset: %d'%len(dataset))
+    print('\nlen dataset: %d'%len(dataset))
     return dataset
+
+def get_negative_dataset(
+    ccc_pairs: pd.DataFrame,
+    cell_vs_gene_emb: defaultdict(dict),
+    gene_node_list_per_spot: defaultdict(dict),
+    X_protein_embedding : dict(),
+    dataset:list(),
+    flag = 'inter'
+):
+    """
+    Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
+    for each pair of cells based on CellNEST detection. And a dictionary with cell_vs_index mapping.
+    """
+    """
+    Parameters:
+    ccc_pairs:  columns are ['from_cell', 'to_cell', 'ligand', 'receptor', 'edge_rank', 'component', 'from_id', 'to_id', 'attention_score']
+    representing cell_barcode_sender, cell_barcode_receiver, ligand gene, receptor gene, 
+    edge_rank, component_label, index_sender, index_receiver, attention_score
+    barcode_info: list of [cell_barcode, coordinate_x, coordinates_y, -1]
+    """
+    # each sample has [sender set, receiver set, score]
+    if dataset == None:
+        dataset = []
+
+    initial_len = len(dataset)
+    protein_emb_notfound = 0
+    for i in range (0, len(ccc_pairs)):
+        print("%d/%d - found %d"%(i,len(ccc_pairs),len(dataset)-initial_len), end='\r')
+        sender_cell_barcode = ccc_pairs['from_cell'][i]
+        rcv_cell_barcode = ccc_pairs['to_cell'][i]
+        #if flag == 'inter' and sender_cell_barcode  == rcv_cell_barcode:
+        #    continue 
+            
+        ligand_gene = ccc_pairs['ligand_gene'][i]
+        rec_gene = ccc_pairs['rec_gene'][i]
+        #sender_cell_index = ccc_pairs['from_id'][i]
+        #rcvr_cell_index = ccc_pairs['to_id'][i]
+        # need to find the index of gene nodes in cells
+
+        if ligand_gene in gene_node_list_per_spot[sender_cell_barcode] and \
+            rec_gene in gene_node_list_per_spot[rcv_cell_barcode]: 
+            if ligand_gene in X_protein_embedding and rec_gene in X_protein_embedding:
+                ligand_node_index = gene_node_list_per_spot[sender_cell_barcode][ligand_gene]
+                rec_node_index = gene_node_list_per_spot[rcv_cell_barcode][rec_gene]
+                
+                sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
+                rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
+                score = 0 #ccc_pairs['attention_score'][i]
+                dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
+            else:
+                protein_emb_notfound = protein_emb_notfound + 1
+
+    
+            
+    print('\nlen dataset: %d, protein emb not found %d'%(len(dataset), protein_emb_notfound))
+    return dataset
+
 
 
 
 def get_cellEmb_geneEmb_pairs(
     cell_vs_index: dict(),
     barcode_info_gene: list(),
-    X_embedding = np.array,
-    X_gene_embedding = np.array,
-    X_protein_embedding = np.array
+    X_embedding: np.array,
+    X_gene_embedding: np.array,
+    X_protein_embedding: np.array
 ) -> defaultdict(dict):
     """
 
@@ -151,10 +208,21 @@ if __name__ == "__main__":
     
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
     ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
-    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot)
+    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding)
     print(len(dataset))
-    # save it
 
+    start_of_negative_pairs = len(dataset)
+    neg_ccc_pairs = pd.read_csv(args.lr_negatome_inter_csv_path, sep=",")
+    dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset)
+    print(len(dataset))
+
+    neg_ccc_pairs = pd.read_csv(args.lr_negatome_intra_csv_path, sep=",")
+    dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset, 'intra')
+    print(len(dataset))
+    
+    # save it
+    
+        
     unique_gene = dict()
     for i in range(0, len(barcode_info_gene)):
         unique_gene[barcode_info_gene[i][5]] = 1
