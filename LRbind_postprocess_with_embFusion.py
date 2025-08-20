@@ -52,6 +52,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
 
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
@@ -83,6 +84,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
 
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
+                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome'
                
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
@@ -99,13 +101,13 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1',
-                  'TGFB1', 'TGFB1',
+                  'TGFB1', 'TGFB1','TGFB1',
                   'TGFB1','TGFB1', #'TGFB1','TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
                     'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1',
-                    'ACVRL1', 'ACVRL1',
+                    'ACVRL1', 'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [7]: #range(0, len(data_names)):
+    for data_index in [13]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -202,6 +204,11 @@ if __name__ == "__main__":
                     negatome_candidate = negatome_candidate + 1
 
         print('negatome_cand %d'%negatome_candidate)  # negatome_cand 37 - luad
+
+        with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
+            negatome_gene, negatome_lr_unique = pickle.load(fp)
+
+      
         #####################
         with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
             cell_vs_gene = pickle.load(fp)
@@ -404,7 +411,7 @@ if __name__ == "__main__":
                             total_connection = 0
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
-                                    if i_gene[1]+'_with_'+j_gene[1] is in negatome_pair:
+                                    if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
                                         continue
                                   
                                     if i_gene[0] in attention_scores and j_gene[0] in attention_scores[i_gene[0]]:
@@ -432,7 +439,7 @@ if __name__ == "__main__":
                               
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
 
-                                if i_gene[1]+'_with_'+j_gene[1] is in negatome_candidate:
+                                if i_gene[1] in negatome_lr_pair  and j_gene[1] in negatome_lr_pair[i_gene[1]]: 
                                     dot_prod_list_negatome_inter.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
                                     continue
                                   
@@ -452,9 +459,8 @@ if __name__ == "__main__":
                                 if i_gene[1]==j_gene[1]:
                                     continue
                               
-                                temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
-
-                                if i_gene[1]+'_with_'+j_gene[1] is in negatome_lr_pair:
+                                if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
+                                    temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
                                     dot_prod_list_negatome_intra.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
                                     continue
                                   
@@ -566,7 +572,7 @@ if __name__ == "__main__":
                     'score': all_negatome_pairs['score']
                     
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo.csv', index=False) #_negatome
+                data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_inter.csv', index=False) #_negatome
 
                 # you can double check if all sender and rcvr cells are the same one
                 data_list_pd = pd.DataFrame({
