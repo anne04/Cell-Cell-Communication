@@ -10,8 +10,7 @@ def get_dataset(
     ccc_pairs: pd.DataFrame,
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
-    X_protein_embedding = dict(),
-    dataset = list()
+    X_protein_embedding = dict()
 ):
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
@@ -25,7 +24,7 @@ def get_dataset(
     barcode_info: list of [cell_barcode, coordinate_x, coordinates_y, -1]
     """
     # each sample has [sender set, receiver set, score]
-    
+    dataset = []
     for i in range (0, len(ccc_pairs)):
         print(i)
         sender_cell_barcode = ccc_pairs['from_cell'][i]
@@ -52,7 +51,7 @@ def get_dataset(
             dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
     print('len dataset: %d'%len(dataset))
-    #return dataset
+    return dataset
 
 
 
@@ -98,14 +97,20 @@ if __name__ == "__main__":
     ################## Mandatory ####################################################################
     parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
-    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
-    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
     parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_Embed_X', help='Name of the dataset')
     parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--lr_negatome_intra_csv_path', type=str, \
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_intra.csv',\
+                        help='Name of the dataset') #, required=True)
+    parser.add_argument( '--lr_negatome_inter_csv_path', type=str, \
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_inter.csv',\
+                        help='Name of the dataset') #, required=True)  
+    
     args = parser.parse_args()
 
-    ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
 
     with gzip.open(args.barcode_info_cellnest_path, 'rb') as fp:     
         barcode_info_cellnest = pickle.load(fp)
@@ -145,8 +150,8 @@ if __name__ == "__main__":
 
     
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
-    dataset = []
-    get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, dataset)
+    ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
+    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot)
     print(len(dataset))
     # save it
 
