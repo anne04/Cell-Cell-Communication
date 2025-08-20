@@ -91,8 +91,7 @@ def get_negative_dataset(
         #rcvr_cell_index = ccc_pairs['to_id'][i]
         # need to find the index of gene nodes in cells
 
-        if ligand_gene in gene_node_list_per_spot[sender_cell_barcode] and \
-            rec_gene in gene_node_list_per_spot[rcv_cell_barcode]: 
+        if ligand_gene in gene_node_list_per_spot[sender_cell_barcode] and rec_gene in gene_node_list_per_spot[rcv_cell_barcode]: 
             if ligand_gene in X_protein_embedding and rec_gene in X_protein_embedding:
                 ligand_node_index = gene_node_list_per_spot[sender_cell_barcode][ligand_gene]
                 rec_node_index = gene_node_list_per_spot[rcv_cell_barcode][rec_gene]
@@ -234,5 +233,5 @@ if __name__ == "__main__":
 
     print(count)
 
-    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir'+'_dataset_embFusion.pkl', 'wb') as fp:  
-    	pickle.dump(dataset, fp)
+    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    	pickle.dump([dataset, start_of_negative_pairs], fp)
