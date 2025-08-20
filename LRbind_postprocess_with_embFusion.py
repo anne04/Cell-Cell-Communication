@@ -380,7 +380,17 @@ if __name__ == "__main__":
                     #    continue
                     #print("i: %d"%i)
                     #print("found list: %d"%len(found_list))
-    
+                    # from i to j 
+                    ligand_node_index = []
+                    for gene in gene_node_list_per_spot[i]:
+                        if gene in ligand_list:
+                            ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+                    
+                    receptor_node_index_intra = []
+                    for gene in gene_node_list_per_spot[i]:
+                        if gene in receptor_list:
+                            receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
+
                     dot_prod_list = []
                     product_only = []
                     for j in range (0, len(barcode_info)):
@@ -388,21 +398,11 @@ if __name__ == "__main__":
                         if dist_X[i][j]==0 or i==j :
                             continue
                         
-                        # from i to j 
-                        ligand_node_index = []
-                        for gene in gene_node_list_per_spot[i]:
-                            if gene in ligand_list:
-                                ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
-                        
+
                         receptor_node_index = []
                         for gene in gene_node_list_per_spot[j]:
                             if gene in receptor_list:
                                 receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
-
-                        receptor_node_index_intra = []
-                        for gene in gene_node_list_per_spot[i]:
-                            if gene in receptor_list:
-                                receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
 
                       
                         # from i to j == total attention score
@@ -428,7 +428,7 @@ if __name__ == "__main__":
                             
                         dot_prod_list = []
                         dot_prod_list_negatome_inter = []
-                        dot_prod_list_negatome_intra = []
+                   
                         product_only = []
                         #product_only_layer1 = []
                         start_index = 0
@@ -453,17 +453,7 @@ if __name__ == "__main__":
                                 #product_only_layer1.append(temp_layer1)
         
                         ###############################################
-                        ## get the list of dot_prod_list_negatome_intra
-                        for i_gene in ligand_node_index:  
-                            for j_gene in receptor_node_index_intra:
-                                if i_gene[1]==j_gene[1]:
-                                    continue
-                              
-                                if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
-                                    temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
-                                    dot_prod_list_negatome_intra.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
-                                    continue
-                                  
+                                
                       
                       
                         if len(dot_prod_list) == 0:
@@ -511,17 +501,7 @@ if __name__ == "__main__":
                             all_negatome_pairs['from_cell_index'].append(item[1])
                             all_negatome_pairs['to_cell_index'].append(item[2])
 
-                        for item in dot_prod_list_negatome_intra:
-                            all_negatome_pairs_intra['from_cell'].append(barcode_info[item[1]][0])
-                            all_negatome_pairs_intra['to_cell'].append(barcode_info[item[2]][0])
-                            all_negatome_pairs_intra['from_gene_node'].append(item[5])
-                            all_negatome_pairs_intra['to_gene_node'].append(item[6])
-                            all_negatome_pairs_intra['ligand_gene'].append(item[3])
-                            all_negatome_pairs_intra['rec_gene'].append(item[4])
-                            all_negatome_pairs_intra['score'].append(item[0])
-                            all_negatome_pairs_intra['from_cell_index'].append(item[1])
-                            all_negatome_pairs_intra['to_cell_index'].append(item[2])
-                            
+
                       
                         for item in dot_prod_list:
                             all_ccc_pairs['from_cell'].append(barcode_info[item[1]][0])
@@ -543,7 +523,30 @@ if __name__ == "__main__":
                                 found_list[i].append(item[0]) #= 1
                                 found_list[j].append(item[0])
                                 #break
-        
+                  
+                    ## get the list of dot_prod_list_negatome_intra
+                    dot_prod_list_negatome_intra = []
+                    for i_gene in ligand_node_index:  
+                        for j_gene in receptor_node_index_intra:
+                            if i_gene[1]==j_gene[1]:
+                                continue
+                          
+                            if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
+                                temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
+                                dot_prod_list_negatome_intra.append([temp, i, i, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                                continue
+                              
+                    for item in dot_prod_list_negatome_intra:
+                        all_negatome_pairs_intra['from_cell'].append(barcode_info[item[1]][0])
+                        all_negatome_pairs_intra['to_cell'].append(barcode_info[item[2]][0])
+                        all_negatome_pairs_intra['from_gene_node'].append(item[5])
+                        all_negatome_pairs_intra['to_gene_node'].append(item[6])
+                        all_negatome_pairs_intra['ligand_gene'].append(item[3])
+                        all_negatome_pairs_intra['rec_gene'].append(item[4])
+                        all_negatome_pairs_intra['score'].append(item[0])
+                        all_negatome_pairs_intra['from_cell_index'].append(item[1])
+                        all_negatome_pairs_intra['to_cell_index'].append(item[2])
+                        
                         ####################################################
                 
                 # plot found_list
