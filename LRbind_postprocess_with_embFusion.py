@@ -55,7 +55,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
 
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
-               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_negatome',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
               
                'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
                #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
@@ -402,7 +402,7 @@ if __name__ == "__main__":
                         receptor_node_index_intra = []
                         for gene in gene_node_list_per_spot[i]:
                             if gene in receptor_list:
-                                receptor_node_index_intra.append([gene_node_list_per_spot[j][gene], gene])
+                                receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
 
                       
                         # from i to j == total attention score
@@ -514,7 +514,7 @@ if __name__ == "__main__":
                         for item in dot_prod_list_negatome_intra:
                             all_negatome_pairs_intra['from_cell'].append(barcode_info[item[1]][0])
                             all_negatome_pairs_intra['to_cell'].append(barcode_info[item[2]][0])
-                            all_negatome_pairs['from_gene_node'].append(item[5])
+                            all_negatome_pairs_intra['from_gene_node'].append(item[5])
                             all_negatome_pairs_intra['to_gene_node'].append(item[6])
                             all_negatome_pairs_intra['ligand_gene'].append(item[3])
                             all_negatome_pairs_intra['rec_gene'].append(item[4])
