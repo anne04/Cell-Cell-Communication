@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument( '--file_name', type=str, default='uniprotkb_reviewed_true_AND_proteome_up_2025_02_27.tsv', help='The name of DB')
     #parser.add_argument( '--negatome_database_path', type=str, default='database/combined_stringent.txt', help='The name of DB')
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
+    #parser.add_argument( '--negatome_database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
     #parser.add_argument( '--database_path_omnipath', type=str, default='database/omnipath_lr_db.csv', help='The name of DB')
     #parser.add_argument( '--result_path', type=str, default='result/')
     args = parser.parse_args()
@@ -51,6 +52,18 @@ if __name__ == "__main__":
         receptor_list.append(receptor)
 
 
+
+    with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+    	negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
+
+
+    for ligand in negatome_ligand_list:
+        ligand_list.append(ligand)
+
+    for receptor in negatome_receptor_list:
+        receptor_list.append(receptor)
+
+    
     ligand_list = np.unique(ligand_list)
     receptor_list = np.unique(receptor_list)
 
