@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     
 
-    with gzip.open(args.gene_emb_path, 'rb') as fp:  
+    with gzip.open(args.gene_emb_path, 'rb') as fp:   
         X_gene_embedding = pickle.load(fp)
 
     #X_g = 
