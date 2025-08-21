@@ -78,11 +78,11 @@ if __name__ == "__main__":
     parser.add_argument( '--model_name', type=str, default="embFusion_gene_prot", help='Provide a model name')
     parser.add_argument( '--model_path', type=str, default='embFusion_model', help='Path to save the model state') # We do not need this for output generation 
     parser.add_argument( '--lr_lrbind_csv_path', type=str, 
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir/model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_allLR_nodeInfo.csv', 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_allLR_nodeInfo.csv', 
                         help='Name of the dataset') #, required=True)
     #=========================== default is set ======================================
     parser.add_argument( '--data_to_predict', type=str, \
-                    default='/cluster/projects/schwartzgroup/fatema/LRbind/database/LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_dataset_results_to_embFusion.pkl', \
+                    default='/cluster/projects/schwartzgroup/fatema/LRbind/database/'+'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome'+'_dataset_results_to_embFusion.pkl', \
                     help='Path to input graph. ')
     #============================================================================
     args = parser.parse_args() 
