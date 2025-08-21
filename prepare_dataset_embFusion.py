@@ -82,8 +82,8 @@ def get_negative_dataset(
         print("%d/%d - found %d"%(i,len(ccc_pairs),len(dataset)-initial_len), end='\r')
         sender_cell_barcode = ccc_pairs['from_cell'][i]
         rcv_cell_barcode = ccc_pairs['to_cell'][i]
-        #if flag == 'inter' and sender_cell_barcode  == rcv_cell_barcode:
-        #    continue 
+        if flag == 'inter' and sender_cell_barcode  == rcv_cell_barcode:
+            continue 
             
         ligand_gene = ccc_pairs['ligand_gene'][i]
         rec_gene = ccc_pairs['rec_gene'][i]
@@ -220,6 +220,8 @@ if __name__ == "__main__":
     print(len(dataset))
     
     # save it
+    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    	pickle.dump([dataset, start_of_negative_pairs], fp)
     
         
     unique_gene = dict()
@@ -233,5 +235,3 @@ if __name__ == "__main__":
 
     print(count)
 
-    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
-    	pickle.dump([dataset, start_of_negative_pairs], fp)
