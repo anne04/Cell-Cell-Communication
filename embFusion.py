@@ -10,74 +10,13 @@ import torch.nn.functional as F
 
 
 cellNEST_dimension = 512
-lrbind_dimension = 264
+lrbind_dimension = 256 #264
 proteinEmb_dimension = 1024
 
-def split_branch(data):
-    prediction_column = data.size(1)-1
-    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
-    sender_emb = data[:, cellNEST_dimension:sender_dimension_total]    
-
-    rcv_emb = data[:, sender_dimension_total+cellNEST_dimension:sender_dimension_total+rcvr_dimension_total]
-    prediction = data[:, prediction_column]
-    return sender_emb, rcv_emb, prediction 
-
-def shuffle_data(
-    training_set #: torch.tensor 
-    ):
-    """
-    Shuffles the training data
-    """
-    # Generate random permutation of row indices
-    sample_count = training_set.size(0)
-    #prediction_column = training_set.size(1)-1
-    row_perm = torch.randperm(sample_count)
-
-    # Shuffle the rows using advanced indexing
-    training_set = training_set[row_perm]
-    #print(training_set)
-    training_sender_emb, training_rcv_emb, training_prediction = split_branch(training_set)
-    """
-    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
-
-    training_sender_emb = training_set[:, 0:sender_dimension_total]    
-    training_rcv_emb = training_set[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
-    training_prediction = training_set[:, prediction_column]
-    """
-    return training_sender_emb, training_rcv_emb, training_prediction 
     
-    
-def data_to_tensor(
-    training_set, #: list()
-    remove_set=None
-    ):
-    """
-    training_set = list of [sender_emb, rcvr_emb, pred]
-    """
-    add_set = []
-    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
-    training_set_matrix = np.zeros((len(training_set), sender_dimension_total + rcvr_dimension_total + 1 )) # 1=prediction column
-    for i in range(0, len(training_set)):
-        if remove_set != None:
-            if training_set[i][3]+'_to_'+training_set[i][4] in remove_set:
-                add_set.append(training_set[i])
-                continue
-
-        training_set_matrix[i, 0:sender_dimension_total] = np.concatenate((training_set[i][0][0],training_set[i][0][1], training_set[i][0][2]), axis=0)
-
-       	training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = np.concatenate((training_set[i][1][0],training_set[i][1][1], training_set[i][1][2]), axis=0)
-
-       	training_set_matrix[i, sender_dimension_total+rcvr_dimension_total] = training_set[i][2]
-
-    # convert to tensor
-    training_set = torch.tensor(training_set_matrix, dtype=torch.float)
-
-    return training_set, add_set
-
-
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
-                 input_size: np.int32 = 512 + 264 + 1023, 
+                 input_size: np.int32 = lrbind_dimension + 1024,  
                  hidden_size_fusion: np.int32 = 512, #1024, 
                  output_size_fusion: np.int32 = 128, #512, # 256
                  hidden_size_predictor_layer1: np.int32 = 128*2, #512*2,
@@ -112,7 +51,7 @@ class fusionMLP(torch.nn.Module):
 
     def forward(self, sender_emb, receiver_emb):
         fused_emb_sender = self.sender_fusion_layer(sender_emb)
-        fused_emb_rcvr = self.rcvr_fusion_layer(sender_emb)
+        fused_emb_rcvr = self.rcvr_fusion_layer(receiver_emb)
 
         fused_emb_sender = F.normalize(fused_emb_sender, p=2) #, dim=1)
         fused_emb_rcvr = F.normalize(fused_emb_rcvr, p=2) #, dim=1)
@@ -122,8 +61,71 @@ class fusionMLP(torch.nn.Module):
 
        	return ppi_prediction
 
+def split_branch(data):
+    prediction_column = data.size(1)-1
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024 # 512+
+    sender_emb = data[:, cellNEST_dimension:sender_dimension_total]    
+    rcv_emb = data[:, sender_dimension_total+cellNEST_dimension:sender_dimension_total+rcvr_dimension_total]
+    prediction = data[:, prediction_column]
+    return sender_emb, rcv_emb, prediction 
+
+def shuffle_data(
+    training_set #: torch.tensor 
+    ):
+    """
+    Shuffles the training data
+    """
+    # Generate random permutation of row indices
+    sample_count = training_set.size(0)
+    #prediction_column = training_set.size(1)-1
+    row_perm = torch.randperm(sample_count)
+
+    # Shuffle the rows using advanced indexing
+    training_set = training_set[row_perm]
+    #print(training_set)
+    training_sender_emb, training_rcv_emb, training_prediction = split_branch(training_set)
+    """
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
+
+    training_sender_emb = training_set[:, 0:sender_dimension_total]    
+    training_rcv_emb = training_set[:, sender_dimension_total:sender_dimension_total+rcvr_dimension_total]
+    training_prediction = training_set[:, prediction_column]
+    """
+    return training_sender_emb, training_rcv_emb, training_prediction 
+    
+
+def data_to_tensor(
+    training_set, #: list()
+    remove_set=None
+    ):
+    """
+    training_set = list of [sender_emb, rcvr_emb, pred]
+    """
+    add_set = []
+    rcvr_dimension_total = sender_dimension_total = 512 + 264 + 1024
+    training_set_matrix = np.zeros((len(training_set), sender_dimension_total + rcvr_dimension_total + 1 )) # 1=prediction column
+    for i in range(0, len(training_set)):
+        if remove_set != None:
+            if training_set[i][3]+'_to_'+training_set[i][4] in remove_set:
+                add_set.append(training_set[i])
+                continue
+
+        training_set_matrix[i, 0:sender_dimension_total] = np.concatenate((training_set[i][0][0],training_set[i][0][1], training_set[i][0][2]), axis=0)
+
+        training_set_matrix[i, sender_dimension_total:sender_dimension_total+rcvr_dimension_total] = np.concatenate((training_set[i][1][0],training_set[i][1][1], training_set[i][1][2]), axis=0)
+
+        training_set_matrix[i, sender_dimension_total+rcvr_dimension_total] = training_set[i][2]
+
+    # convert to tensor
+    training_set = torch.tensor(training_set_matrix, dtype=torch.float)
+
+    return training_set, add_set
+
+
+
 
 def train_fusionMLP(
+    args,
     training_set, #: torch.tensor,
     validation_set, #: torch.tensor = None,
     epoch: np.int32 = 1000,
@@ -145,13 +147,13 @@ def train_fusionMLP(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     model_fusionMLP = fusionMLP(
-                 input_size = 512 + 264 + 1024, 
+                 input_size =  lrbind_dimension + 1024, 
                  hidden_size_fusion = 1024, 
                  output_size_fusion = 256,
                  hidden_size_predictor_layer1 = 256*2,
                  hidden_size_predictor_layer2 = 256
     ).to(device)
-
+    print(model_fusionMLP)
     # set the loss function
     loss_function = nn.MSELoss() #CrossEntropyLoss()
 
@@ -170,12 +172,15 @@ def train_fusionMLP(
         total_loss = 0
         for batch_idx in range(0, total_batch):
             optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
-
             batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
 
             # move the sender and rcvr emb to the GPU
+
+
+
+
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
 
             loss = loss_function(batch_prediction.flatten(), batch_target)
@@ -202,9 +207,9 @@ def train_fusionMLP(
             if validation_loss <= min_loss:
                 min_loss = validation_loss
                 # state save
-                torch.save(model_fusionMLP, "model/my_model_fusionMLP.pickle")
+                torch.save(model_fusionMLP, args.model_name) #"model/my_model_fusionMLP.pickle")
                 # model = torch.load("my_model.pickle")
-                torch.save(model_fusionMLP.state_dict(), "model/my_model_fusionMLP_state_dict.pickle")
+                #torch.save(model_fusionMLP.state_dict(), "model/my_model_fusionMLP_state_dict.pickle")
                 # model = nn.Sequential(...)
                 # model.load_state_dict(torch.load("my_model.pickle"))
                 print('*** min loss found! %g***'%validation_loss)
@@ -249,7 +254,7 @@ def train_fusionMLP(
 
             loss_curve_counter = loss_curve_counter + 1
 
-            logfile=open('model/'+'my_model_fusionMLP'+'_loss_curve.csv', 'wb')
+            logfile=open(args.model_name+'_loss_curve.csv', 'wb')
             np.savetxt(logfile,loss_curve, delimiter=',')
             logfile.close()
 
