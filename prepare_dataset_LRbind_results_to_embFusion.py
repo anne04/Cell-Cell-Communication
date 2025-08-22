@@ -52,7 +52,7 @@ def get_dataset(
             record_index.append(i)
 
     print('len dataset: %d'%len(dataset))
-    return dataset #, record_index
+    return dataset, record_index
 
 
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
     
-    dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding)
+    dataset, record_index = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding)
     print(len(dataset))
     # save it
 
