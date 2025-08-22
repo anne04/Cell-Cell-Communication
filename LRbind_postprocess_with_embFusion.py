@@ -592,7 +592,7 @@ if __name__ == "__main__":
                 
                 """
                 
-                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'+'_allLR_nodeInfo.csv', sep=",")
+                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv', sep=",")
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
