@@ -53,6 +53,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_Allnegatome',
 
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
@@ -84,7 +85,8 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
 
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
-                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_Allnegatome',
                
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
@@ -184,7 +186,7 @@ if __name__ == "__main__":
       
         with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
             target_LR_index, target_cell_pair = pickle.load(fp)
-    
+
         #####################################################################################
         with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
             negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
@@ -208,7 +210,30 @@ if __name__ == "__main__":
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
             negatome_gene, negatome_lr_unique = pickle.load(fp)
 
-      
+###########################################################
+        count = 0
+        for i in range (0, len(barcode_info)):
+            ligand_node_index = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in ligand_list:
+                    ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+            
+            receptor_node_index_intra = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in receptor_list:
+                    receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
+            
+            for i_gene in ligand_node_index:  
+                for j_gene in receptor_node_index_intra:
+                    if i_gene[1]==j_gene[1]:
+                        continue
+                  
+                    if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
+                        #temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
+                        #dot_prod_list_negatome_intra.append([temp, i, i, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                        count = count+1
+                        
+
         #####################
         with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
             cell_vs_gene = pickle.load(fp)
