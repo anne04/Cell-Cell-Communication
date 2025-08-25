@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # now add this column to ccc_pairs
     ccc_pairs['pred_score'] = pred_score
     # save it
-    ccc_pairs.to_csv('model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L_allLR_nodeInfo.csv', index=False) 
+    ccc_pairs.to_csv(args.lr_lrbind_csv_path, index=False) 
 
 
 

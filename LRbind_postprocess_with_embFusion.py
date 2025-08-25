@@ -52,11 +52,12 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
-               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
-
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
-               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
               
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',              
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_Allnegatome',
+
                'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
                #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir',
@@ -81,10 +82,11 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
-
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
+               
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
-                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
+               'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_Allnegatome',
                
                'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L',
                #'model_LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
@@ -100,15 +102,15 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                                
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
-                  'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1',
+                  'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1','TGFB1',
                   'TGFB1', 'TGFB1','TGFB1',
-                  'TGFB1','TGFB1', #'TGFB1','TGFB1',
+                  'TGFB1','TGFB1', 'TGFB1',#'TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
-                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1',
+                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1','ACVRL1',
                     'ACVRL1', 'ACVRL1','ACVRL1',
-                   'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
+                   'ACVRL1','ACVRL1', 'ACVRL1',#'ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 
 if __name__ == "__main__":
@@ -117,7 +119,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [13]: #range(0, len(data_names)):
+    for data_index in [14]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -184,31 +186,34 @@ if __name__ == "__main__":
       
         with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
             target_LR_index, target_cell_pair = pickle.load(fp)
-    
+
         #####################################################################################
-        with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
-            negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
-      
-        negatome_gene_found = dict()
-        for index in gene_node_index_active:
-            gene_name = barcode_info_gene[index][5]
-            if gene_name in negatome_ligand_list or gene_name in negatome_receptor_list:
-                negatome_gene_found[gene_name] = 1
-
-        negatome_lr_pair = defaultdict(dict)
-        negatome_candidate = 0
-        for ligand in lr_unique:
-            for receptor in lr_unique[ligand]:
-                if ligand in negatome_gene_found and receptor in negatome_gene_found:
-                    negatome_lr_pair[ligand][receptor] = 1
-                    negatome_candidate = negatome_candidate + 1
-
-        print('negatome_cand %d'%negatome_candidate)  # negatome_cand 37 - luad
-
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
             negatome_gene, negatome_lr_unique = pickle.load(fp)
+          
+        count = 0
+        for i in range (0, len(barcode_info)):
+            ligand_node_index = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in ligand_list:
+                    ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+            
+            receptor_node_index_intra = []
+            for gene in gene_node_list_per_spot[i]:
+                if gene in receptor_list:
+                    receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
+            
+            for i_gene in ligand_node_index:  
+                for j_gene in receptor_node_index_intra:
+                    if i_gene[1]==j_gene[1]:
+                        continue
+                  
+                    if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
+                        #temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
+                        #dot_prod_list_negatome_intra.append([temp, i, i, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                        count = count+1
+                        
 
-      
         #####################
         with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
             cell_vs_gene = pickle.load(fp)
@@ -564,7 +569,6 @@ if __name__ == "__main__":
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
 
-                
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_negatome_pairs['from_cell'],
                     'to_cell': all_negatome_pairs['to_cell'],
@@ -589,10 +593,19 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_intra.csv', index=False) #_negatome
+
+                negatome_unique_pair = dict()
+                for idx in range (0, len(all_negatome_pairs)):
+                    negatome_unique_pair[all_negatome_pairs['ligand_gene'][idx] + '_with_' + all_negatome_pairs['rec_gene'][idx]] = 1
                 
+                for idx in range (0, len(all_negatome_pairs_intra)):
+                    negatome_unique_pair[all_negatome_pairs_intra['ligand_gene'][idx] + '_with_' + all_negatome_pairs_intra['rec_gene'][idx]] = 1
+
+                print('unique pairs found %d'%len(list(negatome_unique_pair.keys())))
+
                 """
                 
-                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneCorrP7KNN_bidir_3L'+'_allLR_nodeInfo.csv', sep=",")
+                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv', sep=",")
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
