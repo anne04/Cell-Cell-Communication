@@ -52,12 +52,12 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
+              
+               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',              
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
                'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_Allnegatome',
 
-               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
-               'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome',
-              
                'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir',
                #'LRbind_PDAC64630_1D_manualDB_geneCorrKNN_bidir_prefiltered',
                'LRbind_PDAC64630_1D_manualDB_geneLocalCorrKNN_bidir',
@@ -82,8 +82,8 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir_3L_prefiltered',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
-
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh',
+               
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_negatome',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome',
                'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_Allnegatome',
@@ -102,15 +102,15 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                                
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
-                  'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1',
+                  'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1','TGFB1',
                   'TGFB1', 'TGFB1','TGFB1',
-                  'TGFB1','TGFB1', #'TGFB1','TGFB1',
+                  'TGFB1','TGFB1', 'TGFB1',#'TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
-                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1',
+                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1','ACVRL1',
                     'ACVRL1', 'ACVRL1','ACVRL1',
-                   'ACVRL1','ACVRL1', #'ACVRL1','ACVRL1',
+                   'ACVRL1','ACVRL1', 'ACVRL1',#'ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1']
 
 if __name__ == "__main__":
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [13]: #range(0, len(data_names)):
+    for data_index in [14]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -188,29 +188,9 @@ if __name__ == "__main__":
             target_LR_index, target_cell_pair = pickle.load(fp)
 
         #####################################################################################
-        with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
-            negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
-      
-        negatome_gene_found = dict()
-        for index in gene_node_index_active:
-            gene_name = barcode_info_gene[index][5]
-            if gene_name in negatome_ligand_list or gene_name in negatome_receptor_list:
-                negatome_gene_found[gene_name] = 1
-
-        negatome_lr_pair = defaultdict(dict)
-        negatome_candidate = 0
-        for ligand in lr_unique:
-            for receptor in lr_unique[ligand]:
-                if ligand in negatome_gene_found and receptor in negatome_gene_found:
-                    negatome_lr_pair[ligand][receptor] = 1
-                    negatome_candidate = negatome_candidate + 1
-
-        print('negatome_cand %d'%negatome_candidate)  # negatome_cand 37 - luad
-
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
             negatome_gene, negatome_lr_unique = pickle.load(fp)
-
-###########################################################
+          
         count = 0
         for i in range (0, len(barcode_info)):
             ligand_node_index = []
@@ -589,7 +569,6 @@ if __name__ == "__main__":
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
 
-                
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_negatome_pairs['from_cell'],
                     'to_cell': all_negatome_pairs['to_cell'],
@@ -614,7 +593,16 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_intra.csv', index=False) #_negatome
+
+                negatome_unique_pair = dict()
+                for idx in range (0, len(all_negatome_pairs)):
+                    negatome_unique_pair[all_negatome_pairs['ligand_gene'][idx] + '_with_' + all_negatome_pairs['rec_gene'][idx]] = 1
                 
+                for idx in range (0, len(all_negatome_pairs_intra)):
+                    negatome_unique_pair[all_negatome_pairs_intra['ligand_gene'][idx] + '_with_' + all_negatome_pairs_intra['rec_gene'][idx]] = 1
+
+                print('unique pairs found %d'%len(list(negatome_unique_pair.keys())))
+
                 """
                 
                 ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv', sep=",")
