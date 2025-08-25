@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-from embFusion_train_util import split_branch, shuffle_data, data_to_tensor
+from embFusion_train_util import split_branch, shuffle_data#, data_to_tensor
 
 #cellNEST_dimension = 512
 geneEmb_dimension = 256 
@@ -93,7 +93,7 @@ def train_fusionMLP(
     model_fusionMLP = fusionMLP().to(device) # CHECK = set the dimensions based on args.
     print(model_fusionMLP)
     # set the loss function
-    loss_function = nn.MSELoss() #CrossEntropyLoss()
+    loss_function = nn.BCELoss() #CrossEntropyLoss()
 
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
@@ -152,14 +152,14 @@ def train_fusionMLP(
 
             #########
             batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
-    
+            """
             for i in range(0, len(batch_prediction)):
                 if batch_prediction[i]>= threshold_score:
                     batch_prediction[i] = 1
                 else:
                     batch_prediction[i] = 0
 
-
+            """
             pred_class = batch_prediction
 
             TP = TN = FN = FP = 0
@@ -191,3 +191,4 @@ def train_fusionMLP(
             logfile.close()
             ############################
 
+# https://machinelearningmastery.com/building-multilayer-perceptron-models-in-pytorch/
