@@ -119,7 +119,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [14]: #range(0, len(data_names)):
+    for data_index in [13]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -192,6 +192,7 @@ if __name__ == "__main__":
             negatome_gene, negatome_lr_unique = pickle.load(fp)
           
         count = 0
+        negatome_unique_pair = dict()
         for i in range (0, len(barcode_info)):
             ligand_node_index = []
             for gene in gene_node_list_per_spot[i]:
@@ -199,9 +200,11 @@ if __name__ == "__main__":
                     ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
             
             receptor_node_index_intra = []
+           
             for gene in gene_node_list_per_spot[i]:
                 if gene in receptor_list:
                     receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
+
             
             for i_gene in ligand_node_index:  
                 for j_gene in receptor_node_index_intra:
@@ -212,8 +215,10 @@ if __name__ == "__main__":
                         #temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
                         #dot_prod_list_negatome_intra.append([temp, i, i, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
                         count = count+1
-                        
+                        negatome_unique_pair[i_gene[1]+'_with_'+j_gene[1]] = 1
+                                            
 
+        print('unique pairs found %d, and count %d'%(len(list(negatome_unique_pair.keys())),count))
         #####################
         with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
             cell_vs_gene = pickle.load(fp)
