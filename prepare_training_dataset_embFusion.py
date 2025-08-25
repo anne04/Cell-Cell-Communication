@@ -10,7 +10,8 @@ def get_dataset(
     ccc_pairs: pd.DataFrame,
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
-    X_protein_embedding: dict()
+    X_protein_embedding: dict(),
+    threshold_score: int = 0.7
 ):
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
@@ -48,6 +49,11 @@ def get_dataset(
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             score = ccc_pairs['attention_score'][i]
+            if score < threshold_score:
+                score = 0
+            else:
+                score = 1
+                
             dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
     print('\nlen dataset: %d'%len(dataset))
