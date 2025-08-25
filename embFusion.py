@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from embFusion_train_util import split_branch, shuffle_data, data_to_tensor
 
-cellNEST_dimension = 512
+#cellNEST_dimension = 512
 geneEmb_dimension = 256 
 proteinEmb_dimension = 1024
 
