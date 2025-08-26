@@ -192,3 +192,5 @@ def train_fusionMLP(
             ############################
 
 # https://machinelearningmastery.com/building-multilayer-perceptron-models-in-pytorch/
+# https://machinelearningmastery.com/using-dropout-regularization-in-pytorch-models/
+
