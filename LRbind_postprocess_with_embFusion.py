@@ -123,6 +123,7 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
+        parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
         #_geneCorr_remFromDB
         #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
         #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -182,10 +183,21 @@ if __name__ == "__main__":
         with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
             barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
 
-          
+        print('total gene node %d'%len(list(gene_node_index_active.keys())))
       
         with gzip.open(args.metadata_from + args.data_name +'_test_set', 'rb') as fp:  
             target_LR_index, target_cell_pair = pickle.load(fp)
+
+
+        ######################### LR database ###############################################
+        df = pd.read_csv(args.database_path, sep=",")
+        db_gene_nodes = dict()
+        for i in range (0, df["Ligand"].shape[0]):
+            ligand = df["Ligand"][i]
+            receptor = df["Receptor"][i]
+            db_gene_nodes[ligand] = '1'
+            db_gene_nodes[receptor] = '1'
+
 
         #####################################################################################
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
@@ -392,13 +404,17 @@ if __name__ == "__main__":
                     #print("found list: %d"%len(found_list))
                     # from i to j 
                     ligand_node_index = []
+                    ligand_node_index_intra = []
                     for gene in gene_node_list_per_spot[i]:
                         if gene in ligand_list:
-                            ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+                            if gene in db_gene_nodes:
+                                ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+                            if gene in negatome_gene: # it is coming from negatome
+                                ligand_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
                     
                     receptor_node_index_intra = []
                     for gene in gene_node_list_per_spot[i]:
-                        if gene in receptor_list:
+                        if gene in receptor_list and gene in negatome_gene:
                             receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
 
                     dot_prod_list = []
@@ -411,7 +427,8 @@ if __name__ == "__main__":
 
                         receptor_node_index = []
                         for gene in gene_node_list_per_spot[j]:
-                            if gene in receptor_list:
+                            if gene in receptor_list and gene in db_gene_nodes: 
+                                # it must present in LR db to be considered as "inter"
                                 receptor_node_index.append([gene_node_list_per_spot[j][gene], gene])
 
                       
@@ -449,7 +466,7 @@ if __name__ == "__main__":
                               
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
 
-                                if i_gene[1] in negatome_lr_pair  and j_gene[1] in negatome_lr_pair[i_gene[1]]: 
+                                if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique: 
                                     dot_prod_list_negatome_inter.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
                                     continue
                                   
@@ -536,7 +553,7 @@ if __name__ == "__main__":
                   
                     ## get the list of dot_prod_list_negatome_intra
                     dot_prod_list_negatome_intra = []
-                    for i_gene in ligand_node_index:  
+                    for i_gene in ligand_node_index_intra:  
                         for j_gene in receptor_node_index_intra:
                             if i_gene[1]==j_gene[1]:
                                 continue
@@ -544,7 +561,7 @@ if __name__ == "__main__":
                             if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
                                 dot_prod_list_negatome_intra.append([temp, i, i, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
-                                continue
+                                
                               
                     for item in dot_prod_list_negatome_intra:
                         all_negatome_pairs_intra['from_cell'].append(barcode_info[item[1]][0])
@@ -726,7 +743,7 @@ if __name__ == "__main__":
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
                     
-                    elif ligand in negatome_lr_pair and receptor in negatome_lr_pair[ligand]:
+                    elif ligand+'_with_'+receptor in negatome_lr_unique: 
                         data_list['type'].append('From negatome')
                     else:
                         #continue
