@@ -206,19 +206,19 @@ if __name__ == "__main__":
         count = 0
         negatome_unique_pair = dict()
         for i in range (0, len(barcode_info)):
-            ligand_node_index = []
+            ligand_node_index_intra = []
             for gene in gene_node_list_per_spot[i]:
-                if gene in ligand_list:
-                    ligand_node_index.append([gene_node_list_per_spot[i][gene], gene])
+                if gene in ligand_list and gene in negatome_gene:
+                    ligand_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
             
             receptor_node_index_intra = []
            
             for gene in gene_node_list_per_spot[i]:
-                if gene in receptor_list:
+                if gene in receptor_list and gene in negatome_gene:
                     receptor_node_index_intra.append([gene_node_list_per_spot[i][gene], gene])
 
             
-            for i_gene in ligand_node_index:  
+            for i_gene in ligand_node_index_intra:  
                 for j_gene in receptor_node_index_intra:
                     if i_gene[1]==j_gene[1]:
                         continue
@@ -617,10 +617,10 @@ if __name__ == "__main__":
                 data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_intra.csv', index=False) #_negatome
                 print(len(data_list_pd))
                 negatome_unique_pair = dict()
-                for idx in range (0, len(all_negatome_pairs)):
+                for idx in range (0, len(all_negatome_pairs['ligand_gene'])):
                     negatome_unique_pair[all_negatome_pairs['ligand_gene'][idx] + '_with_' + all_negatome_pairs['rec_gene'][idx]] = 1
                 
-                for idx in range (0, len(all_negatome_pairs_intra)):
+                for idx in range (0, len(all_negatome_pairs_intra['ligand_gene'])):
                     negatome_unique_pair[all_negatome_pairs_intra['ligand_gene'][idx] + '_with_' + all_negatome_pairs_intra['rec_gene'][idx]] = 1
 
                 print('unique pairs found %d'%len(list(negatome_unique_pair.keys())))
