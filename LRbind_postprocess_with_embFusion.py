@@ -590,7 +590,7 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
-
+                print(len(data_list_pd))
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_negatome_pairs['from_cell'],
                     'to_cell': all_negatome_pairs['to_cell'],
@@ -602,7 +602,7 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_inter.csv', index=False) #_negatome
-
+                print(len(data_list_pd))
                 # you can double check if all sender and rcvr cells are the same one
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_negatome_pairs_intra['from_cell'],
@@ -615,7 +615,7 @@ if __name__ == "__main__":
                     
                 })
                 data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_intra.csv', index=False) #_negatome
-
+                print(len(data_list_pd))
                 negatome_unique_pair = dict()
                 for idx in range (0, len(all_negatome_pairs)):
                     negatome_unique_pair[all_negatome_pairs['ligand_gene'][idx] + '_with_' + all_negatome_pairs['rec_gene'][idx]] = 1
