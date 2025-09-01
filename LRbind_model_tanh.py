@@ -13,6 +13,63 @@ import gzip
 
 from GATv2Conv_NEST import GATv2Conv
 
+def get_multiGraph(training_data_list):
+    """Add Statement of Purpose
+    Args:
+        training_data: Path to the input graph    
+    Returns:
+        List of torch_geometric.data.Data type: Loaded input graph
+        Integer: Dimension of node embedding
+    """
+    num_feature_list = []
+    for training_data in training_data_list:
+        f = gzip.open(training_data , 'rb') # read input graph
+        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(f)
+        num_feature_list.append(np.max(np.unique(gene_node_type))+1)
+        print('Unique gene type: %d'%np.max(np.unique(gene_node_type)))
+
+
+    num_feature = np.max(num_feature_list) 
+    graph_bags = []
+    for training_data in training_data_list:
+        f = gzip.open(training_data , 'rb') # read input graph
+        row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(f)
+        # one hot vector used as node feature vector
+        feature_vector = np.eye(num_feature, num_feature)
+        # 1 0 0 0 = feature_vector[0]
+        # 0 1 0 0 = feature_vector[1]
+        # 0 0 1 0 = feature_vector[2]
+        # 0 0 0 1 = feature_vector[3]
+        # feature_vector[feature_type]
+        print('total_num_gene_node %d, len gene_node_type %d'%(total_num_gene_node, len(gene_node_type)))
+        X = np.zeros((total_num_gene_node, num_feature))
+        print(len(gene_node_expression))
+        for i in range (0, len(gene_node_type)):
+            #print(i)
+            X[i][:] = feature_vector[gene_node_type[i]]*gene_node_expression[i]
+        
+        X_data = X # node feature vector
+        print('Node feature matrix: X has dimension ', X_data.shape)
+        print("Total number of edges in the input graph is %d"%len(row_col_gene))
+        
+
+        ###########
+
+        edge_index = torch.tensor(np.array(row_col_gene), dtype=torch.long).T
+        edge_attr = torch.tensor(np.array(edge_weight), dtype=torch.float)
+
+        
+        graph = Data(x=torch.tensor(X_data, dtype=torch.float), edge_index=edge_index, edge_attr=edge_attr)
+        graph_bags.append(graph)
+
+    print('Input graph generation done')
+
+    data_loader = DataLoader(graph_bags, batch_size=1) 
+    
+    return data_loader, num_feature
+
+
+
 def get_graph(training_data):
     """Add Statement of Purpose
     Args:
