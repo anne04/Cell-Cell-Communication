@@ -102,9 +102,9 @@ if __name__ == "__main__":
     if args.total_subgraphs == 1:
         if args.model_type == 'dgi':
             if args.tanh == 1: 
-                from LRbind_model_tanh import get_graph, train_NEST, 
+                from LRbind_model_tanh import get_graph, train_NEST
                 if args.multi_graph == 1: 
-                    from LRbind_model_tanh import get_multiGraph, train_multiGraph_NEST
+                    from LRbind_model_tanh import get_multiGraph, train_multigraph_NEST
 
                 print('Using Tanh activation function for attention layer')
             else:
@@ -114,7 +114,7 @@ if __name__ == "__main__":
                 # data preparation
                 data_loader, num_feature = get_multiGraph(training_data) 
                 # train the model
-                DGI_model = train_multiGraph_NEST(args, data_loader=data_loader, in_channels=int(num_feature))
+                DGI_model = train_multigraph_NEST(args, data_loader=data_loader, in_channels=int(num_feature), ['LUAD', 'LYMPH'])
             else:
                 # data preparation
                 data_loader, num_feature = get_graph(args.training_data)    
