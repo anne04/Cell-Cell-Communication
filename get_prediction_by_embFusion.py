@@ -6,8 +6,7 @@ import time
 import random
 import argparse
 import torch
-from embFusion import data_to_tensor
-from embFusion import split_branch
+from embFusion_train_util import data_to_tensor, split_branch
 import pickle
 import gzip
 import pandas as pd
@@ -97,6 +96,7 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
     ccc_pairs = pd.read_csv(args.lr_lrbind_csv_path, sep=",")
+
     with gzip.open(args.data_to_predict, 'rb') as fp:  
     	dataset, record_index = pickle.load(fp)
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     index_vs_score = dict()
     for i in range(0, len(record_index)):
         index = record_index[i]
-        index_vs_score[index] = prediction_score[i]
+        index_vs_score[index] = pred_class[i] #prediction_score[i]
     
     for i in range(0, len(ccc_pairs)):
         if i not in index_vs_score:

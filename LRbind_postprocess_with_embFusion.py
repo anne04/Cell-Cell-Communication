@@ -123,7 +123,7 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
-        parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv', help='The name of DB')
+
         #_geneCorr_remFromDB
         #LRbind_GSM6177599_NYU_BRCA0_Vis_processed_1D_manualDB_geneCorr_bidir #LGALS1, PTPRC
         #LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorr_bidir
@@ -634,7 +634,7 @@ if __name__ == "__main__":
                 ccc_pairs['attention_score'] = all_ccc_pairs['attention_score']
                 lr_dict = defaultdict(list)
                 for i in range(0, len(ccc_pairs)):
-                    if ccc_pairs['pred_score'][i] < 0.7:
+                    if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
                         continue
                     if ccc_pairs['attention_score'][i] < 0.7:
                         continue
@@ -780,7 +780,8 @@ if __name__ == "__main__":
                     #'Score_sum_layer1': data_list['score_sum_layer1'],
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
+                #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass.csv', index=False) #_negatome
 
 
                 
