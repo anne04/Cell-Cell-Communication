@@ -76,13 +76,21 @@ if __name__ == "__main__":
     # =========================== must be provided ===============================
     parser.add_argument( '--model_name', type=str, default="embFusion_gene_prot", help='Provide a model name')
     parser.add_argument( '--model_path', type=str, default='embFusion_model', help='Path to save the model state') # We do not need this for output generation 
-    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_allLR_nodeInfo.csv', 
-                        help='Name of the dataset') #, required=True)
+    #parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+    #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_allLR_nodeInfo.csv', 
+    #                    help='Name of the dataset') #, required=True)
     #=========================== default is set ======================================
+    #parser.add_argument( '--data_to_predict', type=str, \
+    #                default='/cluster/projects/schwartzgroup/fatema/LRbind/database/'+'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome'+'_dataset_results_to_embFusion.pkl', \
+    #                help='Path to input graph. ')
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    
     parser.add_argument( '--data_to_predict', type=str, \
-                    default='/cluster/projects/schwartzgroup/fatema/LRbind/database/'+'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome'+'_dataset_results_to_embFusion.pkl', \
+                    default='database/'+'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_tanh'+'_dataset_results_to_embFusion.pkl', \
                     help='Path to input graph. ')
+    
     #============================================================================
     args = parser.parse_args() 
 
@@ -124,7 +132,7 @@ if __name__ == "__main__":
     # now add this column to ccc_pairs
     ccc_pairs['pred_score'] = pred_score
     # save it
-    ccc_pairs.to_csv(args.lr_lrbind_csv_path, index=False) 
+    ccc_pairs.to_csv(args.lr_lrbind_csv_path, index=False, compression='gzip') 
 
 
 

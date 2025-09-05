@@ -119,7 +119,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
 
-    for data_index in [13]: #range(0, len(data_names)):
+    for data_index in [4]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -589,7 +589,7 @@ if __name__ == "__main__":
                     'score': all_ccc_pairs['score']
                     
                 })
-                data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv', index=False) #_negatome
+                data_list_pd.to_csv(args.output_path +model_name+'_allLR_nodeInfo.csv.gz', index=False, compression='gzip') #_negatome
                 print(len(data_list_pd))
                 data_list_pd = pd.DataFrame({
                     'from_cell': all_negatome_pairs['from_cell'],
@@ -627,19 +627,23 @@ if __name__ == "__main__":
 
                 """
                 
-                ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv', sep=",")
+                ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo.csv.gz') #_negatome
+                #ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv.gz', sep=",")
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
                 ccc_pairs['attention_score'] = all_ccc_pairs['attention_score']
+                
                 lr_dict = defaultdict(list)
                 for i in range(0, len(ccc_pairs)):
-                    if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
-                        continue
+                    #if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
+                    #    continue
+                    
                     if ccc_pairs['attention_score'][i] < 0.7:
                         continue
 
-                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
+                    #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
+                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], -1, ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
 
                     
                 # plot input_cell_pair_list  
@@ -737,7 +741,7 @@ if __name__ == "__main__":
                     ligand = sort_lr_list[i][0].split('+')[0]
                     receptor = sort_lr_list[i][0].split('+')[1]
 
-                    if sort_lr_list[i][3] < 10 or sort_lr_list[i][6]<1.0:
+                    if sort_lr_list[i][3] < 10: # or sort_lr_list[i][6]<1.0:
                         continue
                     
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
