@@ -172,7 +172,18 @@ if __name__ == "__main__":
                         help='Name of the dataset') #, required=True)  
     
     args = parser.parse_args()
-
+"""
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST_experimental/metadata/V1_Human_Lymph_Node_spatial/V1_Human_Lymph_Node_spatial_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info', help='Name of the dataset')    
+    parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST_experimental/embedding_data/V1_Human_Lymph_Node_spatial/NEST_V1_Human_Lymph_Node_spatial_r1_Embed_X.npy', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    args = parser.parse_args()
+"""
 
     with gzip.open(args.barcode_info_cellnest_path, 'rb') as fp:     
         barcode_info_cellnest = pickle.load(fp)

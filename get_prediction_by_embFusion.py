@@ -83,6 +83,7 @@ if __name__ == "__main__":
     #parser.add_argument( '--data_to_predict', type=str, \
     #                default='/cluster/projects/schwartzgroup/fatema/LRbind/database/'+'LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome'+'_dataset_results_to_embFusion.pkl', \
     #                help='Path to input graph. ')
+    """
     parser.add_argument( '--lr_lrbind_csv_path', type=str, 
                         default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo.csv.gz', 
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
@@ -90,7 +91,15 @@ if __name__ == "__main__":
     parser.add_argument( '--data_to_predict', type=str, \
                     default='database/'+'LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_tanh'+'_dataset_results_to_embFusion.pkl', \
                     help='Path to input graph. ')
+    """
+
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome/model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_LYMPH_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     
+    parser.add_argument( '--data_to_predict', type=str, \
+                    default='database/'+'model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome'+'_dataset_results_to_embFusion.pkl', \
+                    help='Path to input graph. ')
     #============================================================================
     args = parser.parse_args() 
 
