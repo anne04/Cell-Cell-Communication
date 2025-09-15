@@ -85,7 +85,7 @@ if __name__ == "__main__":
         all_negatome_pairs = defaultdict(list)
         all_negatome_pairs_intra = defaultdict(list)
         
-        for sample_idx in range(1, len(sample_type)):
+        for sample_idx in range(0, 1): #len(sample_type)):
             print('****' + sample_type[sample_idx] + '****')
             args.metadata_from = 'metadata/'
             args.data_from = 'input_graph/'
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             ##############
             args.metadata_from = args.metadata_from + args.data_name + '/'
             args.data_from = args.data_from + args.data_name + '/'
-            #args.embedding_path  = args.embedding_path + args.data_name + '/'
+            args.embedding_path  = args.embedding_path + args.data_name + '/'
                 
             
         ##################### get metadata: barcode_info ###################################
@@ -525,7 +525,10 @@ if __name__ == "__main__":
             'to_gene_node': all_negatome_pairs['to_gene_node'],
             'ligand_gene': all_negatome_pairs['ligand_gene'],
             'rec_gene': all_negatome_pairs['rec_gene'],
-            'score': all_negatome_pairs['score']
+            'score': all_negatome_pairs['score'],
+            'from_cell_index': all_negatome_pairs['from_cell_index'].append(item[1]),
+            'to_cell_index': all_negatome_pairs['to_cell_index'].append(item[2])
+
             
         })
         data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_inter.csv', index=False) #_negatome
@@ -539,6 +542,8 @@ if __name__ == "__main__":
             'ligand_gene': all_negatome_pairs_intra['ligand_gene'],
             'rec_gene': all_negatome_pairs_intra['rec_gene'],
             'score': all_negatome_pairs_intra['score']
+            'from_cell_index': all_negatome_pairs_intra['from_cell_index'].append(item[1]),
+            'to_cell_index': all_negatome_pairs_intra['to_cell_index'].append(item[2])
             
         })
         data_list_pd.to_csv(args.output_path +model_name+'_negatomeLR_nodeInfo_intra.csv', index=False) #_negatome
@@ -555,7 +560,7 @@ if __name__ == "__main__":
 
         """
         
-        ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo.csv.gz') #_negatome
+        ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo.csv.gz') #_negatome
         ccc_pairs['score'] = all_ccc_pairs['score']
         ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
         ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
@@ -566,14 +571,19 @@ if __name__ == "__main__":
             #if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
             #    continue
             
-            if ccc_pairs['attention_score'][i] < 0.7:
-                continue
+            #if ccc_pairs['attention_score'][i] < 0.7:
+            #    continue
 
             #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
             lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], -1, ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
 
             
         # plot input_cell_pair_list  
+        #  vs 88497
+        0.005 - 5
+        0.0005 - 10
+        0.00005 -15
+        
         '''
         ######### plot output #############################
         # UPDATE # annottaion
@@ -712,7 +722,7 @@ if __name__ == "__main__":
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
         #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
-        data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass.csv', index=False) #_negatome
+        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass.csv', index=False) #_negatome
 
 #####################################################################################################################################################################
                 

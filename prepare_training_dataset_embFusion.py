@@ -11,7 +11,8 @@ def get_dataset(
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
     X_protein_embedding: dict(),
-    threshold_score: int = 0.7
+    threshold_score: int = 0.7,
+    dataset = []
 ):
     """
     Return a dictionary as: [sender_cell][recvr_cell] = [(ligand gene, receptor gene, attention score), ...]
@@ -24,8 +25,8 @@ def get_dataset(
     edge_rank, component_label, index_sender, index_receiver, attention_score
     barcode_info: list of [cell_barcode, coordinate_x, coordinates_y, -1]
     """
-    # each sample has [sender set, receiver set, score]
-    dataset = []
+    # each sample has [sender set, receiver set, score]  
+    dataset = []      
     for i in range (0, len(ccc_pairs)):
         print("%d/%d - found %d"%(i,len(ccc_pairs),len(dataset)), end='\r')
         sender_cell_barcode = ccc_pairs['from_cell'][i]
@@ -49,6 +50,7 @@ def get_dataset(
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             score = ccc_pairs['attention_score'][i]
+            print(threshold_score)
             if score < threshold_score:
                 score = 0
             else:
@@ -120,7 +122,7 @@ def get_negative_dataset(
 def get_cellEmb_geneEmb_pairs(
     cell_vs_index: dict(),
     barcode_info_gene: list(),
-    X_embedding: np.array,
+    X_embedding,
     X_gene_embedding: np.array,
     X_protein_embedding: np.array
 ) -> defaultdict(dict):
@@ -145,7 +147,8 @@ def get_cellEmb_geneEmb_pairs(
         #if cell_barcode == 'GGCGCTCCTCATCAAT-1':
         #    print(gene_index)  
         if gene_name in X_protein_embedding:         
-            cell_vs_gene_emb[cell_barcode][gene_index] = [X_embedding[cell_index_cellnest], X_gene_embedding[gene_index], X_protein_embedding[gene_name]]
+            cell_vs_gene_emb[cell_barcode][gene_index] = [np.zeros(512), X_gene_embedding[gene_index], X_protein_embedding[gene_name]]
+            #X_embedding[cell_index_cellnest]
         else:
             not_found[gene_name] = 1
             
@@ -153,38 +156,7 @@ def get_cellEmb_geneEmb_pairs(
 
 
     
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    ################## Mandatory ####################################################################
-    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
-    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
-    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
-    parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
-    parser.add_argument( '--lr_negatome_intra_csv_path', type=str, \
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_intra.csv',\
-                        help='Name of the dataset') #, required=True)
-    parser.add_argument( '--lr_negatome_inter_csv_path', type=str, \
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_inter.csv',\
-                        help='Name of the dataset') #, required=True)  
-    
-    args = parser.parse_args()
-"""
-    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo.csv.gz', 
-                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST_experimental/metadata/V1_Human_Lymph_Node_spatial/V1_Human_Lymph_Node_spatial_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
-    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info_gene', help='Name of the dataset') 
-    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info', help='Name of the dataset')    
-    parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST_experimental/embedding_data/V1_Human_Lymph_Node_spatial/NEST_V1_Human_Lymph_Node_spatial_r1_Embed_X.npy', help='Name of the dataset')
-    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
-    args = parser.parse_args()
-"""
-
+def get_final_dataset(args, add_negative):
     with gzip.open(args.barcode_info_cellnest_path, 'rb') as fp:     
         barcode_info_cellnest = pickle.load(fp)
         
@@ -202,8 +174,8 @@ if __name__ == "__main__":
     gene_node_list_per_spot_temp = 0
     gc.collect()
     
-    with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
-        X_embedding = pickle.load(fp) 
+    #with gzip.open(args.cell_emb_cellnest_path, 'rb') as fp:  
+    #   X_embedding = pickle.load(fp) 
 
     
 
@@ -222,24 +194,86 @@ if __name__ == "__main__":
         cell_vs_index[barcode_info_cellnest[i][0]] = i
 
     
-    cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, X_embedding, X_gene_embedding, X_protein_embedding)
+    cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, 0, X_gene_embedding, X_protein_embedding)
     ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
+    print(ccc_pairs.columns)
     dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding)
     print(len(dataset))
+    start_of_negative_pairs = -1
 
-    start_of_negative_pairs = len(dataset)
-    neg_ccc_pairs = pd.read_csv(args.lr_negatome_inter_csv_path, sep=",")
-    dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset)
-    print(len(dataset))
+    if add_negative == 1:
+        start_of_negative_pairs = len(dataset)
+        neg_ccc_pairs = pd.read_csv(args.lr_negatome_inter_csv_path, sep=",")
+        dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset)
+        print(len(dataset))
 
-    neg_ccc_pairs = pd.read_csv(args.lr_negatome_intra_csv_path, sep=",")
-    dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset, 'intra')
-    print(len(dataset))
+        neg_ccc_pairs = pd.read_csv(args.lr_negatome_intra_csv_path, sep=",")
+        dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset, 'intra')
+        print(len(dataset))
     
+    return dataset, start_of_negative_pairs
+
+
+
+if __name__ == "__main__":
+    """
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST_experimental/output/V1_Human_Lymph_Node_spatial/CellNEST_V1_Human_Lymph_Node_spatial_top20percent.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST_experimental/metadata/V1_Human_Lymph_Node_spatial/V1_Human_Lymph_Node_spatial_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered_barcode_info', help='Name of the dataset')    
+    #parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST_experimental/embedding_data/V1_Human_Lymph_Node_spatial/NEST_V1_Human_Lymph_Node_spatial_r1_Embed_X.npy', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--lr_inter_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+
+    
+    args = parser.parse_args()
+
+    dataset, start_of_negative_pairs = get_final_dataset(args, add_negative=0)
+
+    """
+
+
+
+    parser = argparse.ArgumentParser()
+    ################## Mandatory ####################################################################
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
+    parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--lr_negatome_intra_csv_path', type=str, \
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_intra.csv',\
+                        help='Name of the dataset') #, required=True)
+    parser.add_argument( '--lr_negatome_inter_csv_path', type=str, \
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_negatomeLR_nodeInfo_inter.csv',\
+                        help='Name of the dataset') #, required=True)  
+    
+    args = parser.parse_args()
+
+
+    dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1)
+    start_of_negative_pairs = start_of_negative_pairs + len(dataset)
+    for i in range(0, len(dataset_temp)):
+        dataset.append(dataset_temp[i])
+        
+    
+
+    print('len of dataset %d, start of negative pairs %d'%(len(dataset), start_of_negative_pairs))
+
+
     # save it
-    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    #with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    #	pickle.dump([dataset, start_of_negative_pairs], fp)
+    with gzip.open('database/'+'LRbind_LUAD_LYMPH_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
     	pickle.dump([dataset, start_of_negative_pairs], fp)
-    
+        
         
     unique_gene = dict()
     for i in range(0, len(barcode_info_gene)):

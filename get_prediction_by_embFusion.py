@@ -74,7 +74,7 @@ def val_fusionMLP_multiBatch(dataset, model_name, threshold_score = 0.7, total_b
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # =========================== must be provided ===============================
-    parser.add_argument( '--model_name', type=str, default="embFusion_gene_prot", help='Provide a model name')
+    parser.add_argument( '--model_name', type=str, default="embFusion_LUAD_LYMPH_gene_prot_", help='Provide a model name')
     parser.add_argument( '--model_path', type=str, default='embFusion_model', help='Path to save the model state') # We do not need this for output generation 
     #parser.add_argument( '--lr_lrbind_csv_path', type=str, 
     #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_allLR_nodeInfo.csv', 

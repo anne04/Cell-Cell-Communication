@@ -15,7 +15,9 @@ import gzip
 import argparse
 import os
 import scanpy as sc
-import pathway_search_LRbind as pathway
+from sklearn.metrics.pairwise import euclidean_distances
+#import pathway_search_LRbind as pathway
+from sklearn.neighbors import NearestNeighbors
 
 print('user input reading')
 #current_dir = 
@@ -34,6 +36,9 @@ if __name__ == "__main__":
     parser.add_argument( '--spot_diameter', type=float, default=160, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
     parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
+    parser.add_argument( '--distance_measure', type=str, default='fixed' , help='Set neighborhood cutoff criteria. Choose from [knn, fixed]')
+    parser.add_argument( '--k', type=int, default=30 , help='Set neighborhood cutoff number. This will be used if --distance_measure=knn')    
+    parser.add_argument( '--juxtacrine_distance', type=float, default=-1, help='Distance for filtering ligand-receptor pairs based on cell-cell contact information. Automatically calculated unless provided. It has the same unit as the coordinates (for Visium, that is pixel).')
     parser.add_argument( '--num_hops', type=int, default=3 , help='Number of hops for direct connection')
     parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--remove_LR', type=str, help='Test LR to predict')
@@ -46,9 +51,11 @@ if __name__ == "__main__":
     parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
     parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
     parser.add_argument( '--threshold_gene_exp_intra', type=float, default=70, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
-    parser.add_argument( '--prefilter', type=int, default=0, help='Set to 1 if you want to block the ligand/receptors that do not have up/downstream genes expressed.')
     parser.add_argument( '--local_coexpression', type=int, default=0, help='Set to 1 if you want to use local coexpression matrix.')
-
+    parser.add_argument( '--add_negatome', type=int, default=0, help='Set to 1 if you want to add negatome')
+    parser.add_argument( '--check_protien_emb', type=int, default=0, help='Set to 1 if you want to see how many of your genes have protein emb')
+    parser.add_argument( '--block_autocrine', type=int, default=0 , help='Set to 1 if you want to ignore autocrine signals.') 
+    parser.add_argument( '--block_juxtacrine', type=int, default=0, help='Set to 1 if you want to ignore juxtacrine signals.')  
     args = parser.parse_args()
     
     args.remove_LR = [[args.target_lig, args.target_rec]]
@@ -61,8 +68,8 @@ if __name__ == "__main__":
         print("Please input args.target_lig, or set args.remove_lig=False")
         exit()
 
-    if args.neighborhood_threshold == 0:
-        args.neighborhood_threshold = args.spot_diameter*args.num_hops
+    #if args.neighborhood_threshold == 0:
+    #    args.neighborhood_threshold = args.spot_diameter*args.num_hops
 
     if args.data_to == 'input_graph/':
         args.data_to = args.data_to + args.data_name + '/'
@@ -76,64 +83,20 @@ if __name__ == "__main__":
         
     ####### get the gene id, cell barcode, cell coordinates ######
     print('input data reading')
-    if args.tissue_position_file == 'None': # Data is available in Space Ranger output format
-        adata_h5 = sc.read_visium(path=args.data_from, count_file='filtered_feature_bc_matrix.h5')
-        print('input data read done')
-        gene_count_before = len(list(adata_h5.var_names) )    
-        sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
-        gene_count_after = len(list(adata_h5.var_names) )  
-        print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
-        gene_ids = list(adata_h5.var_names)
-        coordinates = adata_h5.obsm['spatial']
-        cell_barcode = np.array(adata_h5.obs.index)
-        print('Number of barcodes: %d'%cell_barcode.shape[0])
-        print('Applying quantile normalization')
-        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
-        cell_vs_gene = np.transpose(temp)      
-    
-    else: # Data is not available in Space Ranger output format
-        # read the mtx file
-        	
-        temp = sc.read_10x_mtx(args.data_from) #
-        print(temp)
-        print('*.mtx file read done')
-        gene_count_before = len(list(temp.var_names))
-        sc.pp.filter_genes(temp, min_cells=args.filter_min_cell)
-        gene_count_after = len(list(temp.var_names) )
-        print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
-        gene_ids = list(temp.var_names) 
-        #print(len(gene_ids))
-        cell_barcode = np.array(temp.obs.index)
-        temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(temp.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
-        cell_vs_gene = np.transpose(temp)
-        '''
-        temp = sc.read_mtx(args.data_from)
-        cell_vs_gene = sparse.csr_matrix.toarray(np.transpose(temp.X))
-        cell_barcode = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/barcodes.tsv.gz', header=None)
-        cell_barcode = np.array(list(cell_barcode[0]))
-        gene_ids = pd.read_csv('../data/CID44971_spatial/filtered_count_matrix/features.tsv.gz', header=None)
-        gene_ids = list(gene_ids[0])
-        print("Number of genes %d"%len(gene_ids))
-        print('Number of barcodes: %d'%cell_barcode.shape[0])
-        print('Applying quantile normalization')
-        temp = qnorm.quantile_normalize(np.transpose(cell_vs_gene))  #https://en.wikipedia.org/wiki/Quantile_normalization
-        cell_vs_gene = np.transpose(temp)  
-        '''                                
-        
-        # now read the tissue position file. It has the format:     
-        df = pd.read_csv(args.tissue_position_file, sep=",", header=None)   
-        tissue_position = df.values
-        barcode_vs_xy = dict() # record the x and y coordinates for each spot/cell
-        for i in range (0, tissue_position.shape[0]):
-            #barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][4], tissue_position[i][5]] # x and y coordinates
-            barcode_vs_xy[tissue_position[i][0]] = [tissue_position[i][5], tissue_position[i][4]] #for some weird reason, in the .h5 format for LUAD sample, the x and y are swapped
-        
-        coordinates = np.zeros((cell_barcode.shape[0], 2)) # insert the coordinates in the order of cell_barcodes
-        for i in range (0, cell_barcode.shape[0]):
-            coordinates[i,0] = barcode_vs_xy[cell_barcode[i]][0]
-            coordinates[i,1] = barcode_vs_xy[cell_barcode[i]][1]
-        
-    
+    adata_h5 = sc.read_h5ad(args.data_from)
+    print('input data read done')
+    gene_count_before = len(list(adata_h5.var_names))    
+    sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
+    gene_count_after = len(list(adata_h5.var_names) )  
+    print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+    gene_ids = list(adata_h5.var_names)
+    coordinates = adata_h5.obsm['spatial']
+    cell_barcode = np.array(adata_h5.obs_names) #obs.index)
+    print('Number of barcodes: %d'%cell_barcode.shape[0])
+    print('Applying quantile normalization')
+    temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
+    cell_vs_gene = np.transpose(temp)
+
 
     with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:
         pickle.dump(cell_vs_gene, fp)
@@ -150,12 +113,6 @@ if __name__ == "__main__":
     #cell_ROI = []
     for cell_code in cell_barcode:
         #print(coordinates[i,1])
-        '''
-        if coordinates[i,1]>3000 or coordinates[i,0]>3000:
-            i=i+1
-            continue
-        cell_ROI.append(i)
-        '''
         barcode_info.append([cell_code, coordinates[i,0],coordinates[i,1], 0]) # last entry will hold the component number later
         i=i+1
     ################################################
@@ -249,18 +206,18 @@ if __name__ == "__main__":
 
 
     ####################### for debug purpose ###########
-    print('Looking for embedding of ligand and receptor genes')
-    
-    with gzip.open('database/ligand_receptor_protein_embedding.pkl', 'rb') as fp:  
-        gene_vs_embedding = pickle.load(fp)    
+    if args.check_protien_emb == 1:
+        print('Looking for embedding of ligand and receptor genes')
+        with gzip.open('database/ligand_receptor_protein_embedding.pkl', 'rb') as fp:  
+            gene_vs_embedding = pickle.load(fp)    
 
-    for gene in ligand_list:
-        if gene not in gene_vs_embedding:
-            print('Embedding not found for ligand:' + gene)
+        for gene in ligand_list:
+            if gene not in gene_vs_embedding:
+                print('Embedding not found for ligand:' + gene)
 
-    for gene in receptor_list:
-        if gene not in gene_vs_embedding:
-            print('Embedding not found for receptor:' + gene)
+        for gene in receptor_list:
+            if gene not in gene_vs_embedding:
+                print('Embedding not found for receptor:' + gene)
 
 
 
@@ -289,64 +246,64 @@ if __name__ == "__main__":
 
     print("unique LR pair count %d"%lr_id)        
     ##################### read negatome to see how many overlaps ####################
+    if args.add_negatome == 1:
+        with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
+            negatome_gene, negatome_lr_unique = pickle.load(fp)
 
-    with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
-        negatome_gene, negatome_lr_unique = pickle.load(fp)
-
-    
-    set_1 = set(gene_ids)
-    set_2 = set(negatome_gene)
-    
-    intersection_list = list(set_1.intersection(set_2))
-    print('len of common genes with negatome genes %d'%len(intersection_list))
-    intersection_list = intersection_list #[0:len(intersection_list)//2]
-    neg_l_r_pair = defaultdict(dict)
-    neg_l_r_pair_count = 0
-    neg_chain_A = []
-    neg_chain_B = []
-    for neg_lr_pair in negatome_lr_unique: 
-        #if neg_l_r_pair_count==(len(negatome_lr_unique)//2):
-        #    break
-        #print(neg_lr_pair)
-        neg_lig = neg_lr_pair.split('_with_')[0]
-        neg_rec = neg_lr_pair.split('_with_')[1]
-        if neg_lig in intersection_list and neg_rec in intersection_list:
-            neg_l_r_pair[neg_lig][neg_rec] = 1
-            neg_l_r_pair_count = neg_l_r_pair_count + 1
-            neg_chain_A.append(neg_lig)
-            neg_chain_B.append(neg_rec)
-
-    print('unique negatome lr pair count is %d'%neg_l_r_pair_count)
-    neg_chain_A = list(np.unique(neg_chain_A))
-    neg_chain_B = list(np.unique(neg_chain_B))
-
-    with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
-        negatome_ligand_list, negatome_receptor_list, lr_unique_negatome = pickle.load(fp)
         
-    found_overlap = 0  
-    for ligand in lr_unique_negatome:
-        if ligand in l_r_pair:
-            for receptor in lr_unique_negatome[ligand]:
-                #print(receptor)
-                if receptor in l_r_pair[ligand]:
-                    found_overlap = found_overlap + 1
-                    #print(ligand + '_to_' + receptor)
-     
-    print('found overlap %d'%found_overlap)
+        set_1 = set(gene_ids)
+        set_2 = set(negatome_gene)
+        
+        intersection_list = list(set_1.intersection(set_2))
+        print('len of common genes with negatome genes %d'%len(intersection_list))
+        intersection_list = intersection_list #[0:len(intersection_list)//2]
+        neg_l_r_pair = defaultdict(dict)
+        neg_l_r_pair_count = 0
+        neg_chain_A = []
+        neg_chain_B = []
+        for neg_lr_pair in negatome_lr_unique: 
+            #if neg_l_r_pair_count==(len(negatome_lr_unique)//2):
+            #    break
+            #print(neg_lr_pair)
+            neg_lig = neg_lr_pair.split('_with_')[0]
+            neg_rec = neg_lr_pair.split('_with_')[1]
+            if neg_lig in intersection_list and neg_rec in intersection_list:
+                neg_l_r_pair[neg_lig][neg_rec] = 1
+                neg_l_r_pair_count = neg_l_r_pair_count + 1
+                neg_chain_A.append(neg_lig)
+                neg_chain_B.append(neg_rec)
+
+        print('unique negatome lr pair count is %d'%neg_l_r_pair_count)
+        neg_chain_A = list(np.unique(neg_chain_A))
+        neg_chain_B = list(np.unique(neg_chain_B))
+
+        with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+            negatome_ligand_list, negatome_receptor_list, lr_unique_negatome = pickle.load(fp)
             
-    count = 0
-    for ligand in negatome_ligand_list:
-        if ligand in ligand_list:
-            count = count + 1
+        found_overlap = 0  
+        for ligand in lr_unique_negatome:
+            if ligand in l_r_pair:
+                for receptor in lr_unique_negatome[ligand]:
+                    #print(receptor)
+                    if receptor in l_r_pair[ligand]:
+                        found_overlap = found_overlap + 1
+                        #print(ligand + '_to_' + receptor)
+        
+        print('found overlap %d'%found_overlap)
+                
+        count = 0
+        for ligand in negatome_ligand_list:
+            if ligand in ligand_list:
+                count = count + 1
 
-    print('negatome ligand found %d'%count)
+        print('negatome ligand found %d'%count)
 
-    count = 0
-    for receptor in negatome_receptor_list:
-        if receptor in receptor_list:
-            count = count + 1
+        count = 0
+        for receptor in negatome_receptor_list:
+            if receptor in receptor_list:
+                count = count + 1
 
-    print('negatome receptor found %d'%count)
+        print('negatome receptor found %d'%count)
 
 
     #exit(0)    
@@ -363,44 +320,59 @@ if __name__ == "__main__":
 
     ###################################################################################
     # build physical distance matrix
-    from sklearn.metrics.pairwise import euclidean_distances
-    distance_matrix = euclidean_distances(coordinates, coordinates)
-    
-    # assign weight to the neighborhood relations based on neighborhood distance 
-    dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
-    neighbor_list_per_cell = []
-    #print(' --------- %g --------'%distance_matrix[1276][3517])
-    k_nn = 50
-    for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
-        max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
-        min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
-        for i in range(distance_matrix.shape[0]):
-            dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
+    print('Build physical distance matrix')
+    if args.distance_measure == 'fixed':
+        # then you need to set the args.neighborhood_threshold
+        if args.neighborhood_threshold == 0:
+            from sklearn.metrics.pairwise import euclidean_distances
+            distance_matrix = euclidean_distances(coordinates, coordinates)
+            #### then automatically calculate the min distance between two nodes #########
+            sorted_first_row = np.sort(distance_matrix[0,:])
+            distance_a_b = sorted_first_row[1]
+            args.neighborhood_threshold = distance_a_b * 4 # 4 times the distance between two nodes
+            distance_matrix = 0
+            gc.collect()
 
-        if args.local_coexpression==1:
-            list_indx = list(np.argsort(dist_X[:,j]))
-            k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-            neighbor_list_per_cell.append(k_higher)
-        for i in range(0, distance_matrix.shape[0]):
-            if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
-                dist_X[i,j] = 0 # no ccc happening outside threshold distance
-                
-    #cell_rec_count = np.zeros((cell_vs_gene.shape[0]))
-    ###################################################################################
-    dist_X = np.zeros((distance_matrix.shape[0], distance_matrix.shape[1]))
-    #print(' --------- %g --------'%distance_matrix[1276][3517])
-    for j in range(0, distance_matrix.shape[1]): # look at all the incoming edges to node 'j'
-        max_value=np.max(distance_matrix[:,j]) # max distance of node 'j' to all it's neighbors (incoming)
-        min_value=np.min(distance_matrix[:,j]) # min distance of node 'j' to all it's neighbors (incoming)
-        for i in range(distance_matrix.shape[0]):
-            dist_X[i,j] = 1-(distance_matrix[i,j]-min_value)/(max_value-min_value) # scale the distance of node 'j' to all it's neighbors (incoming) and flip it so that nearest one will have maximum weight.
-            	
-        #list_indx = list(np.argsort(dist_X[:,j]))
-        #k_higher = list_indx[len(list_indx)-k_nn:len(list_indx)]
-        for i in range(0, distance_matrix.shape[0]):
-            if distance_matrix[i,j] > args.neighborhood_threshold: #i not in k_higher:
-                dist_X[i,j] = 0 # no ccc happening outside threshold distance
-          
+        nbrs = NearestNeighbors(radius=args.neighborhood_threshold, algorithm='kd_tree', n_jobs=-1)
+        nbrs.fit(coordinates)
+        distances, indices = nbrs.kneighbors(coordinates)
+        print('Neighborhood distance is set to be %g (same unit as the coordinates)'%(args.neighborhood_threshold))
+    else:
+        print('Neighborhood distance is set to be %d nearest neighbors'%args.k)
+        nbrs = NearestNeighbors(n_neighbors=args.k, algorithm='kd_tree', n_jobs=-1)
+        nbrs.fit(coordinates)
+        distances, indices = nbrs.kneighbors(coordinates)
+
+    unique_distances = np.unique(distances)
+    distance_a_b = unique_distances[1]
+    # distances: array of shape (n_cells, k) with the Euclidean distance from 
+    # each cell to its k neighbors.
+    # indices: array of shape (n_cells, k) with the neighbor indices (row indices of X).
+    # each cell 'j' will receive signal from its neighbors 'i' in descending order of weights
+    print('Assign weight to the neighborhood relations based on neighborhood distance')
+    weightdict_i_to_j = defaultdict(dict)
+    for cell_idx in range (0, indices.shape[0]):
+        max_value = np.max(distances[cell_idx,:])
+        min_value = np.min(distances[cell_idx,:])
+        for neigh_idx in range (0, indices.shape[1]):
+            neigh_cell_idx = indices[cell_idx][neigh_idx]
+            distance_neigh_cell = distances[cell_idx][neigh_idx]
+            flipped_distance_neigh_cell = 1-(distance_neigh_cell-min_value)/(max_value-min_value)
+            # i = neigh_cell_idx, j = cell_idx
+            weightdict_i_to_j[neigh_cell_idx][cell_idx] = flipped_distance_neigh_cell
+
+
+
+    #### automatically set the args.juxtacrine_distance ############
+    if args.juxtacrine_distance == -1: 
+        args.juxtacrine_distance = distance_a_b
+
+    if args.block_juxtacrine == 0:
+        print("Auto calculated juxtacrine distance is %g. To change it use --juxtacrine_distance"%args.juxtacrine_distance)
+
+
+
+
     
     #####################################################################################
     # Set threshold gene percentile
@@ -456,7 +428,7 @@ if __name__ == "__main__":
             for j in range (0, cell_vs_gene.shape[0]): # receptor
                 if cell_vs_gene[j][gene_index[receptor]] < cell_percentile[j]:
                     continue
-                if dist_X[i,j]==0:
+                if i not in weightdict_i_to_j or j not in weightdict_i_to_j[i]: #dist_X[i,j]==0:
                     continue
                     
                 target_cell_pair[ligand+'+'+receptor].append([i, j])    
@@ -466,88 +438,11 @@ if __name__ == "__main__":
     ##############################################################################
     # some preprocessing before making the input graph
     blocked_gene_per_cell = defaultdict(dict)
-    if args.prefilter==1:
 
-        # Set threshold gene percentile
-        threshold_gene_exp = 80
-        cell_percentile_target_gene = []
-        for i in range (0, cell_vs_gene.shape[0]):
-            y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-            ## inter ##
-            active_cutoff = np.percentile(y, threshold_gene_exp)
-            if active_cutoff == min(cell_vs_gene[i][:]):
-                times = 1
-                while active_cutoff == min(cell_vs_gene[i][:]):
-                    new_threshold = threshold_gene_exp + 5 * times
-                    if new_threshold >= 100:
-                        active_cutoff = max(cell_vs_gene[i][:])  
-                        break
-                    active_cutoff = np.percentile(y, new_threshold)
-                    times = times + 1 
-    
-            cell_percentile_target_gene.append(active_cutoff) 
-
-
-        
-        ### remove the ligand and receptors whose up/dowstream genes are not expressed
-        with gzip.open(args.metadata_to+args.data_name+'_receptor_intra_KG.pkl', 'rb') as fp:
-            receptor_intraNW = pickle.load(fp)
-    
-        for receptor in receptor_intraNW:
-            target_list = []
-            for rows in receptor_intraNW[receptor]:
-                target_list.append(rows[0])
-    
-            receptor_intraNW[receptor] = np.unique(target_list)
-            
-        with gzip.open(args.metadata_to+args.data_name+'_ligand_intra_KG.pkl', 'rb') as fp:
-            ligand_intraNW = pickle.load(fp)
-    
-        for ligand in ligand_intraNW:
-            target_list = []
-            
-            for rows in ligand_intraNW[ligand]:
-                target_list.append(rows[0])
-    
-            ligand_intraNW[ligand] = np.unique(target_list)
-    
-        ##############################################
-       
-        blocked_gene_per_cell = defaultdict(dict)
-        for cell in range(0, cell_vs_gene.shape[0]):
-            for j in range(0, cell_vs_gene.shape[1]):
-                gene_name = gene_ids[j]
-                # now see if that gene has up/downstream genes expressed
-                if gene_name in ligand_list:
-                    # check for upstream genes
-                    target_list = ligand_intraNW[gene_name]
-                    found = 0
-                    for gene in target_list:
-                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile_target_gene[cell]:
-                            found = found + 1
-                            
-                            
-                    if len(target_list)>0 and found/len(target_list) < 0.5:      
-                        # if not found then turn it off
-                        blocked_gene_per_cell[cell][j] = 0
-                        
-                if gene_name in receptor_list:
-                    # check for downstream genes
-                    target_list = receptor_intraNW[gene_name]
-                    found = 0
-                    for gene in target_list:
-                        if cell_vs_gene[cell][gene_index[gene]] >= cell_percentile_target_gene[cell]:
-                            found = found + 1
-                            
-                            
-                    if len(target_list)>0 and found/len(target_list) < 0.5:      
-                        # if not found then turn it off
-                        blocked_gene_per_cell[cell][j] = 0
-                        
-    
     ###############################################################################
     count_total_edges = 0
-    
+    cells_ligand_vs_receptor = defaultdict(dict)
+    """
     cells_ligand_vs_receptor = []
     for i in range (0, cell_vs_gene.shape[0]):
         cells_ligand_vs_receptor.append([])
@@ -556,32 +451,33 @@ if __name__ == "__main__":
         for j in range (0, cell_vs_gene.shape[0]):
             cells_ligand_vs_receptor[i].append([])
             cells_ligand_vs_receptor[i][j] = []
-
+    """
     #ligand_list =  list(ligand_dict_dataset.keys())            
     start_index = 0 #args.slice
     end_index = len(ligand_list) #min(len(ligand_list), start_index+100)
     #inactive_node=[]
     for g in range(start_index, end_index): 
         gene = ligand_list[g]
-        for i in range (0, cell_vs_gene.shape[0]): # ligand
-              
+
+        #for i in range (0, cell_vs_gene.shape[0]): # ligand
+        for i in weightdict_i_to_j.keys():
             if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
-                #inactive_node.append(1)
                 continue
+
             if gene_index[gene] in blocked_gene_per_cell[i]:
                 continue
-            
-            for j in range (0, cell_vs_gene.shape[0]): # receptor
-                if dist_X[i,j]==0: #distance_matrix[i,j] >= args.neighborhood_threshold: #spot_diameter*4
-                    continue
-    
+
+            for j in weightdict_i_to_j[i].keys():
+            #for j in range (0, cell_vs_gene.shape[0]): # receptor
+                #if i not in weightdict_i_to_j or j not in weightdict_i_to_j[i]: #dist_X[i,j]==0: 
+                #    continue    
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
             
                         if gene_index[gene_rec] in blocked_gene_per_cell[j]:
                             continue
                         
-                        if gene_rec in cell_cell_contact and distance_matrix[i,j] > args.spot_diameter:
+                        if (gene_rec in cell_cell_contact) and (args.block_juxtacrine==1 or euclidean_distances(coordinates[i],coordinates[j]) > args.juxtacrine_distance):
                             continue
     
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
@@ -591,12 +487,23 @@ if __name__ == "__main__":
                             print('zero valued ccc score found. Might be a potential ERROR!! ')
                             continue	
                             
-                        cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+                        if i in cells_ligand_vs_receptor:
+                            if j in cells_ligand_vs_receptor[i]:
+                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+
+                            else:
+                                cells_ligand_vs_receptor[i][j] = []
+                                cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+
+                        else:
+                            cells_ligand_vs_receptor[i][j] = []        
+                            cells_ligand_vs_receptor[i][j].append([gene, gene_rec, communication_score, relation_id])
+
                         count_total_edges = count_total_edges + 1
     
-        #print('%d genes done out of %d ligand genes'%(g+1, len(ligand_list)))
+        print('%d/%d ligand genes processed'%(g+1, len(ligand_list)), end='\r')
     
-    
+    print('') 
     #print('total number of edges in the input graph %d '%count_total_edges)
     ################################################################################
     # input graph generation
@@ -605,10 +512,10 @@ if __name__ == "__main__":
     edge_weight = [] # 3D edge features in the same order as row_col
     lig_rec = [] # ligand and receptors corresponding to the edges in the same order as row_col
     self_loop_found = defaultdict(dict) # to keep track of self-loops -- used later during visualization plotting
-    for i in range (0, len(cells_ligand_vs_receptor)):
+    for i in cells_ligand_vs_receptor.keys():
         #ccc_j = []
-        for j in range (0, len(cells_ligand_vs_receptor)):
-            if dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
+        for j in cells_ligand_vs_receptor[i].keys():
+            if i in weightdict_i_to_j and j in weightdict_i_to_j[i]: #dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
                 count_local = 0
                 if len(cells_ligand_vs_receptor[i][j])>0:
                     for k in range (0, len(cells_ligand_vs_receptor[i][j])):
@@ -617,11 +524,11 @@ if __name__ == "__main__":
                         ligand_receptor_coexpression_score = cells_ligand_vs_receptor[i][j][k][2]
 
                         row_col.append([i,j])
-                        edge_weight.append([dist_X[i,j]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
+                        edge_weight.append([weightdict_i_to_j[i][j]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
                         lig_rec.append([gene, gene_rec])
 
                         row_col.append([j,i])
-                        edge_weight.append([dist_X[j,i]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
+                        edge_weight.append([weightdict_i_to_j[j][i]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
                         #edge_weight.append([dist_X[i,j], ligand_receptor_coexpression_score, cells_ligand_vs_receptor[i][j][k][3]])
                         lig_rec.append([gene_rec, gene])
                                                   
@@ -729,28 +636,29 @@ if __name__ == "__main__":
     # add the ligands and receptors from negatome
 
     ### negatome ###
-    with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
-        negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
-    
-    for ligand_gene in negatome_ligand_list:
-        if ligand_gene in gene_ids and ligand_gene not in ligand_list:    
-            ligand_list.append(ligand_gene)
+    if args.add_negatome == 1:
+        with gzip.open('database/negatome_ligand_receptor_set', 'rb') as fp:  
+            negatome_ligand_list, negatome_receptor_list, lr_unique = pickle.load(fp)
+        
+        for ligand_gene in negatome_ligand_list:
+            if ligand_gene in gene_ids and ligand_gene not in ligand_list:    
+                ligand_list.append(ligand_gene)
 
-    for receptor_gene in negatome_receptor_list:
-        if receptor_gene in gene_ids and receptor_gene not in receptor_list:    
-            receptor_list.append(receptor_gene)
-
-
-    for ligand_gene in neg_chain_A:
-        if ligand_gene in gene_ids and ligand_gene not in ligand_list:    
-            ligand_list.append(ligand_gene)
-
-    for receptor_gene in neg_chain_B:
-        if receptor_gene in gene_ids and receptor_gene not in receptor_list:    
-            receptor_list.append(receptor_gene)
+        for receptor_gene in negatome_receptor_list:
+            if receptor_gene in gene_ids and receptor_gene not in receptor_list:    
+                receptor_list.append(receptor_gene)
 
 
-    
+        for ligand_gene in neg_chain_A:
+            if ligand_gene in gene_ids and ligand_gene not in ligand_list:    
+                ligand_list.append(ligand_gene)
+
+        for receptor_gene in neg_chain_B:
+            if receptor_gene in gene_ids and receptor_gene not in receptor_list:    
+                receptor_list.append(receptor_gene)
+
+
+        
 
     ################
 
@@ -948,7 +856,7 @@ if __name__ == "__main__":
         pickle.dump(barcode_info, fp)
 
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
-        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active_count, rec_active_count], fp) #, ligand_active_count, rec_active_count
+        pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, weightdict_i_to_j, l_r_pair, gene_node_index_active, ligand_active_count, rec_active_count], fp) #, ligand_active_count, rec_active_count
 
     with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
         pickle.dump([target_LR_index, target_cell_pair], fp)
@@ -963,7 +871,7 @@ if __name__ == "__main__":
      
     print('write data done')
 
-    if 1==1:
+    if args.add_negatome == 1:
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
             negatome_gene, negatome_lr_unique = pickle.load(fp)
           
