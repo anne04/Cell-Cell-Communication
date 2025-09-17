@@ -682,9 +682,9 @@ if __name__ == "__main__":
 
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
-    for i in range(0, cell_vs_gene.shape[0]):
+    for i in weightdict_i_to_j.keys():
         if args.local_coexpression == 1:
-            neighbor_list = neighbor_list_per_cell[i]
+            neighbor_list = list(weightdict_i_to_j[i].keys()) #neighbor_list_per_cell[i]
             temp_cell_vs_gene = cell_vs_gene[neighbor_list]
             df = defaultdict(list)
             for gene in cell_gene_set:

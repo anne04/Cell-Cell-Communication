@@ -85,7 +85,7 @@ if __name__ == "__main__":
         all_negatome_pairs = defaultdict(list)
         all_negatome_pairs_intra = defaultdict(list)
         
-        for sample_idx in range(0, 1): #len(sample_type)):
+        for sample_idx in range(1, len(sample_type)):
             print('****' + sample_type[sample_idx] + '****')
             args.metadata_from = 'metadata/'
             args.data_from = 'input_graph/'
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             ##############
             args.metadata_from = args.metadata_from + args.data_name + '/'
             args.data_from = args.data_from + args.data_name + '/'
-            args.embedding_path  = args.embedding_path + args.data_name + '/'
+            #args.embedding_path  = args.embedding_path + args.data_name + '/'
                 
             
         ##################### get metadata: barcode_info ###################################
@@ -561,21 +561,21 @@ if __name__ == "__main__":
         """
         
         ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo.csv.gz') #_negatome
-        ccc_pairs['score'] = all_ccc_pairs['score']
-        ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
-        ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
-        ccc_pairs['attention_score'] = all_ccc_pairs['attention_score']
+        #ccc_pairs['score'] = all_ccc_pairs['score']
+        #ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
+        #ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
+        #ccc_pairs['attention_score'] = all_ccc_pairs['attention_score']
         
         lr_dict = defaultdict(list)
         for i in range(0, len(ccc_pairs)):
-            #if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
-            #    continue
+            if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
+                continue
             
             #if ccc_pairs['attention_score'][i] < 0.7:
             #    continue
 
             #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
-            lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], -1, ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
+            lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['attention_score'], -1])  # score, cell ids, gene_node ids   
 
             
         # plot input_cell_pair_list  
@@ -684,8 +684,8 @@ if __name__ == "__main__":
             if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                 data_list['type'].append('From DB')
             
-            elif ligand+'_with_'+receptor in negatome_lr_unique: 
-                data_list['type'].append('From negatome')
+            #elif ligand+'_with_'+receptor in negatome_lr_unique: 
+            #    data_list['type'].append('From negatome')
             else:
                 #continue
                 data_list['type'].append('Predicted')
@@ -722,7 +722,7 @@ if __name__ == "__main__":
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
         #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
-        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass.csv', index=False) #_negatome
+        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_top20p.csv', index=False) #_negatome
 
 #####################################################################################################################################################################
                 

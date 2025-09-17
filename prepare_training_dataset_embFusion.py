@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_top20percent.csv', help='Name of the dataset') #, required=True)  #allCCC
     parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
     parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
@@ -259,20 +259,24 @@ if __name__ == "__main__":
 
 
     dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1)
+    
     start_of_negative_pairs = start_of_negative_pairs + len(dataset)
     for i in range(0, len(dataset_temp)):
         dataset.append(dataset_temp[i])
         
     
-
+    #dataset = dataset_temp
     print('len of dataset %d, start of negative pairs %d'%(len(dataset), start_of_negative_pairs))
 
 
     # save it
+    #with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_wonegatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    #	pickle.dump([dataset, start_of_negative_pairs], fp)
+
     #with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
     #	pickle.dump([dataset, start_of_negative_pairs], fp)
-    with gzip.open('database/'+'LRbind_LUAD_LYMPH_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
-    	pickle.dump([dataset, start_of_negative_pairs], fp)
+    #with gzip.open('database/'+'LRbind_LUAD_LYMPH_geneCorrLocalKNN_bidir_negatome'+'_dataset_embFusion_top20p.pkl', 'wb') as fp:  
+    #	pickle.dump([dataset, start_of_negative_pairs], fp)
         
         
     unique_gene = dict()
