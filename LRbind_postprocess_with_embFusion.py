@@ -118,7 +118,7 @@ if __name__ == "__main__":
     knee_flag = 0 #1 #0 # pairwise
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
-
+    # 4, 13
     for data_index in [4]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
@@ -627,8 +627,8 @@ if __name__ == "__main__":
 
                 """
                 
-                ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo.csv.gz') #_negatome
-                #ccc_pairs = pd.read_csv(args.output_path +'model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L'+'_negatome_allLR_nodeInfo.csv.gz', sep=",")
+                ccc_pairs = pd.read_csv(args.output_path +model_name+'_allLR_nodeInfo_LUADtraining_interNegatome.csv.gz') #LUAD_LYMPH, LUAD_LYMPH_top20, LUADtraining_woNegatome
+                #ccc_pairs = pd.read_csv('/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_allLR_nodeInfo_LUADtraining_interNegatome.csv.gz', sep=",")
                 ccc_pairs['score'] = all_ccc_pairs['score']
                 ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
                 ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
@@ -636,14 +636,14 @@ if __name__ == "__main__":
                 
                 lr_dict = defaultdict(list)
                 for i in range(0, len(ccc_pairs)):
-                    #if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
-                    #    continue
+                    if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
+                        continue
                     
                     if ccc_pairs['attention_score'][i] < 0.7:
                         continue
 
                     #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
-                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], -1, ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
+                    lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['attention_score'], -1])  # score, cell ids, gene_node ids   
 
                     
                 # plot input_cell_pair_list  
@@ -692,12 +692,14 @@ if __name__ == "__main__":
                     for item in cell_pair_list:
                         sum = sum + item[0]  
                         #sum_layer1 = sum_layer1 + item[3]
-                        attention_score_sum = attention_score_sum + item[3] 
-                        weighted_sum = weighted_sum + item[0] * item[3] 
-                        sum_pred = sum_pred + item[3]
+                        #attention_score_sum = attention_score_sum + item[3] 
+                        #weighted_sum = weighted_sum + item[0] * item[3] 
+                        #sum_pred = sum_pred + item[3]
                         
                     #sum = sum/len(cell_pair_list)
-                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  -1, -1, -1, -1]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+
+#                    sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
                     
               
                 sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -747,8 +749,8 @@ if __name__ == "__main__":
                     if ligand in l_r_pair and receptor in l_r_pair[ligand]:
                         data_list['type'].append('From DB')
                     
-                    elif ligand+'_with_'+receptor in negatome_lr_unique: 
-                        data_list['type'].append('From negatome')
+                    #elif ligand+'_with_'+receptor in negatome_lr_unique: 
+                    #    data_list['type'].append('From negatome')
                     else:
                         #continue
                         data_list['type'].append('Predicted')
@@ -785,7 +787,7 @@ if __name__ == "__main__":
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
                 #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass.csv', index=False) #_negatome
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUADtraining_interNegatome.csv', index=False) #_top20, LUAD_LYMPH, LUADtraining_woNegatome
 
 
                 

@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
 
         
-        ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo_top20p.csv.gz') #_negatome
+        ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo_LUADtraining_interNegatome.csv.gz') #_top20p, woNegatome
         #ccc_pairs['score'] = all_ccc_pairs['score']
         #ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
         #ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
@@ -121,8 +121,8 @@ if __name__ == "__main__":
             if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
                 continue
             
-            #if ccc_pairs['attention_score'][i] < 0.7:
-            #    continue
+            if ccc_pairs['attention_score'][i] < 0.7:
+                continue
 
             #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
             lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['attention_score'], -1])  # score, cell ids, gene_node ids   
@@ -141,13 +141,14 @@ if __name__ == "__main__":
             for item in cell_pair_list:
                 sum = sum + item[0]  
                 #sum_layer1 = sum_layer1 + item[3]
-                attention_score_sum = attention_score_sum + item[3] 
-                weighted_sum = weighted_sum + item[0] * item[3] 
-                sum_pred = sum_pred + item[3]
+                #attention_score_sum = attention_score_sum + item[3] 
+                #weighted_sum = weighted_sum + item[0] * item[3] 
+                #sum_pred = sum_pred + item[3]
                 
             #sum = sum/len(cell_pair_list)
+            sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  -1, -1, -1, -1]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
             
-            sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
+#            sort_lr_list.append([lr_pair, sum, sum/len(cell_pair_list), len(cell_pair_list),  sum_pred, sum_pred/len(cell_pair_list), attention_score_sum, weighted_sum]) #, sum_layer1, sum_layer1/len(cell_pair_list)])
             
         
         sort_lr_list = sorted(sort_lr_list, key = lambda x: x[1], reverse=True)
@@ -203,8 +204,8 @@ if __name__ == "__main__":
             #'Score_sum_layer1': data_list['score_sum_layer1'],
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
-        #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predScore.csv', index=False) #_negatome
-        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_top20p.csv', index=False) #_negatome
+        data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUADtraining_interNegatome.csv', index=False) #_negatome, woNegatome
+        #data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_top20p.csv', index=False) #_negatome
         print(len(data_list_pd))
         print('done')
 

@@ -156,7 +156,7 @@ def get_cellEmb_geneEmb_pairs(
 
 
     
-def get_final_dataset(args, add_negative):
+def get_final_dataset(args, add_negative=0, add_inter=1, add_intra=1):
     with gzip.open(args.barcode_info_cellnest_path, 'rb') as fp:     
         barcode_info_cellnest = pickle.load(fp)
         
@@ -202,14 +202,16 @@ def get_final_dataset(args, add_negative):
     start_of_negative_pairs = -1
 
     if add_negative == 1:
-        start_of_negative_pairs = len(dataset)
-        neg_ccc_pairs = pd.read_csv(args.lr_negatome_inter_csv_path, sep=",")
-        dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset)
-        print(len(dataset))
+        if add_inter == 1:
+            start_of_negative_pairs = len(dataset)
+            neg_ccc_pairs = pd.read_csv(args.lr_negatome_inter_csv_path, sep=",")
+            dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset)
+            print(len(dataset))
 
-        neg_ccc_pairs = pd.read_csv(args.lr_negatome_intra_csv_path, sep=",")
-        dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset, 'intra')
-        print(len(dataset))
+        if add_intra == 1:
+            neg_ccc_pairs = pd.read_csv(args.lr_negatome_intra_csv_path, sep=",")
+            dataset = get_negative_dataset(neg_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, dataset, 'intra')
+            print(len(dataset))
     
     return dataset, start_of_negative_pairs
 
@@ -241,7 +243,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_top20percent.csv', help='Name of the dataset') #, required=True)  #allCCC
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #allCCC
     parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
     parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_LUAD_1D_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset') 
@@ -258,7 +260,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1)
+    dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1, add_inter=1, add_intra=0)
     
     start_of_negative_pairs = start_of_negative_pairs + len(dataset)
     for i in range(0, len(dataset_temp)):
@@ -270,6 +272,9 @@ if __name__ == "__main__":
 
 
     # save it
+    with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_interNegatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    	pickle.dump([dataset, start_of_negative_pairs], fp)
+
     #with gzip.open('database/'+'LRbind_LUAD_1D_manualDB_geneCorrLocalKNN_bidir_wonegatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
     #	pickle.dump([dataset, start_of_negative_pairs], fp)
 
