@@ -4,15 +4,20 @@ from collections import defaultdict
 import altair as alt
 import pandas as pd
 
-output_name = "data/Xenium_Prime_Human_Skin_FFPE"
-sample_name = 'data/Xenium_Prime_Human_Skin_FFPE' + '.h5ad'
+#output_name = "data/Xenium_Prime_Human_Skin_FFPE"
+#sample_name = 'data/Xenium_Prime_Human_Skin_FFPE' + '.h5ad'
+
+
+output_name = "data/Xenium_FFPE_Human_Breast_Cancer_Rep1"
+sample_name = "data/Xenium_FFPE_Human_Breast_Cancer_Rep1" + '.h5ad'
+
 
 adata = anndata.read(sample_name)
 
 data_list=defaultdict(list)
 for i in range(0, len(adata.obsm['spatial'])):
-    if adata.obsm['spatial'][i][0]<6500:
-        continue
+    #if adata.obsm['spatial'][i][0]<6500:
+    #    continue
     data_list['x_axis'].append(adata.obsm['spatial'][i][0])
     data_list['y_axis'].append(adata.obsm['spatial'][i][1])
 

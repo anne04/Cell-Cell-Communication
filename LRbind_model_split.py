@@ -22,47 +22,38 @@ def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this 
     
     dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
     dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
+
+    nodes_active = dict()
     for i in range(0, len(row_col_gene)): 
         dict_cell_edge[row_col_gene[i][1]].append(i) # index of the edges
         dict_cell_neighbors[row_col_gene[i][1]].append(row_col_gene[i][0]) # neighbor id
-
-
-
-    fp = gzip.open(node_id_sorted, 'rb')
-    node_id_sorted_xy = pickle.load(fp)
-    nodes_active = dict()
-    for i in range(0, len(node_id_sorted_xy)): 
-        nodes_active[node_id_sorted_xy[i][0]]
-
-
+        nodes_active[row_col_gene[i][1]] = '' # to 
+        nodes_active[row_col_gene[i][0]] = '' # from
+    
     datapoint_size = len(nodes_active.keys())
     for i in range (0, datapoint_size):
         neighbor_list = dict_cell_neighbors[i]
         neighbor_list = list(set(neighbor_list))
         dict_cell_neighbors[i] = neighbor_list
     
+    fp = gzip.open(node_id_sorted, 'rb')
+    node_id_sorted_xy = pickle.load(fp)
+    
+    node_id_sorted_xy_temp = []
+    for i in range(0, len(node_id_sorted_xy)):
+        if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
+            node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
+    
+    node_id_sorted_xy = node_id_sorted_xy_temp    
     
     ##################################################################################################################
     # one hot vector used as node feature vector
     print('Unique gene type: %d'%np.max(np.unique(gene_node_type)))
-    num_feature = np.max(np.unique(gene_node_type))+1
-    
     # one hot vector used as node feature vector
-    feature_vector = np.eye(num_feature, num_feature)
-    # 1 0 0 0 = feature_vector[0]
-    # 0 1 0 0 = feature_vector[1]
-    # 0 0 1 0 = feature_vector[2]
-    # 0 0 0 1 = feature_vector[3]
-    # feature_vector[feature_type]
-    print('total_num_gene_node %d, len gene_node_type %d'%(total_num_gene_node, len(gene_node_type)))
-    X = np.zeros((total_num_gene_node, num_feature))
-    for i in range (0, len(gene_node_type)):
-        X[i][:] = feature_vector[gene_node_type[i]]
-    
-    X_data = X # node feature vector
-    print('Node feature matrix: X has dimension ', X_data.shape)
-#    print("Total number of edges in the input graph is %d"%len(row_col_gene))
-    
+    X = np.arange(datapoint_size)        
+    np.random.shuffle(X)
+    num_feature = datapoint_size
+
     # split it into N set of edges
     
     total_subgraphs = total_subgraphs 
@@ -139,7 +130,8 @@ def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this 
         X_data = np.zeros((num_cell, datapoint_size))
         spot_id = 0
         for spot in spot_list:
-            X_data[spot_id] = X[spot,:]
+            one_column_position = X[spot]
+            X_data[spot_id, one_column_position] = 1
             spot_id = spot_id + 1    
         
         row_col_temp = []
@@ -151,6 +143,8 @@ def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this 
         print("subgraph %d: number of nodes %d, each having feature dimension %d. Total number of edges %d"%(set_id, num_cell, num_feature, len(row_col_temp)))
 
         X_data = torch.tensor(X_data, dtype=torch.float)
+        X_data = X_data.to_sparse()
+
         edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
         edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
         
@@ -254,7 +248,10 @@ def corruption(data):
 
     """
     #print('inside corruption function')
+    data.x = data.x.to_dense()
     x = data.x[torch.randperm(data.x.size(0))]
+    x = x.to_sparse()
+    gc.collect()
     return my_data(x, data.edge_index, data.edge_attr)
 
 

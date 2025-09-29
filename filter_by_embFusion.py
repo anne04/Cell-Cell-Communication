@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
 
         
-        ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo_LUADtraining_interNegatome.csv.gz') #_top20p, woNegatome
+        ccc_pairs = pd.read_csv(args.output_path +args.model_name +'_allLR_nodeInfo_LUADtraining_woNegatome.csv.gz') #_top20p, woNegatome
         #ccc_pairs['score'] = all_ccc_pairs['score']
         #ccc_pairs['from_cell_index'] = all_ccc_pairs['from_cell_index']
         #ccc_pairs['to_cell_index'] = all_ccc_pairs['to_cell_index']
@@ -204,7 +204,7 @@ if __name__ == "__main__":
             #'Score_sum_layer1': data_list['score_sum_layer1'],
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
-        data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUADtraining_interNegatome.csv', index=False) #_negatome, woNegatome
+        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUADtraining_woNegatome.csv', index=False) #_negatome, woNegatome
         #data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_top20p.csv', index=False) #_negatome
         print(len(data_list_pd))
         print('done')

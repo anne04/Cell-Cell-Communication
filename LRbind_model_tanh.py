@@ -120,6 +120,158 @@ def get_graph(training_data):
     return data_loader, num_feature
 
 
+def get_split_graph(training_data, node_id_sorted, total_subgraphs): # use this if you don't want to save the split graph into disk due to space issue    
+    fp = gzip.open(training_data, 'rb')  
+    row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node = pickle.load(f)
+    
+    dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
+    dict_cell_neighbors = defaultdict(list) # key = node. value = nodes corresponding to incoming edges/neighbors
+
+    nodes_active = dict()
+    for i in range(0, len(row_col_gene)): 
+        dict_cell_edge[row_col_gene[i][1]].append(i) # index of the edges
+        dict_cell_neighbors[row_col_gene[i][1]].append(row_col_gene[i][0]) # neighbor id
+        nodes_active[row_col_gene[i][1]] = '' # to 
+        nodes_active[row_col_gene[i][0]] = '' # from
+    
+    datapoint_size = len(nodes_active.keys())
+    for i in range (0, datapoint_size):
+        neighbor_list = dict_cell_neighbors[i]
+        neighbor_list = list(set(neighbor_list))
+        dict_cell_neighbors[i] = neighbor_list
+    
+    fp = gzip.open(node_id_sorted, 'rb')
+    node_id_sorted_xy = pickle.load(fp)
+    
+    node_id_sorted_xy_temp = []
+    for i in range(0, len(node_id_sorted_xy)):
+        if node_id_sorted_xy[i][0] in nodes_active: # skip those which are not in our ROI
+            node_id_sorted_xy_temp.append(node_id_sorted_xy[i])
+    
+    node_id_sorted_xy = node_id_sorted_xy_temp    
+    
+    ##################################################################################################################
+    # one hot vector used as node feature vector
+    print('Unique gene type: %d'%np.max(np.unique(gene_node_type)))
+    num_feature = np.max(np.unique(gene_node_type))+1
+    
+    # one hot vector used as node feature vector
+    feature_vector = np.eye(num_feature, num_feature)
+    # 1 0 0 0 = feature_vector[0]
+    # 0 1 0 0 = feature_vector[1]
+    # 0 0 1 0 = feature_vector[2]
+    # 0 0 0 1 = feature_vector[3]
+    # feature_vector[feature_type]
+    print('total_num_gene_node %d, len gene_node_type %d'%(total_num_gene_node, len(gene_node_type)))
+    X = np.zeros((total_num_gene_node, num_feature))
+    print(len(gene_node_expression))
+    for i in range (0, len(gene_node_type)):
+        #print(i)
+        X[i][:] = feature_vector[gene_node_type[i]]*gene_node_expression[i]
+
+    # split it into N set of edges    
+    total_subgraphs = total_subgraphs 
+    #edge_list = []
+    graph_bag = []
+    start_index = []
+    id_map_old_new = [] # make an index array, so that existing node ids are mapped to new ids
+    id_map_new_old = []
+    
+    for i in range (0, total_subgraphs+1):
+        start_index.append((datapoint_size//total_subgraphs)*i)
+        id_map_old_new.append(dict())
+        id_map_new_old.append(dict())
+    
+    set_id=-1
+    for indx in range (0, len(start_index)-1):
+        set_id = set_id + 1
+        #print('graph id %d, node %d to %d'%(set_id,start_index[indx],start_index[indx+1]))
+        set1_nodes = []
+        set1_edges_index = []
+        node_limit_set1 = start_index[indx+1]
+        set1_direct_edges = []
+        
+        for i in range (start_index[indx], node_limit_set1):
+            set1_nodes.append(node_id_sorted_xy[i][0])
+            # add it's edges - first hop
+            
+            for edge_index in dict_cell_edge[node_id_sorted_xy[i][0]]:
+                set1_edges_index.append(edge_index) # has both row_col and edge_weight
+                set1_direct_edges.append(edge_index)
+            # add it's neighbor's edges - second hop
+            for neighbor in dict_cell_neighbors[node_id_sorted_xy[i][0]]:
+                if node_id_sorted_xy[i][0] == neighbor:
+                    continue
+                for edge_index in dict_cell_edge[neighbor]:
+                    set1_edges_index.append(edge_index) # has both row_col and edge_weight
+    
+        set1_edges_index = list(set(set1_edges_index))
+        
+        #print('len of set1_edges_index %d'%len(set1_edges_index))
+        #if len(set1_edges_index)==0:
+        #    break
+            
+        # old to new mapping of the nodes
+        # make an index array, so that existing node ids are mapped to new ids
+        new_id = 0
+        spot_list = []
+        for k in set1_edges_index:
+            i = row_col[k][0]
+            j = row_col[k][1]
+            if i not in id_map_old_new[set_id]:
+                id_map_old_new[set_id][i] = new_id
+                id_map_new_old[set_id][new_id] = i
+                spot_list.append(new_id)
+                new_id = new_id + 1
+    
+            if j not in id_map_old_new[set_id]:
+                id_map_old_new[set_id][j] = new_id
+                id_map_new_old[set_id][new_id] = j
+                spot_list.append(new_id)
+                new_id = new_id + 1
+    
+    
+        #print('new id: %d'%new_id)
+        set1_edges = []
+        for i in set1_direct_edges:  #set1_edges_index:
+            set1_edges.append([[id_map_old_new[set_id][row_col[i][0]], id_map_old_new[set_id][row_col[i][1]]], edge_weight[i]])
+            #set1_edges.append([row_col[i], edge_weight[i]])
+            
+        #edge_list.append(set1_edges)
+        
+        # create new X matrix
+        num_cell = new_id
+        X_data = np.zeros((num_cell, num_feature))
+        spot_id = 0
+        for spot in spot_list:
+            X_data[spot_id,:] = X[spot, :] 
+            spot_id = spot_id + 1    
+        
+        row_col_temp = []
+        edge_weight_temp = []
+        for i in range (0, len(set1_edges)):
+            row_col_temp.append(set1_edges[i][0])
+            edge_weight_temp.append(set1_edges[i][1])
+    
+        print("subgraph %d: number of nodes %d, each having feature dimension %d. Total number of edges %d"%(set_id, num_cell, num_feature, len(row_col_temp)))
+
+        X_data = torch.tensor(X_data, dtype=torch.float)
+        X_data = X_data.to_sparse()
+
+        edge_index = torch.tensor(np.array(row_col_temp), dtype=torch.long).T
+        edge_attr = torch.tensor(np.array(edge_weight_temp), dtype=torch.float)
+        
+        data = Data(x=X_data, edge_index=edge_index, edge_attr=edge_attr)
+        data_loader = DataLoader([data], batch_size=1)
+      
+        graph_bag.append(data_loader)
+        gc.collect()
+        
+    return graph_bag, num_feature    
+
+
+
+
 class Encoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, heads, dropout):
         """Add Statement of Purpose
@@ -208,7 +360,15 @@ def corruption(data):
 
     """
     #print('inside corruption function')
-    x = data.x[torch.randperm(data.x.size(0))]
+    if torch.Tensor.is_sparse(data.x):
+        data.x = data.x.to_dense()
+        x = data.x[torch.randperm(data.x.size(0))]
+        x = x.to_sparse()
+        gc.collect()
+    else:
+        x = data.x[torch.randperm(data.x.size(0))]
+
+
     return my_data(x, data.edge_index, data.edge_attr)
 
 
@@ -515,3 +675,165 @@ def train_multigraph_NEST(args, data_loader, in_channels, model_name_list):
     print("debug loss latest tupple %g"%DGI_loss.item())
 
     return DGI_model
+
+def train_split_NEST(args, graph_bag, in_channels):
+    """Add Statement of Purpose
+    Args: [to be]
+           
+    Returns: [to be]
+
+    """
+    loss_curve = np.zeros((args.num_epoch//args.epoch_interval+1))
+    loss_curve_counter = 0
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    DGI_model = DeepGraphInfomax(
+        hidden_channels=args.hidden,
+        encoder=Encoder(in_channels=in_channels, hidden_channels=args.hidden, heads=args.heads, dropout = args.dropout),
+        summary=lambda z, *args, **kwargs: torch.sigmoid(z.mean(dim=0)),
+        corruption=corruption).to(device)
+    
+    #print('initialized DGI model')
+    #DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=0.005, weight_decay=5e-4)
+    DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=args.lr_rate) #1e-5)#5 #6 #DGI_optimizer = torch.optim.RMSprop(DGI_model.parameters(), lr=1e-5)
+    DGI_filename = args.model_path+'DGI_'+ args.model_name  +'.pth.tar'
+
+    if args.load == 1:
+        print('loading model')
+        checkpoint = torch.load(DGI_filename)
+        DGI_model.load_state_dict(checkpoint['model_state_dict'])
+        DGI_model.to(device)
+        DGI_optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch_start = checkpoint['epoch']
+        min_loss = checkpoint['loss']
+        '''
+        for state in DGI_optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
+        ''' 
+        print('min_loss was %g'%min_loss)
+    else:
+        print('Saving init model state ...')
+        torch.save({
+            'epoch': 0,
+            'model_state_dict': DGI_model.state_dict(),
+            'optimizer_state_dict': DGI_optimizer.state_dict(),
+            #'loss': loss,
+            }, args.model_path+'DGI_init_model_optimizer_'+ args.model_name  + '.pth.tar')
+        min_loss = 10000
+        epoch_start = 0
+        
+    import datetime
+    start_time = datetime.datetime.now()
+
+    #print('training starts ...')
+    for epoch in range(epoch_start, args.num_epoch):
+        DGI_model.train()
+        DGI_optimizer.zero_grad()
+        DGI_all_loss = []
+
+        for subgraph in graph_bag:
+            for data in subgraph:
+                data = data.to(device)
+                pos_z, neg_z, summary = DGI_model(data=data)
+                DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
+                DGI_loss.backward()
+                DGI_all_loss.append(DGI_loss.item())
+                
+
+        DGI_optimizer.step()
+
+        if ((epoch)%args.epoch_interval) == 0:
+            print('Epoch: {:03d}, Loss: {:.4f}'.format(epoch+1, np.mean(DGI_all_loss)))
+            loss_curve[loss_curve_counter] = np.mean(DGI_all_loss)
+            loss_curve_counter = loss_curve_counter + 1
+
+            if np.mean(DGI_all_loss)<min_loss:
+
+                min_loss=np.mean(DGI_all_loss)
+
+                ######## save the current model state ########
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': DGI_model.state_dict(),
+                    'optimizer_state_dict': DGI_optimizer.state_dict(),
+                    'loss': min_loss,
+                    }, DGI_filename)
+
+                ##################################################
+                print("Lower loss found! Save the node embedding")
+               
+                subgraph_id = -1
+                for subgraph in graph_bag:
+                    subgraph_id = subgraph_id + 1
+                    for data in subgraph:
+                        data = data.to(device)
+                        pos_z, neg_z, summary = DGI_model(data=data)              
+               
+
+                    X_embedding = pos_z
+                    X_embedding = X_embedding.cpu().detach().numpy()
+                    print(X_embedding.shape)
+                    X_embedding_filename =  args.embedding_path + args.model_name + '_Embed_X' +'_subgraph'+str(subgraph_id)
+                    with gzip.open(X_embedding_filename, 'wb') as fp:  
+                        pickle.dump(X_embedding, fp)
+                                        
+                    # save the attention scores
+                    
+                    X_attention_index = DGI_model.encoder.attention_scores_mine_l1[0]
+                    X_attention_index = X_attention_index.cpu().detach().numpy()
+                    '''
+                    # layer 1
+                    X_attention_score_normalized_l1 = DGI_model.encoder.attention_scores_mine_l1[1]
+                    X_attention_score_normalized_l1 = X_attention_score_normalized_l1.cpu().detach().numpy()
+                    '''
+                    # layer 1 unnormalized
+                    X_attention_score_unnormalized_l1 = DGI_model.encoder.attention_scores_mine_unnormalized_l1
+                    X_attention_score_unnormalized_l1 = X_attention_score_unnormalized_l1.cpu().detach().numpy()
+
+                    # layer 2 unnormalized
+                    X_attention_score_unnormalized_l2 = DGI_model.encoder.attention_scores_mine_unnormalized_l2
+                    X_attention_score_unnormalized_l2 = X_attention_score_unnormalized_l2.cpu().detach().numpy()
+                    
+                    # layer 3
+                    #X_attention_score_normalized = DGI_model.encoder.attention_scores_mine[1]
+                    #X_attention_score_normalized = X_attention_score_normalized.cpu().detach().numpy()
+                    # layer 3 unnormalized
+                    X_attention_score_unnormalized_l3 = DGI_model.encoder.attention_scores_mine_unnormalized_l3
+                    X_attention_score_unnormalized_l3 = X_attention_score_unnormalized_l3.cpu().detach().numpy()
+
+                    print('making the bundle to save')
+                    X_attention_bundle = [X_attention_index, X_attention_score_unnormalized_l1, X_attention_score_unnormalized_l2, X_attention_score_unnormalized_l3]
+                    X_attention_filename =  args.embedding_path + args.model_name + '_attention' +'_subgraph'+str(subgraph_id)
+                    # np.save(X_attention_filename, X_attention_bundle) # this is deprecated
+                    with gzip.open(X_attention_filename, 'wb') as fp:  
+                        pickle.dump(X_attention_bundle, fp)
+                    
+
+
+
+
+                logfile=open(args.model_path+'DGI_'+ args.model_name+'_loss_curve.csv', 'wb')
+                np.savetxt(logfile,loss_curve, delimiter=',')
+                logfile.close()
+
+                #print(DGI_model.encoder.attention_scores_mine_unnormalized_l1[0:10])
+
+#            if ((epoch)%60000) == 0:
+#                DGI_optimizer = torch.optim.Adam(DGI_model.parameters(), lr=1e-6)  #5 #6
+
+    end_time = datetime.datetime.now()
+
+    print('Training time in seconds: ', (end_time-start_time).seconds)
+
+    checkpoint = torch.load(DGI_filename)
+    DGI_model.load_state_dict(checkpoint['model_state_dict'])
+    DGI_model.to(device)
+    DGI_model.eval()
+    print("debug loss")
+    DGI_loss = DGI_model.loss(pos_z, neg_z, summary)
+    print("debug loss latest tupple %g"%DGI_loss.item())
+
+    return DGI_model
+

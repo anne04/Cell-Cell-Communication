@@ -102,20 +102,33 @@ if __name__ == "__main__":
     if args.total_subgraphs == 1:
         if args.model_type == 'dgi':
             if args.tanh == 1: 
-                from LRbind_model_tanh import get_graph, train_NEST
+                
                 if args.multi_graph == 1: 
                     from LRbind_model_tanh import get_multiGraph, train_multigraph_NEST
+                    # data preparation
+                    data_loader, num_feature = get_multiGraph(training_data) 
+                    # train the model
+                    DGI_model = train_multigraph_NEST(args, data_loader=data_loader, in_channels=int(num_feature), ['LUAD', 'LYMPH'])
+
+
+                elif args.total_subgraphs > 1: 
+                    from LRbind_model_tanh import get_split_graph, train_split_NEST
+                    # data preparation
+                    graph_bag, num_feature = get_split_graph(args.training_data)    
+                    # train the model
+                    DGI_model = train_split_NEST(args, graph_bag=graph_bag, in_channels=int(num_feature))
+
+                else:
+                    from LRbind_model_tanh import get_graph, train_NEST
+                    # data preparation
+                    data_loader, num_feature = get_graph(args.training_data)    
+                    # train the model
+                    DGI_model = train_NEST(args, data_loader=data_loader, in_channels=int(num_feature))
+
 
                 print('Using Tanh activation function for attention layer')
             else:
                 from LRbind_model import get_graph, train_NEST
-            
-            if args.multi_graph == 1: 
-                # data preparation
-                data_loader, num_feature = get_multiGraph(training_data) 
-                # train the model
-                DGI_model = train_multigraph_NEST(args, data_loader=data_loader, in_channels=int(num_feature), ['LUAD', 'LYMPH'])
-            else:
                 # data preparation
                 data_loader, num_feature = get_graph(args.training_data)    
                 # train the model
