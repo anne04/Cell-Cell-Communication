@@ -206,11 +206,12 @@ if __name__ == "__main__":
     #    X_embedding = pickle.load(fp) 
     #X_embedding = np.load(args.cell_emb_cellnest_path)
     
-
+    #############################################################
     with gzip.open(args.gene_emb_path, 'rb') as fp:   
         X_gene_embedding = pickle.load(fp)
 
-    #X_g = 
+    ##########################################################
+  
     
     with gzip.open(args.protein_emb_path, 'rb') as fp:  
         X_protein_embedding = pickle.load(fp)

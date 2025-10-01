@@ -107,7 +107,9 @@ if __name__ == "__main__":
                     default='database/'+'model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome'+'_dataset_results_to_embFusion.pkl', \
                     help='Path to input graph. ')
     '''
+    #============================================================================
     
+    '''
     parser.add_argument( '--lr_lrbind_csv_path', type=str, 
                         default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full_allLR_nodeInfo.csv.gz', 
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
@@ -115,8 +117,16 @@ if __name__ == "__main__":
     parser.add_argument( '--data_to_predict', type=str, \
                     default='database/'+'Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full_tanh'+'_dataset_results_to_embFusion.pkl', \
                     help='Path to input graph. ')
+    '''    
+    #============================================================================
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     
-    
+    parser.add_argument( '--data_to_predict', type=str, \
+                    default='database/'+'Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_tanh'+'_dataset_results_to_embFusion.pkl', \
+                    help='Path to input graph. ')
+        
     #============================================================================
     #parser.add_argument( '--lr_lrbind_csv_path_output', type=str, 
     #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered/model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered_tanh_allLR_nodeInfo_LUADtraining_interNegatome.csv.gz', #, "top20p", "LUAD_LYMPH"
@@ -128,8 +138,11 @@ if __name__ == "__main__":
     #parser.add_argument( '--lr_lrbind_csv_path_output', type=str, 
     #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome/model_LRbind_LUAD_lymph_1D_manualDB_geneLocalCorrKNN_bidir_3L_negatome_r1_LYMPH_allLR_nodeInfo_LUADtraining_woNegatome.csv.gz', # _top20p, woNegatome
     #                    help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    #parser.add_argument( '--lr_lrbind_csv_path_output', type=str, 
+    #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full_allLR_nodeInfo_LUAD_LYMPH_top20.csv.gz', # _top20p, woNegatome
+    #                    help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     parser.add_argument( '--lr_lrbind_csv_path_output', type=str, 
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full_allLR_nodeInfo_LUAD_LYMPH_top20.csv.gz', # _top20p, woNegatome
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_allLR_nodeInfo_LUAD_LYMPH_top20.csv.gz', # _top20p, woNegatome
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
 
     #============================================================================

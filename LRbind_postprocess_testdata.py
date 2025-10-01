@@ -69,7 +69,8 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir',
                'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
 
-               'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full'
+               'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full',
+               'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR'
                  ]
 
 model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
@@ -101,22 +102,24 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L',
                'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
                
-               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full'
-                               
+               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full',
+               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR'                
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1','TGFB1',
                   'TGFB1', 'TGFB1','TGFB1',
                   'TGFB1','TGFB1', 'TGFB1',#'TGFB1',
                  'TGFB1','TGFB1','TGFB1','TGFB1',
-                 'TGFB1'
+                 'TGFB1',
+                 'CXCL12'
                  ]
 target_receptors = ['CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7', 'CCR7',  
                     'ACVRL1','ACVRL1','ACVRL1','ACVRL1', 'ACVRL1','ACVRL1',
                     'ACVRL1', 'ACVRL1','ACVRL1',
                    'ACVRL1','ACVRL1', 'ACVRL1',#'ACVRL1',
                    'ACVRL1','ACVRL1','ACVRL1','ACVRL1',
-                   'TGFBR2'
+                   'ACVRL1',
+                   'CXCR4'
                    ]
 
 if __name__ == "__main__":
@@ -125,7 +128,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
     # 4, 13
-    for data_index in [22]: #range(0, len(data_names)):
+    for data_index in [23]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -313,14 +316,14 @@ if __name__ == "__main__":
               distribution.append(scaled_score)
              
             percentage_value = 80
-            th_70th = np.percentile(sorted(distribution), percentage_value) # higher attention score means stronger connection
+            th_80th = np.percentile(sorted(distribution), percentage_value) # higher attention score means stronger connection
             # Now keep only 
             attention_scores = defaultdict(dict)  
             for index in range (0, X_attention_bundle[0].shape[1]):
               i = X_attention_bundle[0][0][index]
               j = X_attention_bundle[0][1][index]
               scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value)
-              if scaled_score >= th_80th:
+              if scaled_score >= 0.7: #th_80th:
                   attention_scores[i][j] = scaled_score
 
             
@@ -343,7 +346,7 @@ if __name__ == "__main__":
             test_mode = 1
             all_ccc_pairs = defaultdict(list)
             all_negatome_pairs = defaultdict(list)
-            all_negatome_pairs_intra = defaultdict(list)
+            # all_negatome_pairs_intra = defaultdict(list)
           
             for top_N in [100]: #, 30, 10]:
                 print(top_N)
@@ -386,8 +389,8 @@ if __name__ == "__main__":
                             total_connection = 0
                             for i_gene in ligand_node_index:  
                                 for j_gene in receptor_node_index:
-                                    if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
-                                        continue
+                                    #if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique:
+                                    #    continue
                                   
                                     if i_gene[0] in attention_scores and j_gene[0] in attention_scores[i_gene[0]]:
                                         total_attention_score = total_attention_score + attention_scores[i_gene[0]][j_gene[0]]
@@ -414,9 +417,9 @@ if __name__ == "__main__":
                               
                                 temp = distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) # 
 
-                                if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique: 
-                                    dot_prod_list_negatome_inter.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
-                                    continue
+                                #if i_gene[1]+'_with_'+j_gene[1] in negatome_lr_unique: 
+                                #    dot_prod_list_negatome_inter.append([temp, i, j, i_gene[1], j_gene[1], i_gene[0], j_gene[0]])
+                                    #continue
                                   
                                 # distance.euclidean(X_embedding[i_gene[0]], X_embedding[j_gene[0]]) 
                                 # (X_embedding[i_gene[0]], X_embedding[j_gene[0]])
@@ -497,7 +500,7 @@ if __name__ == "__main__":
                                 found_list[j].append(item[0])
                                 #break
                                                 
-                              
+                    '''          
                     for item in dot_prod_list_negatome_intra:
                         all_negatome_pairs_intra['from_cell'].append(barcode_info[item[1]][0])
                         all_negatome_pairs_intra['to_cell'].append(barcode_info[item[2]][0])
@@ -508,7 +511,7 @@ if __name__ == "__main__":
                         all_negatome_pairs_intra['score'].append(item[0])
                         all_negatome_pairs_intra['from_cell_index'].append(item[1])
                         all_negatome_pairs_intra['to_cell_index'].append(item[2])
-                        
+                    '''    
                         ####################################################
                 
                 # plot found_list
