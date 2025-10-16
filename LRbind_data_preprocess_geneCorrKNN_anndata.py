@@ -56,10 +56,18 @@ if __name__ == "__main__":
     parser.add_argument( '--check_protien_emb', type=int, default=0, help='Set to 1 if you want to see how many of your genes have protein emb')
     parser.add_argument( '--block_autocrine', type=int, default=0 , help='Set to 1 if you want to ignore autocrine signals.') 
     parser.add_argument( '--block_juxtacrine', type=int, default=0, help='Set to 1 if you want to ignore juxtacrine signals.')  
+    parser.add_argument( '--set_ROI', type=int, default=0, help='Set to 1 if you want to use ROI')
+    parser.add_argument( '--x_min', type=int, default=0, help='Set if you want to use ROI')
+    parser.add_argument( '--x_max', type=int, default=0, help='Set if you want to use ROI')
+
+
     args = parser.parse_args()
     
-    args.remove_LR = [[args.target_lig, args.target_rec]]
+    if args.remove_lrp=="True":
+        args.remove_LR = [[args.target_lig, args.target_rec]]
 
+    else:
+        args.remove_LR = []
     if args.remove_rec == "True" and args.target_rec == "":
         print("Please input args.target_rec, or set args.remove_rec=False")
         exit()
@@ -85,19 +93,33 @@ if __name__ == "__main__":
     print('input data reading')
     adata_h5 = sc.read_h5ad(args.data_from)
     print('input data read done')
+    ##################################
+    coordinates = np.array(adata_h5.obsm['spatial'])
+    if args.set_ROI == 1:
+        keep_cells = []
+        for i in range(0, coordinates.shape[0]):
+            if args.x_min <= coordinates[i][0] and coordinates[i][0] < args.x_max:
+                keep_cells.append(i)
+
+        adata_h5 = adata_h5[keep_cells]
+        print('after cell removing:')
+
+    print(adata_h5)
+    ###################################
     gene_count_before = len(list(adata_h5.var_names))    
     sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
     gene_count_after = len(list(adata_h5.var_names) )  
     print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
     gene_ids = list(adata_h5.var_names)
-    coordinates = adata_h5.obsm['spatial']
+    coordinates = np.array(adata_h5.obsm['spatial'])
     cell_barcode = np.array(adata_h5.obs_names) #obs.index)
     print('Number of barcodes: %d'%cell_barcode.shape[0])
     print('Applying quantile normalization')
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
     cell_vs_gene = np.transpose(temp)
-
-
+    #print(np.max(cell_vs_gene))
+    #print(np.min(cell_vs_gene))
+    #exit(0)
     with gzip.open(args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed', 'wb') as fp:
         pickle.dump(cell_vs_gene, fp)
 
@@ -241,10 +263,12 @@ if __name__ == "__main__":
         ligand_dict_dataset[gene]=list(set(ligand_dict_dataset[gene]))
         l_r_pair[gene] = dict()
         for receptor_gene in ligand_dict_dataset[gene]:
-            l_r_pair[gene][receptor_gene] = lr_id 
+            l_r_pair[gene][receptor_gene] = lr_id
+            print(gene + '-' + receptor_gene) 
             lr_id  = lr_id  + 1
 
     print("unique LR pair count %d"%lr_id)        
+    
     ##################### read negatome to see how many overlaps ####################
     if args.add_negatome == 1:
         with gzip.open('database/negatome_gene_complex_set', 'rb') as fp:  
@@ -324,7 +348,6 @@ if __name__ == "__main__":
     if args.distance_measure == 'fixed':
         # then you need to set the args.neighborhood_threshold
         if args.neighborhood_threshold == 0:
-            from sklearn.metrics.pairwise import euclidean_distances
             distance_matrix = euclidean_distances(coordinates, coordinates)
             #### then automatically calculate the min distance between two nodes #########
             sorted_first_row = np.sort(distance_matrix[0,:])
@@ -344,7 +367,10 @@ if __name__ == "__main__":
         distances, indices = nbrs.kneighbors(coordinates)
 
     unique_distances = np.unique(distances)
+    unique_distances = sorted(unique_distances)
     distance_a_b = unique_distances[1]
+    #max_value = np.max(unique_distances)
+    #min_value = 0 # self distance is always 0
     # distances: array of shape (n_cells, k) with the Euclidean distance from 
     # each cell to its k neighbors.
     # indices: array of shape (n_cells, k) with the neighbor indices (row indices of X).
@@ -356,7 +382,7 @@ if __name__ == "__main__":
         min_value = np.min(distances[cell_idx,:])
         for neigh_idx in range (0, indices.shape[1]):
             neigh_cell_idx = indices[cell_idx][neigh_idx]
-            distance_neigh_cell = distances[cell_idx][neigh_idx]
+            distance_neigh_cell = distances[cell_idx][neigh_idx] # <= max_value
             flipped_distance_neigh_cell = 1-(distance_neigh_cell-min_value)/(max_value-min_value)
             # i = neigh_cell_idx, j = cell_idx
             weightdict_i_to_j[neigh_cell_idx][cell_idx] = flipped_distance_neigh_cell
@@ -477,7 +503,7 @@ if __name__ == "__main__":
                         if gene_index[gene_rec] in blocked_gene_per_cell[j]:
                             continue
                         
-                        if (gene_rec in cell_cell_contact) and (args.block_juxtacrine==1 or euclidean_distances(coordinates[i],coordinates[j]) > args.juxtacrine_distance):
+                        if (gene_rec in cell_cell_contact) and (args.block_juxtacrine==1 or euclidean_distances(coordinates[i:i+1],coordinates[j:j+1]) > args.juxtacrine_distance):
                             continue
     
                         communication_score = cell_vs_gene[i][gene_index[gene]] * cell_vs_gene[j][gene_index[gene_rec]]
@@ -526,9 +552,9 @@ if __name__ == "__main__":
                         row_col.append([i,j])
                         edge_weight.append([weightdict_i_to_j[i][j]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
                         lig_rec.append([gene, gene_rec])
-
+ 
                         row_col.append([j,i])
-                        edge_weight.append([weightdict_i_to_j[j][i]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
+                        edge_weight.append([weightdict_i_to_j[i][j]]) #, 2]) #, cells_ligand_vs_receptor[i][j][k][3]])
                         #edge_weight.append([dist_X[i,j], ligand_receptor_coexpression_score, cells_ligand_vs_receptor[i][j][k][3]])
                         lig_rec.append([gene_rec, gene])
                                                   
@@ -631,7 +657,7 @@ if __name__ == "__main__":
 
     print('Total number of gene nodes in this graph is %d, inactive %d, active %d'%(gene_node_index, gene_node_index-len(gene_node_index_active.keys()),len(gene_node_index_active.keys())))
 
-
+   
     start_of_intra_edge = len(edge_weight) 
     # add the ligands and receptors from negatome
 
@@ -680,8 +706,10 @@ if __name__ == "__main__":
        
 
 
+    print('BEFORE INTRA: min edge weight %g, max edge weight %g'%(np.min(edge_weight), np.max(edge_weight)))
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
+    
     for i in weightdict_i_to_j.keys():
         if args.local_coexpression == 1:
             neighbor_list = list(weightdict_i_to_j[i].keys()) #neighbor_list_per_cell[i]
@@ -692,11 +720,11 @@ if __name__ == "__main__":
                 df[gene_ids[j]]=list(temp_cell_vs_gene[:, j])
         
             data = pd.DataFrame(df)
-            print('Running gene_coexpression_matrix calculation')
+            #print('Running gene_coexpression_matrix calculation')
             gene_coexpression_matrix = data.corr(method='spearman')
         
         spot_id = i
-        print('i %d, edge %d, gene node %d'%(i, len(row_col_gene), len(gene_node_type)))
+        # print('i %d, edge %d, gene node %d'%(i, len(row_col_gene), len(gene_node_type)))
         cell_intra_gcm = defaultdict(dict)
         for gene_a in cell_gene_set:
             if gene_index[gene_a] in blocked_gene_per_cell[i]:
@@ -804,7 +832,7 @@ if __name__ == "__main__":
                 #print('total edges: %d, total gene nodes %d'%(len(row_col_gene), gene_node_index))
    
                 
-    
+    print('AFTER INTRA: min edge weight %g, max edge weight %g'%(np.min(edge_weight), np.max(edge_weight)))    
     gene_node_index_active = dict()
     rec_active_count = defaultdict(list)
     ligand_active_count = defaultdict(list)
@@ -903,7 +931,6 @@ if __name__ == "__main__":
                                             
 
         print('unique pairs found %d, and count %d'%(len(list(negatome_unique_pair.keys())),count))
-
 
 
 

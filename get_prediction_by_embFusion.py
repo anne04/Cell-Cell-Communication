@@ -74,7 +74,7 @@ def val_fusionMLP_multiBatch(dataset, model_name, threshold_score = 0.7, total_b
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # =========================== must be provided ===============================
-    parser.add_argument( '--model_name', type=str, default="embFusion_LUAD_LYMPH_gene_prot_top20p", help='Provide a model name') # "embFusion_LUAD_LYMPH_gene_prot_top20p", "embFusion_LUAD_LYMPH_gene_prot", woNegatome, "embFusion_gene_prot_woNegatome"
+    parser.add_argument( '--model_name', type=str, default="embFusion_LYMPH_Xe_Br_Sk_LUAD_gene_prot", help='Provide a model name') # "embFusion_LUAD_LYMPH_gene_prot_top20p", "embFusion_LUAD_LYMPH_gene_prot", woNegatome, "embFusion_gene_prot_woNegatome"
     parser.add_argument( '--model_path', type=str, default='embFusion_model', help='Path to save the model state') # We do not need this for output generation 
     
     #=========================== default is set ======================================
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     #                    default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full_allLR_nodeInfo_LUAD_LYMPH_top20.csv.gz', # _top20p, woNegatome
     #                    help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
     parser.add_argument( '--lr_lrbind_csv_path_output', type=str, 
-                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_allLR_nodeInfo_LUAD_LYMPH_top20.csv.gz', # _top20p, woNegatome
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_allLR_nodeInfo_LYMPH_xe_br_sk_LUAD.csv.gz', # _top20p, woNegatome, LUAD_LYMPH_top20.csv.gz
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
 
     #============================================================================

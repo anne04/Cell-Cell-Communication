@@ -11,15 +11,21 @@ import pandas as pd
 output_name = "data/Xenium_FFPE_Human_Breast_Cancer_Rep1"
 sample_name = "data/Xenium_FFPE_Human_Breast_Cancer_Rep1" + '.h5ad'
 
+sample_name = "../LRbind/data/Xenium_Prime_Human_Skin_FFPE" + ".h5ad"
 
 adata = anndata.read(sample_name)
 
 data_list=defaultdict(list)
+list_y_coord = []
+list_x_coord = []
 for i in range(0, len(adata.obsm['spatial'])):
     #if adata.obsm['spatial'][i][0]<6500:
     #    continue
     data_list['x_axis'].append(adata.obsm['spatial'][i][0])
     data_list['y_axis'].append(adata.obsm['spatial'][i][1])
+    list_x_coord.append(adata.obsm['spatial'][i][0])
+    list_y_coord.append(adata.obsm['spatial'][i][1])
+
 
 data_list_pd = pd.DataFrame(data_list)
 chart = alt.Chart(data_list_pd).mark_point(filled=True,size=0.7).encode(

@@ -341,10 +341,11 @@ if __name__ == "__main__":
 
             
 
-        X_embedding_filename =  args.embedding_path + args.model_name + '_r1_Embed_X_subgraphs_combined' 
-        with gzip.open(X_embedding_filename, 'wb') as fp:  
-            pickle.dump(X_embedding, fp)
+        #X_embedding_filename =  args.embedding_path + args.model_name + '_r1_Embed_X_subgraphs_combined' 
+        #with gzip.open(X_embedding_filename, 'wb') as fp:  
+        #    pickle.dump(X_embedding, fp)
 
+        X_gene_embedding = X_embedding # deep copy?
 
         for i in range (0, X_embedding.shape[0]):
             total_score_per_row = np.sum(X_embedding[i][:])
