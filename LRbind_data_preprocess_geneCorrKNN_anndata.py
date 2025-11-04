@@ -8,6 +8,7 @@ import pickle
 from scipy import sparse 
 import numpy as np
 import qnorm
+from scipy import stats
 from scipy.sparse import csr_matrix
 from collections import defaultdict
 import pandas as pd
@@ -18,14 +19,15 @@ import scanpy as sc
 from sklearn.metrics.pairwise import euclidean_distances
 #import pathway_search_LRbind as pathway
 from sklearn.neighbors import NearestNeighbors
-
+import gc
+import math
 print('user input reading')
 #current_dir = 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
-    parser.add_argument( '--data_name', type=str, default='LRbind_LUAD_1D_manualDB_geneCorrKNN_bidir', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--data_from', type=str, default='../data/LUAD/LUAD_GSM5702473_TD1/' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--data_name', type=str, default='LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--data_from', type=str, default='data/Xenium_FFPE_Human_Breast_Cancer_Rep1.h5ad' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     #'../data/V1_Human_Lymph_Node_spatial/'
     ################# default is set ################################################################
     parser.add_argument( '--data_to', type=str, default='input_graph/', help='Path to save the input graph (to be passed to GAT)')
@@ -34,33 +36,34 @@ if __name__ == "__main__":
     parser.add_argument( '--threshold_gene_exp', type=float, default=97, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
     parser.add_argument( '--tissue_position_file', type=str, default='None', help='If your --data_from argument points to a *.mtx file instead of Space Ranger, then please provide the path to tissue position file.')
     parser.add_argument( '--spot_diameter', type=float, default=160, help='Spot/cell diameter for filtering ligand-receptor pairs based on cell-cell contact information. Should be provided in the same unit as spatia data (for Visium, that is pixel).')
-    parser.add_argument( '--split', type=int, default=0 , help='How many split sections?') 
+    parser.add_argument( '--split', type=int, default=1 , help='How many split sections?') 
     parser.add_argument( '--neighborhood_threshold', type=float, default=0 , help='Set neighborhood threshold distance in terms of same unit as spot diameter') 
-    parser.add_argument( '--distance_measure', type=str, default='fixed' , help='Set neighborhood cutoff criteria. Choose from [knn, fixed]')
-    parser.add_argument( '--k', type=int, default=30 , help='Set neighborhood cutoff number. This will be used if --distance_measure=knn')    
-    parser.add_argument( '--juxtacrine_distance', type=float, default=-1, help='Distance for filtering ligand-receptor pairs based on cell-cell contact information. Automatically calculated unless provided. It has the same unit as the coordinates (for Visium, that is pixel).')
+    parser.add_argument( '--distance_measure', type=str, default='knn' , help='Set neighborhood cutoff criteria. Choose from [knn, fixed]')
+    parser.add_argument( '--k', type=int, default=20 , help='Set neighborhood cutoff number. This will be used if --distance_measure=knn')    
+    parser.add_argument( '--juxtacrine_distance', type=float, default=10, help='Distance for filtering ligand-receptor pairs based on cell-cell contact information. Automatically calculated unless provided. It has the same unit as the coordinates (for Visium, that is pixel).')
     parser.add_argument( '--num_hops', type=int, default=3 , help='Number of hops for direct connection')
     parser.add_argument( '--database_path', type=str, default='database/NEST_database_no_predictedPPI.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.') 
     parser.add_argument( '--remove_LR', type=str, help='Test LR to predict')
     #parser.add_argument( '--remove_LR', type=str, default=[['CCL19', 'CCR7']], help='Test LR to predict') #, required=True) # FN1-RPSA
-    parser.add_argument( '--target_lig', type=str, default="TGFB1", help='Test LR to predict')
-    parser.add_argument( '--target_rec', type=str, default="ACVRL1", help='Test LR to predict')
+    parser.add_argument( '--target_lig', type=str, default="CXCL12", help='Test LR to predict')
+    parser.add_argument( '--target_rec', type=str, default="CXCR4", help='Test LR to predict')
     parser.add_argument( '--remove_lig', type=str, default="False", help='Test LR to predict')
     parser.add_argument( '--remove_rec', type=str, default="False", help='Test LR to predict')
     parser.add_argument( '--remove_lrp', type=str, default="True", help='remove target LR pair from database')
     parser.add_argument( '--add_intra', type=int, default=1, help='Set to 1 if you want to add intra network')
-    parser.add_argument( '--intra_cutoff', type=float, default=0.3 , help='?') 
+    parser.add_argument( '--intra_cutoff', type=float, default=0.7 , help='?') 
     parser.add_argument( '--threshold_gene_exp_intra', type=float, default=70, help='Threshold percentile for gene expression. Genes above this percentile are considered active.')
-    parser.add_argument( '--local_coexpression', type=int, default=0, help='Set to 1 if you want to use local coexpression matrix.')
-    parser.add_argument( '--add_negatome', type=int, default=0, help='Set to 1 if you want to add negatome')
+    parser.add_argument( '--local_coexpression', type=int, default=1, help='Set to 1 if you want to use local coexpression matrix.')
+    parser.add_argument( '--add_negatome', type=int, default=1, help='Set to 1 if you want to add negatome')
     parser.add_argument( '--check_protien_emb', type=int, default=0, help='Set to 1 if you want to see how many of your genes have protein emb')
     parser.add_argument( '--block_autocrine', type=int, default=0 , help='Set to 1 if you want to ignore autocrine signals.') 
     parser.add_argument( '--block_juxtacrine', type=int, default=0, help='Set to 1 if you want to ignore juxtacrine signals.')  
     parser.add_argument( '--set_ROI', type=int, default=0, help='Set to 1 if you want to use ROI')
     parser.add_argument( '--x_min', type=int, default=0, help='Set if you want to use ROI')
     parser.add_argument( '--x_max', type=int, default=0, help='Set if you want to use ROI')
-
-
+    parser.add_argument( '--rem_gene_percell', type=int, default=0, help='Set to 1 if you want to remove gene with extreme value')
+    parser.add_argument( '--rem_gene_extreme', type=int, default=0, help='Set to 1 if you want to remove gene with extreme value')
+    parser.add_argument( '--gene_extreme_thr', type=float, default=-1, help='Set to remove gene with extreme value')
     args = parser.parse_args()
     
     if args.remove_lrp=="True":
@@ -105,18 +108,79 @@ if __name__ == "__main__":
         print('after cell removing:')
 
     print(adata_h5)
+    #exit(0)
     ###################################
     gene_count_before = len(list(adata_h5.var_names))    
-    sc.pp.filter_genes(adata_h5, min_cells=args.filter_min_cell)
+    cell_count_before = len(list(adata_h5.obs_names))
+    sc.pp.filter_genes(adata_h5, min_cells=5) #args.filter_min_cell)
+    #sc.pp.filter_cells(adata_h5, min_genes=5) #args.filter_min_gene)
+    #sc.pp.filter_cells(adata_h5, min_counts=10)
     gene_count_after = len(list(adata_h5.var_names) )  
+    cell_count_after = len(list(adata_h5.obs_names) )  
     print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+    print('Cell filtering done. Number of cells reduced from %d to %d'%(cell_count_before, cell_count_after))
+
+
+    gene_counts = np.array((adata_h5.X.sum(axis=0)).flatten()).ravel()  # total counts per gene
+    print(gene_counts.shape)
+    import matplotlib.pyplot as plt
+    plt.clf()
+    plt.hist(gene_counts, bins=100)
+    plt.xlabel("Total counts per gene")
+    plt.ylabel("Number of genes")    
+    plt.savefig('gene_count_plot'+args.data_name+'.png', dpi=300, bbox_inches='tight')
+
+    if args.rem_gene_extreme==1:
+        if args.gene_extreme_thr == -1:
+            threshold = np.percentile(gene_counts, 99.5)  # remove top 0.5% of genes
+        else:
+            threshold = args.gene_extreme_thr
+
+        high_genes = np.where(gene_counts > threshold)[0]
+        removed_genes = adata_h5.var_names[high_genes]
+        print('removed genes with threshold exp %g'%threshold)
+        print(removed_genes)
+
+        adata_h5 = adata_h5[:, np.setdiff1d(np.arange(adata_h5.n_vars), high_genes)]
+        gene_count_after = len(list(adata_h5.var_names) )  
+        cell_count_after = len(list(adata_h5.obs_names) )
+        print('Gene filtering done. Number of genes reduced from %d to %d'%(gene_count_before, gene_count_after))
+        print('Cell filtering done. Number of cells reduced from %d to %d'%(cell_count_before, cell_count_after))
+
+        gene_counts = np.array((adata_h5.X.sum(axis=0)).flatten()).ravel()  # total counts per gene
+        print(gene_counts.shape)
+        plt.clf()
+        plt.hist(gene_counts, bins=100)
+        plt.xlabel("Total counts per gene")
+        plt.ylabel("Number of genes")    
+        plt.savefig('gene_count_plot_after_'+args.data_name+'.png', dpi=300, bbox_inches='tight')
+
+
+    if args.rem_gene_percell == 1:
+        X = adata_h5.X.toarray() if sparse.issparse(adata_h5.X) else adata_h5.X
+
+
+        z_cutoff = 10  # how strict you want to be (2.5–3 usually good)
+        for i in range(X.shape[0]):
+            cell = X[i, :]
+            mean = np.mean(cell)
+            std = np.std(cell)
+            high_mask = cell > mean + z_cutoff * std
+            cell[high_mask] = 0  # zero out extreme genes
+            X[i, :] = cell
+
+        adata_h5.X = sparse.csr_matrix(X)
+
+
     gene_ids = list(adata_h5.var_names)
     coordinates = np.array(adata_h5.obsm['spatial'])
     cell_barcode = np.array(adata_h5.obs_names) #obs.index)
     print('Number of barcodes: %d'%cell_barcode.shape[0])
+    print('max gene exp %g, min gene exp %g'%(np.max(sparse.csr_matrix.toarray(adata_h5.X)), np.min(sparse.csr_matrix.toarray(adata_h5.X))))
     print('Applying quantile normalization')
     temp = qnorm.quantile_normalize(np.transpose(sparse.csr_matrix.toarray(adata_h5.X)))  #https://en.wikipedia.org/wiki/Quantile_normalization
     cell_vs_gene = np.transpose(temp)
+    print('max gene exp %g, min gene exp %g'%(np.max(cell_vs_gene), np.min(cell_vs_gene)))
     #print(np.max(cell_vs_gene))
     #print(np.min(cell_vs_gene))
     #exit(0)
@@ -124,6 +188,7 @@ if __name__ == "__main__":
         pickle.dump(cell_vs_gene, fp)
 
     print('saved: '+args.data_to + args.data_name + '_cell_vs_gene_quantile_transformed')    
+
     #######################
     if args.target_lig in gene_ids:
         print('target ligand exist in the gene list')
@@ -153,6 +218,7 @@ if __name__ == "__main__":
         pickle.dump([gene_index, gene_ids, cell_barcode], fp)
 
     print('gene_index saved')        
+
     ####################### target LR list############################################
     target_LR_index = dict() 
     discard_genes = dict()
@@ -402,14 +468,18 @@ if __name__ == "__main__":
     
     #####################################################################################
     # Set threshold gene percentile
+    active_gene_count_avg = []
     cell_percentile = []
+    count_gene_thr = 0
     for i in range (0, cell_vs_gene.shape[0]):
         y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
         ## inter ##
         active_cutoff = np.percentile(y, args.threshold_gene_exp)
         if active_cutoff == min(cell_vs_gene[i][:]):
             times = 1
+            count_gene_thr = count_gene_thr + 1
             while active_cutoff == min(cell_vs_gene[i][:]):
+                
                 new_threshold = args.threshold_gene_exp + 5 * times                    
                 if new_threshold >= 100:
                     active_cutoff = max(cell_vs_gene[i][:])  
@@ -418,18 +488,24 @@ if __name__ == "__main__":
                 times = times + 1 
 
         cell_percentile.append(active_cutoff)     
+        count = np.sum(y >= active_cutoff)
+        active_gene_count_avg.append(count)
 
-
+    print('active_gene_count_mode %g, with count %g, and avg %g'%(stats.mode(active_gene_count_avg)[0], stats.mode(active_gene_count_avg)[1], np.mean(active_gene_count_avg)))
+    print('percentile calculation done: %d'%count_gene_thr)
+    #exit(0)
     ############################################################################################
     # for each cell, record the active genes
     
     if args.add_intra == 1:
+        count_gene_thr = 0
         intra_active = []
         for i in range (0, cell_vs_gene.shape[0]):
             y = sorted(cell_vs_gene[i])
              ## intra ##
             active_cutoff = np.percentile(y, args.threshold_gene_exp_intra) 
             if active_cutoff == min(cell_vs_gene[i][:]):
+                count_gene_thr = count_gene_thr+1
                 times = 1
                 while active_cutoff == min(cell_vs_gene[i][:]):
                     new_threshold = args.threshold_gene_exp_intra + 5 * times
@@ -441,29 +517,12 @@ if __name__ == "__main__":
             
             intra_active.append(active_cutoff)
 
-
+    print('percentile calculation done: %d'%count_gene_thr)
+    #exit(0)
     ##################### target LR cell pairs #########################################################
-    target_cell_pair = defaultdict(list)
-    debug = dict()
-    for target_LR in target_LR_list:
-        ligand = target_LR[0]
-        receptor = target_LR[1]
-        for i in range (0, cell_vs_gene.shape[0]): # ligand
-            if cell_vs_gene[i][gene_index[ligand]] < cell_percentile[i]:
-                continue
-            for j in range (0, cell_vs_gene.shape[0]): # receptor
-                if cell_vs_gene[j][gene_index[receptor]] < cell_percentile[j]:
-                    continue
-                if i not in weightdict_i_to_j or j not in weightdict_i_to_j[i]: #dist_X[i,j]==0:
-                    continue
-                    
-                target_cell_pair[ligand+'+'+receptor].append([i, j])    
-                debug[i] = ''
-                debug[j] = ''
-    print('target_cell_pair %d'%len(debug.keys()))  
     ##############################################################################
     # some preprocessing before making the input graph
-    blocked_gene_per_cell = defaultdict(dict)
+    #blocked_gene_per_cell = defaultdict(dict)
 
     ###############################################################################
     count_total_edges = 0
@@ -486,22 +545,22 @@ if __name__ == "__main__":
         gene = ligand_list[g]
 
         #for i in range (0, cell_vs_gene.shape[0]): # ligand
-        for i in weightdict_i_to_j.keys():
+        for i in weightdict_i_to_j:
             if cell_vs_gene[i][gene_index[gene]] < cell_percentile[i]:
                 continue
 
-            if gene_index[gene] in blocked_gene_per_cell[i]:
-                continue
+            #if gene_index[gene] in blocked_gene_per_cell[i]:
+            #    continue
 
-            for j in weightdict_i_to_j[i].keys():
+            for j in weightdict_i_to_j[i]:
             #for j in range (0, cell_vs_gene.shape[0]): # receptor
                 #if i not in weightdict_i_to_j or j not in weightdict_i_to_j[i]: #dist_X[i,j]==0: 
                 #    continue    
                 for gene_rec in ligand_dict_dataset[gene]:
                     if cell_vs_gene[j][gene_index[gene_rec]] >= cell_percentile[j]: # or cell_vs_gene[i][gene_index[gene]] >= cell_percentile[i][4] :#gene_list_percentile[gene_rec][1]: #global_percentile: #
             
-                        if gene_index[gene_rec] in blocked_gene_per_cell[j]:
-                            continue
+                        #if gene_index[gene_rec] in blocked_gene_per_cell[j]:
+                        #    continue
                         
                         if (gene_rec in cell_cell_contact) and (args.block_juxtacrine==1 or euclidean_distances(coordinates[i:i+1],coordinates[j:j+1]) > args.juxtacrine_distance):
                             continue
@@ -530,7 +589,7 @@ if __name__ == "__main__":
         print('%d/%d ligand genes processed'%(g+1, len(ligand_list)), end='\r')
     
     print('') 
-    #print('total number of edges in the input graph %d '%count_total_edges)
+    print('total number of edges in the input graph %d '%count_total_edges)
     ################################################################################
     # input graph generation
     ccc_index_dict = dict()
@@ -541,9 +600,9 @@ if __name__ == "__main__":
     for i in cells_ligand_vs_receptor.keys():
         #ccc_j = []
         for j in cells_ligand_vs_receptor[i].keys():
-            if i in weightdict_i_to_j and j in weightdict_i_to_j[i]: #dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
-                count_local = 0
-                if len(cells_ligand_vs_receptor[i][j])>0:
+            #if i in weightdict_i_to_j and j in weightdict_i_to_j[i]: #dist_X[i,j]>0: #distance_matrix[i][j] <= args.neighborhood_threshold: 
+            #    count_local = 0
+            #    if len(cells_ligand_vs_receptor[i][j])>0:
                     for k in range (0, len(cells_ligand_vs_receptor[i][j])):
                         gene = cells_ligand_vs_receptor[i][j][k][0]
                         gene_rec = cells_ligand_vs_receptor[i][j][k][1]
@@ -563,10 +622,10 @@ if __name__ == "__main__":
     
 
     total_num_cell = cell_vs_gene.shape[0]
-    print('total number of spots/cells is %d, and edges is %d in the input graph'%(total_num_cell, len(row_col)))
+    print('total number of spots/cells is %d, and edges is %d in the input graph (bi-directional)'%(total_num_cell, len(row_col)))
     #print('preprocess done.')
     #print('writing data ...')
-
+    
     ################## input gene graph #################################################
     lig_rec_dict = defaultdict(dict)    
     for index in range (0, len(row_col)):
@@ -694,9 +753,11 @@ if __name__ == "__main__":
 
 
     print('gene count for corr matrix %d'%len(cell_gene_set))
+    
+    
     if args.local_coexpression == 0:
         df = defaultdict(list)
-        for gene in cell_gene_set:
+        for gene in gene_ids: #cell_gene_set:
             j = gene_index[gene] 
             df[gene_ids[j]]=list(cell_vs_gene[:, j])
     
@@ -704,31 +765,35 @@ if __name__ == "__main__":
         print('Running gene_coexpression_matrix calculation')
         gene_coexpression_matrix = data.corr(method='spearman')
        
-
+    
 
     print('BEFORE INTRA: min edge weight %g, max edge weight %g'%(np.min(edge_weight), np.max(edge_weight)))
     start_of_intra_edge = len(edge_weight)
     print("start_of_intra_edge %d"%(start_of_intra_edge))
-    
-    for i in weightdict_i_to_j.keys():
+    cell_list = list(weightdict_i_to_j.keys())
+    for i in cell_list:
+        #print('%d = edge weight %g, max edge weight %g'%(i, np.min(edge_weight), np.max(edge_weight)))
         if args.local_coexpression == 1:
             neighbor_list = list(weightdict_i_to_j[i].keys()) #neighbor_list_per_cell[i]
             temp_cell_vs_gene = cell_vs_gene[neighbor_list]
             df = defaultdict(list)
-            for gene in cell_gene_set:
+            for gene in gene_ids: #cell_gene_set:
                 j = gene_index[gene] 
                 df[gene_ids[j]]=list(temp_cell_vs_gene[:, j])
         
             data = pd.DataFrame(df)
             #print('Running gene_coexpression_matrix calculation')
             gene_coexpression_matrix = data.corr(method='spearman')
+            if math.isnan(np.max(gene_coexpression_matrix.values))==True:
+                continue
+
         
         spot_id = i
         # print('i %d, edge %d, gene node %d'%(i, len(row_col_gene), len(gene_node_type)))
         cell_intra_gcm = defaultdict(dict)
         for gene_a in cell_gene_set:
-            if gene_index[gene_a] in blocked_gene_per_cell[i]:
-                continue
+            #if gene_index[gene_a] in blocked_gene_per_cell[i]:
+            #    continue
             #if gene_a == "CCL19" :
             #    print("found ccl19")
             if cell_vs_gene[spot_id][gene_index[gene_a]] < intra_active[spot_id]: #cell_percentile[spot_id]:
@@ -741,7 +806,7 @@ if __name__ == "__main__":
                 # find knn ligand genes
             sorted_gene_b_ligand = []
             for gene_b in ligand_list:
-                if gene_b==gene_a or gene_coexpression_matrix[gene_a][gene_b]<=0: # or cell_vs_gene[spot_id][gene_index[gene_b]] < intra_active[spot_id]: #cell_percentile[spot_id]:
+                if gene_b==gene_a or gene_coexpression_matrix[gene_a][gene_b]<=0 or math.isnan(gene_coexpression_matrix[gene_a][gene_b])==True or cell_vs_gene[spot_id][gene_index[gene_b]] < intra_active[spot_id]: #cell_percentile[spot_id]:
                     continue    
                 sorted_gene_b_ligand.append([gene_b, gene_coexpression_matrix[gene_a][gene_b]])
             
@@ -753,7 +818,7 @@ if __name__ == "__main__":
             sorted_gene_b_receptor = []
             for gene_b in receptor_list:
                     
-                if gene_b==gene_a or gene_coexpression_matrix[gene_a][gene_b]<=0: # or cell_vs_gene[spot_id][gene_index[gene_b]] < intra_active[spot_id]: #cell_percentile[spot_id]:
+                if gene_b==gene_a or gene_coexpression_matrix[gene_a][gene_b]<=0 or cell_vs_gene[spot_id][gene_index[gene_b]] < intra_active[spot_id]: #cell_percentile[spot_id]:
                     continue 
 
                 sorted_gene_b_receptor.append([gene_b, gene_coexpression_matrix[gene_a][gene_b]])
@@ -770,8 +835,8 @@ if __name__ == "__main__":
             sorted_gene_b = sorted_gene_b_temp
             
             for gene_b in sorted_gene_b: #cell_gene_set:
-                if gene_index[gene_b] in blocked_gene_per_cell[i]:
-                    continue
+                #if gene_index[gene_b] in blocked_gene_per_cell[i]:
+                #    continue
 
                 if gene_a in cell_intra_gcm and gene_b in cell_intra_gcm[gene_a]:
                     continue
@@ -862,7 +927,8 @@ if __name__ == "__main__":
     print('active '+args.target_rec +' node %d, with number of incoming connections %d'%(len(rec_active_count), total_incoming_rec))
     print('inter edge count %d, intra edge count %d\n'%(start_of_intra_edge, len(row_col_gene)-start_of_intra_edge))    
 
-            
+    #exit(0)
+    ###############            
     with gzip.open(args.data_to + args.data_name + '_adjacency_gene_records', 'wb') as fp:  
         pickle.dump([row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge], fp)
 
@@ -886,10 +952,6 @@ if __name__ == "__main__":
     with gzip.open(args.metadata_to + args.data_name +'_barcode_info_gene', 'wb') as fp:  
         pickle.dump([barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, weightdict_i_to_j, l_r_pair, gene_node_index_active, ligand_active_count, rec_active_count], fp) #, ligand_active_count, rec_active_count
 
-    with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
-        pickle.dump([target_LR_index, target_cell_pair], fp)
-
-    
     
     ######### optional #############################################################           
     # we do not need this to use anywhere. But just for debug purpose we are saving this. We can skip this if we have space issue.
@@ -932,7 +994,31 @@ if __name__ == "__main__":
 
         print('unique pairs found %d, and count %d'%(len(list(negatome_unique_pair.keys())),count))
 
+    
+    target_cell_pair = defaultdict(list)
+    debug = dict()
+    for target_LR in target_LR_list:
+        ligand = target_LR[0]
+        receptor = target_LR[1]
+        for i in range (0, cell_vs_gene.shape[0]): # ligand
+            if cell_vs_gene[i][gene_index[ligand]] < cell_percentile[i]:
+                continue
+            for j in range (0, cell_vs_gene.shape[0]): # receptor
+                if cell_vs_gene[j][gene_index[receptor]] < cell_percentile[j]:
+                    continue
+                if i not in weightdict_i_to_j or j not in weightdict_i_to_j[i]: #dist_X[i,j]==0:
+                    continue
 
+                target_cell_pair[ligand+'+'+receptor].append([i, j])    
+                debug[i] = ''
+                debug[j] = ''
+    print('target_cell_pair %d'%len(debug.keys()))  
+
+
+    with gzip.open(args.metadata_to + args.data_name +'_test_set', 'wb') as fp:  
+        pickle.dump([target_LR_index, target_cell_pair], fp)
+
+    
 
 
 

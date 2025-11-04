@@ -40,16 +40,20 @@ warnings.filterwarnings('ignore')
 import anndata
 
 
-data_names = ['LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir'
+data_names = ['LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir',
+              'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local'
             ]
 
-model_names = ['model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir',                               
+model_names = ['model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir',
+               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local'                                
           ]
 target_ligands = [
-                 'TGFB1'
+                 'TGFB1',
+                 'CXCL12'
                  ]
 target_receptors = [
-                   'TGFBR2'
+                   'TGFBR2',
+                   'CXCR4'
                    ]
 
 if __name__ == "__main__":
@@ -58,7 +62,7 @@ if __name__ == "__main__":
     file_name_suffix = "100" #'_elbow_' #'100_woHistElbowCut' # '_elbow' #'100' 
     ##########################################################
     # 4, 13
-    for data_index in [0]: #range(0, len(data_names)):
+    for data_index in [1]: #range(0, len(data_names)):
         parser = argparse.ArgumentParser()
         parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
         parser.add_argument( '--data_name', type=str, default='', help='The name of dataset') #, required=True) # default='',
@@ -74,7 +78,7 @@ if __name__ == "__main__":
         parser.add_argument( '--use_attn', type=int, default=1, help='')
         parser.add_argument( '--use_embFusion', type=int, default=1, help='')
         parser.add_argument( '--prediction_threshold', type=float, default=0.7, help='')
-        parser.add_argument( '--total_subgraphs', type=int, default=16, help='')
+        parser.add_argument( '--total_subgraphs', type=int, default=1, help='')
         args = parser.parse_args()
         ##############
         if elbow_cut_flag==0:
@@ -91,7 +95,7 @@ if __name__ == "__main__":
             os.makedirs(args.output_path)
             
         ##################### get metadata: barcode_info ###################################
-        ''''''
+        '''
         with gzip.open(args.metadata_from +args.data_name+'_barcode_info', 'rb') as fp:  #b, a:[0:5]   _filtered
             barcode_info = pickle.load(fp) 
     
@@ -99,7 +103,7 @@ if __name__ == "__main__":
         for i in range (0, len(barcode_info)):
             barcode_index[barcode_info[i][0]] = i
         
-        
+        '''
         with gzip.open(args.metadata_from +args.data_name+'_barcode_info_gene', 'rb') as fp:  #b, a:[0:5]   _filtered
             barcode_info_gene, ligand_list, receptor_list, gene_node_list_per_spot, dist_X, l_r_pair, gene_node_index_active, ligand_active, receptor_active = pickle.load(fp)
 
@@ -112,20 +116,24 @@ if __name__ == "__main__":
         args.model_name = model_names[data_index]
 
 
-        ccc_pairs = pd.read_csv(args.output_path + args.model_name+'_allLR_nodeInfo_LYMPH_xe_br_sk_LUAD.csv.gz') #LUAD_LYMPH, LUAD_LYMPH_top20, LUADtraining_woNegatome
+        ccc_pairs = pd.read_csv(args.output_path + args.model_name+'_r1_allLR_nodeInfo_Xe_Br_Sk_negatome.csv.gz') #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, , LUAD_LYMPH_top20, LUADtraining_woNegatome
         lr_dict = defaultdict(list)
+        count = 0
         for i in range(0, len(ccc_pairs['attention_score'])):
+            
             if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
+                if ccc_pairs['pred_score'][i] < 0:
+                    count = count + 1
                 continue
             
-            if ccc_pairs['attention_score'][i] < 0.7:
-                continue
+            #if ccc_pairs['attention_score'][i] < 0.1:
+            #    continue
 
-            lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['attention_score'], ccc_pairs['pred_score'][i]])  # score, cell ids, gene_node ids   
-
-
+            lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'][i], ccc_pairs['to_cell_index'][i], ccc_pairs['attention_score'][i], ccc_pairs['pred_score'][i]])  # score, cell ids, gene_node ids   
 
 
+
+        print('not found %d'%count)
         #=====================================================================================
         sort_lr_list = []
         for lr_pair in lr_dict:
@@ -203,4 +211,4 @@ if __name__ == "__main__":
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
 
-        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LYMPH_xe_br_sk_LUAD.csv', index=False) #_top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome, LUAD_LYMPH_top20
+        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_Xe_Br_Sk_negatome.csv', index=False) #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, _top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome, LUAD_LYMPH_top20

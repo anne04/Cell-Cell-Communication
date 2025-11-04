@@ -125,7 +125,7 @@ def combined_graph(args):
 
 
     ##################################################################
-    fp = gzip.open('input_graph/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_adjacency_gene_records', 'rb')  
+    fp = gzip.open('input_graph/'+args.data_name+'/'+args.data_name+'_adjacency_gene_records', 'rb')  
     row_col_gene, edge_weight, lig_rec, gene_node_type, gene_node_expression, total_num_gene_node, start_of_intra_edge = pickle.load(fp)
     ########### Merge the subgraphs ####################
     dict_cell_edge = defaultdict(list) # key = node. values = incoming edges
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     '''
     ###########################################################
-
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument( '--lr_lrbind_csv_path', type=str, 
                         default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_allLR_nodeInfo.csv.gz', 
@@ -352,7 +352,30 @@ if __name__ == "__main__":
     parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
     parser.add_argument( '--model_name', type=str, default='model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir', help='Path to grab the metadata')
     parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
+    args = parser.parse_args()    
+    '''
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--lr_lrbind_csv_path', type=str, 
+                        default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome_allLR_nodeInfo.csv.gz', 
+                        help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    #parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/LUAD_TD1_manualDB/LUAD_TD1_manualDB_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
+    parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset')    
+    #parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_r1_Embed_X', help='Name of the dataset')
+    parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome_r1_Embed_X_subgraphs_combined', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--total_subgraphs', type=int, default=16, help='')
+    ##########################################################
+    parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
+    parser.add_argument( '--data_name', type=str, default='LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome', help='The name of dataset') #, required=True) # default='',
+    parser.add_argument( '--total_runs', type=int, default=3, help='How many runs for ensemble (at least 2 are preferred)') #, required=True) 
+    parser.add_argument( '--embedding_path', type=str, default='embedding_data/', help='Path to grab the attention scores from')
+    parser.add_argument( '--metadata_from', type=str, default='metadata/', help='Path to grab the metadata') 
+    parser.add_argument( '--model_name', type=str, default='model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneLocalCorrKNN_bidir_negatome', help='Path to grab the metadata')
+    parser.add_argument( '--data_from', type=str, default='input_graph/', help='Path to grab the input graph from (to be passed to GAT)')
     args = parser.parse_args()
+
 
     #######################################################
 
@@ -391,6 +414,12 @@ if __name__ == "__main__":
     else:
         X_gene_embedding = combined_graph(args)
         print('min %g max %g'%(np.min(X_gene_embedding), np.max(X_gene_embedding)))
+
+    if args.normalized_gene_emb == 1:
+        for i in range (0, X_gene_embedding.shape[0]):
+            total_score_per_row = np.sum(X_gene_embedding[i][:])
+            X_gene_embedding[i] = X_gene_embedding[i]/total_score_per_row
+
 
     ##########################################################
   

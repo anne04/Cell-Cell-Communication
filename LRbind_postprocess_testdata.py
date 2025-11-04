@@ -70,7 +70,7 @@ data_names = ['LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir'
                'LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_prefiltered',
 
                'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full',
-               'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR'
+               'LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local'
                  ]
 
 model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN_bidir_3L',
@@ -103,7 +103,7 @@ model_names = ['model_LRbind_V1_Human_Lymph_Node_spatial_1D_manualDB_geneCorrKNN
                'model_LRbind_V1_Breast_Cancer_Block_A_Section_1_spatial_1D_manualDB_geneLocalCorrKNN_bidir_3L_prefiltered',
                
                'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_full',
-               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR'                
+               'model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local'                
           ]
 target_ligands = ['CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19', 'CCL19',  
                   'TGFB1','TGFB1','TGFB1','TGFB1', 'TGFB1','TGFB1',
@@ -234,42 +234,13 @@ if __name__ == "__main__":
 
         print('unique pairs found %d, and count %d'%(len(list(negatome_unique_pair.keys())),count))
         #####################
-        with gzip.open(args.data_from + args.data_name + '_cell_vs_gene_quantile_transformed', 'rb') as fp:
-            cell_vs_gene = pickle.load(fp)
     
         with gzip.open(args.data_from + args.data_name + '_gene_index', 'rb') as fp:
             gene_index, gene_names, cell_barcodes = pickle.load(fp)
     
         
-        adata = anndata.AnnData(cell_vs_gene)
-        adata.obs_names = cell_barcodes 
-        adata.var_names = gene_names
-        adata.var_names_make_unique()
-        #log transform it
-        sc.pp.log1p(adata)
-    
-        # Set threshold gene percentile
-        threshold_gene_exp = 80
-        cell_percentile = []
-        for i in range (0, cell_vs_gene.shape[0]):
-            y = sorted(cell_vs_gene[i]) # sort each row/cell in ascending order of gene expressions
-            ## inter ##
-            active_cutoff = np.percentile(y, threshold_gene_exp)
-            if active_cutoff == min(cell_vs_gene[i][:]):
-                times = 1
-                while active_cutoff == min(cell_vs_gene[i][:]):
-                    new_threshold = threshold_gene_exp + 5 * times
-                    if new_threshold >= 100:
-                        active_cutoff = max(cell_vs_gene[i][:])  
-                        break
-                    active_cutoff = np.percentile(y, new_threshold)
-                    times = times + 1 
-    
-            cell_percentile.append(active_cutoff) 
-    
-    
-                        
-    
+
+
         print('****' + args.data_name + '*********')
         print(model_names[data_index])
         print(args.target_ligand + '-' + args.target_receptor)
@@ -292,7 +263,7 @@ if __name__ == "__main__":
             ############ attention scores ##############################
             
             layer = 3
-          
+            
             distribution = []
             X_attention_filename = args.embedding_path +  args.model_name + '_attention' #.npy
             print(X_attention_filename)
@@ -310,21 +281,21 @@ if __name__ == "__main__":
             max_value = max(distribution)
             distribution = [] 
             for index in range (0, X_attention_bundle[0].shape[1]):
-              i = X_attention_bundle[0][0][index]
-              j = X_attention_bundle[0][1][index]
-              scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
-              distribution.append(scaled_score)
-             
+                i = X_attention_bundle[0][0][index]
+                j = X_attention_bundle[0][1][index]
+                scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value) # scaled from 0 to 1
+                distribution.append(scaled_score)
+                
             percentage_value = 80
             th_80th = np.percentile(sorted(distribution), percentage_value) # higher attention score means stronger connection
             # Now keep only 
             attention_scores = defaultdict(dict)  
             for index in range (0, X_attention_bundle[0].shape[1]):
-              i = X_attention_bundle[0][0][index]
-              j = X_attention_bundle[0][1][index]
-              scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value)
-              if scaled_score >= 0.7: #th_80th:
-                  attention_scores[i][j] = scaled_score
+                i = X_attention_bundle[0][0][index]
+                j = X_attention_bundle[0][1][index]
+                scaled_score = (X_attention_bundle[layer][index][0]-min_value)/(max_value-min_value)
+                if scaled_score >= 0.7: #th_80th:
+                    attention_scores[i][j] = scaled_score
 
             
             ########################################################################
@@ -582,11 +553,11 @@ if __name__ == "__main__":
                 
                 lr_dict = defaultdict(list)
                 for i in range(0, len(ccc_pairs['attention_score'])):
-                    if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
-                        continue
+                    #if ccc_pairs['pred_score'][i] <= 0: #< 0.7:
+                    #    continue
                     
-                    if ccc_pairs['attention_score'][i] < 0.7:
-                        continue
+                    #if ccc_pairs['attention_score'][i] < 0.7:
+                    #    continue
 
                     #lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['pred_score'][i], ccc_pairs['attention_score']])  # score, cell ids, gene_node ids   
                     lr_dict[ccc_pairs['ligand_gene'][i]+'+'+ccc_pairs['rec_gene'][i]].append([ccc_pairs['score'][i], ccc_pairs['from_cell_index'], ccc_pairs['to_cell_index'], ccc_pairs['attention_score'], -1])  # score, cell ids, gene_node ids   
@@ -732,8 +703,8 @@ if __name__ == "__main__":
                     #'Score_sum_layer1': data_list['score_sum_layer1'],
                     #'Score_avg_layer1': data_list['score_avg_layer1']
                 })
-                #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_wofilter.csv', index=False) #_negatome
-                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUAD_LYMPH_top20.csv', index=False) #_top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome
+                data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_wofilter.csv', index=False) #_negatome
+                #data_list_pd.to_csv(args.output_path +model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_LUAD_LYMPH_top20.csv', index=False) #_top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome
 
 
 
