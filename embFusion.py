@@ -12,9 +12,9 @@ proteinEmb_dimension = 1024
 class fusionMLP(torch.nn.Module):
     def __init__(self, 
                  input_size:int = geneEmb_dimension + proteinEmb_dimension,  
-                 hidden_size_fusion:int = 512, 
-                 output_size_fusion:int = 128, 
-                 hidden_size_predictor_layer1:int = 128*2, # lig & rec branch
+                 hidden_size_fusion:int = 512, #512, 
+                 output_size_fusion:int = 256, #256, 
+                 hidden_size_predictor_layer1:int = 256*2, #256*2, 
                  hidden_size_predictor_layer2:int = 128 
                 ):
         """
@@ -28,25 +28,37 @@ class fusionMLP(torch.nn.Module):
         # Branch: sender
         self.sender_fusion_layer = nn.Sequential(
           nn.Linear(input_size, hidden_size_fusion),
+          nn.BatchNorm1d(hidden_size_fusion),
           nn.ReLU(),
+          nn.Dropout(0.5),
           nn.Linear(hidden_size_fusion, output_size_fusion),
-          nn.ReLU()
+          nn.BatchNorm1d(output_size_fusion),
+          nn.ReLU(),
+          nn.Dropout(0.5)
         )
 
         # Branch: rcvr
         self.rcvr_fusion_layer = nn.Sequential(
           nn.Linear(input_size, hidden_size_fusion),
+          nn.BatchNorm1d(hidden_size_fusion),
           nn.ReLU(),
+          nn.Dropout(0.5),
           nn.Linear(hidden_size_fusion, output_size_fusion),
-          nn.ReLU()
+          nn.BatchNorm1d(output_size_fusion),
+          nn.ReLU(),
+          nn.Dropout(0.5)
         )
 
         # concat both and pass through another MLP
         self.ppi_predict_layer = nn.Sequential(
             nn.Linear(output_size_fusion*2, hidden_size_predictor_layer1),
+            nn.BatchNorm1d(hidden_size_predictor_layer1),
             nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(hidden_size_predictor_layer1, hidden_size_predictor_layer2),
+            nn.BatchNorm1d(hidden_size_predictor_layer2),
             nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(hidden_size_predictor_layer2, 1),
             nn.Sigmoid()
         )
@@ -91,15 +103,18 @@ def train_fusionMLP(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # initialize the model
     model_fusionMLP = fusionMLP().to(device) # CHECK = set the dimensions based on args.
+    #model_fusionMLP = torch.load(args.model_name).to(device)
+
+    
     print(model_fusionMLP)
     # set the loss function
-    loss_function = nn.BCELoss() #CrossEntropyLoss()
+    loss_function = nn.CrossEntropyLoss() #nn.MSELoss()
 
     # set optimizer
     optimizer = torch.optim.Adam(model_fusionMLP.parameters(), lr=learning_rate)
     epoch_interval = 20 # CHECK
     #### for plotting loss curve ########
-    loss_curve = np.zeros((epoch//epoch_interval+1, 2))
+    loss_curve = np.zeros((epoch//epoch_interval+1, 4))
     loss_curve_counter = 0
     ######################################
     total_training_samples = training_set.shape[0]
@@ -108,25 +123,65 @@ def train_fusionMLP(
     for epoch_indx in range (0, epoch):
         # shuffle the training set
         training_sender_emb, training_rcv_emb, training_prediction = shuffle_data(training_set)        
-        # model_fusionMLP.train() # training mode
+        model_fusionMLP.train() # training mode
         total_loss = 0
+        TP = TN = FN = FP = 0
+        P = N = 0
         for batch_idx in range(0, total_batch):
             optimizer.zero_grad() # clears the grad, otherwise will add to the past calculations
             # get the batch of the sender and rcvr emb and move to GPU
             batch_sender_emb = training_sender_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_data_rcv_emb = training_rcv_emb[batch_idx*batch_size: (batch_idx+1)*batch_size, :].to(device)
             batch_target = training_prediction[batch_idx*batch_size: (batch_idx+1)*batch_size].to(device)
-
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
+
+            if batch_idx == 0 and epoch_indx%epoch_interval == 0:
+                print('training:')
+                print(batch_target[0:10])
+                print(list(batch_prediction.flatten().cpu().detach().numpy())[0:10])
 
             loss = loss_function(batch_prediction.flatten(), batch_target)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+            # TP and TN rate
+            batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
+            val_class = 
+            for i in range(0, len(batch_prediction)):
+                if batch_prediction[i]>= threshold_score:
+                    batch_prediction[i] = 1
+                else:
+                    batch_prediction[i] = 0
 
+            
+            pred_class = batch_prediction
+
+            for i in range (0, len(val_class)):
+                if val_class[i] == 1 and pred_class[i] == 1:
+                    TP = TP + 1
+                    P = P + 1
+                elif val_class[i] == 1 and pred_class[i] == 0:
+                    FN = FN + 1
+                    P = P + 1
+                elif val_class[i] == 0 and pred_class[i] == 1:
+                    FP = FP + 1
+                    N = N + 1
+                elif val_class[i] == 0 and pred_class[i] == 0:
+                    TN = TN + 1
+                    N = N + 1
+
+            #print("P %d"%P)
+            print('TP/P = %g, TN/N=%g '%(TP/P, TN/N))
+
+
+
+
+
+
+             
         avg_loss = total_loss/total_batch
         if epoch_indx%epoch_interval == 0:
-            print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))            
+            #print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))            
             # run validation
             # CHECK: if you use dropout layer, you might need to set some flag during inference step 
             validation_sender_emb, validation_rcv_emb, validation_prediction = split_branch(validation_set)
@@ -134,10 +189,13 @@ def train_fusionMLP(
             batch_sender_emb = validation_sender_emb.to(device)
             batch_data_rcv_emb = validation_rcv_emb.to(device)
             batch_target = validation_prediction.to(device)
-            
+            model_fusionMLP.eval()
             batch_prediction = model_fusionMLP(batch_sender_emb, batch_data_rcv_emb)
             validation_loss = loss_function(batch_prediction.flatten(), batch_target)
-            #print('Epoch %d/%d, Training loss: %g'%(epoch_indx, epoch, avg_loss))
+            if epoch_indx==0:
+                min_loss = validation_loss
+            print('Epoch %d/%d, Training loss: %g, val loss: %g'%(epoch_indx, epoch, avg_loss, validation_loss))
+
             if validation_loss <= min_loss:
                 min_loss = validation_loss
                 # state save
@@ -152,14 +210,15 @@ def train_fusionMLP(
 
             #########
             batch_prediction = list(batch_prediction.flatten().cpu().detach().numpy())
-            """
+            print(batch_prediction[0:10])
+            print(batch_target[0:10])
             for i in range(0, len(batch_prediction)):
                 if batch_prediction[i]>= threshold_score:
                     batch_prediction[i] = 1
                 else:
                     batch_prediction[i] = 0
 
-            """
+            
             pred_class = batch_prediction
 
             TP = TN = FN = FP = 0
@@ -185,6 +244,9 @@ def train_fusionMLP(
             ######## update the loss curve #########
             loss_curve[loss_curve_counter][0] = avg_loss
             loss_curve[loss_curve_counter][1] = validation_loss
+            loss_curve[loss_curve_counter][2] = TP/P
+            loss_curve[loss_curve_counter][3] = TN/N
+
             loss_curve_counter = loss_curve_counter + 1
             logfile=open(args.model_name+'_loss_curve.csv', 'wb')
             np.savetxt(logfile,loss_curve, delimiter=',')
@@ -192,5 +254,3 @@ def train_fusionMLP(
             ############################
 
 # https://machinelearningmastery.com/building-multilayer-perceptron-models-in-pytorch/
-# https://machinelearningmastery.com/using-dropout-regularization-in-pytorch-models/
-

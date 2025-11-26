@@ -6,12 +6,17 @@ import gzip
 import numpy as np
 import gc
 
+geneEmb_dimension = 256 
+proteinEmb_dimension = 1280
+
+
 def get_dataset(
     ccc_pairs: pd.DataFrame,
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
     X_protein_embedding: dict(),
-    threshold_score: int = 0.7,
+    threshold_score: float = 0.7,
+    threshold_score_neg: float = 0.2,
     dataset = []
 ):
     """
@@ -50,11 +55,13 @@ def get_dataset(
             sender_set = cell_vs_gene_emb[sender_cell_barcode][ligand_node_index]
             rcvr_set = cell_vs_gene_emb[rcv_cell_barcode][rec_node_index]
             score = ccc_pairs['attention_score'][i]
-            print(threshold_score)
-            if score < threshold_score:
+            #print(threshold_score)
+            if score <= threshold_score_neg:
                 score = 0
-            else:
+            elif score >= threshold_score:
                 score = 1
+            else: # ignore the grey zone
+                continue
                 
             dataset.append([sender_set, rcvr_set, score, ligand_gene, rec_gene])
 
@@ -67,7 +74,7 @@ def get_dataset_from_allCCC(
     cell_vs_gene_emb: defaultdict(dict),
     gene_node_list_per_spot: defaultdict(dict),
     X_protein_embedding: dict(),
-    threshold_score: int = 0.7,
+    #threshold_score: int = 0.7,
     dataset = [],
     rem_pair = ""
 ):
@@ -218,7 +225,6 @@ def get_cellEmb_geneEmb_pairs(
     X_protein_embedding: np.array
 ) -> defaultdict(dict):
     """
-
     Parameters:
     cell_vs_index: dictionary with key = cell_barcode, value = index of that cell 
     barcode_info_gene: list of [cell's barcode, cell's X, cell's Y, -1, gene_node_index, gene_name]
@@ -238,7 +244,7 @@ def get_cellEmb_geneEmb_pairs(
         #if cell_barcode == 'GGCGCTCCTCATCAAT-1':
         #    print(gene_index)  
         if gene_name in X_protein_embedding:         
-            cell_vs_gene_emb[cell_barcode][gene_index] = [np.zeros(512), X_gene_embedding[gene_index], X_protein_embedding[gene_name]]
+            cell_vs_gene_emb[cell_barcode][gene_index] = [np.zeros(512), X_gene_embedding[gene_index],  X_protein_embedding[gene_name]]
             #X_embedding[cell_index_cellnest]
         else:
             not_found[gene_name] = 1
@@ -442,20 +448,41 @@ def get_final_dataset(args, add_negative=0, add_inter=1, add_intra=1, rem_pair =
         X_gene_embedding = combined_graph(args)
 
     print('min %g max %g'%(np.min(X_gene_embedding), np.max(X_gene_embedding)))
-    if args.normalized_gene_emb == 1:
-        for i in range (0, X_gene_embedding.shape[0]):
-            total_score_per_row = np.sum(X_gene_embedding[i][:])
-            X_gene_embedding[i] = X_gene_embedding[i]/total_score_per_row
-
+    
 
     with gzip.open(args.protein_emb_path, 'rb') as fp:  
         X_protein_embedding = pickle.load(fp)
 
-    #X_p = 
+    
+    if args.normalized_gene_emb == 1:
+        from sklearn.preprocessing import MinMaxScaler        
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        X_gene_embedding = scaler.fit_transform(X_gene_embedding)
+
+        print('gene emb value ranges from %g to %g'%(np.min(X_gene_embedding), np.max(X_gene_embedding)))
+
+        X_protein_embedding_temp = np.zeros((len(X_protein_embedding.keys()), proteinEmb_dimension))
+        i = 0
+        gene_to_index = dict()
+        for gene in X_protein_embedding:
+            X_protein_embedding_temp[i] = X_protein_embedding[gene]
+            gene_to_index[gene] = i
+            i = i + 1
+
+        X_protein_embedding_temp = scaler.fit_transform(X_protein_embedding_temp)
+        for gene in X_protein_embedding:
+            i = gene_to_index[gene]
+            X_protein_embedding[gene] = X_protein_embedding_temp[i] 
+        
+        print('gene emb value ranges from %g to %g'%(np.min(X_gene_embedding), np.max(X_gene_embedding)))
+
+
+
     
     cell_vs_index = dict()
     for i in range(0, len(barcode_info_cellnest)):
         cell_vs_index[barcode_info_cellnest[i][0]] = i
+
 
     
     cell_vs_gene_emb = get_cellEmb_geneEmb_pairs(cell_vs_index, barcode_info_gene, 0, X_gene_embedding, X_protein_embedding)
@@ -463,8 +490,8 @@ def get_final_dataset(args, add_negative=0, add_inter=1, add_intra=1, rem_pair =
     ccc_pairs = pd.read_csv(args.lr_cellnest_csv_path, sep=",")
     print(ccc_pairs.columns)
     all_ccc_pairs = pd.read_csv(args.all_lr_cellnest_csv_path, sep=",")
-    #dataset = get_dataset(ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding)
-    dataset = get_dataset_from_allCCC(ccc_pairs, all_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, rem_pair=rem_pair)
+    dataset = get_dataset(all_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, threshold_score = args.threshold_score, threshold_score_neg=args.threshold_score_neg)
+    #dataset = get_dataset_from_allCCC(ccc_pairs, all_ccc_pairs, cell_vs_gene_emb, gene_node_list_per_spot, X_protein_embedding, rem_pair=rem_pair)
 
 
     print(len(dataset))
@@ -539,17 +566,18 @@ if __name__ == "__main__":
 
 
     """
-    """
+    
 
     parser = argparse.ArgumentParser()
-    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_FFPE_Human_Breast_Cancer_Rep1/CellNEST_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_top20percent.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--all_lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_FFPE_Human_Breast_Cancer_Rep1/CellNEST_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)
-    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/Xenium_FFPE_Human_Breast_Cancer_Rep1/Xenium_FFPE_Human_Breast_Cancer_Rep1_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_FFPE_Human_Breast_Cancer_Rep1_filteredCell/CellNEST_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_filteredCell_top20percent.csv', help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
+    parser.add_argument( '--all_lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_FFPE_Human_Breast_Cancer_Rep1_filteredCell/CellNEST_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_filteredCell_allCCC.csv', help='Name of the dataset') #, required=True)
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/Xenium_FFPE_Human_Breast_Cancer_Rep1_filteredCell/Xenium_FFPE_Human_Breast_Cancer_Rep1_filteredCell_barcode_info' , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local_barcode_info_gene', help='Name of the dataset') 
     parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local_barcode_info', help='Name of the dataset')    
     #parser.add_argument( '--cell_emb_cellnest_path', type=str, default='../NEST/embedding_data/Xenium_FFPE_Human_Breast_Cancer_Rep1/Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_r1_Embed_X.npy', help='Name of the dataset')
     parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local_r1_Embed_X', help='Name of the dataset')
-    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    #parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/esmFold_protein_structure_embedding.pkl', help='Name of the dataset')
     parser.add_argument( '--lr_inter_csv_path', type=str, 
                         default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local/model_LRbind_Xenium_FFPE_Human_Breast_Cancer_Rep1_manualDB_geneLocalCorrKNN_bidir_removedLR_local_r1_allLR_nodeInfo.csv.gz', 
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
@@ -561,9 +589,11 @@ if __name__ == "__main__":
                         help='Name of the dataset') #, required=True) 
     parser.add_argument( '--total_subgraphs', type=int, default=1, help='')
     parser.add_argument( '--normalized_gene_emb', type=int, default=1, help='')
+    parser.add_argument( '--threshold_score', type=float, default=0.85, help='')
+    parser.add_argument( '--threshold_score_neg', type=float, default=0.6, help='') #0.65
     args = parser.parse_args()
 
-    dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1, add_inter=1, add_intra=1) #, rem_pair='CXCL12_to_CXCR4'
+    dataset_temp, start_of_negative_pairs = get_final_dataset(args, add_negative=1, add_inter=1, add_intra=1, rem_pair='CXCL12_to_CXCR4') #
     print('len of dataset %d, start of negative pairs %d'%(len(dataset_temp), start_of_negative_pairs))
 
     
@@ -586,7 +616,7 @@ if __name__ == "__main__":
     #print('len of dataset %d, start of negative pairs %d'%(len(dataset), start_of_negative_pairs))
 
 
-    """
+    
 
     """
 
@@ -685,21 +715,23 @@ if __name__ == "__main__":
 
     """
 
-    """
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_Prime_Human_Skin_FFPE/CellNEST_Xenium_Prime_Human_Skin_FFPE_manualDB_top20percent.csv', help='Name of the dataset') #, required=True)
-    parser.add_argument( '--all_lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_Prime_Human_Skin_FFPE/CellNEST_Xenium_Prime_Human_Skin_FFPE_manualDB_allCCC.csv', help='Name of the dataset')
+    parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_Prime_Human_Skin_FFPE_filteredCell/CellNEST_Xenium_Prime_Human_Skin_FFPE_filteredCell_manualDB_top20percent.csv', help='Name of the dataset') #, required=True)
+    parser.add_argument( '--all_lr_cellnest_csv_path', type=str, default='../NEST/output/Xenium_Prime_Human_Skin_FFPE_filteredCell/CellNEST_Xenium_Prime_Human_Skin_FFPE_filteredCell_manualDB_allCCC.csv', help='Name of the dataset')
     parser.add_argument( '--lr_inter_csv_path', type=str, 
                         default='/cluster/home/t116508uhn/LRbind_output/without_elbow_cut/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome_allLR_nodeInfo.csv.gz', 
                         help='Name of the dataset') #, required=True)  #V1_Human_Lymph_Node_spatial_novelLR
-    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/Xenium_Prime_Human_Skin_FFPE/Xenium_Prime_Human_Skin_FFPE_barcode_info'  , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
+    parser.add_argument( '--barcode_info_cellnest_path', type=str, default='../NEST/metadata/Xenium_Prime_Human_Skin_FFPE_filteredCell/Xenium_Prime_Human_Skin_FFPE_filteredCell_barcode_info'  , help='Path to the dataset to read from. Space Ranger outs/ folder is preferred. Otherwise, provide the *.mtx file of the gene expression matrix.') #,required=True) 
     parser.add_argument( '--barcode_info_gene_path', type=str, default='metadata/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome_barcode_info_gene', help='Name of the dataset') 
     parser.add_argument( '--barcode_info_path', type=str, default='metadata/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome_barcode_info', help='Name of the dataset')    
     parser.add_argument( '--gene_emb_path', type=str, default='embedding_data/LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome/model_LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome_r1_Embed_X_subgraphs_combined', help='Name of the dataset')
-    parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
-
+    #parser.add_argument( '--protein_emb_path', type=str, default='database/ligand_receptor_protein_embedding.pkl', help='Name of the dataset')
+    parser.add_argument( '--protein_emb_path', type=str, default='database/esmFold_protein_structure_embedding.pkl', help='Name of the dataset')
     parser.add_argument( '--total_subgraphs', type=int, default=16, help='')
     parser.add_argument( '--normalized_gene_emb', type=int, default=1, help='')
+    parser.add_argument( '--threshold_score', type=float, default=0.55, help='')
+    parser.add_argument( '--threshold_score_neg', type=float, default=0.20, help='')
     #######################################################################################################
     parser.add_argument( '--database_path', type=str, default='database/NEST_database.csv' , help='Provide your desired ligand-receptor database path here. Default database is a combination of CellChat and NicheNet database.')    
     parser.add_argument( '--data_name', type=str, default='LRbind_Xenium_Prime_Human_Skin_FFPE_manualDB_geneCorrKNN_bidir_negatome', help='The name of dataset') #, required=True) # default='',
@@ -738,12 +770,13 @@ if __name__ == "__main__":
     start_of_negative_pairs = len(dataset)
     dataset = dataset + dataset_negatome
     print('len of dataset %d, start of negative pairs %d'%(len(dataset), start_of_negative_pairs))
-    with gzip.open('database/'+'LRbind_Xe_br_sk_Negatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
+    #with gzip.open('database/'+'LRbind_Xe_br_sk_Negatome'+'_dataset_embFusion_normalized.pkl', 'wb') as fp:  
+    with gzip.open('database/'+'LRbind_Xe_br_sk_Negatome'+'_structure_dataset_embFusion_normalized_confident.pkl', 'wb') as fp: #_normalized
     	pickle.dump([dataset, start_of_negative_pairs], fp)
 
-        
+    
+    
     """
-
     parser = argparse.ArgumentParser()
     ################## Mandatory ####################################################################
     parser.add_argument( '--lr_cellnest_csv_path', type=str, default='../NEST/output/LUAD_TD1_manualDB/CellNEST_LUAD_TD1_manualDB_allCCC.csv', help='Name of the dataset') #, required=True)  #allCCC
@@ -776,6 +809,11 @@ if __name__ == "__main__":
     with gzip.open('database/'+'LRbind_Xe_br_sk_woNegatome'+'_dataset_embFusion.pkl', 'wb') as fp:  
     	pickle.dump([dataset, start_of_negative_pairs], fp)
 
+
+
+
+
+    """
 
     #with gzip.open('database/'+'LRbind_Lymph_Xe_br_sk_LUAD'+'_dataset_embFusion.pkl', 'wb') as fp:  
     #	pickle.dump([dataset, start_of_negative_pairs], fp)

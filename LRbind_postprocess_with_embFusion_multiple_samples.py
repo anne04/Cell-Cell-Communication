@@ -249,7 +249,7 @@ if __name__ == "__main__":
     
             
             for i in range (0, X_embedding.shape[0]):
-                total_score_per_row = np.sum(X_embedding[i][:])
+                total_score_per_row = np.linalg.vector_norm(X_embedding[i][:]) #np.sum(X_embedding[i][:])
                 X_embedding[i] = X_embedding[i]/total_score_per_row
 
             '''

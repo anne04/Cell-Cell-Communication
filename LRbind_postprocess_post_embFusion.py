@@ -116,7 +116,7 @@ if __name__ == "__main__":
         args.model_name = model_names[data_index]
 
 
-        ccc_pairs = pd.read_csv(args.output_path + args.model_name+'_r1_allLR_nodeInfo_Xe_Br_Sk_negatome.csv.gz') #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, , LUAD_LYMPH_top20, LUADtraining_woNegatome
+        ccc_pairs = pd.read_csv(args.output_path + args.model_name+'_r1_allLR_nodeInfo_Xe_Br_Sk_negatome_structure_normalized.csv.gz') #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, , LUAD_LYMPH_top20, LUADtraining_woNegatome
         lr_dict = defaultdict(list)
         count = 0
         for i in range(0, len(ccc_pairs['attention_score'])):
@@ -211,4 +211,4 @@ if __name__ == "__main__":
             #'Score_avg_layer1': data_list['score_avg_layer1']
         })
 
-        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_Xe_Br_Sk_negatome.csv', index=False) #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, _top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome, LUAD_LYMPH_top20
+        data_list_pd.to_csv(args.output_path +args.model_name+'_lr_list_sortedBy_totalScore_top'+ file_name_suffix+'_allLR_predClass_Xe_Br_Sk_negatome_structure_test_normalized.csv', index=False) #Xe_Br_Sk_only, LYMPH_Xe_Br_Sk_LUAD, _top20, LUAD_LYMPH, LUADtraining_woNegatome, LUADtraining_interNegatome, LUAD_LYMPH_top20
